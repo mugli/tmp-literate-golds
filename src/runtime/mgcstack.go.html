@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: mgcstack.go in package runtime</title>
+<link href="../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	mgcstack.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../pkg/runtime.html">runtime</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16],
+input[id=r17]:checked ~pre label[for=r17],
+input[id=r18]:checked ~pre label[for=r18],
+input[id=r19]:checked ~pre label[for=r19],
+input[id=r20]:checked ~pre label[for=r20],
+input[id=r21]:checked ~pre label[for=r21],
+input[id=r22]:checked ~pre label[for=r22],
+input[id=r23]:checked ~pre label[for=r23],
+input[id=r24]:checked ~pre label[for=r24],
+input[id=r25]:checked ~pre label[for=r25],
+input[id=r26]:checked ~pre label[for=r26],
+input[id=r27]:checked ~pre label[for=r27],
+input[id=r28]:checked ~pre label[for=r28],
+input[id=r29]:checked ~pre label[for=r29],
+input[id=r30]:checked ~pre label[for=r30],
+input[id=r31]:checked ~pre label[for=r31],
+input[id=r32]:checked ~pre label[for=r32],
+input[id=r33]:checked ~pre label[for=r33],
+input[id=r34]:checked ~pre label[for=r34],
+input[id=r35]:checked ~pre label[for=r35],
+input[id=r36]:checked ~pre label[for=r36],
+input[id=r37]:checked ~pre label[for=r37],
+input[id=r38]:checked ~pre label[for=r38],
+input[id=r39]:checked ~pre label[for=r39]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="r17" type="radio" name="g"/>
+<input id="r18" type="radio" name="g"/>
+<input id="r19" type="radio" name="g"/>
+<input id="r20" type="radio" name="g"/>
+<input id="r21" type="radio" name="g"/>
+<input id="r22" type="radio" name="g"/>
+<input id="r23" type="radio" name="g"/>
+<input id="r24" type="radio" name="g"/>
+<input id="r25" type="radio" name="g"/>
+<input id="r26" type="radio" name="g"/>
+<input id="r27" type="radio" name="g"/>
+<input id="r28" type="radio" name="g"/>
+<input id="r29" type="radio" name="g"/>
+<input id="r30" type="radio" name="g"/>
+<input id="r31" type="radio" name="g"/>
+<input id="r32" type="radio" name="g"/>
+<input id="r33" type="radio" name="g"/>
+<input id="r34" type="radio" name="g"/>
+<input id="r35" type="radio" name="g"/>
+<input id="r36" type="radio" name="g"/>
+<input id="r37" type="radio" name="g"/>
+<input id="r38" type="radio" name="g"/>
+<input id="r39" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2018 The Go Authors. All rights reserved.</span><span class="comment"> Use of this source code is governed by a BSD-style</span><span class="comment"> license that can be found in the LICENSE file.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Garbage collector: stack objects and stack tracing</span><span class="comment"> See the design doc at https://docs.google.com/document/d/1un-Jn47yByHL7I0aVIP_uVCMxjdM5mpelJhiKlIqxkE/edit?usp=sharing</span><span class="comment"> Also see issue 22350.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Stack tracing solves the problem of determining which parts of the</span><span class="comment"> stack are live and should be scanned. It runs as part of scanning</span><span class="comment"> a single goroutine stack.</span><span class="comment"></span><span class="comment"> Normally determining which parts of the stack are live is easy to</span><span class="comment"> do statically, as user code has explicit references (reads and</span><span class="comment"> writes) to stack variables. The compiler can do a simple dataflow</span><span class="comment"> analysis to determine liveness of stack variables at every point in</span><span class="comment"> the code. See cmd/compile/internal/gc/plive.go for that analysis.</span><span class="comment"></span><span class="comment"> However, when we take the address of a stack variable, determining</span><span class="comment"> whether that variable is still live is less clear. We can still</span><span class="comment"> look for static accesses, but accesses through a pointer to the</span><span class="comment"> variable are difficult in general to track statically. That pointer</span><span class="comment"> can be passed among functions on the stack, conditionally retained,</span><span class="comment"> etc.</span><span class="comment"></span><span class="comment"> Instead, we will track pointers to stack variables dynamically.</span><span class="comment"> All pointers to stack-allocated variables will themselves be on the</span><span class="comment"> stack somewhere (or in associated locations, like defer records), so</span><span class="comment"> we can find them all efficiently.</span><span class="comment"></span><span class="comment"> Stack tracing is organized as a mini garbage collection tracing</span><span class="comment"> pass. The objects in this garbage collection are all the variables</span><span class="comment"> on the stack whose address is taken, and which themselves contain a</span><span class="comment"> pointer. We call these variables "stack objects".</span><span class="comment"></span><span class="comment"> We begin by determining all the stack objects on the stack and all</span><span class="comment"> the statically live pointers that may point into the stack. We then</span><span class="comment"> process each pointer to see if it points to a stack object. If it</span><span class="comment"> does, we scan that stack object. It may contain pointers into the</span><span class="comment"> heap, in which case those pointers are passed to the main garbage</span><span class="comment"> collection. It may also contain pointers into the stack, in which</span><span class="comment"> case we add them to our set of stack pointers.</span><span class="comment"></span><span class="comment"> Once we're done processing all the pointers (including the ones we</span><span class="comment"> added during processing), we've found all the stack objects that</span><span class="comment"> are live. Any dead stack objects are not scanned and their contents</span><span class="comment"> will not keep heap objects live. Unlike the main garbage</span><span class="comment"> collection, we can't sweep the dead stack objects; they live on in</span><span class="comment"> a moribund state until the stack frame that contains them is</span><span class="comment"> popped.</span><span class="comment"></span><span class="comment"> A stack can look like this:</span><span class="comment"></span><span class="comment"> +----------+</span><span class="comment"> | foo()    |</span><span class="comment"> | +------+ |</span><span class="comment"> | |  A   | | &lt;---\</span><span class="comment"> | +------+ |     |</span><span class="comment"> |          |     |</span><span class="comment"> | +------+ |     |</span><span class="comment"> | |  B   | |     |</span><span class="comment"> | +------+ |     |</span><span class="comment"> |          |     |</span><span class="comment"> +----------+     |</span><span class="comment"> | bar()    |     |</span><span class="comment"> | +------+ |     |</span><span class="comment"> | |  C   | | &lt;-\ |</span><span class="comment"> | +----|-+ |   | |</span><span class="comment"> |      |   |   | |</span><span class="comment"> | +----v-+ |   | |</span><span class="comment"> | |  D  ---------/</span><span class="comment"> | +------+ |   |</span><span class="comment"> |          |   |</span><span class="comment"> +----------+   |</span><span class="comment"> | baz()    |   |</span><span class="comment"> | +------+ |   |</span><span class="comment"> | |  E  -------/</span><span class="comment"> | +------+ |</span><span class="comment"> |      ^   |</span><span class="comment"> | F: --/   |</span><span class="comment"> |          |</span><span class="comment"> +----------+</span><span class="comment"></span><span class="comment"> foo() calls bar() calls baz(). Each has a frame on the stack.</span><span class="comment"> foo() has stack objects A and B.</span><span class="comment"> bar() has stack objects C and D, with C pointing to D and D pointing to A.</span><span class="comment"> baz() has a stack object E pointing to C, and a local variable F pointing to E.</span><span class="comment"></span><span class="comment"> Starting from the pointer in local variable F, we will eventually</span><span class="comment"> scan all of E, C, D, and A (in that order). B is never scanned</span><span class="comment"> because there is no live pointer to it. If B is also statically</span><span class="comment"> dead (meaning that foo() never accesses B again after it calls</span><span class="comment"> bar()), then B's pointers into the heap are not considered live.</span></div>
+<div class="code"><pre><code>
+<span class="keyword">package</span> runtime
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"runtime/internal/sys"</span></label>
+	<label for="i1"><span class="lit-string i1">"unsafe"</span></label>
+)
+
+<span class="keyword">const</span> <a href="../../pkg/runtime.html#name-stackTraceDebug" class="ident">stackTraceDebug</a> = <a href="../../pkg/builtin.html#name-false" class="ident">false</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Buffer for pointers found during stack tracing.</span><span class="comment"> Must be smaller than or equal to workbuf.</span><span class="comment"></span><span class="comment">go:notinheap</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../pkg/runtime.html#name-stackWorkBuf" class="ident">stackWorkBuf</a> <span class="keyword">struct</span> {
+	<a href="#line-116" class="ident">stackWorkBufHdr</a>
+	<a href="../../use/runtime..stackWorkBuf*59842.obj*772a5.html" class="ident">obj</a> [(<a href="mgcwork.go.html#line-14" class="ident">_WorkbufSize</a> - <a href="../../pkg/unsafe.html" class="ident i1">unsafe</a>.<a href="../../pkg/unsafe.html#name-Sizeof" class="ident">Sizeof</a>(<a href="#line-116" class="ident">stackWorkBufHdr</a>{})) / <a href="../../pkg/runtime/internal/sys.html" class="ident i0">sys</a>.<a href="internal/sys/stubs.go.html#line-9" class="ident">PtrSize</a>]<a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Header declaration must come after the buf declaration above, because of issue #14620.</span><span class="comment"></span><span class="comment">go:notinheap</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../pkg/runtime.html#name-stackWorkBufHdr" class="ident">stackWorkBufHdr</a> <span class="keyword">struct</span> {
+	<a href="mgcwork.go.html#line-316" class="ident">workbufhdr</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Note: we could theoretically repurpose lfnode.next as this next pointer.</span><span class="comment">	 It would save 1 word, but that probably isn't worth busting open</span><span class="comment">	 the lfnode API.</span></div>
+<div class="code"><pre><code>}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Buffer for stack objects found on a goroutine stack.</span><span class="comment"> Must be smaller than or equal to workbuf.</span><span class="comment"></span><span class="comment">go:notinheap</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../pkg/runtime.html#name-stackObjectBuf" class="ident">stackObjectBuf</a> <span class="keyword">struct</span> {
+	<a href="#line-134" class="ident">stackObjectBufHdr</a>
+	<a href="../../use/runtime..stackObjectBuf*41f8e.obj*772a5.html" class="ident">obj</a> [(<a href="mgcwork.go.html#line-14" class="ident">_WorkbufSize</a> - <a href="../../pkg/unsafe.html" class="ident i1">unsafe</a>.<a href="../../pkg/unsafe.html#name-Sizeof" class="ident">Sizeof</a>(<a href="#line-134" class="ident">stackObjectBufHdr</a>{})) / <a href="../../pkg/unsafe.html" class="ident i1">unsafe</a>.<a href="../../pkg/unsafe.html#name-Sizeof" class="ident">Sizeof</a>(<a href="#line-152" class="ident">stackObject</a>{})]<a href="#line-152" class="ident">stackObject</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">go:notinheap</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../pkg/runtime.html#name-stackObjectBufHdr" class="ident">stackObjectBufHdr</a> <span class="keyword">struct</span> {
+	<a href="mgcwork.go.html#line-316" class="ident">workbufhdr</a>
+	<a href="../../use/runtime..stackObjectBufHdr*e3bf0.next*c6c1c.html" class="ident">next</a> *<a href="#line-128" class="ident">stackObjectBuf</a>
+}
+
+<span class="keyword">func</span> <label for="r0" class="ident"><a href="../../pkg/runtime.html#name-init" class="ident">init</a></label>() {
+	<span class="keyword">if</span> <a href="../../pkg/unsafe.html" class="ident i1">unsafe</a>.<a href="../../pkg/unsafe.html#name-Sizeof" class="ident">Sizeof</a>(<a href="#line-108" class="ident">stackWorkBuf</a>{}) &gt; <a href="../../pkg/unsafe.html" class="ident i1">unsafe</a>.<a href="../../pkg/unsafe.html#name-Sizeof" class="ident">Sizeof</a>(<a href="mgcwork.go.html#line-322" class="ident">workbuf</a>{}) {
+		<a href="../../pkg/builtin.html#name-panic" class="ident">panic</a>(<span class="lit-string">"stackWorkBuf too big"</span>)
+	}
+	<span class="keyword">if</span> <a href="../../pkg/unsafe.html" class="ident i1">unsafe</a>.<a href="../../pkg/unsafe.html#name-Sizeof" class="ident">Sizeof</a>(<a href="#line-128" class="ident">stackObjectBuf</a>{}) &gt; <a href="../../pkg/unsafe.html" class="ident i1">unsafe</a>.<a href="../../pkg/unsafe.html#name-Sizeof" class="ident">Sizeof</a>(<a href="mgcwork.go.html#line-322" class="ident">workbuf</a>{}) {
+		<a href="../../pkg/builtin.html#name-panic" class="ident">panic</a>(<span class="lit-string">"stackObjectBuf too big"</span>)
+	}
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> A stackObject represents a variable on the stack that has had</span><span class="comment"> its address taken.</span><span class="comment"></span><span class="comment">go:notinheap</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../pkg/runtime.html#name-stackObject" class="ident">stackObject</a> <span class="keyword">struct</span> {
+	<a href="../../use/runtime..stackObject*43bae.off*b4dc6.html" class="ident">off</a>   <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>       <span class="comment">// offset above stack.lo</span>
+	<a href="../../use/runtime..stackObject*43bae.size*ccdcb.html" class="ident">size</a>  <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>       <span class="comment">// size of object</span>
+	<a href="../../use/runtime..stackObject*43bae.typ*5a553.html" class="ident">typ</a>   *<a href="type.go.html#line-31" class="ident">_type</a>       <span class="comment">// type info (for ptr/nonptr bits). nil if object has been scanned.</span>
+	<a href="../../use/runtime..stackObject*43bae.left*360f8.html" class="ident">left</a>  *<a href="#line-152" class="ident">stackObject</a> <span class="comment">// objects with lower addresses</span>
+	<a href="../../use/runtime..stackObject*43bae.right*27042.html" class="ident">right</a> *<a href="#line-152" class="ident">stackObject</a> <span class="comment">// objects with higher addresses</span>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> obj.typ = typ, but with no write barrier.</span><span class="comment">go:nowritebarrier</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Types of stack objects are always in read-only memory, not the heap.</span><span class="comment">	 So not using a write barrier is ok.</span></div>
+<div class="code"><pre><code>	*(*<a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>)(<a href="../../pkg/unsafe.html" class="ident i1">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(&amp;<label for="r1" class="ident">obj</label>.<a href="#line-155" class="ident">typ</a>)) = <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<a href="../../pkg/unsafe.html" class="ident i1">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(<label for="r3" class="ident">typ</label>))
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> A stackScanState keeps track of the state used during the GC walk</span><span class="comment"> of a goroutine.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../pkg/runtime.html#name-stackScanState" class="ident">stackScanState</a> <span class="keyword">struct</span> {
+	<a href="../../use/runtime..stackScanState*3d52b.cache*5e1ec.html" class="ident">cache</a> <a href="symtab.go.html#line-719" class="ident">pcvalueCache</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> stack limits</span></div>
+<div class="code"><pre><code>	<a href="../../use/runtime..stackScanState*3d52b.stack*6ee08.html" class="ident">stack</a> <a href="runtime2.go.html#line-393" class="ident">stack</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> conservative indicates that the next frame must be scanned conservatively.</span><span class="comment">	 This applies only to the innermost frame at an async safe-point.</span></div>
+<div class="code"><pre><code>	<a href="../../use/runtime..stackScanState*3d52b.conservative*c152d.html" class="ident">conservative</a> <a href="../../pkg/builtin.html#name-bool" class="ident">bool</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> buf contains the set of possible pointers to stack objects.</span><span class="comment">	 Organized as a LIFO linked list of buffers.</span><span class="comment">	 All buffers except possibly the head buffer are full.</span></div>
+<div class="code"><pre><code>	<a href="../../use/runtime..stackScanState*3d52b.buf*3ef31.html" class="ident">buf</a>     *<a href="#line-108" class="ident">stackWorkBuf</a>
+	<a href="../../use/runtime..stackScanState*3d52b.freeBuf*3b915.html" class="ident">freeBuf</a> *<a href="#line-108" class="ident">stackWorkBuf</a> <span class="comment">// keep around one free buffer for allocation hysteresis</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> cbuf contains conservative pointers to stack objects. If</span><span class="comment">	 all pointers to a stack object are obtained via</span><span class="comment">	 conservative scanning, then the stack object may be dead</span><span class="comment">	 and may contain dead pointers, so it must be scanned</span><span class="comment">	 defensively.</span></div>
+<div class="code"><pre><code>	<a href="../../use/runtime..stackScanState*3d52b.cbuf*567e1.html" class="ident">cbuf</a> *<a href="#line-108" class="ident">stackWorkBuf</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> list of stack objects</span><span class="comment">	 Objects are in increasing address order.</span></div>
+<div class="code"><pre><code>	<a href="../../use/runtime..stackScanState*3d52b.head*9f2e6.html" class="ident">head</a>  *<a href="#line-128" class="ident">stackObjectBuf</a>
+	<a href="../../use/runtime..stackScanState*3d52b.tail*0c62f.html" class="ident">tail</a>  *<a href="#line-128" class="ident">stackObjectBuf</a>
+	<a href="../../use/runtime..stackScanState*3d52b.nobjs*1f1c0.html" class="ident">nobjs</a> <a href="../../pkg/builtin.html#name-int" class="ident">int</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> root of binary tree for fast object lookup by address</span><span class="comment">	 Initialized by buildIndex.</span></div>
+<div class="code"><pre><code>	<a href="../../use/runtime..stackScanState*3d52b.root*48134.html" class="ident">root</a> *<a href="#line-152" class="ident">stackObject</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Add p as a potential pointer to a stack object.</span><span class="comment"> p must be a stack address.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r4" class="ident">s</label> *<a href="#line-170" class="ident">stackScanState</a>) <label for="r5" class="ident"><a href="../../use/runtime..stackScanState*3d52b.putPtr*680a8.html" class="ident">putPtr</a></label>(<label for="r6" class="ident">p</label> <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>, <label for="r7" class="ident">conservative</label> <a href="../../pkg/builtin.html#name-bool" class="ident">bool</a>) {
+	<span class="keyword">if</span> <label for="r6" class="ident">p</label> &lt; <label for="r4" class="ident">s</label>.<a href="#line-174" class="ident">stack</a>.<a href="runtime2.go.html#line-394" class="ident">lo</a> || <label for="r6" class="ident">p</label> &gt;= <label for="r4" class="ident">s</label>.<a href="#line-174" class="ident">stack</a>.<a href="runtime2.go.html#line-395" class="ident">hi</a> {
+		<a href="panic.go.html#line-1107" class="ident">throw</a>(<span class="lit-string">"address not a stack address"</span>)
+	}
+	<label for="r8" class="ident">head</label> := &amp;<label for="r4" class="ident">s</label>.<a href="#line-183" class="ident">buf</a>
+	<span class="keyword">if</span> <label for="r7" class="ident">conservative</label> {
+		<label for="r8" class="ident">head</label> = &amp;<label for="r4" class="ident">s</label>.<a href="#line-191" class="ident">cbuf</a>
+	}
+	<label for="r9" class="ident">buf</label> := *<label for="r8" class="ident">head</label>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Initial setup.</span></div>
+<div class="code"><pre><code>		<label for="r9" class="ident">buf</label> = (*<a href="#line-108" class="ident">stackWorkBuf</a>)(<a href="../../pkg/unsafe.html" class="ident i1">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(<a href="mgcwork.go.html#line-348" class="ident">getempty</a>()))
+		<label for="r9" class="ident">buf</label>.<a href="mgcwork.go.html#line-318" class="ident">nobj</a> = <span class="lit-number">0</span>
+		<label for="r9" class="ident">buf</label>.<a href="#line-118" class="ident">next</a> = <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a>
+		*<label for="r8" class="ident">head</label> = <label for="r9" class="ident">buf</label>
+	} <span class="keyword">else</span> <span class="keyword">if</span> <label for="r9" class="ident">buf</label>.<a href="mgcwork.go.html#line-318" class="ident">nobj</a> == <a href="../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r9" class="ident">buf</label>.<a href="#line-110" class="ident">obj</a>) {
+		<span class="keyword">if</span> <label for="r4" class="ident">s</label>.<a href="#line-184" class="ident">freeBuf</a> != <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<label for="r9" class="ident">buf</label> = <label for="r4" class="ident">s</label>.<a href="#line-184" class="ident">freeBuf</a>
+			<label for="r4" class="ident">s</label>.<a href="#line-184" class="ident">freeBuf</a> = <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a>
+		} <span class="keyword">else</span> {
+			<label for="r9" class="ident">buf</label> = (*<a href="#line-108" class="ident">stackWorkBuf</a>)(<a href="../../pkg/unsafe.html" class="ident i1">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(<a href="mgcwork.go.html#line-348" class="ident">getempty</a>()))
+		}
+		<label for="r9" class="ident">buf</label>.<a href="mgcwork.go.html#line-318" class="ident">nobj</a> = <span class="lit-number">0</span>
+		<label for="r9" class="ident">buf</label>.<a href="#line-118" class="ident">next</a> = *<label for="r8" class="ident">head</label>
+		*<label for="r8" class="ident">head</label> = <label for="r9" class="ident">buf</label>
+	}
+	<label for="r9" class="ident">buf</label>.<a href="#line-110" class="ident">obj</a>[<label for="r9" class="ident">buf</label>.<a href="mgcwork.go.html#line-318" class="ident">nobj</a>] = <label for="r6" class="ident">p</label>
+	<label for="r9" class="ident">buf</label>.<a href="mgcwork.go.html#line-318" class="ident">nobj</a>++
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Remove and return a potential pointer to a stack object.</span><span class="comment"> Returns 0 if there are no more pointers available.</span><span class="comment"></span><span class="comment"> This prefers non-conservative pointers so we scan stack objects</span><span class="comment"> precisely if there are any non-conservative pointers to them.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r10" class="ident">s</label> *<a href="#line-170" class="ident">stackScanState</a>) <label for="r11" class="ident"><a href="../../use/runtime..stackScanState*3d52b.getPtr*e6a6a.html" class="ident">getPtr</a></label>() (<label for="r12" class="ident">p</label> <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>, <label for="r13" class="ident">conservative</label> <a href="../../pkg/builtin.html#name-bool" class="ident">bool</a>) {
+	<span class="keyword">for</span> <label for="r14" class="ident">_</label>, <label for="r15" class="ident">head</label> := <span class="keyword">range</span> []**<a href="#line-108" class="ident">stackWorkBuf</a>{&amp;<label for="r10" class="ident">s</label>.<a href="#line-183" class="ident">buf</a>, &amp;<label for="r10" class="ident">s</label>.<a href="#line-191" class="ident">cbuf</a>} {
+		<label for="r16" class="ident">buf</label> := *<label for="r15" class="ident">head</label>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Never had any data.</span></div>
+<div class="code"><pre><code>			<span class="keyword">continue</span>
+		}
+		<span class="keyword">if</span> <label for="r16" class="ident">buf</label>.<a href="mgcwork.go.html#line-318" class="ident">nobj</a> == <span class="lit-number">0</span> {
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Free old freeBuf.</span></div>
+<div class="code"><pre><code>				<a href="mgcwork.go.html#line-403" class="ident">putempty</a>((*<a href="mgcwork.go.html#line-322" class="ident">workbuf</a>)(<a href="../../pkg/unsafe.html" class="ident i1">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(<label for="r10" class="ident">s</label>.<a href="#line-184" class="ident">freeBuf</a>)))
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Move buf to the freeBuf.</span></div>
+<div class="code"><pre><code>			<label for="r10" class="ident">s</label>.<a href="#line-184" class="ident">freeBuf</a> = <label for="r16" class="ident">buf</label>
+			<label for="r16" class="ident">buf</label> = <label for="r16" class="ident">buf</label>.<a href="#line-118" class="ident">next</a>
+			*<label for="r15" class="ident">head</label> = <label for="r16" class="ident">buf</label>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> No more data in this list.</span></div>
+<div class="code"><pre><code>				<span class="keyword">continue</span>
+			}
+		}
+		<label for="r16" class="ident">buf</label>.<a href="mgcwork.go.html#line-318" class="ident">nobj</a>--
+		<span class="keyword">return</span> <label for="r16" class="ident">buf</label>.<a href="#line-110" class="ident">obj</a>[<label for="r16" class="ident">buf</label>.<a href="mgcwork.go.html#line-318" class="ident">nobj</a>], <label for="r15" class="ident">head</label> == &amp;<label for="r10" class="ident">s</label>.<a href="#line-191" class="ident">cbuf</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> No more data in either list.</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> <label for="r10" class="ident">s</label>.<a href="#line-184" class="ident">freeBuf</a> != <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<a href="mgcwork.go.html#line-403" class="ident">putempty</a>((*<a href="mgcwork.go.html#line-322" class="ident">workbuf</a>)(<a href="../../pkg/unsafe.html" class="ident i1">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(<label for="r10" class="ident">s</label>.<a href="#line-184" class="ident">freeBuf</a>)))
+		<label for="r10" class="ident">s</label>.<a href="#line-184" class="ident">freeBuf</a> = <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a>
+	}
+	<span class="keyword">return</span> <span class="lit-number">0</span>, <a href="../../pkg/builtin.html#name-false" class="ident">false</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> addObject adds a stack object at addr of type typ to the set of stack objects.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r17" class="ident">s</label> *<a href="#line-170" class="ident">stackScanState</a>) <label for="r18" class="ident"><a href="../../use/runtime..stackScanState*3d52b.addObject*43862.html" class="ident">addObject</a></label>(<label for="r19" class="ident">addr</label> <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>, <label for="r20" class="ident">typ</label> *<a href="type.go.html#line-31" class="ident">_type</a>) {
+	<label for="r21" class="ident">x</label> := <label for="r17" class="ident">s</label>.<a href="#line-196" class="ident">tail</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> initial setup</span></div>
+<div class="code"><pre><code>		<label for="r21" class="ident">x</label> = (*<a href="#line-128" class="ident">stackObjectBuf</a>)(<a href="../../pkg/unsafe.html" class="ident i1">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(<a href="mgcwork.go.html#line-348" class="ident">getempty</a>()))
+		<label for="r21" class="ident">x</label>.<a href="#line-136" class="ident">next</a> = <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a>
+		<label for="r17" class="ident">s</label>.<a href="#line-195" class="ident">head</a> = <label for="r21" class="ident">x</label>
+		<label for="r17" class="ident">s</label>.<a href="#line-196" class="ident">tail</a> = <label for="r21" class="ident">x</label>
+	}
+	<span class="keyword">if</span> <label for="r21" class="ident">x</label>.<a href="mgcwork.go.html#line-318" class="ident">nobj</a> &gt; <span class="lit-number">0</span> &amp;&amp; <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>(<label for="r19" class="ident">addr</label>-<label for="r17" class="ident">s</label>.<a href="#line-174" class="ident">stack</a>.<a href="runtime2.go.html#line-394" class="ident">lo</a>) &lt; <label for="r21" class="ident">x</label>.<a href="#line-130" class="ident">obj</a>[<label for="r21" class="ident">x</label>.<a href="mgcwork.go.html#line-318" class="ident">nobj</a>-<span class="lit-number">1</span>].<a href="#line-153" class="ident">off</a>+<label for="r21" class="ident">x</label>.<a href="#line-130" class="ident">obj</a>[<label for="r21" class="ident">x</label>.<a href="mgcwork.go.html#line-318" class="ident">nobj</a>-<span class="lit-number">1</span>].<a href="#line-154" class="ident">size</a> {
+		<a href="panic.go.html#line-1107" class="ident">throw</a>(<span class="lit-string">"objects added out of order or overlapping"</span>)
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> full buffer - allocate a new buffer, add to end of linked list</span></div>
+<div class="code"><pre><code>		<label for="r22" class="ident">y</label> := (*<a href="#line-128" class="ident">stackObjectBuf</a>)(<a href="../../pkg/unsafe.html" class="ident i1">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(<a href="mgcwork.go.html#line-348" class="ident">getempty</a>()))
+		<label for="r22" class="ident">y</label>.<a href="#line-136" class="ident">next</a> = <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a>
+		<label for="r21" class="ident">x</label>.<a href="#line-136" class="ident">next</a> = <label for="r22" class="ident">y</label>
+		<label for="r17" class="ident">s</label>.<a href="#line-196" class="ident">tail</a> = <label for="r22" class="ident">y</label>
+		<label for="r21" class="ident">x</label> = <label for="r22" class="ident">y</label>
+	}
+	<label for="r23" class="ident">obj</label> := &amp;<label for="r21" class="ident">x</label>.<a href="#line-130" class="ident">obj</a>[<label for="r21" class="ident">x</label>.<a href="mgcwork.go.html#line-318" class="ident">nobj</a>]
+	<label for="r21" class="ident">x</label>.<a href="mgcwork.go.html#line-318" class="ident">nobj</a>++
+	<label for="r23" class="ident">obj</label>.<a href="#line-153" class="ident">off</a> = <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>(<label for="r19" class="ident">addr</label> - <label for="r17" class="ident">s</label>.<a href="#line-174" class="ident">stack</a>.<a href="runtime2.go.html#line-394" class="ident">lo</a>)
+	<label for="r23" class="ident">obj</label>.<a href="#line-154" class="ident">size</a> = <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>(<label for="r20" class="ident">typ</label>.<a href="type.go.html#line-32" class="ident">size</a>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> obj.left and obj.right will be initialized by buildIndex before use.</span></div>
+<div class="code"><pre><code>	<label for="r17" class="ident">s</label>.<a href="#line-197" class="ident">nobjs</a>++
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> buildIndex initializes s.root to a binary search tree.</span><span class="comment"> It should be called after all addObject calls but before</span><span class="comment"> any call of findObject.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r24" class="ident">s</label> *<a href="#line-170" class="ident">stackScanState</a>) <label for="r25" class="ident"><a href="../../use/runtime..stackScanState*3d52b.buildIndex*32ba8.html" class="ident">buildIndex</a></label>() {
+	<label for="r24" class="ident">s</label>.<a href="#line-201" class="ident">root</a>, _, _ = <a href="#line-315" class="ident">binarySearchTree</a>(<label for="r24" class="ident">s</label>.<a href="#line-195" class="ident">head</a>, <span class="lit-number">0</span>, <label for="r24" class="ident">s</label>.<a href="#line-197" class="ident">nobjs</a>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Build a binary search tree with the n objects in the list</span><span class="comment"> x.obj[idx], x.obj[idx+1], ..., x.next.obj[0], ...</span><span class="comment"> Returns the root of that tree, and the buf+idx of the nth object after x.obj[idx].</span><span class="comment"> (The first object that was not included in the binary search tree.)</span><span class="comment"> If n == 0, returns nil, x.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r26" class="ident"><a href="../../pkg/runtime.html#name-binarySearchTree" class="ident">binarySearchTree</a></label>(<label for="r27" class="ident">x</label> *<a href="#line-128" class="ident">stackObjectBuf</a>, <label for="r28" class="ident">idx</label> <a href="../../pkg/builtin.html#name-int" class="ident">int</a>, <label for="r29" class="ident">n</label> <a href="../../pkg/builtin.html#name-int" class="ident">int</a>) (<label for="r30" class="ident">root</label> *<a href="#line-152" class="ident">stackObject</a>, <label for="r31" class="ident">restBuf</label> *<a href="#line-128" class="ident">stackObjectBuf</a>, <label for="r32" class="ident">restIdx</label> <a href="../../pkg/builtin.html#name-int" class="ident">int</a>) {
+	<span class="keyword">if</span> <label for="r29" class="ident">n</label> == <span class="lit-number">0</span> {
+		<span class="keyword">return</span> <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a>, <label for="r27" class="ident">x</label>, <label for="r28" class="ident">idx</label>
+	}
+	<span class="keyword">var</span> <label for="r33" class="ident">left</label>, <label for="r34" class="ident">right</label> *<a href="#line-152" class="ident">stackObject</a>
+	<label for="r33" class="ident">left</label>, <label for="r27" class="ident">x</label>, <label for="r28" class="ident">idx</label> = <label for="r26" class="ident">binarySearchTree</label>(<label for="r27" class="ident">x</label>, <label for="r28" class="ident">idx</label>, <label for="r29" class="ident">n</label>/<span class="lit-number">2</span>)
+	<label for="r30" class="ident">root</label> = &amp;<label for="r27" class="ident">x</label>.<a href="#line-130" class="ident">obj</a>[<label for="r28" class="ident">idx</label>]
+	<label for="r28" class="ident">idx</label>++
+	<span class="keyword">if</span> <label for="r28" class="ident">idx</label> == <a href="../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r27" class="ident">x</label>.<a href="#line-130" class="ident">obj</a>) {
+		<label for="r27" class="ident">x</label> = <label for="r27" class="ident">x</label>.<a href="#line-136" class="ident">next</a>
+		<label for="r28" class="ident">idx</label> = <span class="lit-number">0</span>
+	}
+	<label for="r34" class="ident">right</label>, <label for="r27" class="ident">x</label>, <label for="r28" class="ident">idx</label> = <label for="r26" class="ident">binarySearchTree</label>(<label for="r27" class="ident">x</label>, <label for="r28" class="ident">idx</label>, <label for="r29" class="ident">n</label>-<label for="r29" class="ident">n</label>/<span class="lit-number">2</span>-<span class="lit-number">1</span>)
+	<label for="r30" class="ident">root</label>.<a href="#line-156" class="ident">left</a> = <label for="r33" class="ident">left</label>
+	<label for="r30" class="ident">root</label>.<a href="#line-157" class="ident">right</a> = <label for="r34" class="ident">right</label>
+	<span class="keyword">return</span> <label for="r30" class="ident">root</label>, <label for="r27" class="ident">x</label>, <label for="r28" class="ident">idx</label>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> findObject returns the stack object containing address a, if any.</span><span class="comment"> Must have called buildIndex previously.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r35" class="ident">s</label> *<a href="#line-170" class="ident">stackScanState</a>) <label for="r36" class="ident"><a href="../../use/runtime..stackScanState*3d52b.findObject*c049d.html" class="ident">findObject</a></label>(<label for="r37" class="ident">a</label> <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>) *<a href="#line-152" class="ident">stackObject</a> {
+	<label for="r38" class="ident">off</label> := <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>(<label for="r37" class="ident">a</label> - <label for="r35" class="ident">s</label>.<a href="#line-174" class="ident">stack</a>.<a href="runtime2.go.html#line-394" class="ident">lo</a>)
+	<label for="r39" class="ident">obj</label> := <label for="r35" class="ident">s</label>.<a href="#line-201" class="ident">root</a>
+	<span class="keyword">for</span> {
+		<span class="keyword">if</span> <label for="r39" class="ident">obj</label> == <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<span class="keyword">return</span> <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a>
+		}
+		<span class="keyword">if</span> <label for="r38" class="ident">off</label> &lt; <label for="r39" class="ident">obj</label>.<a href="#line-153" class="ident">off</a> {
+			<label for="r39" class="ident">obj</label> = <label for="r39" class="ident">obj</label>.<a href="#line-156" class="ident">left</a>
+			<span class="keyword">continue</span>
+		}
+		<span class="keyword">if</span> <label for="r38" class="ident">off</label> &gt;= <label for="r39" class="ident">obj</label>.<a href="#line-153" class="ident">off</a>+<label for="r39" class="ident">obj</label>.<a href="#line-154" class="ident">size</a> {
+			<label for="r39" class="ident">obj</label> = <label for="r39" class="ident">obj</label>.<a href="#line-157" class="ident">right</a>
+			<span class="keyword">continue</span>
+		}
+		<span class="keyword">return</span> <label for="r39" class="ident">obj</label>
+	}
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

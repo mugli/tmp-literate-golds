@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Package: github.com/beorn7/perks/quantile</title>
+<link href="../../../../css/light-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="package-details"><code><span style="font-size:xx-large;">package <b>quantile</b></span>
+
+<span class="title">Import Path</span>
+	<a href="../../../../index.html#pkg-github.com/beorn7/perks/quantile">github.com/beorn7/perks/quantile</a><i> (on <a href="https://pkg.go.dev/github.com/beorn7/perks/quantile" target="_blank">go.dev</a>)</i>
+
+<span class="title">Dependency Relation</span>
+	imports <a href="../../../../dep/github.com/beorn7/perks/quantile.html">2 packages</a>, and imported by <a href="../../../../dep/github.com/beorn7/perks/quantile.html#imported-by">one package</a>
+
+<div id="files"><span class="title">Involved Source Files</span>
+
+	<input type='checkbox' checked class="fold" id="file-0-fold-content"><label for="file-0-fold-content">   <a href="../../../../src/github.com/beorn7/perks/quantile/stream.go.html#doc">d➜</a> <a href="../../../../src/github.com/beorn7/perks/quantile/stream.go.html">stream.go</a></label><span id='file-0-fold-content-items' class="fold-items">
+		Package quantile computes approximate quantiles over an unbounded data
+		stream within low memory and CPU bounds.
+
+		A small amount of accuracy is traded to achieve the above properties.
+
+		Multiple streams can be merged before calling Query to generate a single set
+		of results. This is meaningful when the streams represent the same type of
+		data. See Merge and Samples.
+
+		For more detailed information about the algorithm used, see:
+
+		Effective Computation of Biased Quantiles over Data Streams
+
+		http://www.cs.rutgers.edu/~muthu/bquant.pdf</span></div>
+<div id="examples"><span class="title">Code Examples</span>
+
+	<input type='checkbox' class="fold" id="example-0-fold-content"><label for="example-0-fold-content">_mergeMultipleStreams</label><span id='example-0-fold-content-items' class="fold-items">
+		package main
+		
+		import (
+			"fmt"
+			"github.com/beorn7/perks/quantile"
+		)
+		
+		func main() {
+			// Scenario:
+			// We have multiple database shards. On each shard, there is a process
+			// collecting query response times from the database logs and inserting
+			// them into a Stream (created via NewTargeted(0.90)), much like the
+			// Simple example. These processes expose a network interface for us to
+			// ask them to serialize and send us the results of their
+			// Stream.Samples so we may Merge and Query them.
+			//
+			// NOTES:
+			// * These sample sets are small, allowing us to get them
+			// across the network much faster than sending the entire list of data
+			// points.
+			//
+			// * For this to work correctly, we must supply the same quantiles
+			// a priori the process collecting the samples supplied to NewTargeted,
+			// even if we do not plan to query them all here.
+			ch := make(chan quantile.Samples)
+			getDBQuerySamples(ch)
+			q := quantile.NewTargeted(map[float64]float64{0.90: 0.001})
+			for samples := range ch {
+				q.Merge(samples)
+			}
+			fmt.Println("perc90:", q.Query(0.90))
+		}
+		
+		// This is a stub for the above example. In reality this would hit the remote
+		// servers via http or something like it.
+		func getDBQuerySamples(ch chan quantile.Samples) {}
+
+</span>
+	<input type='checkbox' class="fold" id="example-1-fold-content"><label for="example-1-fold-content">_simple</label><span id='example-1-fold-content-items' class="fold-items">
+		package main
+		
+		import (
+			"bufio"
+			"fmt"
+			"github.com/beorn7/perks/quantile"
+			"log"
+			"os"
+			"strconv"
+		)
+		
+		func main() {
+			ch := make(chan float64)
+			go sendFloats(ch)
+		
+			// Compute the 50th, 90th, and 99th percentile.
+			q := quantile.NewTargeted(map[float64]float64{
+				0.50: 0.005,
+				0.90: 0.001,
+				0.99: 0.0001,
+			})
+			for v := range ch {
+				q.Insert(v)
+			}
+		
+			fmt.Println("perc50:", q.Query(0.50))
+			fmt.Println("perc90:", q.Query(0.90))
+			fmt.Println("perc99:", q.Query(0.99))
+			fmt.Println("count:", q.Count())
+		}
+		
+		func sendFloats(ch chan<- float64) {
+			f, err := os.Open("exampledata.txt")
+			if err != nil {
+				log.Fatal(err)
+			}
+			sc := bufio.NewScanner(f)
+			for sc.Scan() {
+				b := sc.Bytes()
+				v, err := strconv.ParseFloat(string(b), 64)
+				if err != nil {
+					log.Fatal(err)
+				}
+				ch <- v
+			}
+			if sc.Err() != nil {
+				log.Fatal(sc.Err())
+			}
+			close(ch)
+		}
+
+</span>
+	<input type='checkbox' class="fold" id="example-2-fold-content"><label for="example-2-fold-content">_window</label><span id='example-2-fold-content-items' class="fold-items">
+		package main
+		
+		import (
+			"github.com/beorn7/perks/quantile"
+			"time"
+		)
+		
+		func main() {
+			// Scenario: We want the 90th, 95th, and 99th percentiles for each
+			// minute.
+		
+			ch := make(chan float64)
+			go sendStreamValues(ch)
+		
+			tick := time.NewTicker(1 * time.Minute)
+			q := quantile.NewTargeted(map[float64]float64{
+				0.90: 0.001,
+				0.95: 0.0005,
+				0.99: 0.0001,
+			})
+			for {
+				select {
+				case t := <-tick.C:
+					flushToDB(t, q.Samples())
+					q.Reset()
+				case v := <-ch:
+					q.Insert(v)
+				}
+			}
+		}
+		
+		func sendStreamValues(ch chan float64) {
+		
+		}
+		
+		func flushToDB(t time.Time, samples quantile.Samples) {
+		
+		}
+</span>
+</div>
+<div id="exported-types"><span class="title">Package-Level Type Names<span class="title-stat"><i> (total 6, in which 3 are exported)</i></span></span>
+
+<div id="exported-types-buttons" class="js-on">	/* sort exporteds by: <label id="sort-types-by-alphabet" class="button">alphabet</label> | <label id="sort-types-by-popularity" class="button">popularity</label> */</div><div class="anchor type-res" id="name-Sample" data-popularity="35">	<input type='checkbox' class="fold" id="Sample-fold-content"><label for="Sample-fold-content"> <a href="../../../../use/github.com/beorn7/perks/quantile..Sample.html">type</a> <a href="../../../../src/github.com/beorn7/perks/quantile/stream.go.html#line-24">Sample</a> <i>(struct)</i></label><span id='Sample-fold-content-docs' class="fold-docs">
+		Sample holds an observed value and meta information for compression. JSON
+		tags have been added for convenience.
+
+		<input type='checkbox' class="fold" id="Sample-fold-fields"><label for="Sample-fold-fields">Fields (<i>total 3, all are exported</i>)</label><span id='Sample-fold-fields-items' class="fold-items"><span>
+			<span class="nodocs"><a href="../../../../src/github.com/beorn7/perks/quantile/stream.go.html#line-27">Delta</a> <i><a href="../../../builtin.html#name-float64">float64</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../src/github.com/beorn7/perks/quantile/stream.go.html#line-25">Value</a> <i><a href="../../../builtin.html#name-float64">float64</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../src/github.com/beorn7/perks/quantile/stream.go.html#line-26">Width</a> <i><a href="../../../builtin.html#name-float64">float64</a></i></span></span></span>
+		<input type='checkbox' class="fold" id="Sample-fold-params"><label for="Sample-fold-params">As Inputs Of (<i>at least one unexported</i>)</label><span id='Sample-fold-params-items' class="fold-items">
+			<input type='checkbox' class="showhide" id="Sample-showhide-outputofs"><i><label for="Sample-showhide-outputofs" class="show-inline">/* at least one unexported ... */</label><label for="Sample-showhide-outputofs" class="hide-inline">/* at least one unexported: */</label></i><span class="hidden"><i>
+			func (*<a href="#name-Stream">Stream</a>).<a href="../../../../src/github.com/beorn7/perks/quantile/stream.go.html#line-141">insert</a>(sample <b>Sample</b>)</i></span></span>
+
+</span></div><div class="anchor type-res" id="name-Samples" data-popularity="360">	<input type='checkbox' class="fold" id="Samples-fold-content"><label for="Samples-fold-content"> <a href="../../../../use/github.com/beorn7/perks/quantile..Samples.html">type</a> <a href="../../../../src/github.com/beorn7/perks/quantile/stream.go.html#line-31">Samples</a> <i>([]T)</i></label><span id='Samples-fold-content-docs' class="fold-docs">
+		Samples represents a slice of samples. It implements sort.Interface.
+
+		<input type='checkbox' class="fold" id="Samples-fold-methods"><label for="Samples-fold-methods">Methods (<i>total 3, all are exported</i>)</label><span id='Samples-fold-methods-items' class="fold-items"><span>
+			<span class="nodocs">( T) <a href="../../../../src/github.com/beorn7/perks/quantile/stream.go.html#line-33">Len</a>() <a href="../../../builtin.html#name-int">int</a></span></span><span>
+			<span class="nodocs">( T) <a href="../../../../src/github.com/beorn7/perks/quantile/stream.go.html#line-34">Less</a>(i, j <a href="../../../builtin.html#name-int">int</a>) <a href="../../../builtin.html#name-bool">bool</a></span></span><span>
+			<span class="nodocs">( T) <a href="../../../../src/github.com/beorn7/perks/quantile/stream.go.html#line-35">Swap</a>(i, j <a href="../../../builtin.html#name-int">int</a>)</span></span></span>
+		<input type='checkbox' class="fold" id="Samples-fold-impls"><label for="Samples-fold-impls">Implements (<i>at least 2, in which 1 are exported</i>)</label><span id='Samples-fold-impls-items' class="fold-items"><span>
+			 T : sort.<a href="../../../sort.html#name-Interface">Interface</a></span>
+			<input type='checkbox' class="showhide" id="Samples-showhide-impls"><i><label for="Samples-showhide-impls" class="show-inline">/* at least one unexported ... */</label><label for="Samples-showhide-impls" class="hide-inline">/* at least one unexported: */</label></i><span class="hidden"><i>
+			 T : github.com/aws/aws-sdk-go/aws/corehandlers.<a href="../../aws/aws-sdk-go/aws/corehandlers.html#name-lener">lener</a></i></span></span>
+		<input type='checkbox' class="fold" id="Samples-fold-results"><label for="Samples-fold-results">As Outputs Of (<i>at least one exported</i>)</label><span id='Samples-fold-results-items' class="fold-items"><span>
+			func (*<a href="#name-Stream">Stream</a>).<a href="../../../../src/github.com/beorn7/perks/quantile/stream.go.html#line-188">Samples</a>() <b>Samples</b></span></span>
+		<input type='checkbox' class="fold" id="Samples-fold-params"><label for="Samples-fold-params">As Inputs Of (<i>at least one exported</i>)</label><span id='Samples-fold-params-items' class="fold-items"><span>
+			func (*<a href="#name-Stream">Stream</a>).<a href="../../../../src/github.com/beorn7/perks/quantile/stream.go.html#line-176">Merge</a>(samples <b>Samples</b>)</span></span>
+
+</span></div><div class="anchor type-res" id="name-Stream" data-popularity="1100">	<input type='checkbox' class="fold" id="Stream-fold-content"><label for="Stream-fold-content"> <a href="../../../../use/github.com/beorn7/perks/quantile..Stream.html">type</a> <a href="../../../../src/github.com/beorn7/perks/quantile/stream.go.html#line-125">Stream</a> <i>(struct)</i></label><span id='Stream-fold-content-docs' class="fold-docs">
+		Stream computes quantiles for a stream of float64s. It is not thread-safe by
+		design. Take care when using across multiple goroutines.
+
+		<input type='checkbox' class="fold" id="Stream-fold-fields"><label for="Stream-fold-fields">Fields (<i>total 6, none are exported</i>)</label><span id='Stream-fold-fields-items' class="fold-items">
+			<input type='checkbox' class="showhide" id="Stream-showhide-fields"><i><label for="Stream-showhide-fields" class="show-inline">/* 6 unexporteds ... */</label><label for="Stream-showhide-fields" class="hide-inline">/* 6 unexporteds: */</label></i><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../../src/github.com/beorn7/perks/quantile/stream.go.html#line-127">b</a> <i><a href="#name-Samples">Samples</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../../src/github.com/beorn7/perks/quantile/stream.go.html#line-128">sorted</a> <i><a href="../../../builtin.html#name-bool">bool</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../../src/github.com/beorn7/perks/quantile/stream.go.html#line-126">stream</a> <i>*<a href="#name-stream">stream</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../../src/github.com/beorn7/perks/quantile/stream.go.html#line-126" class="path-duplicate">stream</a>.<a href="../../../../src/github.com/beorn7/perks/quantile/stream.go.html#line-221">l</a> <i>[]<a href="#name-Sample">Sample</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../../src/github.com/beorn7/perks/quantile/stream.go.html#line-126" class="path-duplicate">stream</a>.<a href="../../../../src/github.com/beorn7/perks/quantile/stream.go.html#line-220">n</a> <i><a href="../../../builtin.html#name-float64">float64</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../../src/github.com/beorn7/perks/quantile/stream.go.html#line-126" class="path-duplicate">stream</a>.<a href="../../../../src/github.com/beorn7/perks/quantile/stream.go.html#line-222">ƒ</a> <i><a href="#name-invariant">invariant</a></i></span></i></span></span>
+		<input type='checkbox' class="fold" id="Stream-fold-methods"><label for="Stream-fold-methods">Methods (<i>total 16, in which 6 are exported</i>)</label><span id='Stream-fold-methods-items' class="fold-items"><span>
+			<input type='checkbox' class="fold" id="Stream-fold-method-Count"><label for="Stream-fold-method-Count">(*T) <a href="../../../../src/github.com/beorn7/perks/quantile/stream.go.html#line-198">Count</a>() <a href="../../../builtin.html#name-int">int</a></label><span id='Stream-fold-method-Count-docs' class="fold-docs">
+				Count returns the total number of samples observed in the stream
+				since initialization.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Stream-fold-method-Insert"><label for="Stream-fold-method-Insert">(*T) <a href="../../../../src/github.com/beorn7/perks/quantile/stream.go.html#line-137">Insert</a>(v <a href="../../../builtin.html#name-float64">float64</a>)</label><span id='Stream-fold-method-Insert-docs' class="fold-docs">
+				Insert inserts v into the stream.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Stream-fold-method-Merge"><label for="Stream-fold-method-Merge">(*T) <a href="../../../../src/github.com/beorn7/perks/quantile/stream.go.html#line-176">Merge</a>(samples <a href="#name-Samples">Samples</a>)</label><span id='Stream-fold-method-Merge-docs' class="fold-docs">
+				Merge merges samples into the underlying streams samples. This is handy when
+				merging multiple streams from separate threads, database shards, etc.
+
+				ATTENTION: This method is broken and does not yield correct results. The
+				underlying algorithm is not capable of merging streams correctly.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Stream-fold-method-Query"><label for="Stream-fold-method-Query">(*T) <a href="../../../../src/github.com/beorn7/perks/quantile/stream.go.html#line-152">Query</a>(q <a href="../../../builtin.html#name-float64">float64</a>) <a href="../../../builtin.html#name-float64">float64</a></label><span id='Stream-fold-method-Query-docs' class="fold-docs">
+				Query returns the computed qth percentiles value. If s was created with
+				NewTargeted, and q is not in the set of quantiles provided a priori, Query
+				will return an unspecified result.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Stream-fold-method-Reset"><label for="Stream-fold-method-Reset">(*T) <a href="../../../../src/github.com/beorn7/perks/quantile/stream.go.html#line-182">Reset</a>()</label><span id='Stream-fold-method-Reset-docs' class="fold-docs">
+				Reset reinitializes and clears the list reusing the samples buffer memory.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Stream-fold-method-Samples"><label for="Stream-fold-method-Samples">(*T) <a href="../../../../src/github.com/beorn7/perks/quantile/stream.go.html#line-188">Samples</a>() <a href="#name-Samples">Samples</a></label><span id='Stream-fold-method-Samples-docs' class="fold-docs">
+				Samples returns stream samples held by s.
+</span></span>
+			<input type='checkbox' class="showhide" id="Stream-showhide-methods"><i><label for="Stream-showhide-methods" class="show-inline">/* 10 unexporteds ... */</label><label for="Stream-showhide-methods" class="hide-inline">/* 10 unexporteds: */</label></i><span class="hidden"><i>
+			<span class="nodocs">( T) <a href="../../../../src/github.com/beorn7/perks/quantile/stream.go.html#line-287">compress</a>()</span></i></span><span class="hidden"><i>
+			<span class="nodocs">( T) <a href="../../../../src/github.com/beorn7/perks/quantile/stream.go.html#line-268">count</a>() <a href="../../../builtin.html#name-int">int</a></span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../../src/github.com/beorn7/perks/quantile/stream.go.html#line-202">flush</a>()</span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../../src/github.com/beorn7/perks/quantile/stream.go.html#line-215">flushed</a>() <a href="../../../builtin.html#name-bool">bool</a></span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../../src/github.com/beorn7/perks/quantile/stream.go.html#line-141">insert</a>(sample <a href="#name-Sample">Sample</a>)</span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../../src/github.com/beorn7/perks/quantile/stream.go.html#line-208">maybeSort</a>()</span></i></span><span class="hidden"><i>
+			<span class="nodocs">( T) <a href="../../../../src/github.com/beorn7/perks/quantile/stream.go.html#line-234">merge</a>(samples <a href="#name-Samples">Samples</a>)</span></i></span><span class="hidden"><i>
+			<span class="nodocs">( T) <a href="../../../../src/github.com/beorn7/perks/quantile/stream.go.html#line-272">query</a>(q <a href="../../../builtin.html#name-float64">float64</a>) <a href="../../../builtin.html#name-float64">float64</a></span></i></span><span class="hidden"><i>
+			<span class="nodocs">( T) <a href="../../../../src/github.com/beorn7/perks/quantile/stream.go.html#line-225">reset</a>()</span></i></span><span class="hidden"><i>
+			<span class="nodocs">( T) <a href="../../../../src/github.com/beorn7/perks/quantile/stream.go.html#line-312">samples</a>() <a href="#name-Samples">Samples</a></span></i></span></span>
+		<input type='checkbox' class="fold" id="Stream-fold-results"><label for="Stream-fold-results">As Outputs Of (<i>at least 4, in which 3 are exported</i>)</label><span id='Stream-fold-results-items' class="fold-items"><span>
+			func <a href="#name-NewHighBiased">NewHighBiased</a>(epsilon <a href="../../../builtin.html#name-float64">float64</a>) *<b>Stream</b></span><span>
+			func <a href="#name-NewLowBiased">NewLowBiased</a>(epsilon <a href="../../../builtin.html#name-float64">float64</a>) *<b>Stream</b></span><span>
+			func <a href="#name-NewTargeted">NewTargeted</a>(targetMap map[<a href="../../../builtin.html#name-float64">float64</a>]<a href="../../../builtin.html#name-float64">float64</a>) *<b>Stream</b></span>
+			<input type='checkbox' class="showhide" id="Stream-showhide-inputofs"><i><label for="Stream-showhide-inputofs" class="show-inline">/* at least one unexported ... */</label><label for="Stream-showhide-inputofs" class="hide-inline">/* at least one unexported: */</label></i><span class="hidden"><i>
+			func <a href="#name-newStream">newStream</a>(ƒ <a href="#name-invariant">invariant</a>) *<b>Stream</b></i></span></span>
+
+</span></div></div><div>	<input type='checkbox' class="showhide" id="unexported-typenames-showhide"><i><label for="unexported-typenames-showhide" class="show-inline">/* 3 unexporteds ... */</label><label for="unexported-typenames-showhide" class="hide-inline">/* 3 unexporteds: */</label></i><div class="anchor type-res hidden" id="name-invariant" data-popularity="35">	<input type='checkbox' class="fold" id="invariant-fold-content"><label for="invariant-fold-content"> <a href="../../../../use/github.com/beorn7/perks/quantile..invariant*c94ad.html">type</a> <a href="../../../../src/github.com/beorn7/perks/quantile/stream.go.html#line-37">invariant</a> <i>(func)</i></label><span id='invariant-fold-content-docs' class="fold-docs">
+
+		<input type='checkbox' class="fold" id="invariant-fold-params"><label for="invariant-fold-params">As Inputs Of (<i>at least one unexported</i>)</label><span id='invariant-fold-params-items' class="fold-items">
+			<input type='checkbox' checked class="showhide" id="invariant-showhide-outputofs"><i><label for="invariant-showhide-outputofs" class="show-inline">/* at least one unexported ... */</label><label for="invariant-showhide-outputofs" class="hide-inline">/* at least one unexported: */</label></i><span class="hidden"><i>
+			func <a href="#name-newStream">newStream</a>(ƒ <b>invariant</b>) *<a href="#name-Stream">Stream</a></i></span></span>
+
+</span></div><div class="anchor type-res hidden" id="name-stream" data-popularity="350">	<input type='checkbox' class="fold" id="stream-fold-content"><label for="stream-fold-content"> <a href="../../../../use/github.com/beorn7/perks/quantile..stream*dca83.html">type</a> <a href="../../../../src/github.com/beorn7/perks/quantile/stream.go.html#line-219">stream</a> <i>(struct)</i></label><span id='stream-fold-content-docs' class="fold-docs">
+
+		<input type='checkbox' class="fold" id="stream-fold-fields"><label for="stream-fold-fields">Fields (<i>total 3, none are exported</i>)</label><span id='stream-fold-fields-items' class="fold-items">
+			<input type='checkbox' checked class="showhide" id="stream-showhide-fields"><i><label for="stream-showhide-fields" class="show-inline">/* 3 unexporteds ... */</label><label for="stream-showhide-fields" class="hide-inline">/* 3 unexporteds: */</label></i><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../../src/github.com/beorn7/perks/quantile/stream.go.html#line-221">l</a> <i>[]<a href="#name-Sample">Sample</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../../src/github.com/beorn7/perks/quantile/stream.go.html#line-220">n</a> <i><a href="../../../builtin.html#name-float64">float64</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../../src/github.com/beorn7/perks/quantile/stream.go.html#line-222">ƒ</a> <i><a href="#name-invariant">invariant</a></i></span></i></span></span>
+		<input type='checkbox' class="fold" id="stream-fold-methods"><label for="stream-fold-methods">Methods (<i>total 7, none are exported</i>)</label><span id='stream-fold-methods-items' class="fold-items">
+			<input type='checkbox' checked class="showhide" id="stream-showhide-methods"><i><label for="stream-showhide-methods" class="show-inline">/* 7 unexporteds ... */</label><label for="stream-showhide-methods" class="hide-inline">/* 7 unexporteds: */</label></i><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../../src/github.com/beorn7/perks/quantile/stream.go.html#line-287">compress</a>()</span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../../src/github.com/beorn7/perks/quantile/stream.go.html#line-268">count</a>() <a href="../../../builtin.html#name-int">int</a></span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../../src/github.com/beorn7/perks/quantile/stream.go.html#line-230">insert</a>(v <a href="../../../builtin.html#name-float64">float64</a>)</span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../../src/github.com/beorn7/perks/quantile/stream.go.html#line-234">merge</a>(samples <a href="#name-Samples">Samples</a>)</span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../../src/github.com/beorn7/perks/quantile/stream.go.html#line-272">query</a>(q <a href="../../../builtin.html#name-float64">float64</a>) <a href="../../../builtin.html#name-float64">float64</a></span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../../src/github.com/beorn7/perks/quantile/stream.go.html#line-225">reset</a>()</span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../../src/github.com/beorn7/perks/quantile/stream.go.html#line-312">samples</a>() <a href="#name-Samples">Samples</a></span></i></span></span>
+
+</span></div><div class="anchor type-res hidden" id="name-target" data-popularity="75">	<input type='checkbox' class="fold" id="target-fold-content"><label for="target-fold-content"> <a href="../../../../use/github.com/beorn7/perks/quantile..target*34a04.html">type</a> <a href="../../../../src/github.com/beorn7/perks/quantile/stream.go.html#line-104">target</a> <i>(struct)</i></label><span id='target-fold-content-docs' class="fold-docs">
+
+		<input type='checkbox' class="fold" id="target-fold-fields"><label for="target-fold-fields">Fields (<i>total 2, neither is exported</i>)</label><span id='target-fold-fields-items' class="fold-items">
+			<input type='checkbox' checked class="showhide" id="target-showhide-fields"><i><label for="target-showhide-fields" class="show-inline">/* 2 unexporteds ... */</label><label for="target-showhide-fields" class="hide-inline">/* 2 unexporteds: */</label></i><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../../src/github.com/beorn7/perks/quantile/stream.go.html#line-106">epsilon</a> <i><a href="../../../builtin.html#name-float64">float64</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../../src/github.com/beorn7/perks/quantile/stream.go.html#line-105">quantile</a> <i><a href="../../../builtin.html#name-float64">float64</a></i></span></i></span></span>
+		<input type='checkbox' class="fold" id="target-fold-results"><label for="target-fold-results">As Outputs Of (<i>at least one unexported</i>)</label><span id='target-fold-results-items' class="fold-items">
+			<input type='checkbox' checked class="showhide" id="target-showhide-inputofs"><i><label for="target-showhide-inputofs" class="show-inline">/* at least one unexported ... */</label><label for="target-showhide-inputofs" class="hide-inline">/* at least one unexported: */</label></i><span class="hidden"><i>
+			func <a href="#name-targetMapToSlice">targetMapToSlice</a>(targetMap map[<a href="../../../builtin.html#name-float64">float64</a>]<a href="../../../builtin.html#name-float64">float64</a>) []<b>target</b></i></span></span>
+
+</span></div></div>
+<div id="exported-functions"><span class="title">Package-Level Functions<span class="title-stat"><i> (total 5, in which 3 are exported)</i></span></span>
+
+<div class="anchor value-res" id="name-NewHighBiased">	<input type='checkbox' class="fold" id="NewHighBiased-fold-content"><label for="NewHighBiased-fold-content"> <a href="../../../../use/github.com/beorn7/perks/quantile..NewHighBiased.html">func</a> <a href="../../../../src/github.com/beorn7/perks/quantile/stream.go.html#line-66">NewHighBiased</a>(epsilon <a href="../../../builtin.html#name-float64">float64</a>) *<a href="#name-Stream">Stream</a></label><span id='NewHighBiased-fold-content-docs' class="fold-docs">
+		NewHighBiased returns an initialized Stream for high-biased quantiles
+		(e.g. 0.01, 0.1, 0.5) where the needed quantiles are not known a priori, but
+		error guarantees can still be given even for the higher ranks of the data
+		distribution.
+
+		The provided epsilon is a relative error, i.e. the true quantile of a value
+		returned by a query is guaranteed to be within 1-(1±Epsilon)*(1-Quantile).
+
+		See http://www.cs.rutgers.edu/~muthu/bquant.pdf for time, space, and error
+		properties.
+
+</span></div><div class="anchor value-res" id="name-NewLowBiased">	<input type='checkbox' class="fold" id="NewLowBiased-fold-content"><label for="NewLowBiased-fold-content"> <a href="../../../../use/github.com/beorn7/perks/quantile..NewLowBiased.html">func</a> <a href="../../../../src/github.com/beorn7/perks/quantile/stream.go.html#line-49">NewLowBiased</a>(epsilon <a href="../../../builtin.html#name-float64">float64</a>) *<a href="#name-Stream">Stream</a></label><span id='NewLowBiased-fold-content-docs' class="fold-docs">
+		NewLowBiased returns an initialized Stream for low-biased quantiles
+		(e.g. 0.01, 0.1, 0.5) where the needed quantiles are not known a priori, but
+		error guarantees can still be given even for the lower ranks of the data
+		distribution.
+
+		The provided epsilon is a relative error, i.e. the true quantile of a value
+		returned by a query is guaranteed to be within (1±Epsilon)*Quantile.
+
+		See http://www.cs.rutgers.edu/~muthu/bquant.pdf for time, space, and error
+		properties.
+
+</span></div><div class="anchor value-res" id="name-NewTargeted">	<input type='checkbox' class="fold" id="NewTargeted-fold-content"><label for="NewTargeted-fold-content"> <a href="../../../../use/github.com/beorn7/perks/quantile..NewTargeted.html">func</a> <a href="../../../../src/github.com/beorn7/perks/quantile/stream.go.html#line-80">NewTargeted</a>(targetMap map[<a href="../../../builtin.html#name-float64">float64</a>]<a href="../../../builtin.html#name-float64">float64</a>) *<a href="#name-Stream">Stream</a></label><span id='NewTargeted-fold-content-docs' class="fold-docs">
+		NewTargeted returns an initialized Stream concerned with a particular set of
+		quantile values that are supplied a priori. Knowing these a priori reduces
+		space and computation time. The targets map maps the desired quantiles to
+		their absolute errors, i.e. the true quantile of a value returned by a query
+		is guaranteed to be within (Quantile±Epsilon).
+
+		See http://www.cs.rutgers.edu/~muthu/bquant.pdf for time, space, and error properties.
+
+</span></div>	<input type='checkbox' class="showhide" id="unexported-functions-showhide"><i><label for="unexported-functions-showhide" class="show-inline">/* 2 unexporteds ... */</label><label for="unexported-functions-showhide" class="hide-inline">/* 2 unexporteds: */</label></i><div class="anchor value-res hidden" id="name-newStream"><i>	<span class="nodocs"> <a href="../../../../use/github.com/beorn7/perks/quantile..newStream*f12a4.html">func</a> <a href="../../../../src/github.com/beorn7/perks/quantile/stream.go.html#line-131">newStream</a>(ƒ <a href="#name-invariant">invariant</a>) *<a href="#name-Stream">Stream</a></span></i></div><div class="anchor value-res hidden" id="name-targetMapToSlice"><i>	<span class="nodocs"> <a href="../../../../use/github.com/beorn7/perks/quantile..targetMapToSlice*23c67.html">func</a> <a href="../../../../src/github.com/beorn7/perks/quantile/stream.go.html#line-109">targetMapToSlice</a>(targetMap map[<a href="../../../builtin.html#name-float64">float64</a>]<a href="../../../builtin.html#name-float64">float64</a>) []<a href="#name-target">target</a></span></i></div></div></code></pre><pre id="footer">
+<table><tr><td><img src="../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: ini_parser.go in package github.com/aws/aws-sdk-go/internal/ini</title>
+<link href="../../../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	ini_parser.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../../../pkg/github.com/aws/aws-sdk-go/internal/ini.html">github.com/aws/aws-sdk-go/internal/ini</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16],
+input[id=r17]:checked ~pre label[for=r17],
+input[id=r18]:checked ~pre label[for=r18],
+input[id=r19]:checked ~pre label[for=r19],
+input[id=r20]:checked ~pre label[for=r20],
+input[id=r21]:checked ~pre label[for=r21],
+input[id=r22]:checked ~pre label[for=r22],
+input[id=r23]:checked ~pre label[for=r23],
+input[id=r24]:checked ~pre label[for=r24],
+input[id=r25]:checked ~pre label[for=r25],
+input[id=r26]:checked ~pre label[for=r26],
+input[id=r27]:checked ~pre label[for=r27],
+input[id=r28]:checked ~pre label[for=r28],
+input[id=r29]:checked ~pre label[for=r29],
+input[id=r30]:checked ~pre label[for=r30]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="r17" type="radio" name="g"/>
+<input id="r18" type="radio" name="g"/>
+<input id="r19" type="radio" name="g"/>
+<input id="r20" type="radio" name="g"/>
+<input id="r21" type="radio" name="g"/>
+<input id="r22" type="radio" name="g"/>
+<input id="r23" type="radio" name="g"/>
+<input id="r24" type="radio" name="g"/>
+<input id="r25" type="radio" name="g"/>
+<input id="r26" type="radio" name="g"/>
+<input id="r27" type="radio" name="g"/>
+<input id="r28" type="radio" name="g"/>
+<input id="r29" type="radio" name="g"/>
+<input id="r30" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+</div>
+<div class="code"><pre><code><span class="keyword">package</span> ini
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"fmt"</span></label>
+	<label for="i1"><span class="lit-string i1">"io"</span></label>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> State enums for the parse table</span></div>
+<div class="code"><pre><code><span class="keyword">const</span> (
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> stmt -&gt; value stmt'</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> stmt' -&gt; MarkComplete | op stmt</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> value -&gt; number | string | boolean | quoted_string</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> section -&gt; [ section'</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> section' -&gt; value section_close</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> section_close -&gt; ]</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> SkipState will skip (NL WS)+</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> SkipTokenState will skip any token and push the previous</span><span class="comment">	 state onto the stack.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> comment -&gt; # comment' | ; comment'</span><span class="comment">	 comment' -&gt; MarkComplete | value</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> MarkComplete state will complete statements and move that</span><span class="comment">	 to the completed AST list</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> TerminalState signifies that the tokens have been fully parsed</span></div>
+<div class="code"><pre><code>	<a href="../../../../../../pkg/github.com/aws/aws-sdk-go/internal/ini.html#name-TerminalState" class="ident">TerminalState</a>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> parseTable is a state machine to dictate the grammar above.</span></div>
+<div class="code"><pre><code><span class="keyword">var</span> <a href="../../../../../../pkg/github.com/aws/aws-sdk-go/internal/ini.html#name-parseTable" class="ident">parseTable</a> = <span class="keyword">map</span>[<a href="ast.go.html#line-5" class="ident">ASTKind</a>]<span class="keyword">map</span>[<a href="ini_lexer.go.html#line-18" class="ident">TokenType</a>]<a href="../../../../../../pkg/builtin.html#name-int" class="ident">int</a>{
+	<a href="ast.go.html#line-11" class="ident">ASTKindStart</a>: <span class="keyword">map</span>[<a href="ini_lexer.go.html#line-18" class="ident">TokenType</a>]<a href="../../../../../../pkg/builtin.html#name-int" class="ident">int</a>{
+		<a href="ini_lexer.go.html#line-46" class="ident">TokenLit</a>:     <a href="#line-12" class="ident">StatementState</a>,
+		<a href="ini_lexer.go.html#line-47" class="ident">TokenSep</a>:     <a href="#line-18" class="ident">OpenScopeState</a>,
+		<a href="ini_lexer.go.html#line-50" class="ident">TokenWS</a>:      <a href="#line-27" class="ident">SkipTokenState</a>,
+		<a href="ini_lexer.go.html#line-51" class="ident">TokenNL</a>:      <a href="#line-27" class="ident">SkipTokenState</a>,
+		<a href="ini_lexer.go.html#line-52" class="ident">TokenComment</a>: <a href="#line-30" class="ident">CommentState</a>,
+		<a href="ini_lexer.go.html#line-45" class="ident">TokenNone</a>:    <a href="#line-35" class="ident">TerminalState</a>,
+	},
+	<a href="ast.go.html#line-20" class="ident">ASTKindCommentStatement</a>: <span class="keyword">map</span>[<a href="ini_lexer.go.html#line-18" class="ident">TokenType</a>]<a href="../../../../../../pkg/builtin.html#name-int" class="ident">int</a>{
+		<a href="ini_lexer.go.html#line-46" class="ident">TokenLit</a>:     <a href="#line-12" class="ident">StatementState</a>,
+		<a href="ini_lexer.go.html#line-47" class="ident">TokenSep</a>:     <a href="#line-18" class="ident">OpenScopeState</a>,
+		<a href="ini_lexer.go.html#line-50" class="ident">TokenWS</a>:      <a href="#line-27" class="ident">SkipTokenState</a>,
+		<a href="ini_lexer.go.html#line-51" class="ident">TokenNL</a>:      <a href="#line-27" class="ident">SkipTokenState</a>,
+		<a href="ini_lexer.go.html#line-52" class="ident">TokenComment</a>: <a href="#line-30" class="ident">CommentState</a>,
+		<a href="ini_lexer.go.html#line-45" class="ident">TokenNone</a>:    <a href="#line-33" class="ident">MarkCompleteState</a>,
+	},
+	<a href="ast.go.html#line-12" class="ident">ASTKindExpr</a>: <span class="keyword">map</span>[<a href="ini_lexer.go.html#line-18" class="ident">TokenType</a>]<a href="../../../../../../pkg/builtin.html#name-int" class="ident">int</a>{
+		<a href="ini_lexer.go.html#line-49" class="ident">TokenOp</a>:      <a href="#line-14" class="ident">StatementPrimeState</a>,
+		<a href="ini_lexer.go.html#line-46" class="ident">TokenLit</a>:     <a href="#line-16" class="ident">ValueState</a>,
+		<a href="ini_lexer.go.html#line-47" class="ident">TokenSep</a>:     <a href="#line-18" class="ident">OpenScopeState</a>,
+		<a href="ini_lexer.go.html#line-50" class="ident">TokenWS</a>:      <a href="#line-16" class="ident">ValueState</a>,
+		<a href="ini_lexer.go.html#line-51" class="ident">TokenNL</a>:      <a href="#line-24" class="ident">SkipState</a>,
+		<a href="ini_lexer.go.html#line-52" class="ident">TokenComment</a>: <a href="#line-30" class="ident">CommentState</a>,
+		<a href="ini_lexer.go.html#line-45" class="ident">TokenNone</a>:    <a href="#line-33" class="ident">MarkCompleteState</a>,
+	},
+	<a href="ast.go.html#line-13" class="ident">ASTKindEqualExpr</a>: <span class="keyword">map</span>[<a href="ini_lexer.go.html#line-18" class="ident">TokenType</a>]<a href="../../../../../../pkg/builtin.html#name-int" class="ident">int</a>{
+		<a href="ini_lexer.go.html#line-46" class="ident">TokenLit</a>: <a href="#line-16" class="ident">ValueState</a>,
+		<a href="ini_lexer.go.html#line-50" class="ident">TokenWS</a>:  <a href="#line-27" class="ident">SkipTokenState</a>,
+		<a href="ini_lexer.go.html#line-51" class="ident">TokenNL</a>:  <a href="#line-24" class="ident">SkipState</a>,
+	},
+	<a href="ast.go.html#line-14" class="ident">ASTKindStatement</a>: <span class="keyword">map</span>[<a href="ini_lexer.go.html#line-18" class="ident">TokenType</a>]<a href="../../../../../../pkg/builtin.html#name-int" class="ident">int</a>{
+		<a href="ini_lexer.go.html#line-46" class="ident">TokenLit</a>:     <a href="#line-20" class="ident">SectionState</a>,
+		<a href="ini_lexer.go.html#line-47" class="ident">TokenSep</a>:     <a href="#line-22" class="ident">CloseScopeState</a>,
+		<a href="ini_lexer.go.html#line-50" class="ident">TokenWS</a>:      <a href="#line-27" class="ident">SkipTokenState</a>,
+		<a href="ini_lexer.go.html#line-51" class="ident">TokenNL</a>:      <a href="#line-27" class="ident">SkipTokenState</a>,
+		<a href="ini_lexer.go.html#line-52" class="ident">TokenComment</a>: <a href="#line-30" class="ident">CommentState</a>,
+		<a href="ini_lexer.go.html#line-45" class="ident">TokenNone</a>:    <a href="#line-33" class="ident">MarkCompleteState</a>,
+	},
+	<a href="ast.go.html#line-16" class="ident">ASTKindExprStatement</a>: <span class="keyword">map</span>[<a href="ini_lexer.go.html#line-18" class="ident">TokenType</a>]<a href="../../../../../../pkg/builtin.html#name-int" class="ident">int</a>{
+		<a href="ini_lexer.go.html#line-46" class="ident">TokenLit</a>:     <a href="#line-16" class="ident">ValueState</a>,
+		<a href="ini_lexer.go.html#line-47" class="ident">TokenSep</a>:     <a href="#line-18" class="ident">OpenScopeState</a>,
+		<a href="ini_lexer.go.html#line-49" class="ident">TokenOp</a>:      <a href="#line-16" class="ident">ValueState</a>,
+		<a href="ini_lexer.go.html#line-50" class="ident">TokenWS</a>:      <a href="#line-16" class="ident">ValueState</a>,
+		<a href="ini_lexer.go.html#line-51" class="ident">TokenNL</a>:      <a href="#line-33" class="ident">MarkCompleteState</a>,
+		<a href="ini_lexer.go.html#line-52" class="ident">TokenComment</a>: <a href="#line-30" class="ident">CommentState</a>,
+		<a href="ini_lexer.go.html#line-45" class="ident">TokenNone</a>:    <a href="#line-35" class="ident">TerminalState</a>,
+		<a href="ini_lexer.go.html#line-48" class="ident">TokenComma</a>:   <a href="#line-24" class="ident">SkipState</a>,
+	},
+	<a href="ast.go.html#line-17" class="ident">ASTKindSectionStatement</a>: <span class="keyword">map</span>[<a href="ini_lexer.go.html#line-18" class="ident">TokenType</a>]<a href="../../../../../../pkg/builtin.html#name-int" class="ident">int</a>{
+		<a href="ini_lexer.go.html#line-46" class="ident">TokenLit</a>: <a href="#line-20" class="ident">SectionState</a>,
+		<a href="ini_lexer.go.html#line-49" class="ident">TokenOp</a>:  <a href="#line-20" class="ident">SectionState</a>,
+		<a href="ini_lexer.go.html#line-47" class="ident">TokenSep</a>: <a href="#line-22" class="ident">CloseScopeState</a>,
+		<a href="ini_lexer.go.html#line-50" class="ident">TokenWS</a>:  <a href="#line-20" class="ident">SectionState</a>,
+		<a href="ini_lexer.go.html#line-51" class="ident">TokenNL</a>:  <a href="#line-27" class="ident">SkipTokenState</a>,
+	},
+	<a href="ast.go.html#line-21" class="ident">ASTKindCompletedSectionStatement</a>: <span class="keyword">map</span>[<a href="ini_lexer.go.html#line-18" class="ident">TokenType</a>]<a href="../../../../../../pkg/builtin.html#name-int" class="ident">int</a>{
+		<a href="ini_lexer.go.html#line-50" class="ident">TokenWS</a>:      <a href="#line-27" class="ident">SkipTokenState</a>,
+		<a href="ini_lexer.go.html#line-51" class="ident">TokenNL</a>:      <a href="#line-27" class="ident">SkipTokenState</a>,
+		<a href="ini_lexer.go.html#line-46" class="ident">TokenLit</a>:     <a href="#line-12" class="ident">StatementState</a>,
+		<a href="ini_lexer.go.html#line-47" class="ident">TokenSep</a>:     <a href="#line-18" class="ident">OpenScopeState</a>,
+		<a href="ini_lexer.go.html#line-52" class="ident">TokenComment</a>: <a href="#line-30" class="ident">CommentState</a>,
+		<a href="ini_lexer.go.html#line-45" class="ident">TokenNone</a>:    <a href="#line-33" class="ident">MarkCompleteState</a>,
+	},
+	<a href="ast.go.html#line-15" class="ident">ASTKindSkipStatement</a>: <span class="keyword">map</span>[<a href="ini_lexer.go.html#line-18" class="ident">TokenType</a>]<a href="../../../../../../pkg/builtin.html#name-int" class="ident">int</a>{
+		<a href="ini_lexer.go.html#line-46" class="ident">TokenLit</a>:     <a href="#line-12" class="ident">StatementState</a>,
+		<a href="ini_lexer.go.html#line-47" class="ident">TokenSep</a>:     <a href="#line-18" class="ident">OpenScopeState</a>,
+		<a href="ini_lexer.go.html#line-50" class="ident">TokenWS</a>:      <a href="#line-27" class="ident">SkipTokenState</a>,
+		<a href="ini_lexer.go.html#line-51" class="ident">TokenNL</a>:      <a href="#line-27" class="ident">SkipTokenState</a>,
+		<a href="ini_lexer.go.html#line-52" class="ident">TokenComment</a>: <a href="#line-30" class="ident">CommentState</a>,
+		<a href="ini_lexer.go.html#line-45" class="ident">TokenNone</a>:    <a href="#line-35" class="ident">TerminalState</a>,
+	},
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ParseAST will parse input from an io.Reader using</span><span class="comment"> an LL(1) parser.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r0" class="ident"><a href="../../../../../../pkg/github.com/aws/aws-sdk-go/internal/ini.html#name-ParseAST" class="ident">ParseAST</a></label>(<label for="r1" class="ident">r</label> <a href="../../../../../../pkg/io.html" class="ident i1">io</a>.<a href="../../../../../io/io.go.html#line-83" class="ident">Reader</a>) ([]<a href="ast.go.html#line-55" class="ident">AST</a>, <a href="../../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<label for="r2" class="ident">lexer</label> := <a href="ini_lexer.go.html#line-55" class="ident">iniLexer</a>{}
+	<label for="r3" class="ident">tokens</label>, <label for="r4" class="ident">err</label> := <label for="r2" class="ident">lexer</label>.<a href="ini_lexer.go.html#line-59" class="ident">Tokenize</a>(<label for="r1" class="ident">r</label>)
+	<span class="keyword">if</span> <label for="r4" class="ident">err</label> != <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> []<a href="ast.go.html#line-55" class="ident">AST</a>{}, <label for="r4" class="ident">err</label>
+	}
+
+	<span class="keyword">return</span> <a href="#line-137" class="ident">parse</a>(<label for="r3" class="ident">tokens</label>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ParseASTBytes will parse input from a byte slice using</span><span class="comment"> an LL(1) parser.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r5" class="ident"><a href="../../../../../../pkg/github.com/aws/aws-sdk-go/internal/ini.html#name-ParseASTBytes" class="ident">ParseASTBytes</a></label>(<label for="r6" class="ident">b</label> []<a href="../../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>) ([]<a href="ast.go.html#line-55" class="ident">AST</a>, <a href="../../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<label for="r7" class="ident">lexer</label> := <a href="ini_lexer.go.html#line-55" class="ident">iniLexer</a>{}
+	<label for="r8" class="ident">tokens</label>, <label for="r9" class="ident">err</label> := <label for="r7" class="ident">lexer</label>.<a href="ini_lexer.go.html#line-68" class="ident">tokenize</a>(<label for="r6" class="ident">b</label>)
+	<span class="keyword">if</span> <label for="r9" class="ident">err</label> != <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> []<a href="ast.go.html#line-55" class="ident">AST</a>{}, <label for="r9" class="ident">err</label>
+	}
+
+	<span class="keyword">return</span> <a href="#line-137" class="ident">parse</a>(<label for="r8" class="ident">tokens</label>)
+}
+
+<span class="keyword">func</span> <label for="r10" class="ident"><a href="../../../../../../pkg/github.com/aws/aws-sdk-go/internal/ini.html#name-parse" class="ident">parse</a></label>(<label for="r11" class="ident">tokens</label> []<a href="ini_lexer.go.html#line-140" class="ident">Token</a>) ([]<a href="ast.go.html#line-55" class="ident">AST</a>, <a href="../../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<label for="r12" class="ident">start</label> := <a href="ast.go.html#line-120" class="ident">Start</a>
+	<label for="r13" class="ident">stack</label> := <a href="parse_stack.go.html#line-18" class="ident">newParseStack</a>(<span class="lit-number">3</span>, <a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r11" class="ident">tokens</label>))
+
+	<label for="r13" class="ident">stack</label>.<a href="parse_stack.go.html#line-32" class="ident">Push</a>(<label for="r12" class="ident">start</label>)
+	<label for="r14" class="ident">s</label> := <a href="skipper.go.html#line-18" class="ident">newSkipper</a>()
+
+<label for="r15" class="ident">loop</label>:
+	<span class="keyword">for</span> <label for="r13" class="ident">stack</label>.<a href="parse_stack.go.html#line-49" class="ident">Len</a>() &gt; <span class="lit-number">0</span> {
+		<label for="r16" class="ident">k</label> := <label for="r13" class="ident">stack</label>.<a href="parse_stack.go.html#line-26" class="ident">Pop</a>()
+
+		<span class="keyword">var</span> <label for="r17" class="ident">tok</label> <a href="ini_lexer.go.html#line-140" class="ident">Token</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> this occurs when all the tokens have been processed</span><span class="comment">			 but reduction of what's left on the stack needs to</span><span class="comment">			 occur.</span></div>
+<div class="code"><pre><code>			<label for="r17" class="ident">tok</label> = <a href="empty_token.go.html#line-4" class="ident">emptyToken</a>
+		} <span class="keyword">else</span> {
+			<label for="r17" class="ident">tok</label> = <label for="r11" class="ident">tokens</label>[<span class="lit-number">0</span>]
+		}
+
+		<label for="r18" class="ident">step</label> := <a href="#line-39" class="ident">parseTable</a>[<label for="r16" class="ident">k</label>.<a href="ast.go.html#line-56" class="ident">Kind</a>][<label for="r17" class="ident">tok</label>.<a href="ini_lexer.go.html#line-163" class="ident">Type</a>()]
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> being in a skip state with no tokens will break out of</span><span class="comment">			 the parse loop since there is nothing left to process.</span></div>
+<div class="code"><pre><code>			<span class="keyword">if</span> <a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r11" class="ident">tokens</label>) == <span class="lit-number">0</span> {
+				<span class="keyword">break</span> <label for="r15" class="ident">loop</label>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> if should skip is true, we skip the tokens until should skip is set to false.</span></div>
+<div class="code"><pre><code>			<label for="r18" class="ident">step</label> = <a href="#line-27" class="ident">SkipTokenState</a>
+		}
+
+		<span class="keyword">switch</span> <label for="r18" class="ident">step</label> {
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Finished parsing. Push what should be the last</span><span class="comment">			 statement to the stack. If there is anything left</span><span class="comment">			 on the stack, an error in parsing has occurred.</span></div>
+<div class="code"><pre><code>			<span class="keyword">if</span> <label for="r16" class="ident">k</label>.<a href="ast.go.html#line-56" class="ident">Kind</a> != <a href="ast.go.html#line-11" class="ident">ASTKindStart</a> {
+				<label for="r13" class="ident">stack</label>.<a href="parse_stack.go.html#line-38" class="ident">MarkComplete</a>(<label for="r16" class="ident">k</label>)
+			}
+			<span class="keyword">break</span> <label for="r15" class="ident">loop</label>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> When skipping a token, the previous state was popped off the stack.</span><span class="comment">			 To maintain the correct state, the previous state will be pushed</span><span class="comment">			 onto the stack.</span></div>
+<div class="code"><pre><code>			<label for="r13" class="ident">stack</label>.<a href="parse_stack.go.html#line-32" class="ident">Push</a>(<label for="r16" class="ident">k</label>)
+		<span class="keyword">case</span> <a href="#line-12" class="ident">StatementState</a>:
+			<span class="keyword">if</span> <label for="r16" class="ident">k</label>.<a href="ast.go.html#line-56" class="ident">Kind</a> != <a href="ast.go.html#line-11" class="ident">ASTKindStart</a> {
+				<label for="r13" class="ident">stack</label>.<a href="parse_stack.go.html#line-38" class="ident">MarkComplete</a>(<label for="r16" class="ident">k</label>)
+			}
+			<label for="r19" class="ident">expr</label> := <a href="expression.go.html#line-8" class="ident">newExpression</a>(<label for="r17" class="ident">tok</label>)
+			<label for="r13" class="ident">stack</label>.<a href="parse_stack.go.html#line-32" class="ident">Push</a>(<label for="r19" class="ident">expr</label>)
+		<span class="keyword">case</span> <a href="#line-14" class="ident">StatementPrimeState</a>:
+			<span class="keyword">if</span> <label for="r17" class="ident">tok</label>.<a href="ini_lexer.go.html#line-163" class="ident">Type</a>() != <a href="ini_lexer.go.html#line-49" class="ident">TokenOp</a> {
+				<label for="r13" class="ident">stack</label>.<a href="parse_stack.go.html#line-38" class="ident">MarkComplete</a>(<label for="r16" class="ident">k</label>)
+				<span class="keyword">continue</span>
+			}
+
+			<span class="keyword">if</span> <label for="r16" class="ident">k</label>.<a href="ast.go.html#line-56" class="ident">Kind</a> != <a href="ast.go.html#line-12" class="ident">ASTKindExpr</a> {
+				<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="parse_error.go.html#line-19" class="ident">NewParseError</a>(
+					<a href="../../../../../../pkg/fmt.html" class="ident i0">fmt</a>.<a href="../../../../../fmt/print.go.html#line-217" class="ident">Sprintf</a>(<span class="lit-string">"invalid expression: expected Expr type, but found %T type"</span>, <label for="r16" class="ident">k</label>),
+				)
+			}
+
+			<label for="r16" class="ident">k</label> = <a href="#line-335" class="ident">trimSpaces</a>(<label for="r16" class="ident">k</label>)
+			<label for="r20" class="ident">expr</label> := <a href="expression.go.html#line-12" class="ident">newEqualExpr</a>(<label for="r16" class="ident">k</label>, <label for="r17" class="ident">tok</label>)
+			<label for="r13" class="ident">stack</label>.<a href="parse_stack.go.html#line-32" class="ident">Push</a>(<label for="r20" class="ident">expr</label>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ValueState requires the previous state to either be an equal expression</span><span class="comment">			 or an expression statement.</span><span class="comment">			</span><span class="comment">			 This grammar occurs when the RHS is a number, word, or quoted string.</span><span class="comment">			 equal_expr -&gt; lit op equal_expr'</span><span class="comment">			 equal_expr' -&gt; number | string | quoted_string</span><span class="comment">			 quoted_string -&gt; " quoted_string'</span><span class="comment">			 quoted_string' -&gt; string quoted_string_end</span><span class="comment">			 quoted_string_end -&gt; "</span><span class="comment">			</span><span class="comment">			 otherwise</span><span class="comment">			 expr_stmt -&gt; equal_expr (expr_stmt')*</span><span class="comment">			 expr_stmt' -&gt; ws S | op S | MarkComplete</span><span class="comment">			 S -&gt; equal_expr' expr_stmt'</span></div>
+<div class="code"><pre><code>			<span class="keyword">switch</span> <label for="r16" class="ident">k</label>.<a href="ast.go.html#line-56" class="ident">Kind</a> {
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> assigning a value to some key</span></div>
+<div class="code"><pre><code>				<label for="r16" class="ident">k</label>.<a href="ast.go.html#line-79" class="ident">AppendChild</a>(<a href="expression.go.html#line-8" class="ident">newExpression</a>(<label for="r17" class="ident">tok</label>))
+				<label for="r13" class="ident">stack</label>.<a href="parse_stack.go.html#line-32" class="ident">Push</a>(<a href="statement.go.html#line-14" class="ident">newExprStatement</a>(<label for="r16" class="ident">k</label>))
+			<span class="keyword">case</span> <a href="ast.go.html#line-12" class="ident">ASTKindExpr</a>:
+				<label for="r16" class="ident">k</label>.<a href="ast.go.html#line-57" class="ident">Root</a>.<a href="ini_lexer.go.html#line-144" class="ident">raw</a> = <a href="../../../../../../pkg/builtin.html#name-append" class="ident">append</a>(<label for="r16" class="ident">k</label>.<a href="ast.go.html#line-57" class="ident">Root</a>.<a href="ini_lexer.go.html#line-144" class="ident">raw</a>, <label for="r17" class="ident">tok</label>.<a href="ini_lexer.go.html#line-158" class="ident">Raw</a>()...)
+				<label for="r13" class="ident">stack</label>.<a href="parse_stack.go.html#line-32" class="ident">Push</a>(<label for="r16" class="ident">k</label>)
+			<span class="keyword">case</span> <a href="ast.go.html#line-16" class="ident">ASTKindExprStatement</a>:
+				<label for="r21" class="ident">root</label> := <label for="r16" class="ident">k</label>.<a href="ast.go.html#line-85" class="ident">GetRoot</a>()
+				<label for="r22" class="ident">children</label> := <label for="r21" class="ident">root</label>.<a href="ast.go.html#line-98" class="ident">GetChildren</a>()
+				<span class="keyword">if</span> <a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r22" class="ident">children</label>) == <span class="lit-number">0</span> {
+					<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="parse_error.go.html#line-19" class="ident">NewParseError</a>(
+						<a href="../../../../../../pkg/fmt.html" class="ident i0">fmt</a>.<a href="../../../../../fmt/print.go.html#line-217" class="ident">Sprintf</a>(<span class="lit-string">"invalid expression: AST contains no children %s"</span>, <label for="r16" class="ident">k</label>.<a href="ast.go.html#line-56" class="ident">Kind</a>),
+					)
+				}
+
+				<label for="r23" class="ident">rhs</label> := <label for="r22" class="ident">children</label>[<a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r22" class="ident">children</label>)-<span class="lit-number">1</span>]
+
+				<span class="keyword">if</span> <label for="r23" class="ident">rhs</label>.<a href="ast.go.html#line-57" class="ident">Root</a>.<a href="ini_lexer.go.html#line-142" class="ident">ValueType</a> != <a href="literal_tokens.go.html#line-144" class="ident">QuotedStringType</a> {
+					<label for="r23" class="ident">rhs</label>.<a href="ast.go.html#line-57" class="ident">Root</a>.<a href="ini_lexer.go.html#line-142" class="ident">ValueType</a> = <a href="literal_tokens.go.html#line-143" class="ident">StringType</a>
+					<label for="r23" class="ident">rhs</label>.<a href="ast.go.html#line-57" class="ident">Root</a>.<a href="ini_lexer.go.html#line-144" class="ident">raw</a> = <a href="../../../../../../pkg/builtin.html#name-append" class="ident">append</a>(<label for="r23" class="ident">rhs</label>.<a href="ast.go.html#line-57" class="ident">Root</a>.<a href="ini_lexer.go.html#line-144" class="ident">raw</a>, <label for="r17" class="ident">tok</label>.<a href="ini_lexer.go.html#line-158" class="ident">Raw</a>()...)
+
+				}
+
+				<label for="r22" class="ident">children</label>[<a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r22" class="ident">children</label>)-<span class="lit-number">1</span>] = <label for="r23" class="ident">rhs</label>
+				<label for="r16" class="ident">k</label>.<a href="ast.go.html#line-111" class="ident">SetChildren</a>(<label for="r22" class="ident">children</label>)
+
+				<label for="r13" class="ident">stack</label>.<a href="parse_stack.go.html#line-32" class="ident">Push</a>(<label for="r16" class="ident">k</label>)
+			}
+		<span class="keyword">case</span> <a href="#line-18" class="ident">OpenScopeState</a>:
+			<span class="keyword">if</span> !<a href="literal_tokens.go.html#line-312" class="ident">runeCompare</a>(<label for="r17" class="ident">tok</label>.<a href="ini_lexer.go.html#line-158" class="ident">Raw</a>(), <a href="sep_tokens.go.html#line-25" class="ident">openBrace</a>) {
+				<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="parse_error.go.html#line-19" class="ident">NewParseError</a>(<span class="lit-string">"expected '['"</span>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> If OpenScopeState is not at the start, we must mark the previous ast as complete</span><span class="comment">			</span><span class="comment">			 for example: if previous ast was a skip statement;</span><span class="comment">			 we should mark it as complete before we create a new statement</span></div>
+<div class="code"><pre><code>			<span class="keyword">if</span> <label for="r16" class="ident">k</label>.<a href="ast.go.html#line-56" class="ident">Kind</a> != <a href="ast.go.html#line-11" class="ident">ASTKindStart</a> {
+				<label for="r13" class="ident">stack</label>.<a href="parse_stack.go.html#line-38" class="ident">MarkComplete</a>(<label for="r16" class="ident">k</label>)
+			}
+
+			<label for="r24" class="ident">stmt</label> := <a href="statement.go.html#line-4" class="ident">newStatement</a>()
+			<label for="r13" class="ident">stack</label>.<a href="parse_stack.go.html#line-32" class="ident">Push</a>(<label for="r24" class="ident">stmt</label>)
+		<span class="keyword">case</span> <a href="#line-22" class="ident">CloseScopeState</a>:
+			<span class="keyword">if</span> !<a href="literal_tokens.go.html#line-312" class="ident">runeCompare</a>(<label for="r17" class="ident">tok</label>.<a href="ini_lexer.go.html#line-158" class="ident">Raw</a>(), <a href="sep_tokens.go.html#line-26" class="ident">closeBrace</a>) {
+				<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="parse_error.go.html#line-19" class="ident">NewParseError</a>(<span class="lit-string">"expected ']'"</span>)
+			}
+
+			<label for="r16" class="ident">k</label> = <a href="#line-335" class="ident">trimSpaces</a>(<label for="r16" class="ident">k</label>)
+			<label for="r13" class="ident">stack</label>.<a href="parse_stack.go.html#line-32" class="ident">Push</a>(<a href="statement.go.html#line-28" class="ident">newCompletedSectionStatement</a>(<label for="r16" class="ident">k</label>))
+		<span class="keyword">case</span> <a href="#line-20" class="ident">SectionState</a>:
+			<span class="keyword">var</span> <label for="r25" class="ident">stmt</label> <a href="ast.go.html#line-55" class="ident">AST</a>
+
+			<span class="keyword">switch</span> <label for="r16" class="ident">k</label>.<a href="ast.go.html#line-56" class="ident">Kind</a> {
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> If there are multiple literals inside of a scope declaration,</span><span class="comment">				 then the current token's raw value will be appended to the Name.</span><span class="comment">				</span><span class="comment">				 This handles cases like [ profile default ]</span><span class="comment">				</span><span class="comment">				 k will represent a SectionStatement with the children representing</span><span class="comment">				 the label of the section</span></div>
+<div class="code"><pre><code>				<label for="r25" class="ident">stmt</label> = <a href="statement.go.html#line-9" class="ident">newSectionStatement</a>(<label for="r17" class="ident">tok</label>)
+			<span class="keyword">case</span> <a href="ast.go.html#line-17" class="ident">ASTKindSectionStatement</a>:
+				<label for="r16" class="ident">k</label>.<a href="ast.go.html#line-57" class="ident">Root</a>.<a href="ini_lexer.go.html#line-144" class="ident">raw</a> = <a href="../../../../../../pkg/builtin.html#name-append" class="ident">append</a>(<label for="r16" class="ident">k</label>.<a href="ast.go.html#line-57" class="ident">Root</a>.<a href="ini_lexer.go.html#line-144" class="ident">raw</a>, <label for="r17" class="ident">tok</label>.<a href="ini_lexer.go.html#line-158" class="ident">Raw</a>()...)
+				<label for="r25" class="ident">stmt</label> = <label for="r16" class="ident">k</label>
+			<span class="keyword">default</span>:
+				<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="parse_error.go.html#line-19" class="ident">NewParseError</a>(
+					<a href="../../../../../../pkg/fmt.html" class="ident i0">fmt</a>.<a href="../../../../../fmt/print.go.html#line-217" class="ident">Sprintf</a>(<span class="lit-string">"invalid statement: expected statement: %v"</span>, <label for="r16" class="ident">k</label>.<a href="ast.go.html#line-56" class="ident">Kind</a>),
+				)
+			}
+
+			<label for="r13" class="ident">stack</label>.<a href="parse_stack.go.html#line-32" class="ident">Push</a>(<label for="r25" class="ident">stmt</label>)
+		<span class="keyword">case</span> <a href="#line-33" class="ident">MarkCompleteState</a>:
+			<span class="keyword">if</span> <label for="r16" class="ident">k</label>.<a href="ast.go.html#line-56" class="ident">Kind</a> != <a href="ast.go.html#line-11" class="ident">ASTKindStart</a> {
+				<label for="r13" class="ident">stack</label>.<a href="parse_stack.go.html#line-38" class="ident">MarkComplete</a>(<label for="r16" class="ident">k</label>)
+			}
+
+			<span class="keyword">if</span> <label for="r13" class="ident">stack</label>.<a href="parse_stack.go.html#line-49" class="ident">Len</a>() == <span class="lit-number">0</span> {
+				<label for="r13" class="ident">stack</label>.<a href="parse_stack.go.html#line-32" class="ident">Push</a>(<label for="r12" class="ident">start</label>)
+			}
+		<span class="keyword">case</span> <a href="#line-24" class="ident">SkipState</a>:
+			<label for="r13" class="ident">stack</label>.<a href="parse_stack.go.html#line-32" class="ident">Push</a>(<a href="statement.go.html#line-33" class="ident">newSkipStatement</a>(<label for="r16" class="ident">k</label>))
+			<label for="r14" class="ident">s</label>.<a href="skipper.go.html#line-37" class="ident">Skip</a>()
+		<span class="keyword">case</span> <a href="#line-30" class="ident">CommentState</a>:
+			<span class="keyword">if</span> <label for="r16" class="ident">k</label>.<a href="ast.go.html#line-56" class="ident">Kind</a> == <a href="ast.go.html#line-11" class="ident">ASTKindStart</a> {
+				<label for="r13" class="ident">stack</label>.<a href="parse_stack.go.html#line-32" class="ident">Push</a>(<label for="r16" class="ident">k</label>)
+			} <span class="keyword">else</span> {
+				<label for="r13" class="ident">stack</label>.<a href="parse_stack.go.html#line-38" class="ident">MarkComplete</a>(<label for="r16" class="ident">k</label>)
+			}
+
+			<label for="r26" class="ident">stmt</label> := <a href="statement.go.html#line-23" class="ident">newCommentStatement</a>(<label for="r17" class="ident">tok</label>)
+			<label for="r13" class="ident">stack</label>.<a href="parse_stack.go.html#line-32" class="ident">Push</a>(<label for="r26" class="ident">stmt</label>)
+		<span class="keyword">default</span>:
+			<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="parse_error.go.html#line-19" class="ident">NewParseError</a>(
+				<a href="../../../../../../pkg/fmt.html" class="ident i0">fmt</a>.<a href="../../../../../fmt/print.go.html#line-217" class="ident">Sprintf</a>(<span class="lit-string">"invalid state with ASTKind %v and TokenType %v"</span>,
+					<label for="r16" class="ident">k</label>, <label for="r17" class="ident">tok</label>.<a href="ini_lexer.go.html#line-163" class="ident">Type</a>()))
+		}
+
+		<span class="keyword">if</span> <a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r11" class="ident">tokens</label>) &gt; <span class="lit-number">0</span> {
+			<label for="r11" class="ident">tokens</label> = <label for="r11" class="ident">tokens</label>[<span class="lit-number">1</span>:]
+		}
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> this occurs when a statement has not been completed</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> <label for="r13" class="ident">stack</label>.<a href="parse_stack.go.html#line-12" class="ident">top</a> &gt; <span class="lit-number">1</span> {
+		<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="parse_error.go.html#line-19" class="ident">NewParseError</a>(<a href="../../../../../../pkg/fmt.html" class="ident i0">fmt</a>.<a href="../../../../../fmt/print.go.html#line-217" class="ident">Sprintf</a>(<span class="lit-string">"incomplete ini expression"</span>))
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> returns a sublist which excludes the start symbol</span></div>
+<div class="code"><pre><code>	<span class="keyword">return</span> <label for="r13" class="ident">stack</label>.<a href="parse_stack.go.html#line-44" class="ident">List</a>(), <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> trimSpaces will trim spaces on the left and right hand side of</span><span class="comment"> the literal.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> trim left hand side of spaces</span></div>
+<div class="code"><pre><code>	<span class="keyword">for</span> <label for="r29" class="ident">i</label> := <span class="lit-number">0</span>; <label for="r29" class="ident">i</label> &lt; <a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r28" class="ident">k</label>.<a href="ast.go.html#line-57" class="ident">Root</a>.<a href="ini_lexer.go.html#line-144" class="ident">raw</a>); <label for="r29" class="ident">i</label>++ {
+		<span class="keyword">if</span> !<a href="ws_token.go.html#line-11" class="ident">isWhitespace</a>(<label for="r28" class="ident">k</label>.<a href="ast.go.html#line-57" class="ident">Root</a>.<a href="ini_lexer.go.html#line-144" class="ident">raw</a>[<label for="r29" class="ident">i</label>]) {
+			<span class="keyword">break</span>
+		}
+
+		<label for="r28" class="ident">k</label>.<a href="ast.go.html#line-57" class="ident">Root</a>.<a href="ini_lexer.go.html#line-144" class="ident">raw</a> = <label for="r28" class="ident">k</label>.<a href="ast.go.html#line-57" class="ident">Root</a>.<a href="ini_lexer.go.html#line-144" class="ident">raw</a>[<span class="lit-number">1</span>:]
+		<label for="r29" class="ident">i</label>--
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> trim right hand side of spaces</span></div>
+<div class="code"><pre><code>	<span class="keyword">for</span> <label for="r30" class="ident">i</label> := <a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r28" class="ident">k</label>.<a href="ast.go.html#line-57" class="ident">Root</a>.<a href="ini_lexer.go.html#line-144" class="ident">raw</a>) - <span class="lit-number">1</span>; <label for="r30" class="ident">i</label> &gt;= <span class="lit-number">0</span>; <label for="r30" class="ident">i</label>-- {
+		<span class="keyword">if</span> !<a href="ws_token.go.html#line-11" class="ident">isWhitespace</a>(<label for="r28" class="ident">k</label>.<a href="ast.go.html#line-57" class="ident">Root</a>.<a href="ini_lexer.go.html#line-144" class="ident">raw</a>[<label for="r30" class="ident">i</label>]) {
+			<span class="keyword">break</span>
+		}
+
+		<label for="r28" class="ident">k</label>.<a href="ast.go.html#line-57" class="ident">Root</a>.<a href="ini_lexer.go.html#line-144" class="ident">raw</a> = <label for="r28" class="ident">k</label>.<a href="ast.go.html#line-57" class="ident">Root</a>.<a href="ini_lexer.go.html#line-144" class="ident">raw</a>[:<a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r28" class="ident">k</label>.<a href="ast.go.html#line-57" class="ident">Root</a>.<a href="ini_lexer.go.html#line-144" class="ident">raw</a>)-<span class="lit-number">1</span>]
+	}
+
+	<span class="keyword">return</span> <label for="r28" class="ident">k</label>
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

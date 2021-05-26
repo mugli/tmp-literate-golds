@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: signature_v3.go in package golang.org/x/crypto/openpgp/packet</title>
+<link href="../../../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	signature_v3.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../../../pkg/golang.org/x/crypto/openpgp/packet.html">golang.org/x/crypto/openpgp/packet</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1,
+input[id=i2]:checked ~pre .i2,
+input[id=i3]:checked ~pre .i3,
+input[id=i4]:checked ~pre .i4,
+input[id=i5]:checked ~pre .i5,
+input[id=i6]:checked ~pre .i6,
+input[id=i7]:checked ~pre .i7
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<input id="i2" type="radio" name="i"/>
+<input id="i3" type="radio" name="i"/>
+<input id="i4" type="radio" name="i"/>
+<input id="i5" type="radio" name="i"/>
+<input id="i6" type="radio" name="i"/>
+<input id="i7" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2013 The Go Authors. All rights reserved.</span><span class="comment"> Use of this source code is governed by a BSD-style</span><span class="comment"> license that can be found in the LICENSE file.</span></div>
+<div class="code"><pre><code>
+<span class="keyword">package</span> packet
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"crypto"</span></label>
+	<label for="i1"><span class="lit-string i1">"encoding/binary"</span></label>
+	<label for="i2"><span class="lit-string i2">"fmt"</span></label>
+	<label for="i3"><span class="lit-string i3">"io"</span></label>
+	<label for="i4"><span class="lit-string i4">"strconv"</span></label>
+	<label for="i5"><span class="lit-string i5">"time"</span></label>
+
+	<label for="i6"><span class="lit-string i6">"golang.org/x/crypto/openpgp/errors"</span></label>
+	<label for="i7"><span class="lit-string i7">"golang.org/x/crypto/openpgp/s2k"</span></label>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> SignatureV3 represents older version 3 signatures. These signatures are less secure</span><span class="comment"> than version 4 and should not be used to create new signatures. They are included</span><span class="comment"> here for backwards compatibility to read and validate with older key material.</span><span class="comment"> See RFC 4880, section 5.2.2.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../../pkg/golang.org/x/crypto/openpgp/packet.html#name-SignatureV3" class="ident">SignatureV3</a> <span class="keyword">struct</span> {
+	<a href="../../../../../../use/golang.org/x/crypto/openpgp/packet..SignatureV3.SigType.html" class="ident">SigType</a>      <a href="packet.go.html#line-418" class="ident">SignatureType</a>
+	<a href="../../../../../../use/golang.org/x/crypto/openpgp/packet..SignatureV3.CreationTime.html" class="ident">CreationTime</a> <a href="../../../../../../pkg/time.html" class="ident i5">time</a>.<a href="../../../../../time/time.go.html#line-127" class="ident">Time</a>
+	<a href="../../../../../../use/golang.org/x/crypto/openpgp/packet..SignatureV3.IssuerKeyId.html" class="ident">IssuerKeyId</a>  <a href="../../../../../../pkg/builtin.html#name-uint64" class="ident">uint64</a>
+	<a href="../../../../../../use/golang.org/x/crypto/openpgp/packet..SignatureV3.PubKeyAlgo.html" class="ident">PubKeyAlgo</a>   <a href="packet.go.html#line-437" class="ident">PublicKeyAlgorithm</a>
+	<a href="../../../../../../use/golang.org/x/crypto/openpgp/packet..SignatureV3.Hash.html" class="ident">Hash</a>         <a href="../../../../../../pkg/crypto.html" class="ident i0">crypto</a>.<a href="../../../../../crypto/crypto.go.html#line-16" class="ident">Hash</a>
+	<a href="../../../../../../use/golang.org/x/crypto/openpgp/packet..SignatureV3.HashTag.html" class="ident">HashTag</a>      [<span class="lit-number">2</span>]<a href="../../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>
+
+	<a href="../../../../../../use/golang.org/x/crypto/openpgp/packet..SignatureV3.RSASignature.html" class="ident">RSASignature</a>     <a href="public_key.go.html#line-723" class="ident">parsedMPI</a>
+	<a href="../../../../../../use/golang.org/x/crypto/openpgp/packet..SignatureV3.DSASigR.html" class="ident">DSASigR</a>, <a href="../../../../../../use/golang.org/x/crypto/openpgp/packet..SignatureV3.DSASigS.html" class="ident">DSASigS</a> <a href="public_key.go.html#line-723" class="ident">parsedMPI</a>
+}
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> RFC 4880, section 5.2.2</span></div>
+<div class="code"><pre><code>	<span class="keyword">var</span> <label for="r4" class="ident">buf</label> [<span class="lit-number">8</span>]<a href="../../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>
+	<span class="keyword">if</span> _, <label for="r3" class="ident">err</label> = <a href="packet.go.html#line-25" class="ident">readFull</a>(<label for="r2" class="ident">r</label>, <label for="r4" class="ident">buf</label>[:<span class="lit-number">1</span>]); <label for="r3" class="ident">err</label> != <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span>
+	}
+	<span class="keyword">if</span> <label for="r4" class="ident">buf</label>[<span class="lit-number">0</span>] &lt; <span class="lit-number">2</span> || <label for="r4" class="ident">buf</label>[<span class="lit-number">0</span>] &gt; <span class="lit-number">3</span> {
+		<label for="r3" class="ident">err</label> = <a href="../../../../../../pkg/golang.org/x/crypto/openpgp/errors.html" class="ident i6">errors</a>.<a href="../errors/errors.go.html#line-22" class="ident">UnsupportedError</a>(<span class="lit-string">"signature packet version "</span> + <a href="../../../../../../pkg/strconv.html" class="ident i4">strconv</a>.<a href="../../../../../strconv/itoa.go.html#line-34" class="ident">Itoa</a>(<a href="../../../../../../pkg/builtin.html#name-int" class="ident">int</a>(<label for="r4" class="ident">buf</label>[<span class="lit-number">0</span>])))
+		<span class="keyword">return</span>
+	}
+	<span class="keyword">if</span> _, <label for="r3" class="ident">err</label> = <a href="packet.go.html#line-25" class="ident">readFull</a>(<label for="r2" class="ident">r</label>, <label for="r4" class="ident">buf</label>[:<span class="lit-number">1</span>]); <label for="r3" class="ident">err</label> != <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span>
+	}
+	<span class="keyword">if</span> <label for="r4" class="ident">buf</label>[<span class="lit-number">0</span>] != <span class="lit-number">5</span> {
+		<label for="r3" class="ident">err</label> = <a href="../../../../../../pkg/golang.org/x/crypto/openpgp/errors.html" class="ident i6">errors</a>.<a href="../errors/errors.go.html#line-22" class="ident">UnsupportedError</a>(
+			<span class="lit-string">"invalid hashed material length "</span> + <a href="../../../../../../pkg/strconv.html" class="ident i4">strconv</a>.<a href="../../../../../strconv/itoa.go.html#line-34" class="ident">Itoa</a>(<a href="../../../../../../pkg/builtin.html#name-int" class="ident">int</a>(<label for="r4" class="ident">buf</label>[<span class="lit-number">0</span>])))
+		<span class="keyword">return</span>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Read hashed material: signature type + creation time</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> _, <label for="r3" class="ident">err</label> = <a href="packet.go.html#line-25" class="ident">readFull</a>(<label for="r2" class="ident">r</label>, <label for="r4" class="ident">buf</label>[:<span class="lit-number">5</span>]); <label for="r3" class="ident">err</label> != <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span>
+	}
+	<label for="r0" class="ident">sig</label>.<a href="#line-24" class="ident">SigType</a> = <a href="packet.go.html#line-418" class="ident">SignatureType</a>(<label for="r4" class="ident">buf</label>[<span class="lit-number">0</span>])
+	<label for="r5" class="ident">t</label> := <a href="../../../../../../pkg/encoding/binary.html" class="ident i1">binary</a>.<a href="../../../../../encoding/binary/binary.go.html#line-48" class="ident">BigEndian</a>.<a href="../../../../../encoding/binary/binary.go.html#line-111" class="ident">Uint32</a>(<label for="r4" class="ident">buf</label>[<span class="lit-number">1</span>:<span class="lit-number">5</span>])
+	<label for="r0" class="ident">sig</label>.<a href="#line-25" class="ident">CreationTime</a> = <a href="../../../../../../pkg/time.html" class="ident i5">time</a>.<a href="../../../../../time/time.go.html#line-1292" class="ident">Unix</a>(<a href="../../../../../../pkg/builtin.html#name-int64" class="ident">int64</a>(<label for="r5" class="ident">t</label>), <span class="lit-number">0</span>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Eight-octet Key ID of signer.</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> _, <label for="r3" class="ident">err</label> = <a href="packet.go.html#line-25" class="ident">readFull</a>(<label for="r2" class="ident">r</label>, <label for="r4" class="ident">buf</label>[:<span class="lit-number">8</span>]); <label for="r3" class="ident">err</label> != <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span>
+	}
+	<label for="r0" class="ident">sig</label>.<a href="#line-26" class="ident">IssuerKeyId</a> = <a href="../../../../../../pkg/encoding/binary.html" class="ident i1">binary</a>.<a href="../../../../../encoding/binary/binary.go.html#line-48" class="ident">BigEndian</a>.<a href="../../../../../encoding/binary/binary.go.html#line-124" class="ident">Uint64</a>(<label for="r4" class="ident">buf</label>[:])
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Public-key and hash algorithm</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> _, <label for="r3" class="ident">err</label> = <a href="packet.go.html#line-25" class="ident">readFull</a>(<label for="r2" class="ident">r</label>, <label for="r4" class="ident">buf</label>[:<span class="lit-number">2</span>]); <label for="r3" class="ident">err</label> != <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span>
+	}
+	<label for="r0" class="ident">sig</label>.<a href="#line-27" class="ident">PubKeyAlgo</a> = <a href="packet.go.html#line-437" class="ident">PublicKeyAlgorithm</a>(<label for="r4" class="ident">buf</label>[<span class="lit-number">0</span>])
+	<span class="keyword">switch</span> <label for="r0" class="ident">sig</label>.<a href="#line-27" class="ident">PubKeyAlgo</a> {
+	<span class="keyword">case</span> <a href="packet.go.html#line-440" class="ident">PubKeyAlgoRSA</a>, <a href="packet.go.html#line-449" class="ident">PubKeyAlgoRSASignOnly</a>, <a href="packet.go.html#line-442" class="ident">PubKeyAlgoDSA</a>:
+	<span class="keyword">default</span>:
+		<label for="r3" class="ident">err</label> = <a href="../../../../../../pkg/golang.org/x/crypto/openpgp/errors.html" class="ident i6">errors</a>.<a href="../errors/errors.go.html#line-22" class="ident">UnsupportedError</a>(<span class="lit-string">"public key algorithm "</span> + <a href="../../../../../../pkg/strconv.html" class="ident i4">strconv</a>.<a href="../../../../../strconv/itoa.go.html#line-34" class="ident">Itoa</a>(<a href="../../../../../../pkg/builtin.html#name-int" class="ident">int</a>(<label for="r0" class="ident">sig</label>.<a href="#line-27" class="ident">PubKeyAlgo</a>)))
+		<span class="keyword">return</span>
+	}
+	<span class="keyword">var</span> <label for="r6" class="ident">ok</label> <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>
+	<span class="keyword">if</span> <label for="r0" class="ident">sig</label>.<a href="#line-28" class="ident">Hash</a>, <label for="r6" class="ident">ok</label> = <a href="../../../../../../pkg/golang.org/x/crypto/openpgp/s2k.html" class="ident i7">s2k</a>.<a href="../s2k/s2k.go.html#line-244" class="ident">HashIdToHash</a>(<label for="r4" class="ident">buf</label>[<span class="lit-number">1</span>]); !<label for="r6" class="ident">ok</label> {
+		<span class="keyword">return</span> <a href="../../../../../../pkg/golang.org/x/crypto/openpgp/errors.html" class="ident i6">errors</a>.<a href="../errors/errors.go.html#line-22" class="ident">UnsupportedError</a>(<span class="lit-string">"hash function "</span> + <a href="../../../../../../pkg/strconv.html" class="ident i4">strconv</a>.<a href="../../../../../strconv/itoa.go.html#line-34" class="ident">Itoa</a>(<a href="../../../../../../pkg/builtin.html#name-int" class="ident">int</a>(<label for="r4" class="ident">buf</label>[<span class="lit-number">2</span>])))
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Two-octet field holding left 16 bits of signed hash value.</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> _, <label for="r3" class="ident">err</label> = <a href="packet.go.html#line-25" class="ident">readFull</a>(<label for="r2" class="ident">r</label>, <label for="r0" class="ident">sig</label>.<a href="#line-29" class="ident">HashTag</a>[:<span class="lit-number">2</span>]); <label for="r3" class="ident">err</label> != <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span>
+	}
+
+	<span class="keyword">switch</span> <label for="r0" class="ident">sig</label>.<a href="#line-27" class="ident">PubKeyAlgo</a> {
+	<span class="keyword">case</span> <a href="packet.go.html#line-440" class="ident">PubKeyAlgoRSA</a>, <a href="packet.go.html#line-449" class="ident">PubKeyAlgoRSASignOnly</a>:
+		<label for="r0" class="ident">sig</label>.<a href="#line-31" class="ident">RSASignature</a>.<a href="public_key.go.html#line-724" class="ident">bytes</a>, <label for="r0" class="ident">sig</label>.<a href="#line-31" class="ident">RSASignature</a>.<a href="public_key.go.html#line-725" class="ident">bitLength</a>, <label for="r3" class="ident">err</label> = <a href="packet.go.html#line-530" class="ident">readMPI</a>(<label for="r2" class="ident">r</label>)
+	<span class="keyword">case</span> <a href="packet.go.html#line-442" class="ident">PubKeyAlgoDSA</a>:
+		<span class="keyword">if</span> <label for="r0" class="ident">sig</label>.<a href="#line-32" class="ident">DSASigR</a>.<a href="public_key.go.html#line-724" class="ident">bytes</a>, <label for="r0" class="ident">sig</label>.<a href="#line-32" class="ident">DSASigR</a>.<a href="public_key.go.html#line-725" class="ident">bitLength</a>, <label for="r3" class="ident">err</label> = <a href="packet.go.html#line-530" class="ident">readMPI</a>(<label for="r2" class="ident">r</label>); <label for="r3" class="ident">err</label> != <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<span class="keyword">return</span>
+		}
+		<label for="r0" class="ident">sig</label>.<a href="#line-32" class="ident">DSASigS</a>.<a href="public_key.go.html#line-724" class="ident">bytes</a>, <label for="r0" class="ident">sig</label>.<a href="#line-32" class="ident">DSASigS</a>.<a href="public_key.go.html#line-725" class="ident">bitLength</a>, <label for="r3" class="ident">err</label> = <a href="packet.go.html#line-530" class="ident">readMPI</a>(<label for="r2" class="ident">r</label>)
+	<span class="keyword">default</span>:
+		<a href="../../../../../../pkg/builtin.html#name-panic" class="ident">panic</a>(<span class="lit-string">"unreachable"</span>)
+	}
+	<span class="keyword">return</span>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Serialize marshals sig to w. Sign, SignUserId or SignKey must have been</span><span class="comment"> called first.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r7" class="ident">sig</label> *<a href="#line-23" class="ident">SignatureV3</a>) <label for="r8" class="ident"><a href="../../../../../../use/golang.org/x/crypto/openpgp/packet..SignatureV3.Serialize.html" class="ident">Serialize</a></label>(<label for="r9" class="ident">w</label> <a href="../../../../../../pkg/io.html" class="ident i3">io</a>.<a href="../../../../../io/io.go.html#line-96" class="ident">Writer</a>) (<label for="r10" class="ident">err</label> <a href="../../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<label for="r11" class="ident">buf</label> := <a href="../../../../../../pkg/builtin.html#name-make" class="ident">make</a>([]<a href="../../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>, <span class="lit-number">8</span>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Write the sig type and creation time</span></div>
+<div class="code"><pre><code>	<label for="r11" class="ident">buf</label>[<span class="lit-number">0</span>] = <a href="../../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>(<label for="r7" class="ident">sig</label>.<a href="#line-24" class="ident">SigType</a>)
+	<a href="../../../../../../pkg/encoding/binary.html" class="ident i1">binary</a>.<a href="../../../../../encoding/binary/binary.go.html#line-48" class="ident">BigEndian</a>.<a href="../../../../../encoding/binary/binary.go.html#line-116" class="ident">PutUint32</a>(<label for="r11" class="ident">buf</label>[<span class="lit-number">1</span>:<span class="lit-number">5</span>], <a href="../../../../../../pkg/builtin.html#name-uint32" class="ident">uint32</a>(<label for="r7" class="ident">sig</label>.<a href="#line-25" class="ident">CreationTime</a>.<a href="../../../../../time/time.go.html#line-1127" class="ident">Unix</a>()))
+	<span class="keyword">if</span> _, <label for="r10" class="ident">err</label> = <label for="r9" class="ident">w</label>.<a href="../../../../../io/io.go.html#line-97" class="ident">Write</a>(<label for="r11" class="ident">buf</label>[:<span class="lit-number">5</span>]); <label for="r10" class="ident">err</label> != <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Write the issuer long key ID</span></div>
+<div class="code"><pre><code>	<a href="../../../../../../pkg/encoding/binary.html" class="ident i1">binary</a>.<a href="../../../../../encoding/binary/binary.go.html#line-48" class="ident">BigEndian</a>.<a href="../../../../../encoding/binary/binary.go.html#line-130" class="ident">PutUint64</a>(<label for="r11" class="ident">buf</label>[:<span class="lit-number">8</span>], <label for="r7" class="ident">sig</label>.<a href="#line-26" class="ident">IssuerKeyId</a>)
+	<span class="keyword">if</span> _, <label for="r10" class="ident">err</label> = <label for="r9" class="ident">w</label>.<a href="../../../../../io/io.go.html#line-97" class="ident">Write</a>(<label for="r11" class="ident">buf</label>[:<span class="lit-number">8</span>]); <label for="r10" class="ident">err</label> != <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Write public key algorithm, hash ID, and hash value</span></div>
+<div class="code"><pre><code>	<label for="r11" class="ident">buf</label>[<span class="lit-number">0</span>] = <a href="../../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>(<label for="r7" class="ident">sig</label>.<a href="#line-27" class="ident">PubKeyAlgo</a>)
+	<label for="r12" class="ident">hashId</label>, <label for="r13" class="ident">ok</label> := <a href="../../../../../../pkg/golang.org/x/crypto/openpgp/s2k.html" class="ident i7">s2k</a>.<a href="../s2k/s2k.go.html#line-266" class="ident">HashToHashId</a>(<label for="r7" class="ident">sig</label>.<a href="#line-28" class="ident">Hash</a>)
+	<span class="keyword">if</span> !<label for="r13" class="ident">ok</label> {
+		<span class="keyword">return</span> <a href="../../../../../../pkg/golang.org/x/crypto/openpgp/errors.html" class="ident i6">errors</a>.<a href="../errors/errors.go.html#line-22" class="ident">UnsupportedError</a>(<a href="../../../../../../pkg/fmt.html" class="ident i2">fmt</a>.<a href="../../../../../fmt/print.go.html#line-217" class="ident">Sprintf</a>(<span class="lit-string">"hash function %v"</span>, <label for="r7" class="ident">sig</label>.<a href="#line-28" class="ident">Hash</a>))
+	}
+	<label for="r11" class="ident">buf</label>[<span class="lit-number">1</span>] = <label for="r12" class="ident">hashId</label>
+	<a href="../../../../../../pkg/builtin.html#name-copy" class="ident">copy</a>(<label for="r11" class="ident">buf</label>[<span class="lit-number">2</span>:<span class="lit-number">4</span>], <label for="r7" class="ident">sig</label>.<a href="#line-29" class="ident">HashTag</a>[:])
+	<span class="keyword">if</span> _, <label for="r10" class="ident">err</label> = <label for="r9" class="ident">w</label>.<a href="../../../../../io/io.go.html#line-97" class="ident">Write</a>(<label for="r11" class="ident">buf</label>[:<span class="lit-number">4</span>]); <label for="r10" class="ident">err</label> != <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span>
+	}
+
+	<span class="keyword">if</span> <label for="r7" class="ident">sig</label>.<a href="#line-31" class="ident">RSASignature</a>.<a href="public_key.go.html#line-724" class="ident">bytes</a> == <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> &amp;&amp; <label for="r7" class="ident">sig</label>.<a href="#line-32" class="ident">DSASigR</a>.<a href="public_key.go.html#line-724" class="ident">bytes</a> == <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../../../../../pkg/golang.org/x/crypto/openpgp/errors.html" class="ident i6">errors</a>.<a href="../errors/errors.go.html#line-30" class="ident">InvalidArgumentError</a>(<span class="lit-string">"Signature: need to call Sign, SignUserId or SignKey before Serialize"</span>)
+	}
+
+	<span class="keyword">switch</span> <label for="r7" class="ident">sig</label>.<a href="#line-27" class="ident">PubKeyAlgo</a> {
+	<span class="keyword">case</span> <a href="packet.go.html#line-440" class="ident">PubKeyAlgoRSA</a>, <a href="packet.go.html#line-449" class="ident">PubKeyAlgoRSASignOnly</a>:
+		<label for="r10" class="ident">err</label> = <a href="public_key.go.html#line-730" class="ident">writeMPIs</a>(<label for="r9" class="ident">w</label>, <label for="r7" class="ident">sig</label>.<a href="#line-31" class="ident">RSASignature</a>)
+	<span class="keyword">case</span> <a href="packet.go.html#line-442" class="ident">PubKeyAlgoDSA</a>:
+		<label for="r10" class="ident">err</label> = <a href="public_key.go.html#line-730" class="ident">writeMPIs</a>(<label for="r9" class="ident">w</label>, <label for="r7" class="ident">sig</label>.<a href="#line-32" class="ident">DSASigR</a>, <label for="r7" class="ident">sig</label>.<a href="#line-32" class="ident">DSASigS</a>)
+	<span class="keyword">default</span>:
+		<a href="../../../../../../pkg/builtin.html#name-panic" class="ident">panic</a>(<span class="lit-string">"impossible"</span>)
+	}
+	<span class="keyword">return</span>
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

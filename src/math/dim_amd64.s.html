@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: dim_amd64.s in package math</title>
+<link href="../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	dim_amd64.s
+
+<span class="title">Belonging Package</span>
+	<a href="../../pkg/math.html">math</a>
+</code></pre>
+<div id="container"><div class="section">
+<div class="doc">
+</div>
+<div class="code"><pre><code>// Copyright 2010 The Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+#include "textflag.h"
+
+#define PosInf 0x7FF0000000000000
+#define NaN    0x7FF8000000000001
+#define NegInf 0xFFF0000000000000
+
+// func ·Max(x, y float64) float64
+TEXT ·Max(SB),NOSPLIT,$0
+	// +Inf special cases
+	MOVQ    $PosInf, AX
+	MOVQ    x+0(FP), R8
+	CMPQ    AX, R8
+	JEQ     isPosInf
+	MOVQ    y+8(FP), R9
+	CMPQ    AX, R9
+	JEQ     isPosInf
+	// NaN special cases
+	MOVQ    $~(1&lt;&lt;63), DX // bit mask
+	MOVQ    $PosInf, AX
+	MOVQ    R8, BX
+	ANDQ    DX, BX // x = |x|
+	CMPQ    AX, BX
+	JLT     isMaxNaN
+	MOVQ    R9, CX
+	ANDQ    DX, CX // y = |y|
+	CMPQ    AX, CX
+	JLT     isMaxNaN
+	// ±0 special cases
+	ORQ     CX, BX
+	JEQ     isMaxZero
+
+	MOVQ    R8, X0
+	MOVQ    R9, X1
+	MAXSD   X1, X0
+	MOVSD   X0, ret+16(FP)
+	RET
+isMaxNaN: // return NaN
+	MOVQ	$NaN, AX
+isPosInf: // return +Inf
+	MOVQ    AX, ret+16(FP)
+	RET
+isMaxZero:
+	MOVQ    $(1&lt;&lt;63), AX // -0.0
+	CMPQ    AX, R8
+	JEQ     +3(PC)
+	MOVQ    R8, ret+16(FP) // return 0
+	RET
+	MOVQ    R9, ret+16(FP) // return other 0
+	RET
+
+// func Min(x, y float64) float64
+TEXT ·Min(SB),NOSPLIT,$0
+	// -Inf special cases
+	MOVQ    $NegInf, AX
+	MOVQ    x+0(FP), R8
+	CMPQ    AX, R8
+	JEQ     isNegInf
+	MOVQ    y+8(FP), R9
+	CMPQ    AX, R9
+	JEQ     isNegInf
+	// NaN special cases
+	MOVQ    $~(1&lt;&lt;63), DX
+	MOVQ    $PosInf, AX
+	MOVQ    R8, BX
+	ANDQ    DX, BX // x = |x|
+	CMPQ    AX, BX
+	JLT     isMinNaN
+	MOVQ    R9, CX
+	ANDQ    DX, CX // y = |y|
+	CMPQ    AX, CX
+	JLT     isMinNaN
+	// ±0 special cases
+	ORQ     CX, BX
+	JEQ     isMinZero
+
+	MOVQ    R8, X0
+	MOVQ    R9, X1
+	MINSD   X1, X0
+	MOVSD X0, ret+16(FP)
+	RET
+isMinNaN: // return NaN
+	MOVQ	$NaN, AX
+isNegInf: // return -Inf
+	MOVQ    AX, ret+16(FP)
+	RET
+isMinZero:
+	MOVQ    $(1&lt;&lt;63), AX // -0.0
+	CMPQ    AX, R8
+	JEQ     +3(PC)
+	MOVQ    R9, ret+16(FP) // return other 0
+	RET
+	MOVQ    R8, ret+16(FP) // return -0
+	RET
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

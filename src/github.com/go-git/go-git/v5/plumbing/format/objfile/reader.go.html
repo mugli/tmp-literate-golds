@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: reader.go in package github.com/go-git/go-git/v5/plumbing/format/objfile</title>
+<link href="../../../../../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	reader.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../../../../../pkg/github.com/go-git/go-git/v5/plumbing/format/objfile.html">github.com/go-git/go-git/v5/plumbing/format/objfile</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16],
+input[id=r17]:checked ~pre label[for=r17],
+input[id=r18]:checked ~pre label[for=r18],
+input[id=r19]:checked ~pre label[for=r19],
+input[id=r20]:checked ~pre label[for=r20],
+input[id=r21]:checked ~pre label[for=r21],
+input[id=r22]:checked ~pre label[for=r22],
+input[id=r23]:checked ~pre label[for=r23],
+input[id=r24]:checked ~pre label[for=r24],
+input[id=r25]:checked ~pre label[for=r25],
+input[id=r26]:checked ~pre label[for=r26],
+input[id=r27]:checked ~pre label[for=r27],
+input[id=r28]:checked ~pre label[for=r28],
+input[id=r29]:checked ~pre label[for=r29]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1,
+input[id=i2]:checked ~pre .i2,
+input[id=i3]:checked ~pre .i3,
+input[id=i4]:checked ~pre .i4,
+input[id=i5]:checked ~pre .i5
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="r17" type="radio" name="g"/>
+<input id="r18" type="radio" name="g"/>
+<input id="r19" type="radio" name="g"/>
+<input id="r20" type="radio" name="g"/>
+<input id="r21" type="radio" name="g"/>
+<input id="r22" type="radio" name="g"/>
+<input id="r23" type="radio" name="g"/>
+<input id="r24" type="radio" name="g"/>
+<input id="r25" type="radio" name="g"/>
+<input id="r26" type="radio" name="g"/>
+<input id="r27" type="radio" name="g"/>
+<input id="r28" type="radio" name="g"/>
+<input id="r29" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<input id="i2" type="radio" name="i"/>
+<input id="i3" type="radio" name="i"/>
+<input id="i4" type="radio" name="i"/>
+<input id="i5" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+</div>
+<div class="code"><pre><code><span class="keyword">package</span> objfile
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"compress/zlib"</span></label>
+	<label for="i1"><span class="lit-string i1">"errors"</span></label>
+	<label for="i2"><span class="lit-string i2">"io"</span></label>
+	<label for="i3"><span class="lit-string i3">"strconv"</span></label>
+
+	<label for="i4"><span class="lit-string i4">"github.com/go-git/go-git/v5/plumbing"</span></label>
+	<label for="i5"><span class="lit-string i5">"github.com/go-git/go-git/v5/plumbing/format/packfile"</span></label>
+)
+
+<span class="keyword">var</span> (
+	<a href="../../../../../../../../pkg/github.com/go-git/go-git/v5/plumbing/format/objfile.html#name-ErrClosed" class="ident">ErrClosed</a>       = <a href="../../../../../../../../pkg/errors.html" class="ident i1">errors</a>.<a href="../../../../../../../errors/errors.go.html#line-58" class="ident">New</a>(<span class="lit-string">"objfile: already closed"</span>)
+	<a href="../../../../../../../../pkg/github.com/go-git/go-git/v5/plumbing/format/objfile.html#name-ErrHeader" class="ident">ErrHeader</a>       = <a href="../../../../../../../../pkg/errors.html" class="ident i1">errors</a>.<a href="../../../../../../../errors/errors.go.html#line-58" class="ident">New</a>(<span class="lit-string">"objfile: invalid header"</span>)
+	<a href="../../../../../../../../pkg/github.com/go-git/go-git/v5/plumbing/format/objfile.html#name-ErrNegativeSize" class="ident">ErrNegativeSize</a> = <a href="../../../../../../../../pkg/errors.html" class="ident i1">errors</a>.<a href="../../../../../../../errors/errors.go.html#line-58" class="ident">New</a>(<span class="lit-string">"objfile: negative object size"</span>)
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Reader reads and decodes compressed objfile data from a provided io.Reader.</span><span class="comment"> Reader implements io.ReadCloser. Close should be called when finished with</span><span class="comment"> the Reader. Close will not close the underlying io.Reader.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../../../../pkg/github.com/go-git/go-git/v5/plumbing/format/objfile.html#name-Reader" class="ident">Reader</a> <span class="keyword">struct</span> {
+	<a href="../../../../../../../../use/github.com/go-git/go-git/v5/plumbing/format/objfile..Reader.multi*4bd77.html" class="ident">multi</a>  <a href="../../../../../../../../pkg/io.html" class="ident i2">io</a>.<a href="../../../../../../../io/io.go.html#line-83" class="ident">Reader</a>
+	<a href="../../../../../../../../use/github.com/go-git/go-git/v5/plumbing/format/objfile..Reader.zlib*0ea55.html" class="ident">zlib</a>   <a href="../../../../../../../../pkg/io.html" class="ident i2">io</a>.<a href="../../../../../../../io/io.go.html#line-132" class="ident">ReadCloser</a>
+	<a href="../../../../../../../../use/github.com/go-git/go-git/v5/plumbing/format/objfile..Reader.hasher*9320e.html" class="ident">hasher</a> <a href="../../../../../../../../pkg/github.com/go-git/go-git/v5/plumbing.html" class="ident i4">plumbing</a>.<a href="../../hash.go.html#line-44" class="ident">Hasher</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> NewReader returns a new Reader reading from r.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r0" class="ident"><a href="../../../../../../../../pkg/github.com/go-git/go-git/v5/plumbing/format/objfile.html#name-NewReader" class="ident">NewReader</a></label>(<label for="r1" class="ident">r</label> <a href="../../../../../../../../pkg/io.html" class="ident i2">io</a>.<a href="../../../../../../../io/io.go.html#line-83" class="ident">Reader</a>) (*<a href="#line-22" class="ident">Reader</a>, <a href="../../../../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<label for="r2" class="ident">zlib</label>, <label for="r3" class="ident">err</label> := <a href="../../../../../../../../pkg/compress/zlib.html" class="ident i0">zlib</a>.<a href="../../../../../../../compress/zlib/reader.go.html#line-70" class="ident">NewReader</a>(<label for="r1" class="ident">r</label>)
+	<span class="keyword">if</span> <label for="r3" class="ident">err</label> != <a href="../../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="../../../../../../../../pkg/github.com/go-git/go-git/v5/plumbing/format/packfile.html" class="ident i5">packfile</a>.<a href="../packfile/packfile.go.html#line-22" class="ident">ErrZLib</a>.<a href="../packfile/error.go.html#line-25" class="ident">AddDetails</a>(<label for="r3" class="ident">err</label>.Error())
+	}
+
+	<span class="keyword">return</span> &amp;<a href="#line-22" class="ident">Reader</a>{
+		<a href="#line-24" class="ident">zlib</a>: <label for="r2" class="ident">zlib</label>,
+	}, <a href="../../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Header reads the type and the size of object, and prepares the reader for read</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r4" class="ident">r</label> *<a href="#line-22" class="ident">Reader</a>) <label for="r5" class="ident"><a href="../../../../../../../../use/github.com/go-git/go-git/v5/plumbing/format/objfile..Reader.Header.html" class="ident">Header</a></label>() (<label for="r6" class="ident">t</label> <a href="../../../../../../../../pkg/github.com/go-git/go-git/v5/plumbing.html" class="ident i4">plumbing</a>.<a href="../../object.go.html#line-40" class="ident">ObjectType</a>, <label for="r7" class="ident">size</label> <a href="../../../../../../../../pkg/builtin.html#name-int64" class="ident">int64</a>, <label for="r8" class="ident">err</label> <a href="../../../../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<span class="keyword">var</span> <label for="r9" class="ident">raw</label> []<a href="../../../../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>
+	<label for="r9" class="ident">raw</label>, <label for="r8" class="ident">err</label> = <label for="r4" class="ident">r</label>.<a href="#line-70" class="ident">readUntil</a>(<span class="lit-number">' '</span>)
+	<span class="keyword">if</span> <label for="r8" class="ident">err</label> != <a href="../../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span>
+	}
+
+	<label for="r6" class="ident">t</label>, <label for="r8" class="ident">err</label> = <a href="../../../../../../../../pkg/github.com/go-git/go-git/v5/plumbing.html" class="ident i4">plumbing</a>.<a href="../../object.go.html#line-93" class="ident">ParseObjectType</a>(<a href="../../../../../../../../pkg/builtin.html#name-string" class="ident">string</a>(<label for="r9" class="ident">raw</label>))
+	<span class="keyword">if</span> <label for="r8" class="ident">err</label> != <a href="../../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span>
+	}
+
+	<label for="r9" class="ident">raw</label>, <label for="r8" class="ident">err</label> = <label for="r4" class="ident">r</label>.<a href="#line-70" class="ident">readUntil</a>(<span class="lit-number">0</span>)
+	<span class="keyword">if</span> <label for="r8" class="ident">err</label> != <a href="../../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span>
+	}
+
+	<label for="r7" class="ident">size</label>, <label for="r8" class="ident">err</label> = <a href="../../../../../../../../pkg/strconv.html" class="ident i3">strconv</a>.<a href="../../../../../../../strconv/atoi.go.html#line-179" class="ident">ParseInt</a>(<a href="../../../../../../../../pkg/builtin.html#name-string" class="ident">string</a>(<label for="r9" class="ident">raw</label>), <span class="lit-number">10</span>, <span class="lit-number">64</span>)
+	<span class="keyword">if</span> <label for="r8" class="ident">err</label> != <a href="../../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<label for="r8" class="ident">err</label> = <a href="#line-15" class="ident">ErrHeader</a>
+		<span class="keyword">return</span>
+	}
+
+	<span class="keyword">defer</span> <label for="r4" class="ident">r</label>.<a href="#line-89" class="ident">prepareForRead</a>(<label for="r6" class="ident">t</label>, <label for="r7" class="ident">size</label>)
+	<span class="keyword">return</span>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> readSlice reads one byte at a time from r until it encounters delim or an</span><span class="comment"> error.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r10" class="ident">r</label> *<a href="#line-22" class="ident">Reader</a>) <label for="r11" class="ident"><a href="../../../../../../../../use/github.com/go-git/go-git/v5/plumbing/format/objfile..Reader.readUntil*8e09c.html" class="ident">readUntil</a></label>(<label for="r12" class="ident">delim</label> <a href="../../../../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>) ([]<a href="../../../../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>, <a href="../../../../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<span class="keyword">var</span> <label for="r13" class="ident">buf</label> [<span class="lit-number">1</span>]<a href="../../../../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>
+	<label for="r14" class="ident">value</label> := <a href="../../../../../../../../pkg/builtin.html#name-make" class="ident">make</a>([]<a href="../../../../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>, <span class="lit-number">0</span>, <span class="lit-number">16</span>)
+	<span class="keyword">for</span> {
+		<span class="keyword">if</span> <label for="r15" class="ident">n</label>, <label for="r16" class="ident">err</label> := <label for="r10" class="ident">r</label>.<a href="#line-24" class="ident">zlib</a>.<a href="../../../../../../../io/io.go.html#line-84" class="ident">Read</a>(<label for="r13" class="ident">buf</label>[:]); <label for="r16" class="ident">err</label> != <a href="../../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> &amp;&amp; (<label for="r16" class="ident">err</label> != <a href="../../../../../../../../pkg/io.html" class="ident i2">io</a>.<a href="../../../../../../../io/io.go.html#line-44" class="ident">EOF</a> || <label for="r15" class="ident">n</label> == <span class="lit-number">0</span>) {
+			<span class="keyword">if</span> <label for="r16" class="ident">err</label> == <a href="../../../../../../../../pkg/io.html" class="ident i2">io</a>.<a href="../../../../../../../io/io.go.html#line-44" class="ident">EOF</a> {
+				<span class="keyword">return</span> <a href="../../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="#line-15" class="ident">ErrHeader</a>
+			}
+			<span class="keyword">return</span> <a href="../../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <label for="r16" class="ident">err</label>
+		}
+
+		<span class="keyword">if</span> <label for="r13" class="ident">buf</label>[<span class="lit-number">0</span>] == <label for="r12" class="ident">delim</label> {
+			<span class="keyword">return</span> <label for="r14" class="ident">value</label>, <a href="../../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+		}
+
+		<label for="r14" class="ident">value</label> = <a href="../../../../../../../../pkg/builtin.html#name-append" class="ident">append</a>(<label for="r14" class="ident">value</label>, <label for="r13" class="ident">buf</label>[<span class="lit-number">0</span>])
+	}
+}
+
+<span class="keyword">func</span> (<label for="r17" class="ident">r</label> *<a href="#line-22" class="ident">Reader</a>) <label for="r18" class="ident"><a href="../../../../../../../../use/github.com/go-git/go-git/v5/plumbing/format/objfile..Reader.prepareForRead*ee4db.html" class="ident">prepareForRead</a></label>(<label for="r19" class="ident">t</label> <a href="../../../../../../../../pkg/github.com/go-git/go-git/v5/plumbing.html" class="ident i4">plumbing</a>.<a href="../../object.go.html#line-40" class="ident">ObjectType</a>, <label for="r20" class="ident">size</label> <a href="../../../../../../../../pkg/builtin.html#name-int64" class="ident">int64</a>) {
+	<label for="r17" class="ident">r</label>.<a href="#line-25" class="ident">hasher</a> = <a href="../../../../../../../../pkg/github.com/go-git/go-git/v5/plumbing.html" class="ident i4">plumbing</a>.<a href="../../hash.go.html#line-48" class="ident">NewHasher</a>(<label for="r19" class="ident">t</label>, <label for="r20" class="ident">size</label>)
+	<label for="r17" class="ident">r</label>.<a href="#line-23" class="ident">multi</a> = <a href="../../../../../../../../pkg/io.html" class="ident i2">io</a>.<a href="../../../../../../../io/io.go.html#line-550" class="ident">TeeReader</a>(<label for="r17" class="ident">r</label>.<a href="#line-24" class="ident">zlib</a>, <label for="r17" class="ident">r</label>.<a href="#line-25" class="ident">hasher</a>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Read reads len(p) bytes into p from the object data stream. It returns</span><span class="comment"> the number of bytes read (0 &lt;= n &lt;= len(p)) and any error encountered. Even</span><span class="comment"> if Read returns n &lt; len(p), it may use all of p as scratch space during the</span><span class="comment"> call.</span><span class="comment"></span><span class="comment"> If Read encounters the end of the data stream it will return err == io.EOF,</span><span class="comment"> either in the current call if n &gt; 0 or in a subsequent call.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r21" class="ident">r</label> *<a href="#line-22" class="ident">Reader</a>) <label for="r22" class="ident"><a href="../../../../../../../../use/github.com/go-git/go-git/v5/plumbing/format/objfile..Reader.Read.html" class="ident">Read</a></label>(<label for="r23" class="ident">p</label> []<a href="../../../../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>) (<label for="r24" class="ident">n</label> <a href="../../../../../../../../pkg/builtin.html#name-int" class="ident">int</a>, <label for="r25" class="ident">err</label> <a href="../../../../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<span class="keyword">return</span> <label for="r21" class="ident">r</label>.<a href="#line-23" class="ident">multi</a>.<a href="../../../../../../../io/io.go.html#line-84" class="ident">Read</a>(<label for="r23" class="ident">p</label>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Hash returns the hash of the object data stream that has been read so far.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r26" class="ident">r</label> *<a href="#line-22" class="ident">Reader</a>) <label for="r27" class="ident"><a href="../../../../../../../../use/github.com/go-git/go-git/v5/plumbing/format/objfile..Reader.Hash.html" class="ident">Hash</a></label>() <a href="../../../../../../../../pkg/github.com/go-git/go-git/v5/plumbing.html" class="ident i4">plumbing</a>.<a href="../../hash.go.html#line-13" class="ident">Hash</a> {
+	<span class="keyword">return</span> <label for="r26" class="ident">r</label>.<a href="#line-25" class="ident">hasher</a>.<a href="../../hash.go.html#line-57" class="ident">Sum</a>()
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Close releases any resources consumed by the Reader. Calling Close does not</span><span class="comment"> close the wrapped io.Reader originally passed to NewReader.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r28" class="ident">r</label> *<a href="#line-22" class="ident">Reader</a>) <label for="r29" class="ident"><a href="../../../../../../../../use/github.com/go-git/go-git/v5/plumbing/format/objfile..Reader.Close.html" class="ident">Close</a></label>() <a href="../../../../../../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<span class="keyword">return</span> <label for="r28" class="ident">r</label>.<a href="#line-24" class="ident">zlib</a>.<a href="../../../../../../../io/io.go.html#line-105" class="ident">Close</a>()
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

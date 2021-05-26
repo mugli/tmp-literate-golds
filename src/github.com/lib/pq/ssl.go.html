@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: ssl.go in package github.com/lib/pq</title>
+<link href="../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	ssl.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../pkg/github.com/lib/pq.html">github.com/lib/pq</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16],
+input[id=r17]:checked ~pre label[for=r17],
+input[id=r18]:checked ~pre label[for=r18],
+input[id=r19]:checked ~pre label[for=r19],
+input[id=r20]:checked ~pre label[for=r20],
+input[id=r21]:checked ~pre label[for=r21],
+input[id=r22]:checked ~pre label[for=r22],
+input[id=r23]:checked ~pre label[for=r23],
+input[id=r24]:checked ~pre label[for=r24],
+input[id=r25]:checked ~pre label[for=r25],
+input[id=r26]:checked ~pre label[for=r26],
+input[id=r27]:checked ~pre label[for=r27],
+input[id=r28]:checked ~pre label[for=r28],
+input[id=r29]:checked ~pre label[for=r29],
+input[id=r30]:checked ~pre label[for=r30],
+input[id=r31]:checked ~pre label[for=r31],
+input[id=r32]:checked ~pre label[for=r32],
+input[id=r33]:checked ~pre label[for=r33],
+input[id=r34]:checked ~pre label[for=r34],
+input[id=r35]:checked ~pre label[for=r35],
+input[id=r36]:checked ~pre label[for=r36],
+input[id=r37]:checked ~pre label[for=r37],
+input[id=r38]:checked ~pre label[for=r38]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1,
+input[id=i2]:checked ~pre .i2,
+input[id=i3]:checked ~pre .i3,
+input[id=i4]:checked ~pre .i4,
+input[id=i5]:checked ~pre .i5,
+input[id=i6]:checked ~pre .i6
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="r17" type="radio" name="g"/>
+<input id="r18" type="radio" name="g"/>
+<input id="r19" type="radio" name="g"/>
+<input id="r20" type="radio" name="g"/>
+<input id="r21" type="radio" name="g"/>
+<input id="r22" type="radio" name="g"/>
+<input id="r23" type="radio" name="g"/>
+<input id="r24" type="radio" name="g"/>
+<input id="r25" type="radio" name="g"/>
+<input id="r26" type="radio" name="g"/>
+<input id="r27" type="radio" name="g"/>
+<input id="r28" type="radio" name="g"/>
+<input id="r29" type="radio" name="g"/>
+<input id="r30" type="radio" name="g"/>
+<input id="r31" type="radio" name="g"/>
+<input id="r32" type="radio" name="g"/>
+<input id="r33" type="radio" name="g"/>
+<input id="r34" type="radio" name="g"/>
+<input id="r35" type="radio" name="g"/>
+<input id="r36" type="radio" name="g"/>
+<input id="r37" type="radio" name="g"/>
+<input id="r38" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<input id="i2" type="radio" name="i"/>
+<input id="i3" type="radio" name="i"/>
+<input id="i4" type="radio" name="i"/>
+<input id="i5" type="radio" name="i"/>
+<input id="i6" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+</div>
+<div class="code"><pre><code><span class="keyword">package</span> pq
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"crypto/tls"</span></label>
+	<label for="i1"><span class="lit-string i1">"crypto/x509"</span></label>
+	<label for="i2"><span class="lit-string i2">"io/ioutil"</span></label>
+	<label for="i3"><span class="lit-string i3">"net"</span></label>
+	<label for="i4"><span class="lit-string i4">"os"</span></label>
+	<label for="i5"><span class="lit-string i5">"os/user"</span></label>
+	<label for="i6"><span class="lit-string i6">"path/filepath"</span></label>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ssl generates a function to upgrade a net.Conn based on the "sslmode" and</span><span class="comment"> related settings. The function is nil when no upgrade should take place.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r0" class="ident"><a href="../../../../pkg/github.com/lib/pq.html#name-ssl" class="ident">ssl</a></label>(<label for="r1" class="ident">o</label> <a href="conn.go.html#line-381" class="ident">values</a>) (<span class="keyword">func</span>(<a href="../../../../pkg/net.html" class="ident i3">net</a>.<a href="../../../net/net.go.html#line-113" class="ident">Conn</a>) (<a href="../../../../pkg/net.html" class="ident i3">net</a>.<a href="../../../net/net.go.html#line-113" class="ident">Conn</a>, <a href="../../../../pkg/builtin.html#name-error" class="ident">error</a>), <a href="../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<label for="r2" class="ident">verifyCaOnly</label> := <a href="../../../../pkg/builtin.html#name-false" class="ident">false</a>
+	<label for="r3" class="ident">tlsConf</label> := <a href="../../../../pkg/crypto/tls.html" class="ident i0">tls</a>.<a href="../../../crypto/tls/common.go.html#line-499" class="ident">Config</a>{}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> "require" is the default.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> We must skip TLS's own verification since it requires full</span><span class="comment">		 verification since Go 1.3.</span></div>
+<div class="code"><pre><code>		<label for="r3" class="ident">tlsConf</label>.<a href="../../../crypto/tls/common.go.html#line-624" class="ident">InsecureSkipVerify</a> = <a href="../../../../pkg/builtin.html#name-true" class="ident">true</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> From http://www.postgresql.org/docs/current/static/libpq-ssl.html:</span><span class="comment">		</span><span class="comment">		 Note: For backwards compatibility with earlier versions of</span><span class="comment">		 PostgreSQL, if a root CA file exists, the behavior of</span><span class="comment">		 sslmode=require will be the same as that of verify-ca, meaning the</span><span class="comment">		 server certificate is validated against the CA. Relying on this</span><span class="comment">		 behavior is discouraged, and applications that need certificate</span><span class="comment">		 validation should always use verify-ca or verify-full.</span></div>
+<div class="code"><pre><code>		<span class="keyword">if</span> <label for="r5" class="ident">sslrootcert</label>, <label for="r6" class="ident">ok</label> := <label for="r1" class="ident">o</label>[<span class="lit-string">"sslrootcert"</span>]; <label for="r6" class="ident">ok</label> {
+			<span class="keyword">if</span> <label for="r7" class="ident">_</label>, <label for="r8" class="ident">err</label> := <a href="../../../../pkg/os.html" class="ident i4">os</a>.<a href="../../../os/stat.go.html#line-11" class="ident">Stat</a>(<label for="r5" class="ident">sslrootcert</label>); <label for="r8" class="ident">err</label> == <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+				<label for="r2" class="ident">verifyCaOnly</label> = <a href="../../../../pkg/builtin.html#name-true" class="ident">true</a>
+			} <span class="keyword">else</span> {
+				<a href="../../../../pkg/builtin.html#name-delete" class="ident">delete</a>(<label for="r1" class="ident">o</label>, <span class="lit-string">"sslrootcert"</span>)
+			}
+		}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> We must skip TLS's own verification since it requires full</span><span class="comment">		 verification since Go 1.3.</span></div>
+<div class="code"><pre><code>		<label for="r3" class="ident">tlsConf</label>.<a href="../../../crypto/tls/common.go.html#line-624" class="ident">InsecureSkipVerify</a> = <a href="../../../../pkg/builtin.html#name-true" class="ident">true</a>
+		<label for="r2" class="ident">verifyCaOnly</label> = <a href="../../../../pkg/builtin.html#name-true" class="ident">true</a>
+	<span class="keyword">case</span> <span class="lit-string">"verify-full"</span>:
+		<label for="r3" class="ident">tlsConf</label>.<a href="../../../crypto/tls/common.go.html#line-607" class="ident">ServerName</a> = <label for="r1" class="ident">o</label>[<span class="lit-string">"host"</span>]
+	<span class="keyword">case</span> <span class="lit-string">"disable"</span>:
+		<span class="keyword">return</span> <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+	<span class="keyword">default</span>:
+		<span class="keyword">return</span> <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="error.go.html#line-464" class="ident">fmterrorf</a>(<span class="lit-string">`unsupported sslmode %q; only "require" (default), "verify-full", "verify-ca", and "disable" supported`</span>, <label for="r4" class="ident">mode</label>)
+	}
+
+	<label for="r9" class="ident">err</label> := <a href="#line-85" class="ident">sslClientCertificates</a>(&amp;<label for="r3" class="ident">tlsConf</label>, <label for="r1" class="ident">o</label>)
+	<span class="keyword">if</span> <label for="r9" class="ident">err</label> != <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <label for="r9" class="ident">err</label>
+	}
+	<label for="r9" class="ident">err</label> = <a href="#line-133" class="ident">sslCertificateAuthority</a>(&amp;<label for="r3" class="ident">tlsConf</label>, <label for="r1" class="ident">o</label>)
+	<span class="keyword">if</span> <label for="r9" class="ident">err</label> != <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <label for="r9" class="ident">err</label>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Accept renegotiation requests initiated by the backend.</span><span class="comment">	</span><span class="comment">	 Renegotiation was deprecated then removed from PostgreSQL 9.5, but</span><span class="comment">	 the default configuration of older versions has it enabled. Redshift</span><span class="comment">	 also initiates renegotiations and cannot be reconfigured.</span></div>
+<div class="code"><pre><code>	<label for="r3" class="ident">tlsConf</label>.<a href="../../../crypto/tls/common.go.html#line-681" class="ident">Renegotiation</a> = <a href="../../../../pkg/crypto/tls.html" class="ident i0">tls</a>.<a href="../../../crypto/tls/common.go.html#line-492" class="ident">RenegotiateFreelyAsClient</a>
+
+	<span class="keyword">return</span> <span class="keyword">func</span>(<label for="r10" class="ident">conn</label> <a href="../../../../pkg/net.html" class="ident i3">net</a>.<a href="../../../net/net.go.html#line-113" class="ident">Conn</a>) (<a href="../../../../pkg/net.html" class="ident i3">net</a>.<a href="../../../net/net.go.html#line-113" class="ident">Conn</a>, <a href="../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+		<label for="r11" class="ident">client</label> := <a href="../../../../pkg/crypto/tls.html" class="ident i0">tls</a>.<a href="../../../crypto/tls/tls.go.html#line-48" class="ident">Client</a>(<label for="r10" class="ident">conn</label>, &amp;<label for="r3" class="ident">tlsConf</label>)
+		<span class="keyword">if</span> <label for="r2" class="ident">verifyCaOnly</label> {
+			<label for="r12" class="ident">err</label> := <a href="#line-156" class="ident">sslVerifyCertificateAuthority</a>(<label for="r11" class="ident">client</label>, &amp;<label for="r3" class="ident">tlsConf</label>)
+			<span class="keyword">if</span> <label for="r12" class="ident">err</label> != <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+				<span class="keyword">return</span> <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <label for="r12" class="ident">err</label>
+			}
+		}
+		<span class="keyword">return</span> <label for="r11" class="ident">client</label>, <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+	}, <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> sslClientCertificates adds the certificate specified in the "sslcert" and</span><span class="comment"> "sslkey" settings, or if they aren't set, from the .postgresql directory</span><span class="comment"> in the user's home directory. The configured files must exist and have</span><span class="comment"> the correct permissions.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> user.Current() might fail when cross-compiling. We have to ignore the</span><span class="comment">	 error and continue without home directory defaults, since we wouldn't</span><span class="comment">	 know from where to load them.</span></div>
+<div class="code"><pre><code>	<label for="r16" class="ident">user</label>, <label for="r17" class="ident">_</label> := <a href="../../../../pkg/os/user.html" class="ident i5">user</a>.<a href="../../../os/user/lookup.go.html#line-14" class="ident">Current</a>()
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> In libpq, the client certificate is only loaded if the setting is not blank.</span><span class="comment">	</span><span class="comment">	 https://github.com/postgres/postgres/blob/REL9_6_2/src/interfaces/libpq/fe-secure-openssl.c#L1036-L1037</span></div>
+<div class="code"><pre><code>	<label for="r18" class="ident">sslcert</label> := <label for="r15" class="ident">o</label>[<span class="lit-string">"sslcert"</span>]
+	<span class="keyword">if</span> <a href="../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r18" class="ident">sslcert</label>) == <span class="lit-number">0</span> &amp;&amp; <label for="r16" class="ident">user</label> != <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<label for="r18" class="ident">sslcert</label> = <a href="../../../../pkg/path/filepath.html" class="ident i6">filepath</a>.<a href="../../../path/filepath/path.go.html#line-212" class="ident">Join</a>(<label for="r16" class="ident">user</label>.<a href="../../../os/user/user.go.html#line-50" class="ident">HomeDir</a>, <span class="lit-string">".postgresql"</span>, <span class="lit-string">"postgresql.crt"</span>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> https://github.com/postgres/postgres/blob/REL9_6_2/src/interfaces/libpq/fe-secure-openssl.c#L1045</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> <a href="../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r18" class="ident">sslcert</label>) == <span class="lit-number">0</span> {
+		<span class="keyword">return</span> <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> https://github.com/postgres/postgres/blob/REL9_6_2/src/interfaces/libpq/fe-secure-openssl.c#L1050:L1054</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> <label for="r19" class="ident">_</label>, <label for="r20" class="ident">err</label> := <a href="../../../../pkg/os.html" class="ident i4">os</a>.<a href="../../../os/stat.go.html#line-11" class="ident">Stat</a>(<label for="r18" class="ident">sslcert</label>); <a href="../../../../pkg/os.html" class="ident i4">os</a>.<a href="../../../os/error.go.html#line-92" class="ident">IsNotExist</a>(<label for="r20" class="ident">err</label>) {
+		<span class="keyword">return</span> <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+	} <span class="keyword">else</span> <span class="keyword">if</span> <label for="r20" class="ident">err</label> != <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <label for="r20" class="ident">err</label>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> In libpq, the ssl key is only loaded if the setting is not blank.</span><span class="comment">	</span><span class="comment">	 https://github.com/postgres/postgres/blob/REL9_6_2/src/interfaces/libpq/fe-secure-openssl.c#L1123-L1222</span></div>
+<div class="code"><pre><code>	<label for="r21" class="ident">sslkey</label> := <label for="r15" class="ident">o</label>[<span class="lit-string">"sslkey"</span>]
+	<span class="keyword">if</span> <a href="../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r21" class="ident">sslkey</label>) == <span class="lit-number">0</span> &amp;&amp; <label for="r16" class="ident">user</label> != <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<label for="r21" class="ident">sslkey</label> = <a href="../../../../pkg/path/filepath.html" class="ident i6">filepath</a>.<a href="../../../path/filepath/path.go.html#line-212" class="ident">Join</a>(<label for="r16" class="ident">user</label>.<a href="../../../os/user/user.go.html#line-50" class="ident">HomeDir</a>, <span class="lit-string">".postgresql"</span>, <span class="lit-string">"postgresql.key"</span>)
+	}
+
+	<span class="keyword">if</span> <a href="../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r21" class="ident">sslkey</label>) &gt; <span class="lit-number">0</span> {
+		<span class="keyword">if</span> <label for="r22" class="ident">err</label> := <a href="ssl_permissions.go.html#line-11" class="ident">sslKeyPermissions</a>(<label for="r21" class="ident">sslkey</label>); <label for="r22" class="ident">err</label> != <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<span class="keyword">return</span> <label for="r22" class="ident">err</label>
+		}
+	}
+
+	<label for="r23" class="ident">cert</label>, <label for="r24" class="ident">err</label> := <a href="../../../../pkg/crypto/tls.html" class="ident i0">tls</a>.<a href="../../../crypto/tls/tls.go.html#line-261" class="ident">LoadX509KeyPair</a>(<label for="r18" class="ident">sslcert</label>, <label for="r21" class="ident">sslkey</label>)
+	<span class="keyword">if</span> <label for="r24" class="ident">err</label> != <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <label for="r24" class="ident">err</label>
+	}
+
+	<label for="r14" class="ident">tlsConf</label>.<a href="../../../crypto/tls/common.go.html#line-521" class="ident">Certificates</a> = []<a href="../../../../pkg/crypto/tls.html" class="ident i0">tls</a>.<a href="../../../crypto/tls/common.go.html#line-1303" class="ident">Certificate</a>{<label for="r23" class="ident">cert</label>}
+	<span class="keyword">return</span> <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> sslCertificateAuthority adds the RootCA specified in the "sslrootcert" setting.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> In libpq, the root certificate is only loaded if the setting is not blank.</span><span class="comment">	</span><span class="comment">	 https://github.com/postgres/postgres/blob/REL9_6_2/src/interfaces/libpq/fe-secure-openssl.c#L950-L951</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> <label for="r28" class="ident">sslrootcert</label> := <label for="r27" class="ident">o</label>[<span class="lit-string">"sslrootcert"</span>]; <a href="../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r28" class="ident">sslrootcert</label>) &gt; <span class="lit-number">0</span> {
+		<label for="r26" class="ident">tlsConf</label>.<a href="../../../crypto/tls/common.go.html#line-597" class="ident">RootCAs</a> = <a href="../../../../pkg/crypto/x509.html" class="ident i1">x509</a>.<a href="../../../crypto/x509/cert_pool.go.html#line-55" class="ident">NewCertPool</a>()
+
+		<label for="r29" class="ident">cert</label>, <label for="r30" class="ident">err</label> := <a href="../../../../pkg/io/ioutil.html" class="ident i2">ioutil</a>.<a href="../../../io/ioutil/ioutil.go.html#line-36" class="ident">ReadFile</a>(<label for="r28" class="ident">sslrootcert</label>)
+		<span class="keyword">if</span> <label for="r30" class="ident">err</label> != <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<span class="keyword">return</span> <label for="r30" class="ident">err</label>
+		}
+
+		<span class="keyword">if</span> !<label for="r26" class="ident">tlsConf</label>.<a href="../../../crypto/tls/common.go.html#line-597" class="ident">RootCAs</a>.<a href="../../../crypto/x509/cert_pool.go.html#line-206" class="ident">AppendCertsFromPEM</a>(<label for="r29" class="ident">cert</label>) {
+			<span class="keyword">return</span> <a href="error.go.html#line-464" class="ident">fmterrorf</a>(<span class="lit-string">"couldn't parse pem in sslrootcert"</span>)
+		}
+	}
+
+	<span class="keyword">return</span> <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> sslVerifyCertificateAuthority carries out a TLS handshake to the server and</span><span class="comment"> verifies the presented certificate against the CA, i.e. the one specified in</span><span class="comment"> sslrootcert or the system CA if sslrootcert was not specified.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r31" class="ident"><a href="../../../../pkg/github.com/lib/pq.html#name-sslVerifyCertificateAuthority" class="ident">sslVerifyCertificateAuthority</a></label>(<label for="r32" class="ident">client</label> *<a href="../../../../pkg/crypto/tls.html" class="ident i0">tls</a>.<a href="../../../crypto/tls/conn.go.html#line-26" class="ident">Conn</a>, <label for="r33" class="ident">tlsConf</label> *<a href="../../../../pkg/crypto/tls.html" class="ident i0">tls</a>.<a href="../../../crypto/tls/common.go.html#line-499" class="ident">Config</a>) <a href="../../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<label for="r34" class="ident">err</label> := <label for="r32" class="ident">client</label>.<a href="../../../crypto/tls/conn.go.html#line-1377" class="ident">Handshake</a>()
+	<span class="keyword">if</span> <label for="r34" class="ident">err</label> != <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <label for="r34" class="ident">err</label>
+	}
+	<label for="r35" class="ident">certs</label> := <label for="r32" class="ident">client</label>.<a href="../../../crypto/tls/conn.go.html#line-1408" class="ident">ConnectionState</a>().<a href="../../../crypto/tls/common.go.html#line-251" class="ident">PeerCertificates</a>
+	<label for="r36" class="ident">opts</label> := <a href="../../../../pkg/crypto/x509.html" class="ident i1">x509</a>.<a href="../../../crypto/x509/verify.go.html#line-197" class="ident">VerifyOptions</a>{
+		<a href="../../../crypto/x509/verify.go.html#line-200" class="ident">DNSName</a>:       <label for="r32" class="ident">client</label>.<a href="../../../crypto/tls/conn.go.html#line-1408" class="ident">ConnectionState</a>().<a href="../../../crypto/tls/common.go.html#line-242" class="ident">ServerName</a>,
+		<a href="../../../crypto/x509/verify.go.html#line-205" class="ident">Intermediates</a>: <a href="../../../../pkg/crypto/x509.html" class="ident i1">x509</a>.<a href="../../../crypto/x509/cert_pool.go.html#line-55" class="ident">NewCertPool</a>(),
+		<a href="../../../crypto/x509/verify.go.html#line-208" class="ident">Roots</a>:         <label for="r33" class="ident">tlsConf</label>.<a href="../../../crypto/tls/common.go.html#line-597" class="ident">RootCAs</a>,
+	}
+	<span class="keyword">for</span> <label for="r37" class="ident">i</label>, <label for="r38" class="ident">cert</label> := <span class="keyword">range</span> <label for="r35" class="ident">certs</label> {
+		<span class="keyword">if</span> <label for="r37" class="ident">i</label> == <span class="lit-number">0</span> {
+			<span class="keyword">continue</span>
+		}
+		<label for="r36" class="ident">opts</label>.<a href="../../../crypto/x509/verify.go.html#line-205" class="ident">Intermediates</a>.<a href="../../../crypto/x509/cert_pool.go.html#line-168" class="ident">AddCert</a>(<label for="r38" class="ident">cert</label>)
+	}
+	_, <label for="r34" class="ident">err</label> = <label for="r35" class="ident">certs</label>[<span class="lit-number">0</span>].<a href="../../../crypto/x509/verify.go.html#line-758" class="ident">Verify</a>(<label for="r36" class="ident">opts</label>)
+	<span class="keyword">return</span> <label for="r34" class="ident">err</label>
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

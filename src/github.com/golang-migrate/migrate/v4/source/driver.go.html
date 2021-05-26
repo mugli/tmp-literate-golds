@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: driver.go in package github.com/golang-migrate/migrate/v4/source</title>
+<link href="../../../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	driver.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../../../pkg/github.com/golang-migrate/migrate/v4/source.html">github.com/golang-migrate/migrate/v4/source</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1,
+input[id=i2]:checked ~pre .i2,
+input[id=i3]:checked ~pre .i3
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<input id="i2" type="radio" name="i"/>
+<input id="i3" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Package source provides the Source interface.</span><span class="comment"> All source drivers must implement this interface, register themselves,</span><span class="comment"> optionally provide a `WithInstance` function and pass the tests</span><span class="comment"> in package source/testing.</span></div>
+<div class="code"><pre><code><span class="keyword">package</span> source
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"fmt"</span></label>
+	<label for="i1"><span class="lit-string i1">"io"</span></label>
+	<a href="../../../../../../pkg/net/url.html" class="ident i2">nurl</a> <label for="i2"><span class="lit-string i2">"net/url"</span></label>
+	<label for="i3"><span class="lit-string i3">"sync"</span></label>
+)
+
+<span class="keyword">var</span> <a href="../../../../../../pkg/github.com/golang-migrate/migrate/v4/source.html#name-driversMu" class="ident">driversMu</a> <a href="../../../../../../pkg/sync.html" class="ident i3">sync</a>.<a href="../../../../../sync/rwmutex.go.html#line-28" class="ident">RWMutex</a>
+<span class="keyword">var</span> <a href="../../../../../../pkg/github.com/golang-migrate/migrate/v4/source.html#name-drivers" class="ident">drivers</a> = <a href="../../../../../../pkg/builtin.html#name-make" class="ident">make</a>(<span class="keyword">map</span>[<a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>]<a href="#line-35" class="ident">Driver</a>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Driver is the interface every source driver must implement.</span><span class="comment"></span><span class="comment"> How to implement a source driver?</span><span class="comment">   1. Implement this interface.</span><span class="comment">   2. Optionally, add a function named `WithInstance`.</span><span class="comment">      This function should accept an existing source instance and a Config{} struct</span><span class="comment">      and return a driver instance.</span><span class="comment">   3. Add a test that calls source/testing.go:Test()</span><span class="comment">   4. Add own tests for Open(), WithInstance() (when provided) and Close().</span><span class="comment">      All other functions are tested by tests in source/testing.</span><span class="comment">      Saves you some time and makes sure all source drivers behave the same way.</span><span class="comment">   5. Call Register in init().</span><span class="comment"></span><span class="comment"> Guidelines:</span><span class="comment">   * All configuration input must come from the URL string in func Open()</span><span class="comment">     or the Config{} struct in WithInstance. Don't os.Getenv().</span><span class="comment">   * Drivers are supposed to be read only.</span><span class="comment">   * Ideally don't load any contents (into memory) in Open or WithInstance.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Open returns a a new driver instance configured with parameters</span><span class="comment">	 coming from the URL string. Migrate will call this function</span><span class="comment">	 only once per instance.</span></div>
+<div class="code"><pre><code>	Open(url <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>) (<a href="#line-35" class="ident">Driver</a>, <a href="../../../../../../pkg/builtin.html#name-error" class="ident">error</a>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Close closes the underlying source instance managed by the driver.</span><span class="comment">	 Migrate will call this function only once per instance.</span></div>
+<div class="code"><pre><code>	Close() <a href="../../../../../../pkg/builtin.html#name-error" class="ident">error</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> First returns the very first migration version available to the driver.</span><span class="comment">	 Migrate will call this function multiple times.</span><span class="comment">	 If there is no version available, it must return os.ErrNotExist.</span></div>
+<div class="code"><pre><code>	First() (version <a href="../../../../../../pkg/builtin.html#name-uint" class="ident">uint</a>, err <a href="../../../../../../pkg/builtin.html#name-error" class="ident">error</a>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Prev returns the previous version for a given version available to the driver.</span><span class="comment">	 Migrate will call this function multiple times.</span><span class="comment">	 If there is no previous version available, it must return os.ErrNotExist.</span></div>
+<div class="code"><pre><code>	Prev(version <a href="../../../../../../pkg/builtin.html#name-uint" class="ident">uint</a>) (prevVersion <a href="../../../../../../pkg/builtin.html#name-uint" class="ident">uint</a>, err <a href="../../../../../../pkg/builtin.html#name-error" class="ident">error</a>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Next returns the next version for a given version available to the driver.</span><span class="comment">	 Migrate will call this function multiple times.</span><span class="comment">	 If there is no next version available, it must return os.ErrNotExist.</span></div>
+<div class="code"><pre><code>	Next(version <a href="../../../../../../pkg/builtin.html#name-uint" class="ident">uint</a>) (nextVersion <a href="../../../../../../pkg/builtin.html#name-uint" class="ident">uint</a>, err <a href="../../../../../../pkg/builtin.html#name-error" class="ident">error</a>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ReadUp returns the UP migration body and an identifier that helps</span><span class="comment">	 finding this migration in the source for a given version.</span><span class="comment">	 If there is no up migration available for this version,</span><span class="comment">	 it must return os.ErrNotExist.</span><span class="comment">	 Do not start reading, just return the ReadCloser!</span></div>
+<div class="code"><pre><code>	ReadUp(version <a href="../../../../../../pkg/builtin.html#name-uint" class="ident">uint</a>) (r <a href="../../../../../../pkg/io.html" class="ident i1">io</a>.<a href="../../../../../io/io.go.html#line-132" class="ident">ReadCloser</a>, identifier <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>, err <a href="../../../../../../pkg/builtin.html#name-error" class="ident">error</a>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ReadDown returns the DOWN migration body and an identifier that helps</span><span class="comment">	 finding this migration in the source for a given version.</span><span class="comment">	 If there is no down migration available for this version,</span><span class="comment">	 it must return os.ErrNotExist.</span><span class="comment">	 Do not start reading, just return the ReadCloser!</span></div>
+<div class="code"><pre><code>	ReadDown(version <a href="../../../../../../pkg/builtin.html#name-uint" class="ident">uint</a>) (r <a href="../../../../../../pkg/io.html" class="ident i1">io</a>.<a href="../../../../../io/io.go.html#line-132" class="ident">ReadCloser</a>, identifier <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>, err <a href="../../../../../../pkg/builtin.html#name-error" class="ident">error</a>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Open returns a new driver instance.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r0" class="ident"><a href="../../../../../../pkg/github.com/golang-migrate/migrate/v4/source.html#name-Open" class="ident">Open</a></label>(<label for="r1" class="ident">url</label> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>) (<a href="#line-35" class="ident">Driver</a>, <a href="../../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<label for="r2" class="ident">u</label>, <label for="r3" class="ident">err</label> := <a href="../../../../../../pkg/net/url.html" class="ident i2">nurl</a>.<a href="../../../../../net/url/url.go.html#line-475" class="ident">Parse</a>(<label for="r1" class="ident">url</label>)
+	<span class="keyword">if</span> <label for="r3" class="ident">err</label> != <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <label for="r3" class="ident">err</label>
+	}
+
+	<span class="keyword">if</span> <label for="r2" class="ident">u</label>.<a href="../../../../../net/url/url.go.html#line-359" class="ident">Scheme</a> == <span class="lit-string">""</span> {
+		<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="../../../../../../pkg/fmt.html" class="ident i0">fmt</a>.<a href="../../../../../fmt/errors.go.html#line-17" class="ident">Errorf</a>(<span class="lit-string">"source driver: invalid URL scheme"</span>)
+	}
+
+	<a href="#line-14" class="ident">driversMu</a>.<a href="../../../../../sync/rwmutex.go.html#line-56" class="ident">RLock</a>()
+	<label for="r4" class="ident">d</label>, <label for="r5" class="ident">ok</label> := <a href="#line-15" class="ident">drivers</a>[<label for="r2" class="ident">u</label>.<a href="../../../../../net/url/url.go.html#line-359" class="ident">Scheme</a>]
+	<a href="#line-14" class="ident">driversMu</a>.<a href="../../../../../sync/rwmutex.go.html#line-75" class="ident">RUnlock</a>()
+	<span class="keyword">if</span> !<label for="r5" class="ident">ok</label> {
+		<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="../../../../../../pkg/fmt.html" class="ident i0">fmt</a>.<a href="../../../../../fmt/errors.go.html#line-17" class="ident">Errorf</a>(<span class="lit-string">"source driver: unknown driver %v (forgotten import?)"</span>, <label for="r2" class="ident">u</label>.<a href="../../../../../net/url/url.go.html#line-359" class="ident">Scheme</a>)
+	}
+
+	<span class="keyword">return</span> <label for="r4" class="ident">d</label>.<a href="#line-39" class="ident">Open</a>(<label for="r1" class="ident">url</label>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Register globally registers a driver.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r6" class="ident"><a href="../../../../../../pkg/github.com/golang-migrate/migrate/v4/source.html#name-Register" class="ident">Register</a></label>(<label for="r7" class="ident">name</label> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>, <label for="r8" class="ident">driver</label> <a href="#line-35" class="ident">Driver</a>) {
+	<a href="#line-14" class="ident">driversMu</a>.<a href="../../../../../sync/rwmutex.go.html#line-105" class="ident">Lock</a>()
+	<span class="keyword">defer</span> <a href="#line-14" class="ident">driversMu</a>.<a href="../../../../../sync/rwmutex.go.html#line-131" class="ident">Unlock</a>()
+	<span class="keyword">if</span> <label for="r8" class="ident">driver</label> == <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<a href="../../../../../../pkg/builtin.html#name-panic" class="ident">panic</a>(<span class="lit-string">"Register driver is nil"</span>)
+	}
+	<span class="keyword">if</span> <label for="r9" class="ident">_</label>, <label for="r10" class="ident">dup</label> := <a href="#line-15" class="ident">drivers</a>[<label for="r7" class="ident">name</label>]; <label for="r10" class="ident">dup</label> {
+		<a href="../../../../../../pkg/builtin.html#name-panic" class="ident">panic</a>(<span class="lit-string">"Register called twice for driver "</span> + <label for="r7" class="ident">name</label>)
+	}
+	<a href="#line-15" class="ident">drivers</a>[<label for="r7" class="ident">name</label>] = <label for="r8" class="ident">driver</label>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> List lists the registered drivers</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r11" class="ident"><a href="../../../../../../pkg/github.com/golang-migrate/migrate/v4/source.html#name-List" class="ident">List</a></label>() []<a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a> {
+	<a href="#line-14" class="ident">driversMu</a>.<a href="../../../../../sync/rwmutex.go.html#line-56" class="ident">RLock</a>()
+	<span class="keyword">defer</span> <a href="#line-14" class="ident">driversMu</a>.<a href="../../../../../sync/rwmutex.go.html#line-75" class="ident">RUnlock</a>()
+	<label for="r12" class="ident">names</label> := <a href="../../../../../../pkg/builtin.html#name-make" class="ident">make</a>([]<a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>, <span class="lit-number">0</span>, <a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<a href="#line-15" class="ident">drivers</a>))
+	<span class="keyword">for</span> <label for="r13" class="ident">n</label> := <span class="keyword">range</span> <a href="#line-15" class="ident">drivers</a> {
+		<label for="r12" class="ident">names</label> = <a href="../../../../../../pkg/builtin.html#name-append" class="ident">append</a>(<label for="r12" class="ident">names</label>, <label for="r13" class="ident">n</label>)
+	}
+	<span class="keyword">return</span> <label for="r12" class="ident">names</label>
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

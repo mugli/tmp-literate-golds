@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: fold.go in package encoding/json</title>
+<link href="../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	fold.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../pkg/encoding/json.html">encoding/json</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16],
+input[id=r17]:checked ~pre label[for=r17],
+input[id=r18]:checked ~pre label[for=r18],
+input[id=r19]:checked ~pre label[for=r19],
+input[id=r20]:checked ~pre label[for=r20],
+input[id=r21]:checked ~pre label[for=r21],
+input[id=r22]:checked ~pre label[for=r22],
+input[id=r23]:checked ~pre label[for=r23],
+input[id=r24]:checked ~pre label[for=r24],
+input[id=r25]:checked ~pre label[for=r25],
+input[id=r26]:checked ~pre label[for=r26],
+input[id=r27]:checked ~pre label[for=r27],
+input[id=r28]:checked ~pre label[for=r28]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="r17" type="radio" name="g"/>
+<input id="r18" type="radio" name="g"/>
+<input id="r19" type="radio" name="g"/>
+<input id="r20" type="radio" name="g"/>
+<input id="r21" type="radio" name="g"/>
+<input id="r22" type="radio" name="g"/>
+<input id="r23" type="radio" name="g"/>
+<input id="r24" type="radio" name="g"/>
+<input id="r25" type="radio" name="g"/>
+<input id="r26" type="radio" name="g"/>
+<input id="r27" type="radio" name="g"/>
+<input id="r28" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2013 The Go Authors. All rights reserved.</span><span class="comment"> Use of this source code is governed by a BSD-style</span><span class="comment"> license that can be found in the LICENSE file.</span></div>
+<div class="code"><pre><code>
+<span class="keyword">package</span> json
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"bytes"</span></label>
+	<label for="i1"><span class="lit-string i1">"unicode/utf8"</span></label>
+)
+
+<span class="keyword">const</span> (
+	<a href="../../../pkg/encoding/json.html#name-caseMask" class="ident">caseMask</a>     = ^<a href="../../../pkg/builtin.html#name-byte" class="ident">byte</a>(<span class="lit-number">0x20</span>) <span class="comment">// Mask to ignore case in ASCII.</span>
+	<a href="../../../pkg/encoding/json.html#name-kelvin" class="ident">kelvin</a>       = <span class="lit-number">'\u212a'</span>
+	<a href="../../../pkg/encoding/json.html#name-smallLongEss" class="ident">smallLongEss</a> = <span class="lit-number">'\u017f'</span>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> foldFunc returns one of four different case folding equivalence</span><span class="comment"> functions, from most general (and slow) to fastest:</span><span class="comment"></span><span class="comment"> 1) bytes.EqualFold, if the key s contains any non-ASCII UTF-8</span><span class="comment"> 2) equalFoldRight, if s contains special folding ASCII ('k', 'K', 's', 'S')</span><span class="comment"> 3) asciiEqualFold, no special, but includes non-letters (including _)</span><span class="comment"> 4) simpleLetterEqualFold, no specials, no non-letters.</span><span class="comment"></span><span class="comment"> The letters S and K are special because they map to 3 runes, not just 2:</span><span class="comment">  * S maps to s and to U+017F 'ſ' Latin small letter long s</span><span class="comment">  * k maps to K and to U+212A 'K' Kelvin sign</span><span class="comment"> See https://play.golang.org/p/tTxjOc0OGo</span><span class="comment"></span><span class="comment"> The returned function is specialized for matching against s and</span><span class="comment"> should only be given s. It's not curried for performance reasons.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r0" class="ident"><a href="../../../pkg/encoding/json.html#name-foldFunc" class="ident">foldFunc</a></label>(<label for="r1" class="ident">s</label> []<a href="../../../pkg/builtin.html#name-byte" class="ident">byte</a>) <span class="keyword">func</span>(<label for="r2" class="ident">s</label>, <label for="r3" class="ident">t</label> []<a href="../../../pkg/builtin.html#name-byte" class="ident">byte</a>) <a href="../../../pkg/builtin.html#name-bool" class="ident">bool</a> {
+	<label for="r4" class="ident">nonLetter</label> := <a href="../../../pkg/builtin.html#name-false" class="ident">false</a>
+	<label for="r5" class="ident">special</label> := <a href="../../../pkg/builtin.html#name-false" class="ident">false</a> <span class="comment">// special letter</span>
+	<span class="keyword">for</span> <label for="r6" class="ident">_</label>, <label for="r7" class="ident">b</label> := <span class="keyword">range</span> <label for="r1" class="ident">s</label> {
+		<span class="keyword">if</span> <label for="r7" class="ident">b</label> &gt;= <a href="../../../pkg/unicode/utf8.html" class="ident i1">utf8</a>.<a href="../../unicode/utf8/utf8.go.html#line-17" class="ident">RuneSelf</a> {
+			<span class="keyword">return</span> <a href="../../../pkg/bytes.html" class="ident i0">bytes</a>.<a href="../../bytes/bytes.go.html#line-1037" class="ident">EqualFold</a>
+		}
+		<label for="r8" class="ident">upper</label> := <label for="r7" class="ident">b</label> &amp; <a href="#line-13" class="ident">caseMask</a>
+		<span class="keyword">if</span> <label for="r8" class="ident">upper</label> &lt; <span class="lit-number">'A'</span> || <label for="r8" class="ident">upper</label> &gt; <span class="lit-number">'Z'</span> {
+			<label for="r4" class="ident">nonLetter</label> = <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> See above for why these letters are special.</span></div>
+<div class="code"><pre><code>			<label for="r5" class="ident">special</label> = <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>
+		}
+	}
+	<span class="keyword">if</span> <label for="r5" class="ident">special</label> {
+		<span class="keyword">return</span> <a href="#line-61" class="ident">equalFoldRight</a>
+	}
+	<span class="keyword">if</span> <label for="r4" class="ident">nonLetter</label> {
+		<span class="keyword">return</span> <a href="#line-109" class="ident">asciiEqualFold</a>
+	}
+	<span class="keyword">return</span> <a href="#line-133" class="ident">simpleLetterEqualFold</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> equalFoldRight is a specialization of bytes.EqualFold when s is</span><span class="comment"> known to be all ASCII (including punctuation), but contains an 's',</span><span class="comment"> 'S', 'k', or 'K', requiring a Unicode fold on the bytes in t.</span><span class="comment"> See comments on foldFunc.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r9" class="ident"><a href="../../../pkg/encoding/json.html#name-equalFoldRight" class="ident">equalFoldRight</a></label>(<label for="r10" class="ident">s</label>, <label for="r11" class="ident">t</label> []<a href="../../../pkg/builtin.html#name-byte" class="ident">byte</a>) <a href="../../../pkg/builtin.html#name-bool" class="ident">bool</a> {
+	<span class="keyword">for</span> <label for="r12" class="ident">_</label>, <label for="r13" class="ident">sb</label> := <span class="keyword">range</span> <label for="r10" class="ident">s</label> {
+		<span class="keyword">if</span> <a href="../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r11" class="ident">t</label>) == <span class="lit-number">0</span> {
+			<span class="keyword">return</span> <a href="../../../pkg/builtin.html#name-false" class="ident">false</a>
+		}
+		<label for="r14" class="ident">tb</label> := <label for="r11" class="ident">t</label>[<span class="lit-number">0</span>]
+		<span class="keyword">if</span> <label for="r14" class="ident">tb</label> &lt; <a href="../../../pkg/unicode/utf8.html" class="ident i1">utf8</a>.<a href="../../unicode/utf8/utf8.go.html#line-17" class="ident">RuneSelf</a> {
+			<span class="keyword">if</span> <label for="r13" class="ident">sb</label> != <label for="r14" class="ident">tb</label> {
+				<label for="r15" class="ident">sbUpper</label> := <label for="r13" class="ident">sb</label> &amp; <a href="#line-13" class="ident">caseMask</a>
+				<span class="keyword">if</span> <span class="lit-number">'A'</span> &lt;= <label for="r15" class="ident">sbUpper</label> &amp;&amp; <label for="r15" class="ident">sbUpper</label> &lt;= <span class="lit-number">'Z'</span> {
+					<span class="keyword">if</span> <label for="r15" class="ident">sbUpper</label> != <label for="r14" class="ident">tb</label>&amp;<a href="#line-13" class="ident">caseMask</a> {
+						<span class="keyword">return</span> <a href="../../../pkg/builtin.html#name-false" class="ident">false</a>
+					}
+				} <span class="keyword">else</span> {
+					<span class="keyword">return</span> <a href="../../../pkg/builtin.html#name-false" class="ident">false</a>
+				}
+			}
+			<label for="r11" class="ident">t</label> = <label for="r11" class="ident">t</label>[<span class="lit-number">1</span>:]
+			<span class="keyword">continue</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> sb is ASCII and t is not. t must be either kelvin</span><span class="comment">		 sign or long s; sb must be s, S, k, or K.</span></div>
+<div class="code"><pre><code>		<label for="r16" class="ident">tr</label>, <label for="r17" class="ident">size</label> := <a href="../../../pkg/unicode/utf8.html" class="ident i1">utf8</a>.<a href="../../unicode/utf8/utf8.go.html#line-151" class="ident">DecodeRune</a>(<label for="r11" class="ident">t</label>)
+		<span class="keyword">switch</span> <label for="r13" class="ident">sb</label> {
+		<span class="keyword">case</span> <span class="lit-number">'s'</span>, <span class="lit-number">'S'</span>:
+			<span class="keyword">if</span> <label for="r16" class="ident">tr</label> != <a href="#line-15" class="ident">smallLongEss</a> {
+				<span class="keyword">return</span> <a href="../../../pkg/builtin.html#name-false" class="ident">false</a>
+			}
+		<span class="keyword">case</span> <span class="lit-number">'k'</span>, <span class="lit-number">'K'</span>:
+			<span class="keyword">if</span> <label for="r16" class="ident">tr</label> != <a href="#line-14" class="ident">kelvin</a> {
+				<span class="keyword">return</span> <a href="../../../pkg/builtin.html#name-false" class="ident">false</a>
+			}
+		<span class="keyword">default</span>:
+			<span class="keyword">return</span> <a href="../../../pkg/builtin.html#name-false" class="ident">false</a>
+		}
+		<label for="r11" class="ident">t</label> = <label for="r11" class="ident">t</label>[<label for="r17" class="ident">size</label>:]
+
+	}
+	<span class="keyword">if</span> <a href="../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r11" class="ident">t</label>) &gt; <span class="lit-number">0</span> {
+		<span class="keyword">return</span> <a href="../../../pkg/builtin.html#name-false" class="ident">false</a>
+	}
+	<span class="keyword">return</span> <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> asciiEqualFold is a specialization of bytes.EqualFold for use when</span><span class="comment"> s is all ASCII (but may contain non-letters) and contains no</span><span class="comment"> special-folding letters.</span><span class="comment"> See comments on foldFunc.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r18" class="ident"><a href="../../../pkg/encoding/json.html#name-asciiEqualFold" class="ident">asciiEqualFold</a></label>(<label for="r19" class="ident">s</label>, <label for="r20" class="ident">t</label> []<a href="../../../pkg/builtin.html#name-byte" class="ident">byte</a>) <a href="../../../pkg/builtin.html#name-bool" class="ident">bool</a> {
+	<span class="keyword">if</span> <a href="../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r19" class="ident">s</label>) != <a href="../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r20" class="ident">t</label>) {
+		<span class="keyword">return</span> <a href="../../../pkg/builtin.html#name-false" class="ident">false</a>
+	}
+	<span class="keyword">for</span> <label for="r21" class="ident">i</label>, <label for="r22" class="ident">sb</label> := <span class="keyword">range</span> <label for="r19" class="ident">s</label> {
+		<label for="r23" class="ident">tb</label> := <label for="r20" class="ident">t</label>[<label for="r21" class="ident">i</label>]
+		<span class="keyword">if</span> <label for="r22" class="ident">sb</label> == <label for="r23" class="ident">tb</label> {
+			<span class="keyword">continue</span>
+		}
+		<span class="keyword">if</span> (<span class="lit-number">'a'</span> &lt;= <label for="r22" class="ident">sb</label> &amp;&amp; <label for="r22" class="ident">sb</label> &lt;= <span class="lit-number">'z'</span>) || (<span class="lit-number">'A'</span> &lt;= <label for="r22" class="ident">sb</label> &amp;&amp; <label for="r22" class="ident">sb</label> &lt;= <span class="lit-number">'Z'</span>) {
+			<span class="keyword">if</span> <label for="r22" class="ident">sb</label>&amp;<a href="#line-13" class="ident">caseMask</a> != <label for="r23" class="ident">tb</label>&amp;<a href="#line-13" class="ident">caseMask</a> {
+				<span class="keyword">return</span> <a href="../../../pkg/builtin.html#name-false" class="ident">false</a>
+			}
+		} <span class="keyword">else</span> {
+			<span class="keyword">return</span> <a href="../../../pkg/builtin.html#name-false" class="ident">false</a>
+		}
+	}
+	<span class="keyword">return</span> <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> simpleLetterEqualFold is a specialization of bytes.EqualFold for</span><span class="comment"> use when s is all ASCII letters (no underscores, etc) and also</span><span class="comment"> doesn't contain 'k', 'K', 's', or 'S'.</span><span class="comment"> See comments on foldFunc.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r24" class="ident"><a href="../../../pkg/encoding/json.html#name-simpleLetterEqualFold" class="ident">simpleLetterEqualFold</a></label>(<label for="r25" class="ident">s</label>, <label for="r26" class="ident">t</label> []<a href="../../../pkg/builtin.html#name-byte" class="ident">byte</a>) <a href="../../../pkg/builtin.html#name-bool" class="ident">bool</a> {
+	<span class="keyword">if</span> <a href="../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r25" class="ident">s</label>) != <a href="../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r26" class="ident">t</label>) {
+		<span class="keyword">return</span> <a href="../../../pkg/builtin.html#name-false" class="ident">false</a>
+	}
+	<span class="keyword">for</span> <label for="r27" class="ident">i</label>, <label for="r28" class="ident">b</label> := <span class="keyword">range</span> <label for="r25" class="ident">s</label> {
+		<span class="keyword">if</span> <label for="r28" class="ident">b</label>&amp;<a href="#line-13" class="ident">caseMask</a> != <label for="r26" class="ident">t</label>[<label for="r27" class="ident">i</label>]&amp;<a href="#line-13" class="ident">caseMask</a> {
+			<span class="keyword">return</span> <a href="../../../pkg/builtin.html#name-false" class="ident">false</a>
+		}
+	}
+	<span class="keyword">return</span> <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

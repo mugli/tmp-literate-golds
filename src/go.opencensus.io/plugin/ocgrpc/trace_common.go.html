@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: trace_common.go in package go.opencensus.io/plugin/ocgrpc</title>
+<link href="../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	trace_common.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../pkg/go.opencensus.io/plugin/ocgrpc.html">go.opencensus.io/plugin/ocgrpc</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16],
+input[id=r17]:checked ~pre label[for=r17],
+input[id=r18]:checked ~pre label[for=r18],
+input[id=r19]:checked ~pre label[for=r19],
+input[id=r20]:checked ~pre label[for=r20],
+input[id=r21]:checked ~pre label[for=r21],
+input[id=r22]:checked ~pre label[for=r22],
+input[id=r23]:checked ~pre label[for=r23],
+input[id=r24]:checked ~pre label[for=r24],
+input[id=r25]:checked ~pre label[for=r25],
+input[id=r26]:checked ~pre label[for=r26],
+input[id=r27]:checked ~pre label[for=r27],
+input[id=r28]:checked ~pre label[for=r28],
+input[id=r29]:checked ~pre label[for=r29],
+input[id=r30]:checked ~pre label[for=r30]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1,
+input[id=i2]:checked ~pre .i2,
+input[id=i3]:checked ~pre .i3,
+input[id=i4]:checked ~pre .i4,
+input[id=i5]:checked ~pre .i5,
+input[id=i6]:checked ~pre .i6,
+input[id=i7]:checked ~pre .i7
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="r17" type="radio" name="g"/>
+<input id="r18" type="radio" name="g"/>
+<input id="r19" type="radio" name="g"/>
+<input id="r20" type="radio" name="g"/>
+<input id="r21" type="radio" name="g"/>
+<input id="r22" type="radio" name="g"/>
+<input id="r23" type="radio" name="g"/>
+<input id="r24" type="radio" name="g"/>
+<input id="r25" type="radio" name="g"/>
+<input id="r26" type="radio" name="g"/>
+<input id="r27" type="radio" name="g"/>
+<input id="r28" type="radio" name="g"/>
+<input id="r29" type="radio" name="g"/>
+<input id="r30" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<input id="i2" type="radio" name="i"/>
+<input id="i3" type="radio" name="i"/>
+<input id="i4" type="radio" name="i"/>
+<input id="i5" type="radio" name="i"/>
+<input id="i6" type="radio" name="i"/>
+<input id="i7" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2017, OpenCensus Authors</span><span class="comment"></span><span class="comment"> Licensed under the Apache License, Version 2.0 (the "License");</span><span class="comment"> you may not use this file except in compliance with the License.</span><span class="comment"> You may obtain a copy of the License at</span><span class="comment"></span><span class="comment">     http://www.apache.org/licenses/LICENSE-2.0</span><span class="comment"></span><span class="comment"> Unless required by applicable law or agreed to in writing, software</span><span class="comment"> distributed under the License is distributed on an "AS IS" BASIS,</span><span class="comment"> WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span><span class="comment"> See the License for the specific language governing permissions and</span><span class="comment"> limitations under the License.</span></div>
+<div class="code"><pre><code>
+<span class="keyword">package</span> ocgrpc
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"context"</span></label>
+	<label for="i1"><span class="lit-string i1">"strings"</span></label>
+
+	<label for="i2"><span class="lit-string i2">"google.golang.org/grpc/codes"</span></label>
+	<label for="i3"><span class="lit-string i3">"google.golang.org/grpc/metadata"</span></label>
+	<label for="i4"><span class="lit-string i4">"google.golang.org/grpc/stats"</span></label>
+	<label for="i5"><span class="lit-string i5">"google.golang.org/grpc/status"</span></label>
+
+	<label for="i6"><span class="lit-string i6">"go.opencensus.io/trace"</span></label>
+	<label for="i7"><span class="lit-string i7">"go.opencensus.io/trace/propagation"</span></label>
+)
+
+<span class="keyword">const</span> <a href="../../../../pkg/go.opencensus.io/plugin/ocgrpc.html#name-traceContextKey" class="ident">traceContextKey</a> = <span class="lit-string">"grpc-trace-bin"</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> TagRPC creates a new trace span for the client side of the RPC.</span><span class="comment"></span><span class="comment"> It returns ctx with the new trace span added and a serialization of the</span><span class="comment"> SpanContext added to the outgoing gRPC metadata.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r0" class="ident">c</label> *<a href="client.go.html#line-26" class="ident">ClientHandler</a>) <label for="r1" class="ident"><a href="../../../../use/go.opencensus.io/plugin/ocgrpc..ClientHandler.traceTagRPC*78ec1.html" class="ident">traceTagRPC</a></label>(<label for="r2" class="ident">ctx</label> <a href="../../../../pkg/context.html" class="ident i0">context</a>.<a href="../../../context/context.go.html#line-62" class="ident">Context</a>, <label for="r3" class="ident">rti</label> *<a href="../../../../pkg/google.golang.org/grpc/stats.html" class="ident i4">stats</a>.<a href="../../../google.golang.org/grpc/stats/handlers.go.html#line-35" class="ident">RPCTagInfo</a>) <a href="../../../../pkg/context.html" class="ident i0">context</a>.<a href="../../../context/context.go.html#line-62" class="ident">Context</a> {
+	<label for="r4" class="ident">name</label> := <a href="../../../../pkg/strings.html" class="ident i1">strings</a>.<a href="../../../strings/strings.go.html#line-902" class="ident">TrimPrefix</a>(<label for="r3" class="ident">rti</label>.<a href="../../../google.golang.org/grpc/stats/handlers.go.html#line-37" class="ident">FullMethodName</a>, <span class="lit-string">"/"</span>)
+	<label for="r4" class="ident">name</label> = <a href="../../../../pkg/strings.html" class="ident i1">strings</a>.<a href="../../../strings/strings.go.html#line-924" class="ident">Replace</a>(<label for="r4" class="ident">name</label>, <span class="lit-string">"/"</span>, <span class="lit-string">"."</span>, -<span class="lit-number">1</span>)
+	<label for="r2" class="ident">ctx</label>, <label for="r5" class="ident">span</label> := <a href="../../../../pkg/go.opencensus.io/trace.html" class="ident i6">trace</a>.<a href="../../trace/trace.go.html#line-169" class="ident">StartSpan</a>(<label for="r2" class="ident">ctx</label>, <label for="r4" class="ident">name</label>,
+		<a href="../../../../pkg/go.opencensus.io/trace.html" class="ident i6">trace</a>.<a href="../../trace/trace.go.html#line-158" class="ident">WithSampler</a>(<label for="r0" class="ident">c</label>.<a href="client.go.html#line-31" class="ident">StartOptions</a>.<a href="../../trace/trace.go.html#line-139" class="ident">Sampler</a>),
+		<a href="../../../../pkg/go.opencensus.io/trace.html" class="ident i6">trace</a>.<a href="../../trace/trace.go.html#line-150" class="ident">WithSpanKind</a>(<a href="../../../../pkg/go.opencensus.io/trace.html" class="ident i6">trace</a>.<a href="../../trace/trace.go.html#line-126" class="ident">SpanKindClient</a>)) <span class="comment">// span is ended by traceHandleRPC</span>
+	<label for="r6" class="ident">traceContextBinary</label> := <a href="../../../../pkg/go.opencensus.io/trace/propagation.html" class="ident i7">propagation</a>.<a href="../../trace/propagation/propagation.go.html#line-57" class="ident">Binary</a>(<label for="r5" class="ident">span</label>.<a href="../../trace/trace.go.html#line-320" class="ident">SpanContext</a>())
+	<span class="keyword">return</span> <a href="../../../../pkg/google.golang.org/grpc/metadata.html" class="ident i3">metadata</a>.<a href="../../../google.golang.org/grpc/metadata/metadata.go.html#line-154" class="ident">AppendToOutgoingContext</a>(<label for="r2" class="ident">ctx</label>, <a href="#line-30" class="ident">traceContextKey</a>, <a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>(<label for="r6" class="ident">traceContextBinary</label>))
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> TagRPC creates a new trace span for the server side of the RPC.</span><span class="comment"></span><span class="comment"> It checks the incoming gRPC metadata in ctx for a SpanContext, and if</span><span class="comment"> it finds one, uses that SpanContext as the parent context of the new span.</span><span class="comment"></span><span class="comment"> It returns ctx, with the new trace span added.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r7" class="ident">s</label> *<a href="server.go.html#line-32" class="ident">ServerHandler</a>) <label for="r8" class="ident"><a href="../../../../use/go.opencensus.io/plugin/ocgrpc..ServerHandler.traceTagRPC*78ec1.html" class="ident">traceTagRPC</a></label>(<label for="r9" class="ident">ctx</label> <a href="../../../../pkg/context.html" class="ident i0">context</a>.<a href="../../../context/context.go.html#line-62" class="ident">Context</a>, <label for="r10" class="ident">rti</label> *<a href="../../../../pkg/google.golang.org/grpc/stats.html" class="ident i4">stats</a>.<a href="../../../google.golang.org/grpc/stats/handlers.go.html#line-35" class="ident">RPCTagInfo</a>) <a href="../../../../pkg/context.html" class="ident i0">context</a>.<a href="../../../context/context.go.html#line-62" class="ident">Context</a> {
+	<label for="r11" class="ident">md</label>, <label for="r12" class="ident">_</label> := <a href="../../../../pkg/google.golang.org/grpc/metadata.html" class="ident i3">metadata</a>.<a href="../../../google.golang.org/grpc/metadata/metadata.go.html#line-169" class="ident">FromIncomingContext</a>(<label for="r9" class="ident">ctx</label>)
+	<label for="r13" class="ident">name</label> := <a href="../../../../pkg/strings.html" class="ident i1">strings</a>.<a href="../../../strings/strings.go.html#line-902" class="ident">TrimPrefix</a>(<label for="r10" class="ident">rti</label>.<a href="../../../google.golang.org/grpc/stats/handlers.go.html#line-37" class="ident">FullMethodName</a>, <span class="lit-string">"/"</span>)
+	<label for="r13" class="ident">name</label> = <a href="../../../../pkg/strings.html" class="ident i1">strings</a>.<a href="../../../strings/strings.go.html#line-924" class="ident">Replace</a>(<label for="r13" class="ident">name</label>, <span class="lit-string">"/"</span>, <span class="lit-string">"."</span>, -<span class="lit-number">1</span>)
+	<label for="r14" class="ident">traceContext</label> := <label for="r11" class="ident">md</label>[<a href="#line-30" class="ident">traceContextKey</a>]
+	<span class="keyword">var</span> (
+		<label for="r15" class="ident">parent</label>     <a href="../../../../pkg/go.opencensus.io/trace.html" class="ident i6">trace</a>.<a href="../../trace/trace.go.html#line-102" class="ident">SpanContext</a>
+		<label for="r16" class="ident">haveParent</label> <a href="../../../../pkg/builtin.html#name-bool" class="ident">bool</a>
+	)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Metadata with keys ending in -bin are actually binary. They are base64</span><span class="comment">		 encoded before being put on the wire, see:</span><span class="comment">		 https://github.com/grpc/grpc-go/blob/08d6261/Documentation/grpc-metadata.md#storing-binary-data-in-metadata</span></div>
+<div class="code"><pre><code>		<label for="r17" class="ident">traceContextBinary</label> := []<a href="../../../../pkg/builtin.html#name-byte" class="ident">byte</a>(<label for="r14" class="ident">traceContext</label>[<span class="lit-number">0</span>])
+		<label for="r15" class="ident">parent</label>, <label for="r16" class="ident">haveParent</label> = <a href="../../../../pkg/go.opencensus.io/trace/propagation.html" class="ident i7">propagation</a>.<a href="../../trace/propagation/propagation.go.html#line-74" class="ident">FromBinary</a>(<label for="r17" class="ident">traceContextBinary</label>)
+		<span class="keyword">if</span> <label for="r16" class="ident">haveParent</label> &amp;&amp; !<label for="r7" class="ident">s</label>.<a href="server.go.html#line-41" class="ident">IsPublicEndpoint</a> {
+			<label for="r18" class="ident">ctx</label>, <label for="r19" class="ident">_</label> := <a href="../../../../pkg/go.opencensus.io/trace.html" class="ident i6">trace</a>.<a href="../../trace/trace.go.html#line-193" class="ident">StartSpanWithRemoteParent</a>(<label for="r9" class="ident">ctx</label>, <label for="r13" class="ident">name</label>, <label for="r15" class="ident">parent</label>,
+				<a href="../../../../pkg/go.opencensus.io/trace.html" class="ident i6">trace</a>.<a href="../../trace/trace.go.html#line-150" class="ident">WithSpanKind</a>(<a href="../../../../pkg/go.opencensus.io/trace.html" class="ident i6">trace</a>.<a href="../../trace/trace.go.html#line-125" class="ident">SpanKindServer</a>),
+				<a href="../../../../pkg/go.opencensus.io/trace.html" class="ident i6">trace</a>.<a href="../../trace/trace.go.html#line-158" class="ident">WithSampler</a>(<label for="r7" class="ident">s</label>.<a href="server.go.html#line-54" class="ident">StartOptions</a>.<a href="../../trace/trace.go.html#line-139" class="ident">Sampler</a>),
+			)
+			<span class="keyword">return</span> <label for="r18" class="ident">ctx</label>
+		}
+	}
+	<label for="r9" class="ident">ctx</label>, <label for="r20" class="ident">span</label> := <a href="../../../../pkg/go.opencensus.io/trace.html" class="ident i6">trace</a>.<a href="../../trace/trace.go.html#line-169" class="ident">StartSpan</a>(<label for="r9" class="ident">ctx</label>, <label for="r13" class="ident">name</label>,
+		<a href="../../../../pkg/go.opencensus.io/trace.html" class="ident i6">trace</a>.<a href="../../trace/trace.go.html#line-150" class="ident">WithSpanKind</a>(<a href="../../../../pkg/go.opencensus.io/trace.html" class="ident i6">trace</a>.<a href="../../trace/trace.go.html#line-125" class="ident">SpanKindServer</a>),
+		<a href="../../../../pkg/go.opencensus.io/trace.html" class="ident i6">trace</a>.<a href="../../trace/trace.go.html#line-158" class="ident">WithSampler</a>(<label for="r7" class="ident">s</label>.<a href="server.go.html#line-54" class="ident">StartOptions</a>.<a href="../../trace/trace.go.html#line-139" class="ident">Sampler</a>))
+	<span class="keyword">if</span> <label for="r16" class="ident">haveParent</label> {
+		<label for="r20" class="ident">span</label>.<a href="../../trace/trace.go.html#line-512" class="ident">AddLink</a>(<a href="../../../../pkg/go.opencensus.io/trace.html" class="ident i6">trace</a>.<a href="../../trace/basetypes.go.html#line-84" class="ident">Link</a>{<a href="../../trace/basetypes.go.html#line-85" class="ident">TraceID</a>: <label for="r15" class="ident">parent</label>.<a href="../../trace/trace.go.html#line-103" class="ident">TraceID</a>, <a href="../../trace/basetypes.go.html#line-86" class="ident">SpanID</a>: <label for="r15" class="ident">parent</label>.<a href="../../trace/trace.go.html#line-104" class="ident">SpanID</a>, <a href="../../trace/basetypes.go.html#line-87" class="ident">Type</a>: <a href="../../../../pkg/go.opencensus.io/trace.html" class="ident i6">trace</a>.<a href="../../trace/basetypes.go.html#line-79" class="ident">LinkTypeChild</a>})
+	}
+	<span class="keyword">return</span> <label for="r9" class="ident">ctx</label>
+}
+
+<span class="keyword">func</span> <label for="r21" class="ident"><a href="../../../../pkg/go.opencensus.io/plugin/ocgrpc.html#name-traceHandleRPC" class="ident">traceHandleRPC</a></label>(<label for="r22" class="ident">ctx</label> <a href="../../../../pkg/context.html" class="ident i0">context</a>.<a href="../../../context/context.go.html#line-62" class="ident">Context</a>, <label for="r23" class="ident">rs</label> <a href="../../../../pkg/google.golang.org/grpc/stats.html" class="ident i4">stats</a>.<a href="../../../google.golang.org/grpc/stats/stats.go.html#line-33" class="ident">RPCStats</a>) {
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> TODO: compressed and uncompressed sizes are not populated in every message.</span></div>
+<div class="code"><pre><code>	<span class="keyword">switch</span> rs := <label for="r23" class="ident">rs</label>.(<span class="keyword">type</span>) {
+	<span class="keyword">case</span> *<a href="../../../../pkg/google.golang.org/grpc/stats.html" class="ident i4">stats</a>.<a href="../../../google.golang.org/grpc/stats/stats.go.html#line-41" class="ident">Begin</a>:
+		<label for="r24" class="ident">span</label>.<a href="../../trace/trace.go.html#line-401" class="ident">AddAttributes</a>(
+			<a href="../../../../pkg/go.opencensus.io/trace.html" class="ident i6">trace</a>.<a href="../../trace/basetypes.go.html#line-53" class="ident">BoolAttribute</a>(<span class="lit-string">"Client"</span>, <label for="r25" class="ident">rs</label>.<a href="../../../google.golang.org/grpc/stats/stats.go.html#line-43" class="ident">Client</a>),
+			<a href="../../../../pkg/go.opencensus.io/trace.html" class="ident i6">trace</a>.<a href="../../trace/basetypes.go.html#line-53" class="ident">BoolAttribute</a>(<span class="lit-string">"FailFast"</span>, <label for="r25" class="ident">rs</label>.<a href="../../../google.golang.org/grpc/stats/stats.go.html#line-47" class="ident">FailFast</a>))
+	<span class="keyword">case</span> *<a href="../../../../pkg/google.golang.org/grpc/stats.html" class="ident i4">stats</a>.<a href="../../../google.golang.org/grpc/stats/stats.go.html#line-56" class="ident">InPayload</a>:
+		<label for="r24" class="ident">span</label>.<a href="../../trace/trace.go.html#line-495" class="ident">AddMessageReceiveEvent</a>(<span class="lit-number">0</span> <span class="comment">/* TODO: messageID */</span>, <a href="../../../../pkg/builtin.html#name-int64" class="ident">int64</a>(<label for="r26" class="ident">rs</label>.<a href="../../../google.golang.org/grpc/stats/stats.go.html#line-64" class="ident">Length</a>), <a href="../../../../pkg/builtin.html#name-int64" class="ident">int64</a>(<label for="r26" class="ident">rs</label>.<a href="../../../google.golang.org/grpc/stats/stats.go.html#line-66" class="ident">WireLength</a>))
+	<span class="keyword">case</span> *<a href="../../../../pkg/google.golang.org/grpc/stats.html" class="ident i4">stats</a>.<a href="../../../google.golang.org/grpc/stats/stats.go.html#line-118" class="ident">OutPayload</a>:
+		<label for="r24" class="ident">span</label>.<a href="../../trace/trace.go.html#line-473" class="ident">AddMessageSendEvent</a>(<span class="lit-number">0</span>, <a href="../../../../pkg/builtin.html#name-int64" class="ident">int64</a>(<label for="r27" class="ident">rs</label>.<a href="../../../google.golang.org/grpc/stats/stats.go.html#line-126" class="ident">Length</a>), <a href="../../../../pkg/builtin.html#name-int64" class="ident">int64</a>(<label for="r27" class="ident">rs</label>.<a href="../../../google.golang.org/grpc/stats/stats.go.html#line-128" class="ident">WireLength</a>))
+	<span class="keyword">case</span> *<a href="../../../../pkg/google.golang.org/grpc/stats.html" class="ident i4">stats</a>.<a href="../../../google.golang.org/grpc/stats/stats.go.html#line-181" class="ident">End</a>:
+		<span class="keyword">if</span> <label for="r28" class="ident">rs</label>.<a href="../../../google.golang.org/grpc/stats/stats.go.html#line-195" class="ident">Error</a> != <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<label for="r29" class="ident">s</label>, <label for="r30" class="ident">ok</label> := <a href="../../../../pkg/google.golang.org/grpc/status.html" class="ident i5">status</a>.<a href="../../../google.golang.org/grpc/status/status.go.html#line-79" class="ident">FromError</a>(<label for="r28" class="ident">rs</label>.<a href="../../../google.golang.org/grpc/stats/stats.go.html#line-195" class="ident">Error</a>)
+			<span class="keyword">if</span> <label for="r30" class="ident">ok</label> {
+				<label for="r24" class="ident">span</label>.<a href="../../trace/trace.go.html#line-338" class="ident">SetStatus</a>(<a href="../../../../pkg/go.opencensus.io/trace.html" class="ident i6">trace</a>.<a href="../../trace/basetypes.go.html#line-112" class="ident">Status</a>{<a href="../../trace/basetypes.go.html#line-117" class="ident">Code</a>: <a href="../../../../pkg/builtin.html#name-int32" class="ident">int32</a>(<label for="r29" class="ident">s</label>.<a href="../../../google.golang.org/grpc/internal/status/status.go.html#line-72" class="ident">Code</a>()), <a href="../../trace/basetypes.go.html#line-118" class="ident">Message</a>: <label for="r29" class="ident">s</label>.<a href="../../../google.golang.org/grpc/internal/status/status.go.html#line-80" class="ident">Message</a>()})
+			} <span class="keyword">else</span> {
+				<label for="r24" class="ident">span</label>.<a href="../../trace/trace.go.html#line-338" class="ident">SetStatus</a>(<a href="../../../../pkg/go.opencensus.io/trace.html" class="ident i6">trace</a>.<a href="../../trace/basetypes.go.html#line-112" class="ident">Status</a>{<a href="../../trace/basetypes.go.html#line-117" class="ident">Code</a>: <a href="../../../../pkg/builtin.html#name-int32" class="ident">int32</a>(<a href="../../../../pkg/google.golang.org/grpc/codes.html" class="ident i2">codes</a>.<a href="../../../google.golang.org/grpc/codes/codes.go.html#line-168" class="ident">Internal</a>), <a href="../../trace/basetypes.go.html#line-118" class="ident">Message</a>: <label for="r28" class="ident">rs</label>.<a href="../../../google.golang.org/grpc/stats/stats.go.html#line-195" class="ident">Error</a>.Error()})
+			}
+		}
+		<label for="r24" class="ident">span</label>.<a href="../../trace/trace.go.html#line-265" class="ident">End</a>()
+	}
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

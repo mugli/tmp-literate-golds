@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: warnings.go in package gopkg.in/warnings.v0</title>
+<link href="../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	warnings.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../pkg/gopkg.in/warnings.v0.html">gopkg.in/warnings.v0</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16],
+input[id=r17]:checked ~pre label[for=r17],
+input[id=r18]:checked ~pre label[for=r18],
+input[id=r19]:checked ~pre label[for=r19],
+input[id=r20]:checked ~pre label[for=r20],
+input[id=r21]:checked ~pre label[for=r21]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="r17" type="radio" name="g"/>
+<input id="r18" type="radio" name="g"/>
+<input id="r19" type="radio" name="g"/>
+<input id="r20" type="radio" name="g"/>
+<input id="r21" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Package warnings implements error handling with non-fatal errors (warnings).</span><span class="comment"></span><span class="comment"> A recurring pattern in Go programming is the following:</span><span class="comment"></span><span class="comment">  func myfunc(params) error {</span><span class="comment">      if err := doSomething(...); err != nil {</span><span class="comment">          return err</span><span class="comment">      }</span><span class="comment">      if err := doSomethingElse(...); err != nil {</span><span class="comment">          return err</span><span class="comment">      }</span><span class="comment">      if ok := doAnotherThing(...); !ok {</span><span class="comment">          return errors.New("my error")</span><span class="comment">      }</span><span class="comment">      ...</span><span class="comment">      return nil</span><span class="comment">  }</span><span class="comment"></span><span class="comment"> This pattern allows interrupting the flow on any received error. But what if</span><span class="comment"> there are errors that should be noted but still not fatal, for which the flow</span><span class="comment"> should not be interrupted? Implementing such logic at each if statement would</span><span class="comment"> make the code complex and the flow much harder to follow.</span><span class="comment"></span><span class="comment"> Package warnings provides the Collector type and a clean and simple pattern</span><span class="comment"> for achieving such logic. The Collector takes care of deciding when to break</span><span class="comment"> the flow and when to continue, collecting any non-fatal errors (warnings)</span><span class="comment"> along the way. The only requirement is that fatal and non-fatal errors can be</span><span class="comment"> distinguished programmatically; that is a function such as</span><span class="comment"></span><span class="comment">  IsFatal(error) bool</span><span class="comment"></span><span class="comment"> must be implemented. The following is an example of what the above snippet</span><span class="comment"> could look like using the warnings package:</span><span class="comment"></span><span class="comment">  import "gopkg.in/warnings.v0"</span><span class="comment"></span><span class="comment">  func isFatal(err error) bool {</span><span class="comment">      _, ok := err.(WarningType)</span><span class="comment">      return !ok</span><span class="comment">  }</span><span class="comment"></span><span class="comment">  func myfunc(params) error {</span><span class="comment">      c := warnings.NewCollector(isFatal)</span><span class="comment">      c.FatalWithWarnings = true</span><span class="comment">      if err := c.Collect(doSomething()); err != nil {</span><span class="comment">          return err</span><span class="comment">      }</span><span class="comment">      if err := c.Collect(doSomethingElse(...)); err != nil {</span><span class="comment">          return err</span><span class="comment">      }</span><span class="comment">      if ok := doAnotherThing(...); !ok {</span><span class="comment">          if err := c.Collect(errors.New("my error")); err != nil {</span><span class="comment">              return err</span><span class="comment">          }</span><span class="comment">      }</span><span class="comment">      ...</span><span class="comment">      return c.Done()</span><span class="comment">  }</span><span class="comment"></span><span class="comment"> For an example of a non-trivial code base using this library, see</span><span class="comment"> gopkg.in/gcfg.v1</span><span class="comment"></span><span class="comment"> Rules for using warnings</span><span class="comment"></span><span class="comment">  - ensure that warnings are programmatically distinguishable from fatal</span><span class="comment">    errors (i.e. implement an isFatal function and any necessary error types)</span><span class="comment">  - ensure that there is a single Collector instance for a call of each</span><span class="comment">    exported function</span><span class="comment">  - ensure that all errors (fatal or warning) are fed through Collect</span><span class="comment">  - ensure that every time an error is returned, it is one returned by a</span><span class="comment">    Collector (from Collect or Done)</span><span class="comment">  - ensure that Collect is never called after Done</span><span class="comment"></span><span class="comment"> TODO</span><span class="comment"></span><span class="comment">  - optionally limit the number of warnings (e.g. stop after 20 warnings) (?)</span><span class="comment">  - consider interaction with contexts</span><span class="comment">  - go vet-style invocations verifier</span><span class="comment">  - semi-automatic code converter</span><span class="comment"></span></div>
+<div class="code"><pre><code><span class="keyword">package</span> warnings <span class="comment">// import "gopkg.in/warnings.v0"</span>
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"bytes"</span></label>
+	<label for="i1"><span class="lit-string i1">"fmt"</span></label>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> List holds a collection of warnings and optionally one fatal error.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../pkg/gopkg.in/warnings.v0.html#name-List" class="ident">List</a> <span class="keyword">struct</span> {
+	<a href="../../../use/gopkg.in/warnings.v0..List.Warnings.html" class="ident">Warnings</a> []<a href="../../../pkg/builtin.html#name-error" class="ident">error</a>
+	<a href="../../../use/gopkg.in/warnings.v0..List.Fatal.html" class="ident">Fatal</a>    <a href="../../../pkg/builtin.html#name-error" class="ident">error</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Error implements the error interface.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r0" class="ident">l</label> <a href="#line-89" class="ident">List</a>) <label for="r1" class="ident"><a href="../../../use/gopkg.in/warnings.v0..List.Error.html" class="ident">Error</a></label>() <a href="../../../pkg/builtin.html#name-string" class="ident">string</a> {
+	<label for="r2" class="ident">b</label> := <a href="../../../pkg/bytes.html" class="ident i0">bytes</a>.<a href="../../bytes/buffer.go.html#line-450" class="ident">NewBuffer</a>(<a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a>)
+	<span class="keyword">if</span> <label for="r0" class="ident">l</label>.<a href="#line-91" class="ident">Fatal</a> != <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<a href="../../../pkg/fmt.html" class="ident i1">fmt</a>.<a href="../../fmt/print.go.html#line-262" class="ident">Fprintln</a>(<label for="r2" class="ident">b</label>, <span class="lit-string">"fatal:"</span>)
+		<a href="../../../pkg/fmt.html" class="ident i1">fmt</a>.<a href="../../fmt/print.go.html#line-262" class="ident">Fprintln</a>(<label for="r2" class="ident">b</label>, <label for="r0" class="ident">l</label>.<a href="#line-91" class="ident">Fatal</a>)
+	}
+	<span class="keyword">switch</span> <a href="../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r0" class="ident">l</label>.<a href="#line-90" class="ident">Warnings</a>) {
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> nop</span></div>
+<div class="code"><pre><code>	<span class="keyword">case</span> <span class="lit-number">1</span>:
+		<a href="../../../pkg/fmt.html" class="ident i1">fmt</a>.<a href="../../fmt/print.go.html#line-262" class="ident">Fprintln</a>(<label for="r2" class="ident">b</label>, <span class="lit-string">"warning:"</span>)
+	<span class="keyword">default</span>:
+		<a href="../../../pkg/fmt.html" class="ident i1">fmt</a>.<a href="../../fmt/print.go.html#line-262" class="ident">Fprintln</a>(<label for="r2" class="ident">b</label>, <span class="lit-string">"warnings:"</span>)
+	}
+	<span class="keyword">for</span> <label for="r3" class="ident">_</label>, <label for="r4" class="ident">err</label> := <span class="keyword">range</span> <label for="r0" class="ident">l</label>.<a href="#line-90" class="ident">Warnings</a> {
+		<a href="../../../pkg/fmt.html" class="ident i1">fmt</a>.<a href="../../fmt/print.go.html#line-262" class="ident">Fprintln</a>(<label for="r2" class="ident">b</label>, <label for="r4" class="ident">err</label>)
+	}
+	<span class="keyword">return</span> <label for="r2" class="ident">b</label>.<a href="../../bytes/buffer.go.html#line-60" class="ident">String</a>()
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> A Collector collects errors up to the first fatal error.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> IsFatal distinguishes between warnings and fatal errors.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> FatalWithWarnings set to true means that a fatal error is returned as</span><span class="comment">	 a List together with all warnings so far. The default behavior is to</span><span class="comment">	 only return the fatal error and discard any warnings that have been</span><span class="comment">	 collected.</span></div>
+<div class="code"><pre><code>	<a href="../../../use/gopkg.in/warnings.v0..Collector.FatalWithWarnings.html" class="ident">FatalWithWarnings</a> <a href="../../../pkg/builtin.html#name-bool" class="ident">bool</a>
+
+	<a href="../../../use/gopkg.in/warnings.v0..Collector.l*acac8.html" class="ident">l</a>    <a href="#line-89" class="ident">List</a>
+	<a href="../../../use/gopkg.in/warnings.v0..Collector.done*a4c3e.html" class="ident">done</a> <a href="../../../pkg/builtin.html#name-bool" class="ident">bool</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> NewCollector returns a new Collector; it uses isFatal to distinguish between</span><span class="comment"> warnings and fatal errors.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r5" class="ident"><a href="../../../pkg/gopkg.in/warnings.v0.html#name-NewCollector" class="ident">NewCollector</a></label>(<label for="r6" class="ident">isFatal</label> <span class="keyword">func</span>(<a href="../../../pkg/builtin.html#name-error" class="ident">error</a>) <a href="../../../pkg/builtin.html#name-bool" class="ident">bool</a>) *<a href="#line-116" class="ident">Collector</a> {
+	<span class="keyword">return</span> &amp;<a href="#line-116" class="ident">Collector</a>{<a href="#line-118" class="ident">IsFatal</a>: <label for="r6" class="ident">isFatal</label>}
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Collect collects a single error (warning or fatal). It returns nil if</span><span class="comment"> collection can continue (only warnings so far), or otherwise the errors</span><span class="comment"> collected. Collect mustn't be called after the first fatal error or after</span><span class="comment"> Done has been called.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r7" class="ident">c</label> *<a href="#line-116" class="ident">Collector</a>) <label for="r8" class="ident"><a href="../../../use/gopkg.in/warnings.v0..Collector.Collect.html" class="ident">Collect</a></label>(<label for="r9" class="ident">err</label> <a href="../../../pkg/builtin.html#name-error" class="ident">error</a>) <a href="../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<span class="keyword">if</span> <label for="r7" class="ident">c</label>.<a href="#line-126" class="ident">done</a> {
+		<a href="../../../pkg/builtin.html#name-panic" class="ident">panic</a>(<span class="lit-string">"warnings.Collector already done"</span>)
+	}
+	<span class="keyword">if</span> <label for="r9" class="ident">err</label> == <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+	}
+	<span class="keyword">if</span> <label for="r7" class="ident">c</label>.<a href="#line-118" class="ident">IsFatal</a>(<label for="r9" class="ident">err</label>) {
+		<label for="r7" class="ident">c</label>.<a href="#line-126" class="ident">done</a> = <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>
+		<label for="r7" class="ident">c</label>.<a href="#line-125" class="ident">l</a>.<a href="#line-91" class="ident">Fatal</a> = <label for="r9" class="ident">err</label>
+	} <span class="keyword">else</span> {
+		<label for="r7" class="ident">c</label>.<a href="#line-125" class="ident">l</a>.<a href="#line-90" class="ident">Warnings</a> = <a href="../../../pkg/builtin.html#name-append" class="ident">append</a>(<label for="r7" class="ident">c</label>.<a href="#line-125" class="ident">l</a>.<a href="#line-90" class="ident">Warnings</a>, <label for="r9" class="ident">err</label>)
+	}
+	<span class="keyword">if</span> <label for="r7" class="ident">c</label>.<a href="#line-125" class="ident">l</a>.<a href="#line-91" class="ident">Fatal</a> != <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <label for="r7" class="ident">c</label>.<a href="#line-164" class="ident">erorr</a>()
+	}
+	<span class="keyword">return</span> <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Done ends collection and returns the collected error(s).</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r10" class="ident">c</label> *<a href="#line-116" class="ident">Collector</a>) <label for="r11" class="ident"><a href="../../../use/gopkg.in/warnings.v0..Collector.Done.html" class="ident">Done</a></label>() <a href="../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<label for="r10" class="ident">c</label>.<a href="#line-126" class="ident">done</a> = <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>
+	<span class="keyword">return</span> <label for="r10" class="ident">c</label>.<a href="#line-164" class="ident">erorr</a>()
+}
+
+<span class="keyword">func</span> (<label for="r12" class="ident">c</label> *<a href="#line-116" class="ident">Collector</a>) <label for="r13" class="ident"><a href="../../../use/gopkg.in/warnings.v0..Collector.erorr*db91e.html" class="ident">erorr</a></label>() <a href="../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<span class="keyword">if</span> !<label for="r12" class="ident">c</label>.<a href="#line-123" class="ident">FatalWithWarnings</a> &amp;&amp; <label for="r12" class="ident">c</label>.<a href="#line-125" class="ident">l</a>.<a href="#line-91" class="ident">Fatal</a> != <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <label for="r12" class="ident">c</label>.<a href="#line-125" class="ident">l</a>.<a href="#line-91" class="ident">Fatal</a>
+	}
+	<span class="keyword">if</span> <label for="r12" class="ident">c</label>.<a href="#line-125" class="ident">l</a>.<a href="#line-91" class="ident">Fatal</a> == <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a> &amp;&amp; <a href="../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r12" class="ident">c</label>.<a href="#line-125" class="ident">l</a>.<a href="#line-90" class="ident">Warnings</a>) == <span class="lit-number">0</span> {
+		<span class="keyword">return</span> <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Note that a single warning is also returned as a List. This is to make it</span><span class="comment">	 easier to determine fatal-ness of the returned error.</span></div>
+<div class="code"><pre><code>	<span class="keyword">return</span> <label for="r12" class="ident">c</label>.<a href="#line-125" class="ident">l</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> FatalOnly returns the fatal error, if any, **in an error returned by a</span><span class="comment"> Collector**. It returns nil if and only if err is nil or err is a List</span><span class="comment"> with err.Fatal == nil.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r14" class="ident"><a href="../../../pkg/gopkg.in/warnings.v0.html#name-FatalOnly" class="ident">FatalOnly</a></label>(<label for="r15" class="ident">err</label> <a href="../../../pkg/builtin.html#name-error" class="ident">error</a>) <a href="../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<label for="r16" class="ident">l</label>, <label for="r17" class="ident">ok</label> := <label for="r15" class="ident">err</label>.(<a href="#line-89" class="ident">List</a>)
+	<span class="keyword">if</span> !<label for="r17" class="ident">ok</label> {
+		<span class="keyword">return</span> <label for="r15" class="ident">err</label>
+	}
+	<span class="keyword">return</span> <label for="r16" class="ident">l</label>.<a href="#line-91" class="ident">Fatal</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> WarningsOnly returns the warnings **in an error returned by a Collector**.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r18" class="ident"><a href="../../../pkg/gopkg.in/warnings.v0.html#name-WarningsOnly" class="ident">WarningsOnly</a></label>(<label for="r19" class="ident">err</label> <a href="../../../pkg/builtin.html#name-error" class="ident">error</a>) []<a href="../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<label for="r20" class="ident">l</label>, <label for="r21" class="ident">ok</label> := <label for="r19" class="ident">err</label>.(<a href="#line-89" class="ident">List</a>)
+	<span class="keyword">if</span> !<label for="r21" class="ident">ok</label> {
+		<span class="keyword">return</span> <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+	}
+	<span class="keyword">return</span> <label for="r20" class="ident">l</label>.<a href="#line-90" class="ident">Warnings</a>
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

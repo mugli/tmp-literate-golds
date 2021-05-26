@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: tables.go in package golang.org/x/net/http2/hpack</title>
+<link href="../../../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	tables.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../../../pkg/golang.org/x/net/http2/hpack.html">golang.org/x/net/http2/hpack</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16],
+input[id=r17]:checked ~pre label[for=r17],
+input[id=r18]:checked ~pre label[for=r18],
+input[id=r19]:checked ~pre label[for=r19],
+input[id=r20]:checked ~pre label[for=r20],
+input[id=r21]:checked ~pre label[for=r21],
+input[id=r22]:checked ~pre label[for=r22],
+input[id=r23]:checked ~pre label[for=r23],
+input[id=r24]:checked ~pre label[for=r24],
+input[id=r25]:checked ~pre label[for=r25],
+input[id=r26]:checked ~pre label[for=r26],
+input[id=r27]:checked ~pre label[for=r27],
+input[id=r28]:checked ~pre label[for=r28],
+input[id=r29]:checked ~pre label[for=r29],
+input[id=r30]:checked ~pre label[for=r30]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="r17" type="radio" name="g"/>
+<input id="r18" type="radio" name="g"/>
+<input id="r19" type="radio" name="g"/>
+<input id="r20" type="radio" name="g"/>
+<input id="r21" type="radio" name="g"/>
+<input id="r22" type="radio" name="g"/>
+<input id="r23" type="radio" name="g"/>
+<input id="r24" type="radio" name="g"/>
+<input id="r25" type="radio" name="g"/>
+<input id="r26" type="radio" name="g"/>
+<input id="r27" type="radio" name="g"/>
+<input id="r28" type="radio" name="g"/>
+<input id="r29" type="radio" name="g"/>
+<input id="r30" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2014 The Go Authors. All rights reserved.</span><span class="comment"> Use of this source code is governed by a BSD-style</span><span class="comment"> license that can be found in the LICENSE file.</span></div>
+<div class="code"><pre><code>
+<span class="keyword">package</span> hpack
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"fmt"</span></label>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> headerFieldTable implements a list of HeaderFields.</span><span class="comment"> This is used to implement the static and dynamic tables.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> For static tables, entries are never evicted.</span><span class="comment">	</span><span class="comment">	 For dynamic tables, entries are evicted from ents[0] and added to the end.</span><span class="comment">	 Each entry has a unique id that starts at one and increments for each</span><span class="comment">	 entry that is added. This unique id is stable across evictions, meaning</span><span class="comment">	 it can be used as a pointer to a specific entry. As in hpack, unique ids</span><span class="comment">	 are 1-based. The unique id for ents[k] is k + evictCount + 1.</span><span class="comment">	</span><span class="comment">	 Zero is not a valid unique id.</span><span class="comment">	</span><span class="comment">	 evictCount should not overflow in any remotely practical situation. In</span><span class="comment">	 practice, we will have one dynamic table per HTTP/2 connection. If we</span><span class="comment">	 assume a very powerful server that handles 1M QPS per connection and each</span><span class="comment">	 request adds (then evicts) 100 entries from the table, it would still take</span><span class="comment">	 2M years for evictCount to overflow.</span></div>
+<div class="code"><pre><code>	<a href="../../../../../../use/golang.org/x/net/http2/hpack..headerFieldTable*bc784.ents*db9ad.html" class="ident">ents</a>       []<a href="hpack.go.html#line-36" class="ident">HeaderField</a>
+	<a href="../../../../../../use/golang.org/x/net/http2/hpack..headerFieldTable*bc784.evictCount*17a78.html" class="ident">evictCount</a> <a href="../../../../../../pkg/builtin.html#name-uint64" class="ident">uint64</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> byName maps a HeaderField name to the unique id of the newest entry with</span><span class="comment">	 the same name. See above for a definition of "unique id".</span></div>
+<div class="code"><pre><code>	<a href="../../../../../../use/golang.org/x/net/http2/hpack..headerFieldTable*bc784.byName*67fa0.html" class="ident">byName</a> <span class="keyword">map</span>[<a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>]<a href="../../../../../../pkg/builtin.html#name-uint64" class="ident">uint64</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> byNameValue maps a HeaderField name/value pair to the unique id of the newest</span><span class="comment">	 entry with the same name and value. See above for a definition of "unique id".</span></div>
+<div class="code"><pre><code>	<a href="../../../../../../use/golang.org/x/net/http2/hpack..headerFieldTable*bc784.byNameValue*f0380.html" class="ident">byNameValue</a> <span class="keyword">map</span>[<a href="#line-41" class="ident">pairNameValue</a>]<a href="../../../../../../pkg/builtin.html#name-uint64" class="ident">uint64</a>
+}
+
+<span class="keyword">type</span> <a href="../../../../../../pkg/golang.org/x/net/http2/hpack.html#name-pairNameValue" class="ident">pairNameValue</a> <span class="keyword">struct</span> {
+	<a href="../../../../../../use/golang.org/x/net/http2/hpack..pairNameValue*b77b2.name*82a35.html" class="ident">name</a>, <a href="../../../../../../use/golang.org/x/net/http2/hpack..pairNameValue*b77b2.value*cd424.html" class="ident">value</a> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+}
+
+<span class="keyword">func</span> (<label for="r0" class="ident">t</label> *<a href="#line-13" class="ident">headerFieldTable</a>) <label for="r1" class="ident"><a href="../../../../../../use/golang.org/x/net/http2/hpack..headerFieldTable*bc784.init*bb540.html" class="ident">init</a></label>() {
+	<label for="r0" class="ident">t</label>.<a href="#line-34" class="ident">byName</a> = <a href="../../../../../../pkg/builtin.html#name-make" class="ident">make</a>(<span class="keyword">map</span>[<a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>]<a href="../../../../../../pkg/builtin.html#name-uint64" class="ident">uint64</a>)
+	<label for="r0" class="ident">t</label>.<a href="#line-38" class="ident">byNameValue</a> = <a href="../../../../../../pkg/builtin.html#name-make" class="ident">make</a>(<span class="keyword">map</span>[<a href="#line-41" class="ident">pairNameValue</a>]<a href="../../../../../../pkg/builtin.html#name-uint64" class="ident">uint64</a>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> len reports the number of entries in the table.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r2" class="ident">t</label> *<a href="#line-13" class="ident">headerFieldTable</a>) <label for="r3" class="ident"><a href="../../../../../../use/golang.org/x/net/http2/hpack..headerFieldTable*bc784.len*71fa9.html" class="ident">len</a></label>() <a href="../../../../../../pkg/builtin.html#name-int" class="ident">int</a> {
+	<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r2" class="ident">t</label>.<a href="#line-29" class="ident">ents</a>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> addEntry adds a new entry.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r4" class="ident">t</label> *<a href="#line-13" class="ident">headerFieldTable</a>) <label for="r5" class="ident"><a href="../../../../../../use/golang.org/x/net/http2/hpack..headerFieldTable*bc784.addEntry*1f51c.html" class="ident">addEntry</a></label>(<label for="r6" class="ident">f</label> <a href="hpack.go.html#line-36" class="ident">HeaderField</a>) {
+	<label for="r7" class="ident">id</label> := <a href="../../../../../../pkg/builtin.html#name-uint64" class="ident">uint64</a>(<label for="r4" class="ident">t</label>.<a href="#line-51" class="ident">len</a>()) + <label for="r4" class="ident">t</label>.<a href="#line-30" class="ident">evictCount</a> + <span class="lit-number">1</span>
+	<label for="r4" class="ident">t</label>.<a href="#line-34" class="ident">byName</a>[<label for="r6" class="ident">f</label>.<a href="hpack.go.html#line-37" class="ident">Name</a>] = <label for="r7" class="ident">id</label>
+	<label for="r4" class="ident">t</label>.<a href="#line-38" class="ident">byNameValue</a>[<a href="#line-41" class="ident">pairNameValue</a>{<label for="r6" class="ident">f</label>.<a href="hpack.go.html#line-37" class="ident">Name</a>, <label for="r6" class="ident">f</label>.<a href="hpack.go.html#line-37" class="ident">Value</a>}] = <label for="r7" class="ident">id</label>
+	<label for="r4" class="ident">t</label>.<a href="#line-29" class="ident">ents</a> = <a href="../../../../../../pkg/builtin.html#name-append" class="ident">append</a>(<label for="r4" class="ident">t</label>.<a href="#line-29" class="ident">ents</a>, <label for="r6" class="ident">f</label>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> evictOldest evicts the n oldest entries in the table.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r8" class="ident">t</label> *<a href="#line-13" class="ident">headerFieldTable</a>) <label for="r9" class="ident"><a href="../../../../../../use/golang.org/x/net/http2/hpack..headerFieldTable*bc784.evictOldest*40469.html" class="ident">evictOldest</a></label>(<label for="r10" class="ident">n</label> <a href="../../../../../../pkg/builtin.html#name-int" class="ident">int</a>) {
+	<span class="keyword">if</span> <label for="r10" class="ident">n</label> &gt; <label for="r8" class="ident">t</label>.<a href="#line-51" class="ident">len</a>() {
+		<a href="../../../../../../pkg/builtin.html#name-panic" class="ident">panic</a>(<a href="../../../../../../pkg/fmt.html" class="ident i0">fmt</a>.<a href="../../../../../fmt/print.go.html#line-217" class="ident">Sprintf</a>(<span class="lit-string">"evictOldest(%v) on table with %v entries"</span>, <label for="r10" class="ident">n</label>, <label for="r8" class="ident">t</label>.<a href="#line-51" class="ident">len</a>()))
+	}
+	<span class="keyword">for</span> <label for="r11" class="ident">k</label> := <span class="lit-number">0</span>; <label for="r11" class="ident">k</label> &lt; <label for="r10" class="ident">n</label>; <label for="r11" class="ident">k</label>++ {
+		<label for="r12" class="ident">f</label> := <label for="r8" class="ident">t</label>.<a href="#line-29" class="ident">ents</a>[<label for="r11" class="ident">k</label>]
+		<label for="r13" class="ident">id</label> := <label for="r8" class="ident">t</label>.<a href="#line-30" class="ident">evictCount</a> + <a href="../../../../../../pkg/builtin.html#name-uint64" class="ident">uint64</a>(<label for="r11" class="ident">k</label>) + <span class="lit-number">1</span>
+		<span class="keyword">if</span> <label for="r8" class="ident">t</label>.<a href="#line-34" class="ident">byName</a>[<label for="r12" class="ident">f</label>.<a href="hpack.go.html#line-37" class="ident">Name</a>] == <label for="r13" class="ident">id</label> {
+			<a href="../../../../../../pkg/builtin.html#name-delete" class="ident">delete</a>(<label for="r8" class="ident">t</label>.<a href="#line-34" class="ident">byName</a>, <label for="r12" class="ident">f</label>.<a href="hpack.go.html#line-37" class="ident">Name</a>)
+		}
+		<span class="keyword">if</span> <label for="r14" class="ident">p</label> := (<a href="#line-41" class="ident">pairNameValue</a>{<label for="r12" class="ident">f</label>.<a href="hpack.go.html#line-37" class="ident">Name</a>, <label for="r12" class="ident">f</label>.<a href="hpack.go.html#line-37" class="ident">Value</a>}); <label for="r8" class="ident">t</label>.<a href="#line-38" class="ident">byNameValue</a>[<label for="r14" class="ident">p</label>] == <label for="r13" class="ident">id</label> {
+			<a href="../../../../../../pkg/builtin.html#name-delete" class="ident">delete</a>(<label for="r8" class="ident">t</label>.<a href="#line-38" class="ident">byNameValue</a>, <label for="r14" class="ident">p</label>)
+		}
+	}
+	<a href="../../../../../../pkg/builtin.html#name-copy" class="ident">copy</a>(<label for="r8" class="ident">t</label>.<a href="#line-29" class="ident">ents</a>, <label for="r8" class="ident">t</label>.<a href="#line-29" class="ident">ents</a>[<label for="r10" class="ident">n</label>:])
+	<span class="keyword">for</span> <label for="r15" class="ident">k</label> := <label for="r8" class="ident">t</label>.<a href="#line-51" class="ident">len</a>() - <label for="r10" class="ident">n</label>; <label for="r15" class="ident">k</label> &lt; <label for="r8" class="ident">t</label>.<a href="#line-51" class="ident">len</a>(); <label for="r15" class="ident">k</label>++ {
+		<label for="r8" class="ident">t</label>.<a href="#line-29" class="ident">ents</a>[<label for="r15" class="ident">k</label>] = <a href="hpack.go.html#line-36" class="ident">HeaderField</a>{} <span class="comment">// so strings can be garbage collected</span>
+	}
+	<label for="r8" class="ident">t</label>.<a href="#line-29" class="ident">ents</a> = <label for="r8" class="ident">t</label>.<a href="#line-29" class="ident">ents</a>[:<label for="r8" class="ident">t</label>.<a href="#line-51" class="ident">len</a>()-<label for="r10" class="ident">n</label>]
+	<span class="keyword">if</span> <label for="r8" class="ident">t</label>.<a href="#line-30" class="ident">evictCount</a>+<a href="../../../../../../pkg/builtin.html#name-uint64" class="ident">uint64</a>(<label for="r10" class="ident">n</label>) &lt; <label for="r8" class="ident">t</label>.<a href="#line-30" class="ident">evictCount</a> {
+		<a href="../../../../../../pkg/builtin.html#name-panic" class="ident">panic</a>(<span class="lit-string">"evictCount overflow"</span>)
+	}
+	<label for="r8" class="ident">t</label>.<a href="#line-30" class="ident">evictCount</a> += <a href="../../../../../../pkg/builtin.html#name-uint64" class="ident">uint64</a>(<label for="r10" class="ident">n</label>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> search finds f in the table. If there is no match, i is 0.</span><span class="comment"> If both name and value match, i is the matched index and nameValueMatch</span><span class="comment"> becomes true. If only name matches, i points to that index and</span><span class="comment"> nameValueMatch becomes false.</span><span class="comment"></span><span class="comment"> The returned index is a 1-based HPACK index. For dynamic tables, HPACK says</span><span class="comment"> that index 1 should be the newest entry, but t.ents[0] is the oldest entry,</span><span class="comment"> meaning t.ents is reversed for dynamic tables. Hence, when t is a dynamic</span><span class="comment"> table, the return value i actually refers to the entry t.ents[t.len()-i].</span><span class="comment"></span><span class="comment"> All tables are assumed to be a dynamic tables except for the global</span><span class="comment"> staticTable pointer.</span><span class="comment"></span><span class="comment"> See Section 2.3.3.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r16" class="ident">t</label> *<a href="#line-13" class="ident">headerFieldTable</a>) <label for="r17" class="ident"><a href="../../../../../../use/golang.org/x/net/http2/hpack..headerFieldTable*bc784.search*24193.html" class="ident">search</a></label>(<label for="r18" class="ident">f</label> <a href="hpack.go.html#line-36" class="ident">HeaderField</a>) (<label for="r19" class="ident">i</label> <a href="../../../../../../pkg/builtin.html#name-uint64" class="ident">uint64</a>, <label for="r20" class="ident">nameValueMatch</label> <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>) {
+	<span class="keyword">if</span> !<label for="r18" class="ident">f</label>.<a href="hpack.go.html#line-41" class="ident">Sensitive</a> {
+		<span class="keyword">if</span> <label for="r21" class="ident">id</label> := <label for="r16" class="ident">t</label>.<a href="#line-38" class="ident">byNameValue</a>[<a href="#line-41" class="ident">pairNameValue</a>{<label for="r18" class="ident">f</label>.<a href="hpack.go.html#line-37" class="ident">Name</a>, <label for="r18" class="ident">f</label>.<a href="hpack.go.html#line-37" class="ident">Value</a>}]; <label for="r21" class="ident">id</label> != <span class="lit-number">0</span> {
+			<span class="keyword">return</span> <label for="r16" class="ident">t</label>.<a href="#line-117" class="ident">idToIndex</a>(<label for="r21" class="ident">id</label>), <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>
+		}
+	}
+	<span class="keyword">if</span> <label for="r22" class="ident">id</label> := <label for="r16" class="ident">t</label>.<a href="#line-34" class="ident">byName</a>[<label for="r18" class="ident">f</label>.<a href="hpack.go.html#line-37" class="ident">Name</a>]; <label for="r22" class="ident">id</label> != <span class="lit-number">0</span> {
+		<span class="keyword">return</span> <label for="r16" class="ident">t</label>.<a href="#line-117" class="ident">idToIndex</a>(<label for="r22" class="ident">id</label>), <a href="../../../../../../pkg/builtin.html#name-false" class="ident">false</a>
+	}
+	<span class="keyword">return</span> <span class="lit-number">0</span>, <a href="../../../../../../pkg/builtin.html#name-false" class="ident">false</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> idToIndex converts a unique id to an HPACK index.</span><span class="comment"> See Section 2.3.3.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r23" class="ident">t</label> *<a href="#line-13" class="ident">headerFieldTable</a>) <label for="r24" class="ident"><a href="../../../../../../use/golang.org/x/net/http2/hpack..headerFieldTable*bc784.idToIndex*bc20b.html" class="ident">idToIndex</a></label>(<label for="r25" class="ident">id</label> <a href="../../../../../../pkg/builtin.html#name-uint64" class="ident">uint64</a>) <a href="../../../../../../pkg/builtin.html#name-uint64" class="ident">uint64</a> {
+	<span class="keyword">if</span> <label for="r25" class="ident">id</label> &lt;= <label for="r23" class="ident">t</label>.<a href="#line-30" class="ident">evictCount</a> {
+		<a href="../../../../../../pkg/builtin.html#name-panic" class="ident">panic</a>(<a href="../../../../../../pkg/fmt.html" class="ident i0">fmt</a>.<a href="../../../../../fmt/print.go.html#line-217" class="ident">Sprintf</a>(<span class="lit-string">"id (%v) &lt;= evictCount (%v)"</span>, <label for="r25" class="ident">id</label>, <label for="r23" class="ident">t</label>.<a href="#line-30" class="ident">evictCount</a>))
+	}
+	<label for="r26" class="ident">k</label> := <label for="r25" class="ident">id</label> - <label for="r23" class="ident">t</label>.<a href="#line-30" class="ident">evictCount</a> - <span class="lit-number">1</span> <span class="comment">// convert id to an index t.ents[k]</span>
+	<span class="keyword">if</span> <label for="r23" class="ident">t</label> != <a href="#line-129" class="ident">staticTable</a> {
+		<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-uint64" class="ident">uint64</a>(<label for="r23" class="ident">t</label>.<a href="#line-51" class="ident">len</a>()) - <label for="r26" class="ident">k</label> <span class="comment">// dynamic table</span>
+	}
+	<span class="keyword">return</span> <label for="r26" class="ident">k</label> + <span class="lit-number">1</span>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> http://tools.ietf.org/html/draft-ietf-httpbis-header-compression-07#appendix-B</span></div>
+<div class="code"><pre><code><span class="keyword">var</span> <a href="../../../../../../pkg/golang.org/x/net/http2/hpack.html#name-staticTable" class="ident">staticTable</a> = <a href="#line-194" class="ident">newStaticTable</a>()
+<span class="keyword">var</span> <a href="../../../../../../pkg/golang.org/x/net/http2/hpack.html#name-staticTableEntries" class="ident">staticTableEntries</a> = [...]<a href="hpack.go.html#line-36" class="ident">HeaderField</a>{
+	{<a href="hpack.go.html#line-37" class="ident">Name</a>: <span class="lit-string">":authority"</span>},
+	{<a href="hpack.go.html#line-37" class="ident">Name</a>: <span class="lit-string">":method"</span>, <a href="hpack.go.html#line-37" class="ident">Value</a>: <span class="lit-string">"GET"</span>},
+	{<a href="hpack.go.html#line-37" class="ident">Name</a>: <span class="lit-string">":method"</span>, <a href="hpack.go.html#line-37" class="ident">Value</a>: <span class="lit-string">"POST"</span>},
+	{<a href="hpack.go.html#line-37" class="ident">Name</a>: <span class="lit-string">":path"</span>, <a href="hpack.go.html#line-37" class="ident">Value</a>: <span class="lit-string">"/"</span>},
+	{<a href="hpack.go.html#line-37" class="ident">Name</a>: <span class="lit-string">":path"</span>, <a href="hpack.go.html#line-37" class="ident">Value</a>: <span class="lit-string">"/index.html"</span>},
+	{<a href="hpack.go.html#line-37" class="ident">Name</a>: <span class="lit-string">":scheme"</span>, <a href="hpack.go.html#line-37" class="ident">Value</a>: <span class="lit-string">"http"</span>},
+	{<a href="hpack.go.html#line-37" class="ident">Name</a>: <span class="lit-string">":scheme"</span>, <a href="hpack.go.html#line-37" class="ident">Value</a>: <span class="lit-string">"https"</span>},
+	{<a href="hpack.go.html#line-37" class="ident">Name</a>: <span class="lit-string">":status"</span>, <a href="hpack.go.html#line-37" class="ident">Value</a>: <span class="lit-string">"200"</span>},
+	{<a href="hpack.go.html#line-37" class="ident">Name</a>: <span class="lit-string">":status"</span>, <a href="hpack.go.html#line-37" class="ident">Value</a>: <span class="lit-string">"204"</span>},
+	{<a href="hpack.go.html#line-37" class="ident">Name</a>: <span class="lit-string">":status"</span>, <a href="hpack.go.html#line-37" class="ident">Value</a>: <span class="lit-string">"206"</span>},
+	{<a href="hpack.go.html#line-37" class="ident">Name</a>: <span class="lit-string">":status"</span>, <a href="hpack.go.html#line-37" class="ident">Value</a>: <span class="lit-string">"304"</span>},
+	{<a href="hpack.go.html#line-37" class="ident">Name</a>: <span class="lit-string">":status"</span>, <a href="hpack.go.html#line-37" class="ident">Value</a>: <span class="lit-string">"400"</span>},
+	{<a href="hpack.go.html#line-37" class="ident">Name</a>: <span class="lit-string">":status"</span>, <a href="hpack.go.html#line-37" class="ident">Value</a>: <span class="lit-string">"404"</span>},
+	{<a href="hpack.go.html#line-37" class="ident">Name</a>: <span class="lit-string">":status"</span>, <a href="hpack.go.html#line-37" class="ident">Value</a>: <span class="lit-string">"500"</span>},
+	{<a href="hpack.go.html#line-37" class="ident">Name</a>: <span class="lit-string">"accept-charset"</span>},
+	{<a href="hpack.go.html#line-37" class="ident">Name</a>: <span class="lit-string">"accept-encoding"</span>, <a href="hpack.go.html#line-37" class="ident">Value</a>: <span class="lit-string">"gzip, deflate"</span>},
+	{<a href="hpack.go.html#line-37" class="ident">Name</a>: <span class="lit-string">"accept-language"</span>},
+	{<a href="hpack.go.html#line-37" class="ident">Name</a>: <span class="lit-string">"accept-ranges"</span>},
+	{<a href="hpack.go.html#line-37" class="ident">Name</a>: <span class="lit-string">"accept"</span>},
+	{<a href="hpack.go.html#line-37" class="ident">Name</a>: <span class="lit-string">"access-control-allow-origin"</span>},
+	{<a href="hpack.go.html#line-37" class="ident">Name</a>: <span class="lit-string">"age"</span>},
+	{<a href="hpack.go.html#line-37" class="ident">Name</a>: <span class="lit-string">"allow"</span>},
+	{<a href="hpack.go.html#line-37" class="ident">Name</a>: <span class="lit-string">"authorization"</span>},
+	{<a href="hpack.go.html#line-37" class="ident">Name</a>: <span class="lit-string">"cache-control"</span>},
+	{<a href="hpack.go.html#line-37" class="ident">Name</a>: <span class="lit-string">"content-disposition"</span>},
+	{<a href="hpack.go.html#line-37" class="ident">Name</a>: <span class="lit-string">"content-encoding"</span>},
+	{<a href="hpack.go.html#line-37" class="ident">Name</a>: <span class="lit-string">"content-language"</span>},
+	{<a href="hpack.go.html#line-37" class="ident">Name</a>: <span class="lit-string">"content-length"</span>},
+	{<a href="hpack.go.html#line-37" class="ident">Name</a>: <span class="lit-string">"content-location"</span>},
+	{<a href="hpack.go.html#line-37" class="ident">Name</a>: <span class="lit-string">"content-range"</span>},
+	{<a href="hpack.go.html#line-37" class="ident">Name</a>: <span class="lit-string">"content-type"</span>},
+	{<a href="hpack.go.html#line-37" class="ident">Name</a>: <span class="lit-string">"cookie"</span>},
+	{<a href="hpack.go.html#line-37" class="ident">Name</a>: <span class="lit-string">"date"</span>},
+	{<a href="hpack.go.html#line-37" class="ident">Name</a>: <span class="lit-string">"etag"</span>},
+	{<a href="hpack.go.html#line-37" class="ident">Name</a>: <span class="lit-string">"expect"</span>},
+	{<a href="hpack.go.html#line-37" class="ident">Name</a>: <span class="lit-string">"expires"</span>},
+	{<a href="hpack.go.html#line-37" class="ident">Name</a>: <span class="lit-string">"from"</span>},
+	{<a href="hpack.go.html#line-37" class="ident">Name</a>: <span class="lit-string">"host"</span>},
+	{<a href="hpack.go.html#line-37" class="ident">Name</a>: <span class="lit-string">"if-match"</span>},
+	{<a href="hpack.go.html#line-37" class="ident">Name</a>: <span class="lit-string">"if-modified-since"</span>},
+	{<a href="hpack.go.html#line-37" class="ident">Name</a>: <span class="lit-string">"if-none-match"</span>},
+	{<a href="hpack.go.html#line-37" class="ident">Name</a>: <span class="lit-string">"if-range"</span>},
+	{<a href="hpack.go.html#line-37" class="ident">Name</a>: <span class="lit-string">"if-unmodified-since"</span>},
+	{<a href="hpack.go.html#line-37" class="ident">Name</a>: <span class="lit-string">"last-modified"</span>},
+	{<a href="hpack.go.html#line-37" class="ident">Name</a>: <span class="lit-string">"link"</span>},
+	{<a href="hpack.go.html#line-37" class="ident">Name</a>: <span class="lit-string">"location"</span>},
+	{<a href="hpack.go.html#line-37" class="ident">Name</a>: <span class="lit-string">"max-forwards"</span>},
+	{<a href="hpack.go.html#line-37" class="ident">Name</a>: <span class="lit-string">"proxy-authenticate"</span>},
+	{<a href="hpack.go.html#line-37" class="ident">Name</a>: <span class="lit-string">"proxy-authorization"</span>},
+	{<a href="hpack.go.html#line-37" class="ident">Name</a>: <span class="lit-string">"range"</span>},
+	{<a href="hpack.go.html#line-37" class="ident">Name</a>: <span class="lit-string">"referer"</span>},
+	{<a href="hpack.go.html#line-37" class="ident">Name</a>: <span class="lit-string">"refresh"</span>},
+	{<a href="hpack.go.html#line-37" class="ident">Name</a>: <span class="lit-string">"retry-after"</span>},
+	{<a href="hpack.go.html#line-37" class="ident">Name</a>: <span class="lit-string">"server"</span>},
+	{<a href="hpack.go.html#line-37" class="ident">Name</a>: <span class="lit-string">"set-cookie"</span>},
+	{<a href="hpack.go.html#line-37" class="ident">Name</a>: <span class="lit-string">"strict-transport-security"</span>},
+	{<a href="hpack.go.html#line-37" class="ident">Name</a>: <span class="lit-string">"transfer-encoding"</span>},
+	{<a href="hpack.go.html#line-37" class="ident">Name</a>: <span class="lit-string">"user-agent"</span>},
+	{<a href="hpack.go.html#line-37" class="ident">Name</a>: <span class="lit-string">"vary"</span>},
+	{<a href="hpack.go.html#line-37" class="ident">Name</a>: <span class="lit-string">"via"</span>},
+	{<a href="hpack.go.html#line-37" class="ident">Name</a>: <span class="lit-string">"www-authenticate"</span>},
+}
+
+<span class="keyword">func</span> <label for="r27" class="ident"><a href="../../../../../../pkg/golang.org/x/net/http2/hpack.html#name-newStaticTable" class="ident">newStaticTable</a></label>() *<a href="#line-13" class="ident">headerFieldTable</a> {
+	<label for="r28" class="ident">t</label> := &amp;<a href="#line-13" class="ident">headerFieldTable</a>{}
+	<label for="r28" class="ident">t</label>.<a href="#line-45" class="ident">init</a>()
+	<span class="keyword">for</span> <label for="r29" class="ident">_</label>, <label for="r30" class="ident">e</label> := <span class="keyword">range</span> <a href="#line-130" class="ident">staticTableEntries</a>[:] {
+		<label for="r28" class="ident">t</label>.<a href="#line-56" class="ident">addEntry</a>(<label for="r30" class="ident">e</label>)
+	}
+	<span class="keyword">return</span> <label for="r28" class="ident">t</label>
+}
+
+<span class="keyword">var</span> <a href="../../../../../../pkg/golang.org/x/net/http2/hpack.html#name-huffmanCodes" class="ident">huffmanCodes</a> = [<span class="lit-number">256</span>]<a href="../../../../../../pkg/builtin.html#name-uint32" class="ident">uint32</a>{
+	<span class="lit-number">0x1ff8</span>,
+	<span class="lit-number">0x7fffd8</span>,
+	<span class="lit-number">0xfffffe2</span>,
+	<span class="lit-number">0xfffffe3</span>,
+	<span class="lit-number">0xfffffe4</span>,
+	<span class="lit-number">0xfffffe5</span>,
+	<span class="lit-number">0xfffffe6</span>,
+	<span class="lit-number">0xfffffe7</span>,
+	<span class="lit-number">0xfffffe8</span>,
+	<span class="lit-number">0xffffea</span>,
+	<span class="lit-number">0x3ffffffc</span>,
+	<span class="lit-number">0xfffffe9</span>,
+	<span class="lit-number">0xfffffea</span>,
+	<span class="lit-number">0x3ffffffd</span>,
+	<span class="lit-number">0xfffffeb</span>,
+	<span class="lit-number">0xfffffec</span>,
+	<span class="lit-number">0xfffffed</span>,
+	<span class="lit-number">0xfffffee</span>,
+	<span class="lit-number">0xfffffef</span>,
+	<span class="lit-number">0xffffff0</span>,
+	<span class="lit-number">0xffffff1</span>,
+	<span class="lit-number">0xffffff2</span>,
+	<span class="lit-number">0x3ffffffe</span>,
+	<span class="lit-number">0xffffff3</span>,
+	<span class="lit-number">0xffffff4</span>,
+	<span class="lit-number">0xffffff5</span>,
+	<span class="lit-number">0xffffff6</span>,
+	<span class="lit-number">0xffffff7</span>,
+	<span class="lit-number">0xffffff8</span>,
+	<span class="lit-number">0xffffff9</span>,
+	<span class="lit-number">0xffffffa</span>,
+	<span class="lit-number">0xffffffb</span>,
+	<span class="lit-number">0x14</span>,
+	<span class="lit-number">0x3f8</span>,
+	<span class="lit-number">0x3f9</span>,
+	<span class="lit-number">0xffa</span>,
+	<span class="lit-number">0x1ff9</span>,
+	<span class="lit-number">0x15</span>,
+	<span class="lit-number">0xf8</span>,
+	<span class="lit-number">0x7fa</span>,
+	<span class="lit-number">0x3fa</span>,
+	<span class="lit-number">0x3fb</span>,
+	<span class="lit-number">0xf9</span>,
+	<span class="lit-number">0x7fb</span>,
+	<span class="lit-number">0xfa</span>,
+	<span class="lit-number">0x16</span>,
+	<span class="lit-number">0x17</span>,
+	<span class="lit-number">0x18</span>,
+	<span class="lit-number">0x0</span>,
+	<span class="lit-number">0x1</span>,
+	<span class="lit-number">0x2</span>,
+	<span class="lit-number">0x19</span>,
+	<span class="lit-number">0x1a</span>,
+	<span class="lit-number">0x1b</span>,
+	<span class="lit-number">0x1c</span>,
+	<span class="lit-number">0x1d</span>,
+	<span class="lit-number">0x1e</span>,
+	<span class="lit-number">0x1f</span>,
+	<span class="lit-number">0x5c</span>,
+	<span class="lit-number">0xfb</span>,
+	<span class="lit-number">0x7ffc</span>,
+	<span class="lit-number">0x20</span>,
+	<span class="lit-number">0xffb</span>,
+	<span class="lit-number">0x3fc</span>,
+	<span class="lit-number">0x1ffa</span>,
+	<span class="lit-number">0x21</span>,
+	<span class="lit-number">0x5d</span>,
+	<span class="lit-number">0x5e</span>,
+	<span class="lit-number">0x5f</span>,
+	<span class="lit-number">0x60</span>,
+	<span class="lit-number">0x61</span>,
+	<span class="lit-number">0x62</span>,
+	<span class="lit-number">0x63</span>,
+	<span class="lit-number">0x64</span>,
+	<span class="lit-number">0x65</span>,
+	<span class="lit-number">0x66</span>,
+	<span class="lit-number">0x67</span>,
+	<span class="lit-number">0x68</span>,
+	<span class="lit-number">0x69</span>,
+	<span class="lit-number">0x6a</span>,
+	<span class="lit-number">0x6b</span>,
+	<span class="lit-number">0x6c</span>,
+	<span class="lit-number">0x6d</span>,
+	<span class="lit-number">0x6e</span>,
+	<span class="lit-number">0x6f</span>,
+	<span class="lit-number">0x70</span>,
+	<span class="lit-number">0x71</span>,
+	<span class="lit-number">0x72</span>,
+	<span class="lit-number">0xfc</span>,
+	<span class="lit-number">0x73</span>,
+	<span class="lit-number">0xfd</span>,
+	<span class="lit-number">0x1ffb</span>,
+	<span class="lit-number">0x7fff0</span>,
+	<span class="lit-number">0x1ffc</span>,
+	<span class="lit-number">0x3ffc</span>,
+	<span class="lit-number">0x22</span>,
+	<span class="lit-number">0x7ffd</span>,
+	<span class="lit-number">0x3</span>,
+	<span class="lit-number">0x23</span>,
+	<span class="lit-number">0x4</span>,
+	<span class="lit-number">0x24</span>,
+	<span class="lit-number">0x5</span>,
+	<span class="lit-number">0x25</span>,
+	<span class="lit-number">0x26</span>,
+	<span class="lit-number">0x27</span>,
+	<span class="lit-number">0x6</span>,
+	<span class="lit-number">0x74</span>,
+	<span class="lit-number">0x75</span>,
+	<span class="lit-number">0x28</span>,
+	<span class="lit-number">0x29</span>,
+	<span class="lit-number">0x2a</span>,
+	<span class="lit-number">0x7</span>,
+	<span class="lit-number">0x2b</span>,
+	<span class="lit-number">0x76</span>,
+	<span class="lit-number">0x2c</span>,
+	<span class="lit-number">0x8</span>,
+	<span class="lit-number">0x9</span>,
+	<span class="lit-number">0x2d</span>,
+	<span class="lit-number">0x77</span>,
+	<span class="lit-number">0x78</span>,
+	<span class="lit-number">0x79</span>,
+	<span class="lit-number">0x7a</span>,
+	<span class="lit-number">0x7b</span>,
+	<span class="lit-number">0x7ffe</span>,
+	<span class="lit-number">0x7fc</span>,
+	<span class="lit-number">0x3ffd</span>,
+	<span class="lit-number">0x1ffd</span>,
+	<span class="lit-number">0xffffffc</span>,
+	<span class="lit-number">0xfffe6</span>,
+	<span class="lit-number">0x3fffd2</span>,
+	<span class="lit-number">0xfffe7</span>,
+	<span class="lit-number">0xfffe8</span>,
+	<span class="lit-number">0x3fffd3</span>,
+	<span class="lit-number">0x3fffd4</span>,
+	<span class="lit-number">0x3fffd5</span>,
+	<span class="lit-number">0x7fffd9</span>,
+	<span class="lit-number">0x3fffd6</span>,
+	<span class="lit-number">0x7fffda</span>,
+	<span class="lit-number">0x7fffdb</span>,
+	<span class="lit-number">0x7fffdc</span>,
+	<span class="lit-number">0x7fffdd</span>,
+	<span class="lit-number">0x7fffde</span>,
+	<span class="lit-number">0xffffeb</span>,
+	<span class="lit-number">0x7fffdf</span>,
+	<span class="lit-number">0xffffec</span>,
+	<span class="lit-number">0xffffed</span>,
+	<span class="lit-number">0x3fffd7</span>,
+	<span class="lit-number">0x7fffe0</span>,
+	<span class="lit-number">0xffffee</span>,
+	<span class="lit-number">0x7fffe1</span>,
+	<span class="lit-number">0x7fffe2</span>,
+	<span class="lit-number">0x7fffe3</span>,
+	<span class="lit-number">0x7fffe4</span>,
+	<span class="lit-number">0x1fffdc</span>,
+	<span class="lit-number">0x3fffd8</span>,
+	<span class="lit-number">0x7fffe5</span>,
+	<span class="lit-number">0x3fffd9</span>,
+	<span class="lit-number">0x7fffe6</span>,
+	<span class="lit-number">0x7fffe7</span>,
+	<span class="lit-number">0xffffef</span>,
+	<span class="lit-number">0x3fffda</span>,
+	<span class="lit-number">0x1fffdd</span>,
+	<span class="lit-number">0xfffe9</span>,
+	<span class="lit-number">0x3fffdb</span>,
+	<span class="lit-number">0x3fffdc</span>,
+	<span class="lit-number">0x7fffe8</span>,
+	<span class="lit-number">0x7fffe9</span>,
+	<span class="lit-number">0x1fffde</span>,
+	<span class="lit-number">0x7fffea</span>,
+	<span class="lit-number">0x3fffdd</span>,
+	<span class="lit-number">0x3fffde</span>,
+	<span class="lit-number">0xfffff0</span>,
+	<span class="lit-number">0x1fffdf</span>,
+	<span class="lit-number">0x3fffdf</span>,
+	<span class="lit-number">0x7fffeb</span>,
+	<span class="lit-number">0x7fffec</span>,
+	<span class="lit-number">0x1fffe0</span>,
+	<span class="lit-number">0x1fffe1</span>,
+	<span class="lit-number">0x3fffe0</span>,
+	<span class="lit-number">0x1fffe2</span>,
+	<span class="lit-number">0x7fffed</span>,
+	<span class="lit-number">0x3fffe1</span>,
+	<span class="lit-number">0x7fffee</span>,
+	<span class="lit-number">0x7fffef</span>,
+	<span class="lit-number">0xfffea</span>,
+	<span class="lit-number">0x3fffe2</span>,
+	<span class="lit-number">0x3fffe3</span>,
+	<span class="lit-number">0x3fffe4</span>,
+	<span class="lit-number">0x7ffff0</span>,
+	<span class="lit-number">0x3fffe5</span>,
+	<span class="lit-number">0x3fffe6</span>,
+	<span class="lit-number">0x7ffff1</span>,
+	<span class="lit-number">0x3ffffe0</span>,
+	<span class="lit-number">0x3ffffe1</span>,
+	<span class="lit-number">0xfffeb</span>,
+	<span class="lit-number">0x7fff1</span>,
+	<span class="lit-number">0x3fffe7</span>,
+	<span class="lit-number">0x7ffff2</span>,
+	<span class="lit-number">0x3fffe8</span>,
+	<span class="lit-number">0x1ffffec</span>,
+	<span class="lit-number">0x3ffffe2</span>,
+	<span class="lit-number">0x3ffffe3</span>,
+	<span class="lit-number">0x3ffffe4</span>,
+	<span class="lit-number">0x7ffffde</span>,
+	<span class="lit-number">0x7ffffdf</span>,
+	<span class="lit-number">0x3ffffe5</span>,
+	<span class="lit-number">0xfffff1</span>,
+	<span class="lit-number">0x1ffffed</span>,
+	<span class="lit-number">0x7fff2</span>,
+	<span class="lit-number">0x1fffe3</span>,
+	<span class="lit-number">0x3ffffe6</span>,
+	<span class="lit-number">0x7ffffe0</span>,
+	<span class="lit-number">0x7ffffe1</span>,
+	<span class="lit-number">0x3ffffe7</span>,
+	<span class="lit-number">0x7ffffe2</span>,
+	<span class="lit-number">0xfffff2</span>,
+	<span class="lit-number">0x1fffe4</span>,
+	<span class="lit-number">0x1fffe5</span>,
+	<span class="lit-number">0x3ffffe8</span>,
+	<span class="lit-number">0x3ffffe9</span>,
+	<span class="lit-number">0xffffffd</span>,
+	<span class="lit-number">0x7ffffe3</span>,
+	<span class="lit-number">0x7ffffe4</span>,
+	<span class="lit-number">0x7ffffe5</span>,
+	<span class="lit-number">0xfffec</span>,
+	<span class="lit-number">0xfffff3</span>,
+	<span class="lit-number">0xfffed</span>,
+	<span class="lit-number">0x1fffe6</span>,
+	<span class="lit-number">0x3fffe9</span>,
+	<span class="lit-number">0x1fffe7</span>,
+	<span class="lit-number">0x1fffe8</span>,
+	<span class="lit-number">0x7ffff3</span>,
+	<span class="lit-number">0x3fffea</span>,
+	<span class="lit-number">0x3fffeb</span>,
+	<span class="lit-number">0x1ffffee</span>,
+	<span class="lit-number">0x1ffffef</span>,
+	<span class="lit-number">0xfffff4</span>,
+	<span class="lit-number">0xfffff5</span>,
+	<span class="lit-number">0x3ffffea</span>,
+	<span class="lit-number">0x7ffff4</span>,
+	<span class="lit-number">0x3ffffeb</span>,
+	<span class="lit-number">0x7ffffe6</span>,
+	<span class="lit-number">0x3ffffec</span>,
+	<span class="lit-number">0x3ffffed</span>,
+	<span class="lit-number">0x7ffffe7</span>,
+	<span class="lit-number">0x7ffffe8</span>,
+	<span class="lit-number">0x7ffffe9</span>,
+	<span class="lit-number">0x7ffffea</span>,
+	<span class="lit-number">0x7ffffeb</span>,
+	<span class="lit-number">0xffffffe</span>,
+	<span class="lit-number">0x7ffffec</span>,
+	<span class="lit-number">0x7ffffed</span>,
+	<span class="lit-number">0x7ffffee</span>,
+	<span class="lit-number">0x7ffffef</span>,
+	<span class="lit-number">0x7fffff0</span>,
+	<span class="lit-number">0x3ffffee</span>,
+}
+
+<span class="keyword">var</span> <a href="../../../../../../pkg/golang.org/x/net/http2/hpack.html#name-huffmanCodeLen" class="ident">huffmanCodeLen</a> = [<span class="lit-number">256</span>]<a href="../../../../../../pkg/builtin.html#name-uint8" class="ident">uint8</a>{
+	<span class="lit-number">13</span>, <span class="lit-number">23</span>, <span class="lit-number">28</span>, <span class="lit-number">28</span>, <span class="lit-number">28</span>, <span class="lit-number">28</span>, <span class="lit-number">28</span>, <span class="lit-number">28</span>, <span class="lit-number">28</span>, <span class="lit-number">24</span>, <span class="lit-number">30</span>, <span class="lit-number">28</span>, <span class="lit-number">28</span>, <span class="lit-number">30</span>, <span class="lit-number">28</span>, <span class="lit-number">28</span>,
+	<span class="lit-number">28</span>, <span class="lit-number">28</span>, <span class="lit-number">28</span>, <span class="lit-number">28</span>, <span class="lit-number">28</span>, <span class="lit-number">28</span>, <span class="lit-number">30</span>, <span class="lit-number">28</span>, <span class="lit-number">28</span>, <span class="lit-number">28</span>, <span class="lit-number">28</span>, <span class="lit-number">28</span>, <span class="lit-number">28</span>, <span class="lit-number">28</span>, <span class="lit-number">28</span>, <span class="lit-number">28</span>,
+	<span class="lit-number">6</span>, <span class="lit-number">10</span>, <span class="lit-number">10</span>, <span class="lit-number">12</span>, <span class="lit-number">13</span>, <span class="lit-number">6</span>, <span class="lit-number">8</span>, <span class="lit-number">11</span>, <span class="lit-number">10</span>, <span class="lit-number">10</span>, <span class="lit-number">8</span>, <span class="lit-number">11</span>, <span class="lit-number">8</span>, <span class="lit-number">6</span>, <span class="lit-number">6</span>, <span class="lit-number">6</span>,
+	<span class="lit-number">5</span>, <span class="lit-number">5</span>, <span class="lit-number">5</span>, <span class="lit-number">6</span>, <span class="lit-number">6</span>, <span class="lit-number">6</span>, <span class="lit-number">6</span>, <span class="lit-number">6</span>, <span class="lit-number">6</span>, <span class="lit-number">6</span>, <span class="lit-number">7</span>, <span class="lit-number">8</span>, <span class="lit-number">15</span>, <span class="lit-number">6</span>, <span class="lit-number">12</span>, <span class="lit-number">10</span>,
+	<span class="lit-number">13</span>, <span class="lit-number">6</span>, <span class="lit-number">7</span>, <span class="lit-number">7</span>, <span class="lit-number">7</span>, <span class="lit-number">7</span>, <span class="lit-number">7</span>, <span class="lit-number">7</span>, <span class="lit-number">7</span>, <span class="lit-number">7</span>, <span class="lit-number">7</span>, <span class="lit-number">7</span>, <span class="lit-number">7</span>, <span class="lit-number">7</span>, <span class="lit-number">7</span>, <span class="lit-number">7</span>,
+	<span class="lit-number">7</span>, <span class="lit-number">7</span>, <span class="lit-number">7</span>, <span class="lit-number">7</span>, <span class="lit-number">7</span>, <span class="lit-number">7</span>, <span class="lit-number">7</span>, <span class="lit-number">7</span>, <span class="lit-number">8</span>, <span class="lit-number">7</span>, <span class="lit-number">8</span>, <span class="lit-number">13</span>, <span class="lit-number">19</span>, <span class="lit-number">13</span>, <span class="lit-number">14</span>, <span class="lit-number">6</span>,
+	<span class="lit-number">15</span>, <span class="lit-number">5</span>, <span class="lit-number">6</span>, <span class="lit-number">5</span>, <span class="lit-number">6</span>, <span class="lit-number">5</span>, <span class="lit-number">6</span>, <span class="lit-number">6</span>, <span class="lit-number">6</span>, <span class="lit-number">5</span>, <span class="lit-number">7</span>, <span class="lit-number">7</span>, <span class="lit-number">6</span>, <span class="lit-number">6</span>, <span class="lit-number">6</span>, <span class="lit-number">5</span>,
+	<span class="lit-number">6</span>, <span class="lit-number">7</span>, <span class="lit-number">6</span>, <span class="lit-number">5</span>, <span class="lit-number">5</span>, <span class="lit-number">6</span>, <span class="lit-number">7</span>, <span class="lit-number">7</span>, <span class="lit-number">7</span>, <span class="lit-number">7</span>, <span class="lit-number">7</span>, <span class="lit-number">15</span>, <span class="lit-number">11</span>, <span class="lit-number">14</span>, <span class="lit-number">13</span>, <span class="lit-number">28</span>,
+	<span class="lit-number">20</span>, <span class="lit-number">22</span>, <span class="lit-number">20</span>, <span class="lit-number">20</span>, <span class="lit-number">22</span>, <span class="lit-number">22</span>, <span class="lit-number">22</span>, <span class="lit-number">23</span>, <span class="lit-number">22</span>, <span class="lit-number">23</span>, <span class="lit-number">23</span>, <span class="lit-number">23</span>, <span class="lit-number">23</span>, <span class="lit-number">23</span>, <span class="lit-number">24</span>, <span class="lit-number">23</span>,
+	<span class="lit-number">24</span>, <span class="lit-number">24</span>, <span class="lit-number">22</span>, <span class="lit-number">23</span>, <span class="lit-number">24</span>, <span class="lit-number">23</span>, <span class="lit-number">23</span>, <span class="lit-number">23</span>, <span class="lit-number">23</span>, <span class="lit-number">21</span>, <span class="lit-number">22</span>, <span class="lit-number">23</span>, <span class="lit-number">22</span>, <span class="lit-number">23</span>, <span class="lit-number">23</span>, <span class="lit-number">24</span>,
+	<span class="lit-number">22</span>, <span class="lit-number">21</span>, <span class="lit-number">20</span>, <span class="lit-number">22</span>, <span class="lit-number">22</span>, <span class="lit-number">23</span>, <span class="lit-number">23</span>, <span class="lit-number">21</span>, <span class="lit-number">23</span>, <span class="lit-number">22</span>, <span class="lit-number">22</span>, <span class="lit-number">24</span>, <span class="lit-number">21</span>, <span class="lit-number">22</span>, <span class="lit-number">23</span>, <span class="lit-number">23</span>,
+	<span class="lit-number">21</span>, <span class="lit-number">21</span>, <span class="lit-number">22</span>, <span class="lit-number">21</span>, <span class="lit-number">23</span>, <span class="lit-number">22</span>, <span class="lit-number">23</span>, <span class="lit-number">23</span>, <span class="lit-number">20</span>, <span class="lit-number">22</span>, <span class="lit-number">22</span>, <span class="lit-number">22</span>, <span class="lit-number">23</span>, <span class="lit-number">22</span>, <span class="lit-number">22</span>, <span class="lit-number">23</span>,
+	<span class="lit-number">26</span>, <span class="lit-number">26</span>, <span class="lit-number">20</span>, <span class="lit-number">19</span>, <span class="lit-number">22</span>, <span class="lit-number">23</span>, <span class="lit-number">22</span>, <span class="lit-number">25</span>, <span class="lit-number">26</span>, <span class="lit-number">26</span>, <span class="lit-number">26</span>, <span class="lit-number">27</span>, <span class="lit-number">27</span>, <span class="lit-number">26</span>, <span class="lit-number">24</span>, <span class="lit-number">25</span>,
+	<span class="lit-number">19</span>, <span class="lit-number">21</span>, <span class="lit-number">26</span>, <span class="lit-number">27</span>, <span class="lit-number">27</span>, <span class="lit-number">26</span>, <span class="lit-number">27</span>, <span class="lit-number">24</span>, <span class="lit-number">21</span>, <span class="lit-number">21</span>, <span class="lit-number">26</span>, <span class="lit-number">26</span>, <span class="lit-number">28</span>, <span class="lit-number">27</span>, <span class="lit-number">27</span>, <span class="lit-number">27</span>,
+	<span class="lit-number">20</span>, <span class="lit-number">24</span>, <span class="lit-number">20</span>, <span class="lit-number">21</span>, <span class="lit-number">22</span>, <span class="lit-number">21</span>, <span class="lit-number">21</span>, <span class="lit-number">23</span>, <span class="lit-number">22</span>, <span class="lit-number">22</span>, <span class="lit-number">25</span>, <span class="lit-number">25</span>, <span class="lit-number">24</span>, <span class="lit-number">24</span>, <span class="lit-number">26</span>, <span class="lit-number">23</span>,
+	<span class="lit-number">26</span>, <span class="lit-number">27</span>, <span class="lit-number">26</span>, <span class="lit-number">26</span>, <span class="lit-number">27</span>, <span class="lit-number">27</span>, <span class="lit-number">27</span>, <span class="lit-number">27</span>, <span class="lit-number">27</span>, <span class="lit-number">28</span>, <span class="lit-number">27</span>, <span class="lit-number">27</span>, <span class="lit-number">27</span>, <span class="lit-number">27</span>, <span class="lit-number">27</span>, <span class="lit-number">26</span>,
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: once.go in package github.com/go-redis/redis/v8/internal</title>
+<link href="../../../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	once.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../../../pkg/github.com/go-redis/redis/v8/internal.html">github.com/go-redis/redis/v8/internal</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"></span><span class="comment">Copyright 2014 The Camlistore Authors</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Licensed under the Apache License, Version 2.0 (the "License");</span><span class="comment">you may not use this file except in compliance with the License.</span><span class="comment">You may obtain a copy of the License at</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">     http:www.apache.org/licenses/LICENSE-2.0</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Unless required by applicable law or agreed to in writing, software</span><span class="comment">distributed under the License is distributed on an "AS IS" BASIS,</span><span class="comment">WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span><span class="comment">See the License for the specific language governing permissions and</span><span class="comment">limitations under the License.</span><span class="comment"></span></div>
+<div class="code"><pre><code>
+<span class="keyword">package</span> internal
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"sync"</span></label>
+	<label for="i1"><span class="lit-string i1">"sync/atomic"</span></label>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> A Once will perform a successful action exactly once.</span><span class="comment"></span><span class="comment"> Unlike a sync.Once, this Once's func returns an error</span><span class="comment"> and is re-armed on failure.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../../pkg/github.com/go-redis/redis/v8/internal.html#name-Once" class="ident">Once</a> <span class="keyword">struct</span> {
+	<a href="../../../../../../use/github.com/go-redis/redis/v8/internal..Once.m*62c66.html" class="ident">m</a>    <a href="../../../../../../pkg/sync.html" class="ident i0">sync</a>.<a href="../../../../../sync/mutex.go.html#line-25" class="ident">Mutex</a>
+	<a href="../../../../../../use/github.com/go-redis/redis/v8/internal..Once.done*a4c3e.html" class="ident">done</a> <a href="../../../../../../pkg/builtin.html#name-uint32" class="ident">uint32</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Do calls the function f if and only if Do has not been invoked</span><span class="comment"> without error for this instance of Once.  In other words, given</span><span class="comment"> 	var once Once</span><span class="comment"> if once.Do(f) is called multiple times, only the first call will</span><span class="comment"> invoke f, even if f has a different value in each invocation unless</span><span class="comment"> f returns an error.  A new instance of Once is required for each</span><span class="comment"> function to execute.</span><span class="comment"></span><span class="comment"> Do is intended for initialization that must be run exactly once.  Since f</span><span class="comment"> is niladic, it may be necessary to use a function literal to capture the</span><span class="comment"> arguments to a function to be invoked by Do:</span><span class="comment"> 	err := config.once.Do(func() error { return config.init(filename) })</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r0" class="ident">o</label> *<a href="#line-28" class="ident">Once</a>) <label for="r1" class="ident"><a href="../../../../../../use/github.com/go-redis/redis/v8/internal..Once.Do.html" class="ident">Do</a></label>(<label for="r2" class="ident">f</label> <span class="keyword">func</span>() <a href="../../../../../../pkg/builtin.html#name-error" class="ident">error</a>) <a href="../../../../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<span class="keyword">if</span> <a href="../../../../../../pkg/sync/atomic.html" class="ident i1">atomic</a>.<a href="../../../../../sync/atomic/doc.go.html#line-117" class="ident">LoadUint32</a>(&amp;<label for="r0" class="ident">o</label>.<a href="#line-30" class="ident">done</a>) == <span class="lit-number">1</span> {
+		<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Slow-path.</span></div>
+<div class="code"><pre><code>	<label for="r0" class="ident">o</label>.<a href="#line-29" class="ident">m</a>.<a href="../../../../../sync/mutex.go.html#line-72" class="ident">Lock</a>()
+	<span class="keyword">defer</span> <label for="r0" class="ident">o</label>.<a href="#line-29" class="ident">m</a>.<a href="../../../../../sync/mutex.go.html#line-179" class="ident">Unlock</a>()
+	<span class="keyword">var</span> <label for="r3" class="ident">err</label> <a href="../../../../../../pkg/builtin.html#name-error" class="ident">error</a>
+	<span class="keyword">if</span> <label for="r0" class="ident">o</label>.<a href="#line-30" class="ident">done</a> == <span class="lit-number">0</span> {
+		<label for="r3" class="ident">err</label> = <label for="r2" class="ident">f</label>()
+		<span class="keyword">if</span> <label for="r3" class="ident">err</label> == <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<a href="../../../../../../pkg/sync/atomic.html" class="ident i1">atomic</a>.<a href="../../../../../sync/atomic/doc.go.html#line-135" class="ident">StoreUint32</a>(&amp;<label for="r0" class="ident">o</label>.<a href="#line-30" class="ident">done</a>, <span class="lit-number">1</span>)
+		}
+	}
+	<span class="keyword">return</span> <label for="r3" class="ident">err</label>
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

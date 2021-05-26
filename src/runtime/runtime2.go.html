@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: runtime2.go in package runtime</title>
+<link href="../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	runtime2.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../pkg/runtime.html">runtime</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16],
+input[id=r17]:checked ~pre label[for=r17],
+input[id=r18]:checked ~pre label[for=r18],
+input[id=r19]:checked ~pre label[for=r19],
+input[id=r20]:checked ~pre label[for=r20],
+input[id=r21]:checked ~pre label[for=r21],
+input[id=r22]:checked ~pre label[for=r22],
+input[id=r23]:checked ~pre label[for=r23],
+input[id=r24]:checked ~pre label[for=r24],
+input[id=r25]:checked ~pre label[for=r25],
+input[id=r26]:checked ~pre label[for=r26],
+input[id=r27]:checked ~pre label[for=r27],
+input[id=r28]:checked ~pre label[for=r28],
+input[id=r29]:checked ~pre label[for=r29],
+input[id=r30]:checked ~pre label[for=r30],
+input[id=r31]:checked ~pre label[for=r31],
+input[id=r32]:checked ~pre label[for=r32],
+input[id=r33]:checked ~pre label[for=r33],
+input[id=r34]:checked ~pre label[for=r34]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1,
+input[id=i2]:checked ~pre .i2,
+input[id=i3]:checked ~pre .i3
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="r17" type="radio" name="g"/>
+<input id="r18" type="radio" name="g"/>
+<input id="r19" type="radio" name="g"/>
+<input id="r20" type="radio" name="g"/>
+<input id="r21" type="radio" name="g"/>
+<input id="r22" type="radio" name="g"/>
+<input id="r23" type="radio" name="g"/>
+<input id="r24" type="radio" name="g"/>
+<input id="r25" type="radio" name="g"/>
+<input id="r26" type="radio" name="g"/>
+<input id="r27" type="radio" name="g"/>
+<input id="r28" type="radio" name="g"/>
+<input id="r29" type="radio" name="g"/>
+<input id="r30" type="radio" name="g"/>
+<input id="r31" type="radio" name="g"/>
+<input id="r32" type="radio" name="g"/>
+<input id="r33" type="radio" name="g"/>
+<input id="r34" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<input id="i2" type="radio" name="i"/>
+<input id="i3" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2009 The Go Authors. All rights reserved.</span><span class="comment"> Use of this source code is governed by a BSD-style</span><span class="comment"> license that can be found in the LICENSE file.</span></div>
+<div class="code"><pre><code>
+<span class="keyword">package</span> runtime
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"internal/cpu"</span></label>
+	<label for="i1"><span class="lit-string i1">"runtime/internal/atomic"</span></label>
+	<label for="i2"><span class="lit-string i2">"runtime/internal/sys"</span></label>
+	<label for="i3"><span class="lit-string i3">"unsafe"</span></label>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> defined constants</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> G status</span><span class="comment">	</span><span class="comment">	 Beyond indicating the general state of a G, the G status</span><span class="comment">	 acts like a lock on the goroutine's stack (and hence its</span><span class="comment">	 ability to execute user code).</span><span class="comment">	</span><span class="comment">	 If you add to this list, add to the list</span><span class="comment">	 of "okay during garbage collection" status</span><span class="comment">	 in mgcmark.go too.</span><span class="comment">	</span><span class="comment">	 TODO(austin): The _Gscan bit could be much lighter-weight.</span><span class="comment">	 For example, we could choose not to run _Gscanrunnable</span><span class="comment">	 goroutines found in the run queue, rather than CAS-looping</span><span class="comment">	 until they become _Grunnable. And transitions like</span><span class="comment">	 _Gscanwaiting -&gt; _Gscanrunnable are actually okay because</span><span class="comment">	 they don't affect stack ownership.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> _Gidle means this goroutine was just allocated and has not</span><span class="comment">	 yet been initialized.</span></div>
+<div class="code"><pre><code>	<a href="../../pkg/runtime.html#name-_Gidle" class="ident">_Gidle</a> = <a href="../../pkg/builtin.html#name-iota" class="ident">iota</a> <span class="comment">// 0</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> _Grunnable means this goroutine is on a run queue. It is</span><span class="comment">	 not currently executing user code. The stack is not owned.</span></div>
+<div class="code"><pre><code>	<a href="../../pkg/runtime.html#name-_Grunnable" class="ident">_Grunnable</a> <span class="comment">// 1</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> _Grunning means this goroutine may execute user code. The</span><span class="comment">	 stack is owned by this goroutine. It is not on a run queue.</span><span class="comment">	 It is assigned an M and a P (g.m and g.m.p are valid).</span></div>
+<div class="code"><pre><code>	<a href="../../pkg/runtime.html#name-_Grunning" class="ident">_Grunning</a> <span class="comment">// 2</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> _Gsyscall means this goroutine is executing a system call.</span><span class="comment">	 It is not executing user code. The stack is owned by this</span><span class="comment">	 goroutine. It is not on a run queue. It is assigned an M.</span></div>
+<div class="code"><pre><code>	<a href="../../pkg/runtime.html#name-_Gsyscall" class="ident">_Gsyscall</a> <span class="comment">// 3</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> _Gwaiting means this goroutine is blocked in the runtime.</span><span class="comment">	 It is not executing user code. It is not on a run queue,</span><span class="comment">	 but should be recorded somewhere (e.g., a channel wait</span><span class="comment">	 queue) so it can be ready()d when necessary. The stack is</span><span class="comment">	 not owned *except* that a channel operation may read or</span><span class="comment">	 write parts of the stack under the appropriate channel</span><span class="comment">	 lock. Otherwise, it is not safe to access the stack after a</span><span class="comment">	 goroutine enters _Gwaiting (e.g., it may get moved).</span></div>
+<div class="code"><pre><code>	<a href="../../pkg/runtime.html#name-_Gwaiting" class="ident">_Gwaiting</a> <span class="comment">// 4</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> _Gmoribund_unused is currently unused, but hardcoded in gdb</span><span class="comment">	 scripts.</span></div>
+<div class="code"><pre><code>	<a href="../../pkg/runtime.html#name-_Gmoribund_unused" class="ident">_Gmoribund_unused</a> <span class="comment">// 5</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> _Gdead means this goroutine is currently unused. It may be</span><span class="comment">	 just exited, on a free list, or just being initialized. It</span><span class="comment">	 is not executing user code. It may or may not have a stack</span><span class="comment">	 allocated. The G and its stack (if any) are owned by the M</span><span class="comment">	 that is exiting the G or that obtained the G from the free</span><span class="comment">	 list.</span></div>
+<div class="code"><pre><code>	<a href="../../pkg/runtime.html#name-_Gdead" class="ident">_Gdead</a> <span class="comment">// 6</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> _Genqueue_unused is currently unused.</span></div>
+<div class="code"><pre><code>	<a href="../../pkg/runtime.html#name-_Genqueue_unused" class="ident">_Genqueue_unused</a> <span class="comment">// 7</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> _Gcopystack means this goroutine's stack is being moved. It</span><span class="comment">	 is not executing user code and is not on a run queue. The</span><span class="comment">	 stack is owned by the goroutine that put it in _Gcopystack.</span></div>
+<div class="code"><pre><code>	<a href="../../pkg/runtime.html#name-_Gcopystack" class="ident">_Gcopystack</a> <span class="comment">// 8</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> _Gpreempted means this goroutine stopped itself for a</span><span class="comment">	 suspendG preemption. It is like _Gwaiting, but nothing is</span><span class="comment">	 yet responsible for ready()ing it. Some suspendG must CAS</span><span class="comment">	 the status to _Gwaiting to take responsibility for</span><span class="comment">	 ready()ing this G.</span></div>
+<div class="code"><pre><code>	<a href="../../pkg/runtime.html#name-_Gpreempted" class="ident">_Gpreempted</a> <span class="comment">// 9</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> _Gscan combined with one of the above states other than</span><span class="comment">	 _Grunning indicates that GC is scanning the stack. The</span><span class="comment">	 goroutine is not executing user code and the stack is owned</span><span class="comment">	 by the goroutine that set the _Gscan bit.</span><span class="comment">	</span><span class="comment">	 _Gscanrunning is different: it is used to briefly block</span><span class="comment">	 state transitions while GC signals the G to scan its own</span><span class="comment">	 stack. This is otherwise like _Grunning.</span><span class="comment">	</span><span class="comment">	 atomicstatus&amp;~Gscan gives the state the goroutine will</span><span class="comment">	 return to when the scan completes.</span></div>
+<div class="code"><pre><code>	<a href="../../pkg/runtime.html#name-_Gscan" class="ident">_Gscan</a>          = <span class="lit-number">0x1000</span>
+	<a href="../../pkg/runtime.html#name-_Gscanrunnable" class="ident">_Gscanrunnable</a>  = <a href="#line-99" class="ident">_Gscan</a> + <a href="#line-39" class="ident">_Grunnable</a>  <span class="comment">// 0x1001</span>
+	<a href="../../pkg/runtime.html#name-_Gscanrunning" class="ident">_Gscanrunning</a>   = <a href="#line-99" class="ident">_Gscan</a> + <a href="#line-44" class="ident">_Grunning</a>   <span class="comment">// 0x1002</span>
+	<a href="../../pkg/runtime.html#name-_Gscansyscall" class="ident">_Gscansyscall</a>   = <a href="#line-99" class="ident">_Gscan</a> + <a href="#line-49" class="ident">_Gsyscall</a>   <span class="comment">// 0x1003</span>
+	<a href="../../pkg/runtime.html#name-_Gscanwaiting" class="ident">_Gscanwaiting</a>   = <a href="#line-99" class="ident">_Gscan</a> + <a href="#line-59" class="ident">_Gwaiting</a>   <span class="comment">// 0x1004</span>
+	<a href="../../pkg/runtime.html#name-_Gscanpreempted" class="ident">_Gscanpreempted</a> = <a href="#line-99" class="ident">_Gscan</a> + <a href="#line-86" class="ident">_Gpreempted</a> <span class="comment">// 0x1009</span>
+)
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> P status</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> _Pidle means a P is not being used to run user code or the</span><span class="comment">	 scheduler. Typically, it's on the idle P list and available</span><span class="comment">	 to the scheduler, but it may just be transitioning between</span><span class="comment">	 other states.</span><span class="comment">	</span><span class="comment">	 The P is owned by the idle list or by whatever is</span><span class="comment">	 transitioning its state. Its run queue is empty.</span></div>
+<div class="code"><pre><code>	<a href="../../pkg/runtime.html#name-_Pidle" class="ident">_Pidle</a> = <a href="../../pkg/builtin.html#name-iota" class="ident">iota</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> _Prunning means a P is owned by an M and is being used to</span><span class="comment">	 run user code or the scheduler. Only the M that owns this P</span><span class="comment">	 is allowed to change the P's status from _Prunning. The M</span><span class="comment">	 may transition the P to _Pidle (if it has no more work to</span><span class="comment">	 do), _Psyscall (when entering a syscall), or _Pgcstop (to</span><span class="comment">	 halt for the GC). The M may also hand ownership of the P</span><span class="comment">	 off directly to another M (e.g., to schedule a locked G).</span></div>
+<div class="code"><pre><code>	<a href="../../pkg/runtime.html#name-_Prunning" class="ident">_Prunning</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> _Psyscall means a P is not running user code. It has</span><span class="comment">	 affinity to an M in a syscall but is not owned by it and</span><span class="comment">	 may be stolen by another M. This is similar to _Pidle but</span><span class="comment">	 uses lightweight transitions and maintains M affinity.</span><span class="comment">	</span><span class="comment">	 Leaving _Psyscall must be done with a CAS, either to steal</span><span class="comment">	 or retake the P. Note that there's an ABA hazard: even if</span><span class="comment">	 an M successfully CASes its original P back to _Prunning</span><span class="comment">	 after a syscall, it must understand the P may have been</span><span class="comment">	 used by another M in the interim.</span></div>
+<div class="code"><pre><code>	<a href="../../pkg/runtime.html#name-_Psyscall" class="ident">_Psyscall</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> _Pgcstop means a P is halted for STW and owned by the M</span><span class="comment">	 that stopped the world. The M that stopped the world</span><span class="comment">	 continues to use its P, even in _Pgcstop. Transitioning</span><span class="comment">	 from _Prunning to _Pgcstop causes an M to release its P and</span><span class="comment">	 park.</span><span class="comment">	</span><span class="comment">	 The P retains its run queue and startTheWorld will restart</span><span class="comment">	 the scheduler on Ps with non-empty run queues.</span></div>
+<div class="code"><pre><code>	<a href="../../pkg/runtime.html#name-_Pgcstop" class="ident">_Pgcstop</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> _Pdead means a P is no longer used (GOMAXPROCS shrank). We</span><span class="comment">	 reuse Ps if GOMAXPROCS increases. A dead P is mostly</span><span class="comment">	 stripped of its resources, though a few things remain</span><span class="comment">	 (e.g., trace buffers).</span></div>
+<div class="code"><pre><code>	<a href="../../pkg/runtime.html#name-_Pdead" class="ident">_Pdead</a>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Mutual exclusion locks.  In the uncontended case,</span><span class="comment"> as fast as spin locks (just a few user-level instructions),</span><span class="comment"> but on the contention path they sleep in the kernel.</span><span class="comment"> A zeroed Mutex is unlocked (no need to initialize each lock).</span><span class="comment"> Initialization is helpful for static lock ranking, but not required.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Empty struct if lock ranking is disabled, otherwise includes the lock rank</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Futex-based impl treats it as uint32 key,</span><span class="comment">	 while sema-based impl as M* waitm.</span><span class="comment">	 Used to be a union, but unions break precise GC.</span></div>
+<div class="code"><pre><code>	<a href="../../use/runtime..mutex*96cf2.key*2c70e.html" class="ident">key</a> <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> sleep and wakeup on one-time events.</span><span class="comment"> before any calls to notesleep or notewakeup,</span><span class="comment"> must call noteclear to initialize the Note.</span><span class="comment"> then, exactly one thread can call notesleep</span><span class="comment"> and exactly one thread can call notewakeup (once).</span><span class="comment"> once notewakeup has been called, the notesleep</span><span class="comment"> will return.  future notesleep will return immediately.</span><span class="comment"> subsequent noteclear must be called only after</span><span class="comment"> previous notesleep has returned, e.g. it's disallowed</span><span class="comment"> to call noteclear straight after notewakeup.</span><span class="comment"></span><span class="comment"> notetsleep is like notesleep but wakes up after</span><span class="comment"> a given number of nanoseconds even if the event</span><span class="comment"> has not yet happened.  if a goroutine uses notetsleep to</span><span class="comment"> wake up early, it must wait to call noteclear until it</span><span class="comment"> can be sure that no other goroutine is calling</span><span class="comment"> notewakeup.</span><span class="comment"></span><span class="comment"> notesleep/notetsleep are generally called on g0,</span><span class="comment"> notetsleepg is similar to notetsleep but is called on user g.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Futex-based impl treats it as uint32 key,</span><span class="comment">	 while sema-based impl as M* waitm.</span><span class="comment">	 Used to be a union, but unions break precise GC.</span></div>
+<div class="code"><pre><code>	<a href="../../use/runtime..note*edb46.key*2c70e.html" class="ident">key</a> <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>
+}
+
+<span class="keyword">type</span> <a href="../../pkg/runtime.html#name-funcval" class="ident">funcval</a> <span class="keyword">struct</span> {
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> variable-size, fn-specific data here</span></div>
+<div class="code"><pre><code>}
+
+<span class="keyword">type</span> <a href="../../pkg/runtime.html#name-iface" class="ident">iface</a> <span class="keyword">struct</span> {
+	<a href="../../use/runtime..iface*29928.tab*75083.html" class="ident">tab</a>  *<a href="#line-857" class="ident">itab</a>
+	<a href="../../use/runtime..iface*29928.data*3a6eb.html" class="ident">data</a> <a href="../../pkg/unsafe.html" class="ident i3">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>
+}
+
+<span class="keyword">type</span> <a href="../../pkg/runtime.html#name-eface" class="ident">eface</a> <span class="keyword">struct</span> {
+	<a href="../../use/runtime..eface*8bf01._type*1cc4a.html" class="ident">_type</a> *<a href="type.go.html#line-31" class="ident">_type</a>
+	<a href="../../use/runtime..eface*8bf01.data*3a6eb.html" class="ident">data</a>  <a href="../../pkg/unsafe.html" class="ident i3">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>
+}
+
+<span class="keyword">func</span> <label for="r0" class="ident"><a href="../../pkg/runtime.html#name-efaceOf" class="ident">efaceOf</a></label>(<label for="r1" class="ident">ep</label> *<span class="keyword">interface</span>{}) *<a href="#line-208" class="ident">eface</a> {
+	<span class="keyword">return</span> (*<a href="#line-208" class="ident">eface</a>)(<a href="../../pkg/unsafe.html" class="ident i3">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(<label for="r1" class="ident">ep</label>))
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> The guintptr, muintptr, and puintptr are all used to bypass write barriers.</span><span class="comment"> It is particularly important to avoid write barriers when the current P has</span><span class="comment"> been released, because the GC thinks the world is stopped, and an</span><span class="comment"> unexpected write barrier would not be synchronized with the GC,</span><span class="comment"> which can lead to a half-executed write barrier that has marked the object</span><span class="comment"> but not queued it. If the GC skips the object and completes before the</span><span class="comment"> queuing can occur, it will incorrectly free the object.</span><span class="comment"></span><span class="comment"> We tried using special assignment functions invoked only when not</span><span class="comment"> holding a running P, but then some updates to a particular memory</span><span class="comment"> word went through write barriers and some did not. This breaks the</span><span class="comment"> write barrier shadow checking mode, and it is also scary: better to have</span><span class="comment"> a word that is completely ignored by the GC than to have one for which</span><span class="comment"> only a few updates are ignored.</span><span class="comment"></span><span class="comment"> Gs and Ps are always reachable via true pointers in the</span><span class="comment"> allgs and allp lists or (during allocation before they reach those lists)</span><span class="comment"> from stack variables.</span><span class="comment"></span><span class="comment"> Ms are always reachable via true pointers either from allm or</span><span class="comment"> freem. Unlike Gs and Ps we do free Ms, so it's important that</span><span class="comment"> nothing ever hold an muintptr across a safe point.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> A guintptr holds a goroutine pointer, but typed as a uintptr</span><span class="comment"> to bypass write barriers. It is used in the Gobuf goroutine state</span><span class="comment"> and in scheduling lists that are manipulated without a P.</span><span class="comment"></span><span class="comment"> The Gobuf.g goroutine pointer is almost always updated by assembly code.</span><span class="comment"> In one of the few places it is updated by Go code - func save - it must be</span><span class="comment"> treated as a uintptr to avoid a write barrier being emitted at a bad time.</span><span class="comment"> Instead of figuring out how to emit the write barriers missing in the</span><span class="comment"> assembly manipulation, we change the type of the field to uintptr,</span><span class="comment"> so that it does not require write barriers at all.</span><span class="comment"></span><span class="comment"> Goroutine structs are published in the allg list and never freed.</span><span class="comment"> That will keep the goroutine structs from being collected.</span><span class="comment"> There is never a time that Gobuf.g's contain the only references</span><span class="comment"> to a goroutine: the publishing of the goroutine in allg comes first.</span><span class="comment"> Goroutine pointers are also kept in non-GC-visible places like TLS,</span><span class="comment"> so I can't see them ever moving. If we did want to start moving data</span><span class="comment"> in the GC, we'd need to allocate the goroutine structs from an</span><span class="comment"> alternate arena. Using guintptr doesn't make that problem any worse.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../pkg/runtime.html#name-guintptr" class="ident">guintptr</a> <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">go:nosplit</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r2" class="ident">gp</label> <a href="#line-259" class="ident">guintptr</a>) <label for="r3" class="ident"><a href="../../use/runtime..guintptr*fb85a.ptr*83dbe.html" class="ident">ptr</a></label>() *<a href="#line-404" class="ident">g</a> { <span class="keyword">return</span> (*<a href="#line-404" class="ident">g</a>)(<a href="../../pkg/unsafe.html" class="ident i3">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(<label for="r2" class="ident">gp</label>)) }
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">go:nosplit</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r4" class="ident">gp</label> *<a href="#line-259" class="ident">guintptr</a>) <label for="r5" class="ident"><a href="../../use/runtime..guintptr*fb85a.set*6ee0e.html" class="ident">set</a></label>(<label for="r6" class="ident">g</label> *<a href="#line-404" class="ident">g</a>) { *<label for="r4" class="ident">gp</label> = <a href="#line-259" class="ident">guintptr</a>(<a href="../../pkg/unsafe.html" class="ident i3">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(<label for="r6" class="ident">g</label>)) }
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">go:nosplit</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r7" class="ident">gp</label> *<a href="#line-259" class="ident">guintptr</a>) <label for="r8" class="ident"><a href="../../use/runtime..guintptr*fb85a.cas*0ab2b.html" class="ident">cas</a></label>(<label for="r9" class="ident">old</label>, <label for="r10" class="ident">new</label> <a href="#line-259" class="ident">guintptr</a>) <a href="../../pkg/builtin.html#name-bool" class="ident">bool</a> {
+	<span class="keyword">return</span> <a href="../../pkg/runtime/internal/atomic.html" class="ident i1">atomic</a>.<a href="internal/atomic/stubs.go.html#line-18" class="ident">Casuintptr</a>((*<a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>)(<a href="../../pkg/unsafe.html" class="ident i3">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(<label for="r7" class="ident">gp</label>)), <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<label for="r9" class="ident">old</label>), <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<label for="r10" class="ident">new</label>))
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> setGNoWB performs *gp = new without a write barrier.</span><span class="comment"> For times when it's impractical to use a guintptr.</span><span class="comment">go:nosplit</span><span class="comment">go:nowritebarrier</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r11" class="ident"><a href="../../pkg/runtime.html#name-setGNoWB" class="ident">setGNoWB</a></label>(<label for="r12" class="ident">gp</label> **<a href="#line-404" class="ident">g</a>, <label for="r13" class="ident">new</label> *<a href="#line-404" class="ident">g</a>) {
+	(*<a href="#line-259" class="ident">guintptr</a>)(<a href="../../pkg/unsafe.html" class="ident i3">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(<label for="r12" class="ident">gp</label>)).<a href="#line-265" class="ident">set</a>(<label for="r13" class="ident">new</label>)
+}
+
+<span class="keyword">type</span> <a href="../../pkg/runtime.html#name-puintptr" class="ident">puintptr</a> <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">go:nosplit</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r14" class="ident">pp</label> <a href="#line-280" class="ident">puintptr</a>) <label for="r15" class="ident"><a href="../../use/runtime..puintptr*1c63e.ptr*83dbe.html" class="ident">ptr</a></label>() *<a href="#line-576" class="ident">p</a> { <span class="keyword">return</span> (*<a href="#line-576" class="ident">p</a>)(<a href="../../pkg/unsafe.html" class="ident i3">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(<label for="r14" class="ident">pp</label>)) }
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">go:nosplit</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r16" class="ident">pp</label> *<a href="#line-280" class="ident">puintptr</a>) <label for="r17" class="ident"><a href="../../use/runtime..puintptr*1c63e.set*6ee0e.html" class="ident">set</a></label>(<label for="r18" class="ident">p</label> *<a href="#line-576" class="ident">p</a>) { *<label for="r16" class="ident">pp</label> = <a href="#line-280" class="ident">puintptr</a>(<a href="../../pkg/unsafe.html" class="ident i3">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(<label for="r18" class="ident">p</label>)) }
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> muintptr is a *m that is not tracked by the garbage collector.</span><span class="comment"></span><span class="comment"> Because we do free Ms, there are some additional constrains on</span><span class="comment"> muintptrs:</span><span class="comment"></span><span class="comment"> 1. Never hold an muintptr locally across a safe point.</span><span class="comment"></span><span class="comment"> 2. Any muintptr in the heap must be owned by the M itself so it can</span><span class="comment">    ensure it is not in use when the last true *m is released.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../pkg/runtime.html#name-muintptr" class="ident">muintptr</a> <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">go:nosplit</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r19" class="ident">mp</label> <a href="#line-297" class="ident">muintptr</a>) <label for="r20" class="ident"><a href="../../use/runtime..muintptr*95c7d.ptr*83dbe.html" class="ident">ptr</a></label>() *<a href="#line-486" class="ident">m</a> { <span class="keyword">return</span> (*<a href="#line-486" class="ident">m</a>)(<a href="../../pkg/unsafe.html" class="ident i3">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(<label for="r19" class="ident">mp</label>)) }
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">go:nosplit</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r21" class="ident">mp</label> *<a href="#line-297" class="ident">muintptr</a>) <label for="r22" class="ident"><a href="../../use/runtime..muintptr*95c7d.set*6ee0e.html" class="ident">set</a></label>(<label for="r23" class="ident">m</label> *<a href="#line-486" class="ident">m</a>) { *<label for="r21" class="ident">mp</label> = <a href="#line-297" class="ident">muintptr</a>(<a href="../../pkg/unsafe.html" class="ident i3">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(<label for="r23" class="ident">m</label>)) }
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> setMNoWB performs *mp = new without a write barrier.</span><span class="comment"> For times when it's impractical to use an muintptr.</span><span class="comment">go:nosplit</span><span class="comment">go:nowritebarrier</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r24" class="ident"><a href="../../pkg/runtime.html#name-setMNoWB" class="ident">setMNoWB</a></label>(<label for="r25" class="ident">mp</label> **<a href="#line-486" class="ident">m</a>, <label for="r26" class="ident">new</label> *<a href="#line-486" class="ident">m</a>) {
+	(*<a href="#line-297" class="ident">muintptr</a>)(<a href="../../pkg/unsafe.html" class="ident i3">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(<label for="r25" class="ident">mp</label>)).<a href="#line-303" class="ident">set</a>(<label for="r26" class="ident">new</label>)
+}
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> The offsets of sp, pc, and g are known to (hard-coded in) libmach.</span><span class="comment">	</span><span class="comment">	 ctxt is unusual with respect to GC: it may be a</span><span class="comment">	 heap-allocated funcval, so GC needs to track it, but it</span><span class="comment">	 needs to be set and cleared from assembly, where it's</span><span class="comment">	 difficult to have write barriers. However, ctxt is really a</span><span class="comment">	 saved, live register, and we only ever exchange it between</span><span class="comment">	 the real register and the gobuf. Hence, we treat it as a</span><span class="comment">	 root during stack scanning, which means assembly that saves</span><span class="comment">	 and restores it doesn't need write barriers. It's still</span><span class="comment">	 typed as a pointer so that any other writes from Go get</span><span class="comment">	 write barriers.</span></div>
+<div class="code"><pre><code>	<a href="../../use/runtime..gobuf*a9011.sp*be18b.html" class="ident">sp</a>   <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>
+	<a href="../../use/runtime..gobuf*a9011.pc*d8463.html" class="ident">pc</a>   <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>
+	<a href="../../use/runtime..gobuf*a9011.g*cd0aa.html" class="ident">g</a>    <a href="#line-259" class="ident">guintptr</a>
+	<a href="../../use/runtime..gobuf*a9011.ctxt*45e63.html" class="ident">ctxt</a> <a href="../../pkg/unsafe.html" class="ident i3">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>
+	<a href="../../use/runtime..gobuf*a9011.ret*85e4a.html" class="ident">ret</a>  <a href="../../pkg/runtime/internal/sys.html" class="ident i2">sys</a>.<a href="internal/sys/arch_amd64.go.html#line-16" class="ident">Uintreg</a>
+	<a href="../../use/runtime..gobuf*a9011.lr*6896b.html" class="ident">lr</a>   <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>
+	<a href="../../use/runtime..gobuf*a9011.bp*226a1.html" class="ident">bp</a>   <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a> <span class="comment">// for framepointer-enabled architectures</span>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> sudog represents a g in a wait list, such as for sending/receiving</span><span class="comment"> on a channel.</span><span class="comment"></span><span class="comment"> sudog is necessary because the g ↔ synchronization object relation</span><span class="comment"> is many-to-many. A g can be on many wait lists, so there may be</span><span class="comment"> many sudogs for one g; and many gs may be waiting on the same</span><span class="comment"> synchronization object, so there may be many sudogs for one object.</span><span class="comment"></span><span class="comment"> sudogs are allocated from a special pool. Use acquireSudog and</span><span class="comment"> releaseSudog to allocate and free them.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> The following fields are protected by the hchan.lock of the</span><span class="comment">	 channel this sudog is blocking on. shrinkstack depends on</span><span class="comment">	 this for sudogs involved in channel ops.</span></div>
+<div class="code"><pre><code>
+	<a href="../../use/runtime..sudog*2b28b.g*cd0aa.html" class="ident">g</a> *<a href="#line-404" class="ident">g</a>
+
+	<a href="../../use/runtime..sudog*2b28b.next*c6c1c.html" class="ident">next</a> *<a href="#line-345" class="ident">sudog</a>
+	<a href="../../use/runtime..sudog*2b28b.prev*84fd9.html" class="ident">prev</a> *<a href="#line-345" class="ident">sudog</a>
+	<a href="../../use/runtime..sudog*2b28b.elem*7ddcd.html" class="ident">elem</a> <a href="../../pkg/unsafe.html" class="ident i3">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a> <span class="comment">// data element (may point to stack)</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> The following fields are never accessed concurrently.</span><span class="comment">	 For channels, waitlink is only accessed by g.</span><span class="comment">	 For semaphores, all fields (including the ones above)</span><span class="comment">	 are only accessed when holding a semaRoot lock.</span></div>
+<div class="code"><pre><code>
+	<a href="../../use/runtime..sudog*2b28b.acquiretime*4b120.html" class="ident">acquiretime</a> <a href="../../pkg/builtin.html#name-int64" class="ident">int64</a>
+	<a href="../../use/runtime..sudog*2b28b.releasetime*63be8.html" class="ident">releasetime</a> <a href="../../pkg/builtin.html#name-int64" class="ident">int64</a>
+	<a href="../../use/runtime..sudog*2b28b.ticket*14069.html" class="ident">ticket</a>      <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> isSelect indicates g is participating in a select, so</span><span class="comment">	 g.selectDone must be CAS'd to win the wake-up race.</span></div>
+<div class="code"><pre><code>	<a href="../../use/runtime..sudog*2b28b.isSelect*beae9.html" class="ident">isSelect</a> <a href="../../pkg/builtin.html#name-bool" class="ident">bool</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> success indicates whether communication over channel c</span><span class="comment">	 succeeded. It is true if the goroutine was awoken because a</span><span class="comment">	 value was delivered over channel c, and false if awoken</span><span class="comment">	 because c was closed.</span></div>
+<div class="code"><pre><code>	<a href="../../use/runtime..sudog*2b28b.success*aee40.html" class="ident">success</a> <a href="../../pkg/builtin.html#name-bool" class="ident">bool</a>
+
+	<a href="../../use/runtime..sudog*2b28b.parent*e4712.html" class="ident">parent</a>   *<a href="#line-345" class="ident">sudog</a> <span class="comment">// semaRoot binary tree</span>
+	<a href="../../use/runtime..sudog*2b28b.waitlink*3e53f.html" class="ident">waitlink</a> *<a href="#line-345" class="ident">sudog</a> <span class="comment">// g.waiting list or semaRoot</span>
+	<a href="../../use/runtime..sudog*2b28b.waittail*b4090.html" class="ident">waittail</a> *<a href="#line-345" class="ident">sudog</a> <span class="comment">// semaRoot</span>
+	<a href="../../use/runtime..sudog*2b28b.c*2e7d2.html" class="ident">c</a>        *<a href="chan.go.html#line-32" class="ident">hchan</a> <span class="comment">// channel</span>
+}
+
+<span class="keyword">type</span> <a href="../../pkg/runtime.html#name-libcall" class="ident">libcall</a> <span class="keyword">struct</span> {
+	<a href="../../use/runtime..libcall*1c4f2.fn*0f1e1.html" class="ident">fn</a>   <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>
+	<a href="../../use/runtime..libcall*1c4f2.n*1b16b.html" class="ident">n</a>    <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a> <span class="comment">// number of parameters</span>
+	<a href="../../use/runtime..libcall*1c4f2.args*09077.html" class="ident">args</a> <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a> <span class="comment">// parameters</span>
+	<a href="../../use/runtime..libcall*1c4f2.r1*82f3e.html" class="ident">r1</a>   <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a> <span class="comment">// return values</span>
+	<a href="../../use/runtime..libcall*1c4f2.r2*db77f.html" class="ident">r2</a>   <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>
+	<a href="../../use/runtime..libcall*1c4f2.err*d9eb2.html" class="ident">err</a>  <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a> <span class="comment">// error number</span>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Stack describes a Go execution stack.</span><span class="comment"> The bounds of the stack are exactly [lo, hi),</span><span class="comment"> with no implicit data structures on either side.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../pkg/runtime.html#name-stack" class="ident">stack</a> <span class="keyword">struct</span> {
+	<a href="../../use/runtime..stack*6ee08.lo*9294a.html" class="ident">lo</a> <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>
+	<a href="../../use/runtime..stack*6ee08.hi*8f434.html" class="ident">hi</a> <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> heldLockInfo gives info on a held lock and the rank of that lock</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../pkg/runtime.html#name-heldLockInfo" class="ident">heldLockInfo</a> <span class="keyword">struct</span> {
+	<a href="../../use/runtime..heldLockInfo*27827.lockAddr*102f9.html" class="ident">lockAddr</a> <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>
+	<a href="../../use/runtime..heldLockInfo*27827.rank*5a846.html" class="ident">rank</a>     <a href="lockrank.go.html#line-27" class="ident">lockRank</a>
+}
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Stack parameters.</span><span class="comment">	 stack describes the actual stack memory: [stack.lo, stack.hi).</span><span class="comment">	 stackguard0 is the stack pointer compared in the Go stack growth prologue.</span><span class="comment">	 It is stack.lo+StackGuard normally, but can be StackPreempt to trigger a preemption.</span><span class="comment">	 stackguard1 is the stack pointer compared in the C stack growth prologue.</span><span class="comment">	 It is stack.lo+StackGuard on g0 and gsignal stacks.</span><span class="comment">	 It is ~0 on other goroutine stacks, to trigger a call to morestackc (and crash).</span></div>
+<div class="code"><pre><code>	<a href="../../use/runtime..g*cd0aa.stack*6ee08.html" class="ident">stack</a>       <a href="#line-393" class="ident">stack</a>   <span class="comment">// offset known to runtime/cgo</span>
+	<a href="../../use/runtime..g*cd0aa.stackguard0*205fb.html" class="ident">stackguard0</a> <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a> <span class="comment">// offset known to liblink</span>
+	<a href="../../use/runtime..g*cd0aa.stackguard1*8855b.html" class="ident">stackguard1</a> <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a> <span class="comment">// offset known to liblink</span>
+
+	<a href="../../use/runtime..g*cd0aa._panic*49001.html" class="ident">_panic</a>       *<a href="#line-942" class="ident">_panic</a> <span class="comment">// innermost panic - offset known to liblink</span>
+	<a href="../../use/runtime..g*cd0aa._defer*e53a4.html" class="ident">_defer</a>       *<a href="#line-907" class="ident">_defer</a> <span class="comment">// innermost defer</span>
+	<a href="../../use/runtime..g*cd0aa.m*62c66.html" class="ident">m</a>            *<a href="#line-486" class="ident">m</a>      <span class="comment">// current m; offset known to arm liblink</span>
+	<a href="../../use/runtime..g*cd0aa.sched*fcce4.html" class="ident">sched</a>        <a href="#line-313" class="ident">gobuf</a>
+	<a href="../../use/runtime..g*cd0aa.syscallsp*7de62.html" class="ident">syscallsp</a>    <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>        <span class="comment">// if status==Gsyscall, syscallsp = sched.sp to use during gc</span>
+	<a href="../../use/runtime..g*cd0aa.syscallpc*a4106.html" class="ident">syscallpc</a>    <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>        <span class="comment">// if status==Gsyscall, syscallpc = sched.pc to use during gc</span>
+	<a href="../../use/runtime..g*cd0aa.stktopsp*50250.html" class="ident">stktopsp</a>     <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>        <span class="comment">// expected sp at top of stack, to check in traceback</span>
+	<a href="../../use/runtime..g*cd0aa.param*ccaaa.html" class="ident">param</a>        <a href="../../pkg/unsafe.html" class="ident i3">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a> <span class="comment">// passed parameter on wakeup</span>
+	<a href="../../use/runtime..g*cd0aa.atomicstatus*25b60.html" class="ident">atomicstatus</a> <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>
+	<a href="../../use/runtime..g*cd0aa.stackLock*b8403.html" class="ident">stackLock</a>    <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a> <span class="comment">// sigprof/scang lock; TODO: fold in to atomicstatus</span>
+	<a href="../../use/runtime..g*cd0aa.goid*02ee2.html" class="ident">goid</a>         <a href="../../pkg/builtin.html#name-int64" class="ident">int64</a>
+	<a href="../../use/runtime..g*cd0aa.schedlink*f3933.html" class="ident">schedlink</a>    <a href="#line-259" class="ident">guintptr</a>
+	<a href="../../use/runtime..g*cd0aa.waitsince*f664e.html" class="ident">waitsince</a>    <a href="../../pkg/builtin.html#name-int64" class="ident">int64</a>      <span class="comment">// approx time when the g become blocked</span>
+	<a href="../../use/runtime..g*cd0aa.waitreason*95bf6.html" class="ident">waitreason</a>   <a href="#line-985" class="ident">waitReason</a> <span class="comment">// if status==Gwaiting</span>
+
+	<a href="../../use/runtime..g*cd0aa.preempt*1f460.html" class="ident">preempt</a>       <a href="../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// preemption signal, duplicates stackguard0 = stackpreempt</span>
+	<a href="../../use/runtime..g*cd0aa.preemptStop*fd419.html" class="ident">preemptStop</a>   <a href="../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// transition to _Gpreempted on preemption; otherwise, just deschedule</span>
+	<a href="../../use/runtime..g*cd0aa.preemptShrink*a8614.html" class="ident">preemptShrink</a> <a href="../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// shrink stack at synchronous safe point</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> asyncSafePoint is set if g is stopped at an asynchronous</span><span class="comment">	 safe point. This means there are frames on the stack</span><span class="comment">	 without precise pointer information.</span></div>
+<div class="code"><pre><code>	<a href="../../use/runtime..g*cd0aa.asyncSafePoint*61c55.html" class="ident">asyncSafePoint</a> <a href="../../pkg/builtin.html#name-bool" class="ident">bool</a>
+
+	<a href="../../use/runtime..g*cd0aa.paniconfault*9b055.html" class="ident">paniconfault</a> <a href="../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// panic (instead of crash) on unexpected fault address</span>
+	<a href="../../use/runtime..g*cd0aa.gcscandone*850b3.html" class="ident">gcscandone</a>   <a href="../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// g has scanned stack; protected by _Gscan bit in status</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> activeStackChans indicates that there are unlocked channels</span><span class="comment">	 pointing into this goroutine's stack. If true, stack</span><span class="comment">	 copying needs to acquire channel locks to protect these</span><span class="comment">	 areas of the stack.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> parkingOnChan indicates that the goroutine is about to</span><span class="comment">	 park on a chansend or chanrecv. Used to signal an unsafe point</span><span class="comment">	 for stack shrinking. It's a boolean value, but is updated atomically.</span></div>
+<div class="code"><pre><code>	<a href="../../use/runtime..g*cd0aa.parkingOnChan*0a468.html" class="ident">parkingOnChan</a> <a href="../../pkg/builtin.html#name-uint8" class="ident">uint8</a>
+
+	<a href="../../use/runtime..g*cd0aa.raceignore*88f7e.html" class="ident">raceignore</a>     <a href="../../pkg/builtin.html#name-int8" class="ident">int8</a>     <span class="comment">// ignore race detection events</span>
+	<a href="../../use/runtime..g*cd0aa.sysblocktraced*ad018.html" class="ident">sysblocktraced</a> <a href="../../pkg/builtin.html#name-bool" class="ident">bool</a>     <span class="comment">// StartTrace has emitted EvGoInSyscall about this goroutine</span>
+	<a href="../../use/runtime..g*cd0aa.sysexitticks*d0a75.html" class="ident">sysexitticks</a>   <a href="../../pkg/builtin.html#name-int64" class="ident">int64</a>    <span class="comment">// cputicks when syscall has returned (for tracing)</span>
+	<a href="../../use/runtime..g*cd0aa.traceseq*9037c.html" class="ident">traceseq</a>       <a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a>   <span class="comment">// trace event sequencer</span>
+	<a href="../../use/runtime..g*cd0aa.tracelastp*c968f.html" class="ident">tracelastp</a>     <a href="#line-280" class="ident">puintptr</a> <span class="comment">// last P emitted an event for this goroutine</span>
+	<a href="../../use/runtime..g*cd0aa.lockedm*8e6ea.html" class="ident">lockedm</a>        <a href="#line-297" class="ident">muintptr</a>
+	<a href="../../use/runtime..g*cd0aa.sig*a5439.html" class="ident">sig</a>            <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>
+	<a href="../../use/runtime..g*cd0aa.writebuf*bfc8d.html" class="ident">writebuf</a>       []<a href="../../pkg/builtin.html#name-byte" class="ident">byte</a>
+	<a href="../../use/runtime..g*cd0aa.sigcode0*36136.html" class="ident">sigcode0</a>       <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>
+	<a href="../../use/runtime..g*cd0aa.sigcode1*0fd63.html" class="ident">sigcode1</a>       <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>
+	<a href="../../use/runtime..g*cd0aa.sigpc*34b8a.html" class="ident">sigpc</a>          <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>
+	<a href="../../use/runtime..g*cd0aa.gopc*2be2d.html" class="ident">gopc</a>           <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>         <span class="comment">// pc of go statement that created this goroutine</span>
+	<a href="../../use/runtime..g*cd0aa.ancestors*4c679.html" class="ident">ancestors</a>      *[]<a href="#line-968" class="ident">ancestorInfo</a> <span class="comment">// ancestor information goroutine(s) that created this goroutine (only used if debug.tracebackancestors)</span>
+	<a href="../../use/runtime..g*cd0aa.startpc*fbe3f.html" class="ident">startpc</a>        <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>         <span class="comment">// pc of goroutine function</span>
+	<a href="../../use/runtime..g*cd0aa.racectx*27ed1.html" class="ident">racectx</a>        <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>
+	<a href="../../use/runtime..g*cd0aa.waiting*80cfa.html" class="ident">waiting</a>        *<a href="#line-345" class="ident">sudog</a>         <span class="comment">// sudog structures this g is waiting on (that have a valid elem ptr); in lock order</span>
+	<a href="../../use/runtime..g*cd0aa.cgoCtxt*0db1e.html" class="ident">cgoCtxt</a>        []<a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>      <span class="comment">// cgo traceback context</span>
+	<a href="../../use/runtime..g*cd0aa.labels*d772e.html" class="ident">labels</a>         <a href="../../pkg/unsafe.html" class="ident i3">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a> <span class="comment">// profiler labels</span>
+	<a href="../../use/runtime..g*cd0aa.timer*cd94e.html" class="ident">timer</a>          *<a href="time.go.html#line-17" class="ident">timer</a>         <span class="comment">// cached timer for time.Sleep</span>
+	<a href="../../use/runtime..g*cd0aa.selectDone*b347c.html" class="ident">selectDone</a>     <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>         <span class="comment">// are we participating in a select and did someone win the race?</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Per-G GC state</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> gcAssistBytes is this G's GC assist credit in terms of</span><span class="comment">	 bytes allocated. If this is positive, then the G has credit</span><span class="comment">	 to allocate gcAssistBytes bytes without assisting. If this</span><span class="comment">	 is negative, then the G must correct this by performing</span><span class="comment">	 scan work. We track this in bytes to make it fast to update</span><span class="comment">	 and check for debt in the malloc hot path. The assist ratio</span><span class="comment">	 determines how this corresponds to scan work debt.</span></div>
+<div class="code"><pre><code>	<a href="../../use/runtime..g*cd0aa.gcAssistBytes*4f54d.html" class="ident">gcAssistBytes</a> <a href="../../pkg/builtin.html#name-int64" class="ident">int64</a>
+}
+
+<span class="keyword">type</span> <a href="../../pkg/runtime.html#name-m" class="ident">m</a> <span class="keyword">struct</span> {
+	<a href="../../use/runtime..m*62c66.g0*f21b0.html" class="ident">g0</a>      *<a href="#line-404" class="ident">g</a>     <span class="comment">// goroutine with scheduling stack</span>
+	<a href="../../use/runtime..m*62c66.morebuf*7a231.html" class="ident">morebuf</a> <a href="#line-313" class="ident">gobuf</a>  <span class="comment">// gobuf arg to morestack</span>
+	<a href="../../use/runtime..m*62c66.divmod*234e8.html" class="ident">divmod</a>  <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a> <span class="comment">// div/mod denominator for arm - known to liblink</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Fields not known to debuggers.</span></div>
+<div class="code"><pre><code>	<a href="../../use/runtime..m*62c66.procid*86f81.html" class="ident">procid</a>        <a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a>       <span class="comment">// for debuggers, but offset not hard-coded</span>
+	<a href="../../use/runtime..m*62c66.gsignal*3d492.html" class="ident">gsignal</a>       *<a href="#line-404" class="ident">g</a>           <span class="comment">// signal-handling g</span>
+	<a href="../../use/runtime..m*62c66.goSigStack*33f85.html" class="ident">goSigStack</a>    <a href="signal_unix.go.html#line-1171" class="ident">gsignalStack</a> <span class="comment">// Go-allocated signal handling stack</span>
+	<a href="../../use/runtime..m*62c66.sigmask*9f490.html" class="ident">sigmask</a>       <a href="os_darwin.go.html#line-349" class="ident">sigset</a>       <span class="comment">// storage for saved signal mask</span>
+	<a href="../../use/runtime..m*62c66.tls*b7e65.html" class="ident">tls</a>           [<span class="lit-number">6</span>]<a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>   <span class="comment">// thread-local storage (for x86 extern register)</span>
+	<a href="../../use/runtime..m*62c66.mstartfn*8ddfe.html" class="ident">mstartfn</a>      <span class="keyword">func</span>()
+	<a href="../../use/runtime..m*62c66.curg*65ffe.html" class="ident">curg</a>          *<a href="#line-404" class="ident">g</a>       <span class="comment">// current running goroutine</span>
+	<a href="../../use/runtime..m*62c66.caughtsig*0db4f.html" class="ident">caughtsig</a>     <a href="#line-259" class="ident">guintptr</a> <span class="comment">// goroutine running during fatal signal</span>
+	<a href="../../use/runtime..m*62c66.p*148de.html" class="ident">p</a>             <a href="#line-280" class="ident">puintptr</a> <span class="comment">// attached p for executing go code (nil if not executing go code)</span>
+	<a href="../../use/runtime..m*62c66.nextp*a73f3.html" class="ident">nextp</a>         <a href="#line-280" class="ident">puintptr</a>
+	<a href="../../use/runtime..m*62c66.oldp*00bbc.html" class="ident">oldp</a>          <a href="#line-280" class="ident">puintptr</a> <span class="comment">// the p that was attached before executing a syscall</span>
+	<a href="../../use/runtime..m*62c66.id*a5614.html" class="ident">id</a>            <a href="../../pkg/builtin.html#name-int64" class="ident">int64</a>
+	<a href="../../use/runtime..m*62c66.mallocing*485fb.html" class="ident">mallocing</a>     <a href="../../pkg/builtin.html#name-int32" class="ident">int32</a>
+	<a href="../../use/runtime..m*62c66.throwing*fb0a0.html" class="ident">throwing</a>      <a href="../../pkg/builtin.html#name-int32" class="ident">int32</a>
+	<a href="../../use/runtime..m*62c66.preemptoff*38971.html" class="ident">preemptoff</a>    <a href="../../pkg/builtin.html#name-string" class="ident">string</a> <span class="comment">// if != "", keep curg running on this m</span>
+	<a href="../../use/runtime..m*62c66.locks*e4b3e.html" class="ident">locks</a>         <a href="../../pkg/builtin.html#name-int32" class="ident">int32</a>
+	<a href="../../use/runtime..m*62c66.dying*a3287.html" class="ident">dying</a>         <a href="../../pkg/builtin.html#name-int32" class="ident">int32</a>
+	<a href="../../use/runtime..m*62c66.profilehz*f42c4.html" class="ident">profilehz</a>     <a href="../../pkg/builtin.html#name-int32" class="ident">int32</a>
+	<a href="../../use/runtime..m*62c66.spinning*c9195.html" class="ident">spinning</a>      <a href="../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// m is out of work and is actively looking for work</span>
+	<a href="../../use/runtime..m*62c66.blocked*6973d.html" class="ident">blocked</a>       <a href="../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// m is blocked on a note</span>
+	<a href="../../use/runtime..m*62c66.newSigstack*5b362.html" class="ident">newSigstack</a>   <a href="../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// minit on C thread called sigaltstack</span>
+	<a href="../../use/runtime..m*62c66.printlock*dd125.html" class="ident">printlock</a>     <a href="../../pkg/builtin.html#name-int8" class="ident">int8</a>
+	<a href="../../use/runtime..m*62c66.incgo*c995a.html" class="ident">incgo</a>         <a href="../../pkg/builtin.html#name-bool" class="ident">bool</a>   <span class="comment">// m is executing a cgo call</span>
+	<a href="../../use/runtime..m*62c66.freeWait*7e1b1.html" class="ident">freeWait</a>      <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a> <span class="comment">// if == 0, safe to free g0 and delete m (atomic)</span>
+	<a href="../../use/runtime..m*62c66.fastrand*c106e.html" class="ident">fastrand</a>      [<span class="lit-number">2</span>]<a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>
+	<a href="../../use/runtime..m*62c66.needextram*93d04.html" class="ident">needextram</a>    <a href="../../pkg/builtin.html#name-bool" class="ident">bool</a>
+	<a href="../../use/runtime..m*62c66.traceback*5e570.html" class="ident">traceback</a>     <a href="../../pkg/builtin.html#name-uint8" class="ident">uint8</a>
+	<a href="../../use/runtime..m*62c66.ncgocall*02e26.html" class="ident">ncgocall</a>      <a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a>      <span class="comment">// number of cgo calls in total</span>
+	<a href="../../use/runtime..m*62c66.ncgo*7e550.html" class="ident">ncgo</a>          <a href="../../pkg/builtin.html#name-int32" class="ident">int32</a>       <span class="comment">// number of cgo calls currently in progress</span>
+	<a href="../../use/runtime..m*62c66.cgoCallersUse*cdf57.html" class="ident">cgoCallersUse</a> <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>      <span class="comment">// if non-zero, cgoCallers in use temporarily</span>
+	<a href="../../use/runtime..m*62c66.cgoCallers*711bf.html" class="ident">cgoCallers</a>    *<a href="cgocall.go.html#line-95" class="ident">cgoCallers</a> <span class="comment">// cgo traceback if crashing in cgo call</span>
+	<a href="../../use/runtime..m*62c66.doesPark*ec2ba.html" class="ident">doesPark</a>      <a href="../../pkg/builtin.html#name-bool" class="ident">bool</a>        <span class="comment">// non-P running threads: sysmon and newmHandoff never use .park</span>
+	<a href="../../use/runtime..m*62c66.park*4d397.html" class="ident">park</a>          <a href="#line-191" class="ident">note</a>
+	<a href="../../use/runtime..m*62c66.alllink*7a172.html" class="ident">alllink</a>       *<a href="#line-486" class="ident">m</a> <span class="comment">// on allm</span>
+	<a href="../../use/runtime..m*62c66.schedlink*f3933.html" class="ident">schedlink</a>     <a href="#line-297" class="ident">muintptr</a>
+	<a href="../../use/runtime..m*62c66.lockedg*4cf32.html" class="ident">lockedg</a>       <a href="#line-259" class="ident">guintptr</a>
+	<a href="../../use/runtime..m*62c66.createstack*592be.html" class="ident">createstack</a>   [<span class="lit-number">32</span>]<a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a> <span class="comment">// stack that created this thread.</span>
+	<a href="../../use/runtime..m*62c66.lockedExt*46b4a.html" class="ident">lockedExt</a>     <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>      <span class="comment">// tracking for external LockOSThread</span>
+	<a href="../../use/runtime..m*62c66.lockedInt*ddefc.html" class="ident">lockedInt</a>     <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>      <span class="comment">// tracking for internal lockOSThread</span>
+	<a href="../../use/runtime..m*62c66.nextwaitm*c43f1.html" class="ident">nextwaitm</a>     <a href="#line-297" class="ident">muintptr</a>    <span class="comment">// next m waiting for lock</span>
+	<a href="../../use/runtime..m*62c66.waitunlockf*7464a.html" class="ident">waitunlockf</a>   <span class="keyword">func</span>(*<a href="#line-404" class="ident">g</a>, <a href="../../pkg/unsafe.html" class="ident i3">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>) <a href="../../pkg/builtin.html#name-bool" class="ident">bool</a>
+	<a href="../../use/runtime..m*62c66.waitlock*5e79e.html" class="ident">waitlock</a>      <a href="../../pkg/unsafe.html" class="ident i3">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>
+	<a href="../../use/runtime..m*62c66.waittraceev*c2ec7.html" class="ident">waittraceev</a>   <a href="../../pkg/builtin.html#name-byte" class="ident">byte</a>
+	<a href="../../use/runtime..m*62c66.waittraceskip*2e798.html" class="ident">waittraceskip</a> <a href="../../pkg/builtin.html#name-int" class="ident">int</a>
+	<a href="../../use/runtime..m*62c66.startingtrace*c9a34.html" class="ident">startingtrace</a> <a href="../../pkg/builtin.html#name-bool" class="ident">bool</a>
+	<a href="../../use/runtime..m*62c66.syscalltick*0c621.html" class="ident">syscalltick</a>   <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>
+	<a href="../../use/runtime..m*62c66.freelink*cd472.html" class="ident">freelink</a>      *<a href="#line-486" class="ident">m</a> <span class="comment">// on sched.freem</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> mFixup is used to synchronize OS related m state (credentials etc)</span><span class="comment">	 use mutex to access.</span></div>
+<div class="code"><pre><code>	<a href="../../use/runtime..m*62c66.mFixup*2fa30.html" class="ident">mFixup</a> <span class="keyword">struct</span> {
+		lock <a href="#line-162" class="ident">mutex</a>
+		fn   <span class="keyword">func</span>(<a href="../../pkg/builtin.html#name-bool" class="ident">bool</a>) <a href="../../pkg/builtin.html#name-bool" class="ident">bool</a>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> these are here because they are too large to be on the stack</span><span class="comment">	 of low-level NOSPLIT functions.</span></div>
+<div class="code"><pre><code>	<a href="../../use/runtime..m*62c66.libcall*1c4f2.html" class="ident">libcall</a>   <a href="#line-381" class="ident">libcall</a>
+	<a href="../../use/runtime..m*62c66.libcallpc*a032b.html" class="ident">libcallpc</a> <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a> <span class="comment">// for cpu profiler</span>
+	<a href="../../use/runtime..m*62c66.libcallsp*32a25.html" class="ident">libcallsp</a> <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>
+	<a href="../../use/runtime..m*62c66.libcallg*0ae8a.html" class="ident">libcallg</a>  <a href="#line-259" class="ident">guintptr</a>
+	<a href="../../use/runtime..m*62c66.syscall*44b1b.html" class="ident">syscall</a>   <a href="#line-381" class="ident">libcall</a> <span class="comment">// stores syscall parameters on windows</span>
+
+	<a href="../../use/runtime..m*62c66.vdsoSP*07cdd.html" class="ident">vdsoSP</a> <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a> <span class="comment">// SP for traceback while in VDSO call (0 if not in call)</span>
+	<a href="../../use/runtime..m*62c66.vdsoPC*4b232.html" class="ident">vdsoPC</a> <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a> <span class="comment">// PC for traceback while in VDSO call</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> preemptGen counts the number of completed preemption</span><span class="comment">	 signals. This is used to detect when a preemption is</span><span class="comment">	 requested, but fails. Accessed atomically.</span></div>
+<div class="code"><pre><code>	<a href="../../use/runtime..m*62c66.preemptGen*44a01.html" class="ident">preemptGen</a> <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Whether this is a pending preemption signal on this M.</span><span class="comment">	 Accessed atomically.</span></div>
+<div class="code"><pre><code>	<a href="../../use/runtime..m*62c66.signalPending*b0057.html" class="ident">signalPending</a> <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>
+
+	<a href="debuglog_off.go.html#line-11" class="ident">dlogPerM</a>
+
+	<a href="os_darwin.go.html#line-9" class="ident">mOS</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Up to 10 locks held by this m, maintained by the lock ranking code.</span></div>
+<div class="code"><pre><code>	<a href="../../use/runtime..m*62c66.locksHeldLen*35816.html" class="ident">locksHeldLen</a> <a href="../../pkg/builtin.html#name-int" class="ident">int</a>
+	<a href="../../use/runtime..m*62c66.locksHeld*edb0f.html" class="ident">locksHeld</a>    [<span class="lit-number">10</span>]<a href="#line-399" class="ident">heldLockInfo</a>
+}
+
+<span class="keyword">type</span> <a href="../../pkg/runtime.html#name-p" class="ident">p</a> <span class="keyword">struct</span> {
+	<a href="../../use/runtime..p*148de.id*a5614.html" class="ident">id</a>          <a href="../../pkg/builtin.html#name-int32" class="ident">int32</a>
+	<a href="../../use/runtime..p*148de.status*073c1.html" class="ident">status</a>      <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a> <span class="comment">// one of pidle/prunning/...</span>
+	<a href="../../use/runtime..p*148de.link*b1b1b.html" class="ident">link</a>        <a href="#line-280" class="ident">puintptr</a>
+	<a href="../../use/runtime..p*148de.schedtick*5d610.html" class="ident">schedtick</a>   <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>     <span class="comment">// incremented on every scheduler call</span>
+	<a href="../../use/runtime..p*148de.syscalltick*0c621.html" class="ident">syscalltick</a> <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>     <span class="comment">// incremented on every system call</span>
+	<a href="../../use/runtime..p*148de.sysmontick*75392.html" class="ident">sysmontick</a>  <a href="proc.go.html#line-5252" class="ident">sysmontick</a> <span class="comment">// last tick observed by sysmon</span>
+	<a href="../../use/runtime..p*148de.m*62c66.html" class="ident">m</a>           <a href="#line-297" class="ident">muintptr</a>   <span class="comment">// back-link to associated m (nil if idle)</span>
+	<a href="../../use/runtime..p*148de.mcache*8aa2c.html" class="ident">mcache</a>      *<a href="mcache.go.html#line-20" class="ident">mcache</a>
+	<a href="../../use/runtime..p*148de.pcache*5b49e.html" class="ident">pcache</a>      <a href="mpagecache.go.html#line-18" class="ident">pageCache</a>
+	<a href="../../use/runtime..p*148de.raceprocctx*2ae62.html" class="ident">raceprocctx</a> <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>
+
+	<a href="../../use/runtime..p*148de.deferpool*aa253.html" class="ident">deferpool</a>    [<span class="lit-number">5</span>][]*<a href="#line-907" class="ident">_defer</a> <span class="comment">// pool of available defer structs of different sizes (see panic.go)</span>
+	<a href="../../use/runtime..p*148de.deferpoolbuf*02245.html" class="ident">deferpoolbuf</a> [<span class="lit-number">5</span>][<span class="lit-number">32</span>]*<a href="#line-907" class="ident">_defer</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Cache of goroutine ids, amortizes accesses to runtime·sched.goidgen.</span></div>
+<div class="code"><pre><code>	<a href="../../use/runtime..p*148de.goidcache*c7433.html" class="ident">goidcache</a>    <a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a>
+	<a href="../../use/runtime..p*148de.goidcacheend*e727b.html" class="ident">goidcacheend</a> <a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Queue of runnable goroutines. Accessed without lock.</span></div>
+<div class="code"><pre><code>	<a href="../../use/runtime..p*148de.runqhead*3df8f.html" class="ident">runqhead</a> <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>
+	<a href="../../use/runtime..p*148de.runqtail*afcb5.html" class="ident">runqtail</a> <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> runnext, if non-nil, is a runnable G that was ready'd by</span><span class="comment">	 the current G and should be run next instead of what's in</span><span class="comment">	 runq if there's time remaining in the running G's time</span><span class="comment">	 slice. It will inherit the time left in the current time</span><span class="comment">	 slice. If a set of goroutines is locked in a</span><span class="comment">	 communicate-and-wait pattern, this schedules that set as a</span><span class="comment">	 unit and eliminates the (potentially large) scheduling</span><span class="comment">	 latency that otherwise arises from adding the ready'd</span><span class="comment">	 goroutines to the end of the run queue.</span></div>
+<div class="code"><pre><code>	<a href="../../use/runtime..p*148de.runnext*f166b.html" class="ident">runnext</a> <a href="#line-259" class="ident">guintptr</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Available G's (status == Gdead)</span></div>
+<div class="code"><pre><code>	<a href="../../use/runtime..p*148de.gFree*096ef.html" class="ident">gFree</a> <span class="keyword">struct</span> {
+		<a href="proc.go.html#line-6023" class="ident">gList</a>
+		n <a href="../../pkg/builtin.html#name-int32" class="ident">int32</a>
+	}
+
+	<a href="../../use/runtime..p*148de.sudogcache*dbb56.html" class="ident">sudogcache</a> []*<a href="#line-345" class="ident">sudog</a>
+	<a href="../../use/runtime..p*148de.sudogbuf*48ffb.html" class="ident">sudogbuf</a>   [<span class="lit-number">128</span>]*<a href="#line-345" class="ident">sudog</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Cache of mspan objects from the heap.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> We need an explicit length here because this field is used</span><span class="comment">		 in allocation codepaths where write barriers are not allowed,</span><span class="comment">		 and eliminating the write barrier/keeping it eliminated from</span><span class="comment">		 slice updates is tricky, moreso than just managing the length</span><span class="comment">		 ourselves.</span></div>
+<div class="code"><pre><code>		len <a href="../../pkg/builtin.html#name-int" class="ident">int</a>
+		buf [<span class="lit-number">128</span>]*<a href="mheap.go.html#line-382" class="ident">mspan</a>
+	}
+
+	<a href="../../use/runtime..p*148de.tracebuf*a9249.html" class="ident">tracebuf</a> <a href="trace.go.html#line-170" class="ident">traceBufPtr</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> traceSweep indicates the sweep events should be traced.</span><span class="comment">	 This is used to defer the sweep start event until a span</span><span class="comment">	 has actually been swept.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> traceSwept and traceReclaimed track the number of bytes</span><span class="comment">	 swept and reclaimed by sweeping in the current sweep loop.</span></div>
+<div class="code"><pre><code>	<a href="../../use/runtime..p*148de.traceSwept*9c9f6.html" class="ident">traceSwept</a>, <a href="../../use/runtime..p*148de.traceReclaimed*9e1c9.html" class="ident">traceReclaimed</a> <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>
+
+	<a href="../../use/runtime..p*148de.palloc*4da6a.html" class="ident">palloc</a> <a href="malloc.go.html#line-1285" class="ident">persistentAlloc</a> <span class="comment">// per-P to avoid mutex</span>
+
+	_ <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a> <span class="comment">// Alignment for atomic fields below</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> The when field of the first entry on the timer heap.</span><span class="comment">	 This is updated using atomic functions.</span><span class="comment">	 This is 0 if the timer heap is empty.</span></div>
+<div class="code"><pre><code>	<a href="../../use/runtime..p*148de.timer0When*dea16.html" class="ident">timer0When</a> <a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> The earliest known nextwhen field of a timer with</span><span class="comment">	 timerModifiedEarlier status. Because the timer may have been</span><span class="comment">	 modified again, there need not be any timer with this value.</span><span class="comment">	 This is updated using atomic functions.</span><span class="comment">	 This is 0 if the value is unknown.</span></div>
+<div class="code"><pre><code>	<a href="../../use/runtime..p*148de.timerModifiedEarliest*90249.html" class="ident">timerModifiedEarliest</a> <a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Per-P GC state</span></div>
+<div class="code"><pre><code>	<a href="../../use/runtime..p*148de.gcAssistTime*13dbd.html" class="ident">gcAssistTime</a>         <a href="../../pkg/builtin.html#name-int64" class="ident">int64</a> <span class="comment">// Nanoseconds in assistAlloc</span>
+	<a href="../../use/runtime..p*148de.gcFractionalMarkTime*b3a6f.html" class="ident">gcFractionalMarkTime</a> <a href="../../pkg/builtin.html#name-int64" class="ident">int64</a> <span class="comment">// Nanoseconds in fractional mark worker (atomic)</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> gcMarkWorkerMode is the mode for the next mark worker to run in.</span><span class="comment">	 That is, this is used to communicate with the worker goroutine</span><span class="comment">	 selected for immediate execution by</span><span class="comment">	 gcController.findRunnableGCWorker. When scheduling other goroutines,</span><span class="comment">	 this field must be set to gcMarkWorkerNotWorker.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> gcMarkWorkerStartTime is the nanotime() at which the most recent</span><span class="comment">	 mark worker started.</span></div>
+<div class="code"><pre><code>	<a href="../../use/runtime..p*148de.gcMarkWorkerStartTime*3cebe.html" class="ident">gcMarkWorkerStartTime</a> <a href="../../pkg/builtin.html#name-int64" class="ident">int64</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> gcw is this P's GC work buffer cache. The work buffer is</span><span class="comment">	 filled by write barriers, drained by mutator assists, and</span><span class="comment">	 disposed on certain GC state transitions.</span></div>
+<div class="code"><pre><code>	<a href="../../use/runtime..p*148de.gcw*dce92.html" class="ident">gcw</a> <a href="mgcwork.go.html#line-55" class="ident">gcWork</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> wbBuf is this P's GC write barrier buffer.</span><span class="comment">	</span><span class="comment">	 TODO: Consider caching this in the running G.</span></div>
+<div class="code"><pre><code>	<a href="../../use/runtime..p*148de.wbBuf*01301.html" class="ident">wbBuf</a> <a href="mwbbuf.go.html#line-42" class="ident">wbBuf</a>
+
+	<a href="../../use/runtime..p*148de.runSafePointFn*73e5f.html" class="ident">runSafePointFn</a> <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a> <span class="comment">// if 1, run sched.safePointFn at next safe point</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> statsSeq is a counter indicating whether this P is currently</span><span class="comment">	 writing any stats. Its value is even when not, odd when it is.</span></div>
+<div class="code"><pre><code>	<a href="../../use/runtime..p*148de.statsSeq*818da.html" class="ident">statsSeq</a> <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Lock for timers. We normally access the timers while running</span><span class="comment">	 on this P, but the scheduler can also do it from a different P.</span></div>
+<div class="code"><pre><code>	<a href="../../use/runtime..p*148de.timersLock*58f49.html" class="ident">timersLock</a> <a href="#line-162" class="ident">mutex</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Actions to take at some time. This is used to implement the</span><span class="comment">	 standard library's time package.</span><span class="comment">	 Must hold timersLock to access.</span></div>
+<div class="code"><pre><code>	<a href="../../use/runtime..p*148de.timers*e17f7.html" class="ident">timers</a> []*<a href="time.go.html#line-17" class="ident">timer</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Number of timers in P's heap.</span><span class="comment">	 Modified using atomic instructions.</span></div>
+<div class="code"><pre><code>	<a href="../../use/runtime..p*148de.numTimers*64baa.html" class="ident">numTimers</a> <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Number of timerModifiedEarlier timers on P's heap.</span><span class="comment">	 This should only be modified while holding timersLock,</span><span class="comment">	 or while the timer status is in a transient state</span><span class="comment">	 such as timerModifying.</span></div>
+<div class="code"><pre><code>	<a href="../../use/runtime..p*148de.adjustTimers*48677.html" class="ident">adjustTimers</a> <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Number of timerDeleted timers in P's heap.</span><span class="comment">	 Modified using atomic instructions.</span></div>
+<div class="code"><pre><code>	<a href="../../use/runtime..p*148de.deletedTimers*5c043.html" class="ident">deletedTimers</a> <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Race context used while executing timer functions.</span></div>
+<div class="code"><pre><code>	<a href="../../use/runtime..p*148de.timerRaceCtx*e0711.html" class="ident">timerRaceCtx</a> <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> preempt is set to indicate that this P should be enter the</span><span class="comment">	 scheduler ASAP (regardless of what G is running on it).</span></div>
+<div class="code"><pre><code>	<a href="../../use/runtime..p*148de.preempt*1f460.html" class="ident">preempt</a> <a href="../../pkg/builtin.html#name-bool" class="ident">bool</a>
+
+	<a href="../../use/runtime..p*148de.pad*f563f.html" class="ident">pad</a> <a href="../../pkg/internal/cpu.html" class="ident i0">cpu</a>.<a href="../internal/cpu/cpu.go.html#line-15" class="ident">CacheLinePad</a>
+}
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> accessed atomically. keep at top to ensure alignment on 32-bit systems.</span></div>
+<div class="code"><pre><code>	<a href="../../use/runtime..schedt*c5d5c.goidgen*9ed2a.html" class="ident">goidgen</a>   <a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a>
+	<a href="../../use/runtime..schedt*c5d5c.lastpoll*1144a.html" class="ident">lastpoll</a>  <a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a> <span class="comment">// time of last network poll, 0 if currently polling</span>
+	<a href="../../use/runtime..schedt*c5d5c.pollUntil*5ddc6.html" class="ident">pollUntil</a> <a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a> <span class="comment">// time to which current poll is sleeping</span>
+
+	<a href="../../use/runtime..schedt*c5d5c.lock*0c030.html" class="ident">lock</a> <a href="#line-162" class="ident">mutex</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> When increasing nmidle, nmidlelocked, nmsys, or nmfreed, be</span><span class="comment">	 sure to call checkdead().</span></div>
+<div class="code"><pre><code>
+	<a href="../../use/runtime..schedt*c5d5c.midle*e5848.html" class="ident">midle</a>        <a href="#line-297" class="ident">muintptr</a> <span class="comment">// idle m's waiting for work</span>
+	<a href="../../use/runtime..schedt*c5d5c.nmidle*28135.html" class="ident">nmidle</a>       <a href="../../pkg/builtin.html#name-int32" class="ident">int32</a>    <span class="comment">// number of idle m's waiting for work</span>
+	<a href="../../use/runtime..schedt*c5d5c.nmidlelocked*8f381.html" class="ident">nmidlelocked</a> <a href="../../pkg/builtin.html#name-int32" class="ident">int32</a>    <span class="comment">// number of locked m's waiting for work</span>
+	<a href="../../use/runtime..schedt*c5d5c.mnext*7fef0.html" class="ident">mnext</a>        <a href="../../pkg/builtin.html#name-int64" class="ident">int64</a>    <span class="comment">// number of m's that have been created and next M ID</span>
+	<a href="../../use/runtime..schedt*c5d5c.maxmcount*5afbe.html" class="ident">maxmcount</a>    <a href="../../pkg/builtin.html#name-int32" class="ident">int32</a>    <span class="comment">// maximum number of m's allowed (or die)</span>
+	<a href="../../use/runtime..schedt*c5d5c.nmsys*736b1.html" class="ident">nmsys</a>        <a href="../../pkg/builtin.html#name-int32" class="ident">int32</a>    <span class="comment">// number of system m's not counted for deadlock</span>
+	<a href="../../use/runtime..schedt*c5d5c.nmfreed*81b36.html" class="ident">nmfreed</a>      <a href="../../pkg/builtin.html#name-int64" class="ident">int64</a>    <span class="comment">// cumulative number of freed m's</span>
+
+	<a href="../../use/runtime..schedt*c5d5c.ngsys*b3e92.html" class="ident">ngsys</a> <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a> <span class="comment">// number of system goroutines; updated atomically</span>
+
+	<a href="../../use/runtime..schedt*c5d5c.pidle*13e3d.html" class="ident">pidle</a>      <a href="#line-280" class="ident">puintptr</a> <span class="comment">// idle p's</span>
+	<a href="../../use/runtime..schedt*c5d5c.npidle*2b064.html" class="ident">npidle</a>     <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>
+	<a href="../../use/runtime..schedt*c5d5c.nmspinning*f8069.html" class="ident">nmspinning</a> <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a> <span class="comment">// See "Worker thread parking/unparking" comment in proc.go.</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Global runnable queue.</span></div>
+<div class="code"><pre><code>	<a href="../../use/runtime..schedt*c5d5c.runq*16089.html" class="ident">runq</a>     <a href="proc.go.html#line-5956" class="ident">gQueue</a>
+	<a href="../../use/runtime..schedt*c5d5c.runqsize*c8c7b.html" class="ident">runqsize</a> <a href="../../pkg/builtin.html#name-int32" class="ident">int32</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> disable controls selective disabling of the scheduler.</span><span class="comment">	</span><span class="comment">	 Use schedEnableUser to control this.</span><span class="comment">	</span><span class="comment">	 disable is protected by sched.lock.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> user disables scheduling of user goroutines.</span></div>
+<div class="code"><pre><code>		user     <a href="../../pkg/builtin.html#name-bool" class="ident">bool</a>
+		runnable <a href="proc.go.html#line-5956" class="ident">gQueue</a> <span class="comment">// pending runnable Gs</span>
+		n        <a href="../../pkg/builtin.html#name-int32" class="ident">int32</a>  <span class="comment">// length of runnable</span>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Global cache of dead G's.</span></div>
+<div class="code"><pre><code>	<a href="../../use/runtime..schedt*c5d5c.gFree*096ef.html" class="ident">gFree</a> <span class="keyword">struct</span> {
+		lock    <a href="#line-162" class="ident">mutex</a>
+		stack   <a href="proc.go.html#line-6023" class="ident">gList</a> <span class="comment">// Gs with stacks</span>
+		noStack <a href="proc.go.html#line-6023" class="ident">gList</a> <span class="comment">// Gs without stacks</span>
+		n       <a href="../../pkg/builtin.html#name-int32" class="ident">int32</a>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Central cache of sudog structs.</span></div>
+<div class="code"><pre><code>	<a href="../../use/runtime..schedt*c5d5c.sudoglock*e9241.html" class="ident">sudoglock</a>  <a href="#line-162" class="ident">mutex</a>
+	<a href="../../use/runtime..schedt*c5d5c.sudogcache*dbb56.html" class="ident">sudogcache</a> *<a href="#line-345" class="ident">sudog</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Central pool of available defer structs of different sizes.</span></div>
+<div class="code"><pre><code>	<a href="../../use/runtime..schedt*c5d5c.deferlock*9a418.html" class="ident">deferlock</a> <a href="#line-162" class="ident">mutex</a>
+	<a href="../../use/runtime..schedt*c5d5c.deferpool*aa253.html" class="ident">deferpool</a> [<span class="lit-number">5</span>]*<a href="#line-907" class="ident">_defer</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> freem is the list of m's waiting to be freed when their</span><span class="comment">	 m.exited is set. Linked through m.freelink.</span></div>
+<div class="code"><pre><code>	<a href="../../use/runtime..schedt*c5d5c.freem*7375b.html" class="ident">freem</a> *<a href="#line-486" class="ident">m</a>
+
+	<a href="../../use/runtime..schedt*c5d5c.gcwaiting*a96f2.html" class="ident">gcwaiting</a>  <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a> <span class="comment">// gc is waiting to run</span>
+	<a href="../../use/runtime..schedt*c5d5c.stopwait*8f5b2.html" class="ident">stopwait</a>   <a href="../../pkg/builtin.html#name-int32" class="ident">int32</a>
+	<a href="../../use/runtime..schedt*c5d5c.stopnote*7d9c3.html" class="ident">stopnote</a>   <a href="#line-191" class="ident">note</a>
+	<a href="../../use/runtime..schedt*c5d5c.sysmonwait*14606.html" class="ident">sysmonwait</a> <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>
+	<a href="../../use/runtime..schedt*c5d5c.sysmonnote*6d0f7.html" class="ident">sysmonnote</a> <a href="#line-191" class="ident">note</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> While true, sysmon not ready for mFixup calls.</span><span class="comment">	 Accessed atomically.</span></div>
+<div class="code"><pre><code>	<a href="../../use/runtime..schedt*c5d5c.sysmonStarting*545f7.html" class="ident">sysmonStarting</a> <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> safepointFn should be called on each P at the next GC</span><span class="comment">	 safepoint if p.runSafePointFn is set.</span></div>
+<div class="code"><pre><code>	<a href="../../use/runtime..schedt*c5d5c.safePointFn*8bb48.html" class="ident">safePointFn</a>   <span class="keyword">func</span>(*<a href="#line-576" class="ident">p</a>)
+	<a href="../../use/runtime..schedt*c5d5c.safePointWait*6df96.html" class="ident">safePointWait</a> <a href="../../pkg/builtin.html#name-int32" class="ident">int32</a>
+	<a href="../../use/runtime..schedt*c5d5c.safePointNote*a63cb.html" class="ident">safePointNote</a> <a href="#line-191" class="ident">note</a>
+
+	<a href="../../use/runtime..schedt*c5d5c.profilehz*f42c4.html" class="ident">profilehz</a> <a href="../../pkg/builtin.html#name-int32" class="ident">int32</a> <span class="comment">// cpu profiling rate</span>
+
+	<a href="../../use/runtime..schedt*c5d5c.procresizetime*9ba18.html" class="ident">procresizetime</a> <a href="../../pkg/builtin.html#name-int64" class="ident">int64</a> <span class="comment">// nanotime() of last change to gomaxprocs</span>
+	<a href="../../use/runtime..schedt*c5d5c.totaltime*1e57a.html" class="ident">totaltime</a>      <a href="../../pkg/builtin.html#name-int64" class="ident">int64</a> <span class="comment">// ∫gomaxprocs dt up to procresizetime</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> sysmonlock protects sysmon's actions on the runtime.</span><span class="comment">	</span><span class="comment">	 Acquire and hold this mutex to block sysmon from interacting</span><span class="comment">	 with the rest of the runtime.</span></div>
+<div class="code"><pre><code>	<a href="../../use/runtime..schedt*c5d5c.sysmonlock*af318.html" class="ident">sysmonlock</a> <a href="#line-162" class="ident">mutex</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Values for the flags field of a sigTabT.</span></div>
+<div class="code"><pre><code><span class="keyword">const</span> (
+	<a href="../../pkg/runtime.html#name-_SigNotify" class="ident">_SigNotify</a>   = <span class="lit-number">1</span> &lt;&lt; <a href="../../pkg/builtin.html#name-iota" class="ident">iota</a> <span class="comment">// let signal.Notify have signal, even if from kernel</span>
+	<a href="../../pkg/runtime.html#name-_SigKill" class="ident">_SigKill</a>                 <span class="comment">// if signal.Notify doesn't take it, exit quietly</span>
+	<a href="../../pkg/runtime.html#name-_SigThrow" class="ident">_SigThrow</a>                <span class="comment">// if signal.Notify doesn't take it, exit loudly</span>
+	<a href="../../pkg/runtime.html#name-_SigPanic" class="ident">_SigPanic</a>                <span class="comment">// if the signal is from the kernel, panic</span>
+	<a href="../../pkg/runtime.html#name-_SigDefault" class="ident">_SigDefault</a>              <span class="comment">// if the signal isn't explicitly requested, don't monitor it</span>
+	<a href="../../pkg/runtime.html#name-_SigGoExit" class="ident">_SigGoExit</a>               <span class="comment">// cause all runtime procs to exit (only used on Plan 9).</span>
+	<a href="../../pkg/runtime.html#name-_SigSetStack" class="ident">_SigSetStack</a>             <span class="comment">// add SA_ONSTACK to libc handler</span>
+	<a href="../../pkg/runtime.html#name-_SigUnblock" class="ident">_SigUnblock</a>              <span class="comment">// always unblock; see blockableSig</span>
+	<a href="../../pkg/runtime.html#name-_SigIgn" class="ident">_SigIgn</a>                  <span class="comment">// _SIG_DFL action is to ignore the signal</span>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Layout of in-memory per-function information prepared by linker</span><span class="comment"> See https://golang.org/s/go12symtab.</span><span class="comment"> Keep in sync with linker (../cmd/link/internal/ld/pcln.go:/pclntab)</span><span class="comment"> and with package debug/gosym and with symtab.go in package runtime.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../pkg/runtime.html#name-_func" class="ident">_func</a> <span class="keyword">struct</span> {
+	<a href="../../use/runtime.._func*be418.entry*923fe.html" class="ident">entry</a>   <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a> <span class="comment">// start pc</span>
+	<a href="../../use/runtime.._func*be418.nameoff*0669b.html" class="ident">nameoff</a> <a href="../../pkg/builtin.html#name-int32" class="ident">int32</a>   <span class="comment">// function name</span>
+
+	<a href="../../use/runtime.._func*be418.args*09077.html" class="ident">args</a>        <a href="../../pkg/builtin.html#name-int32" class="ident">int32</a>  <span class="comment">// in/out args size</span>
+	<a href="../../use/runtime.._func*be418.deferreturn*4a66c.html" class="ident">deferreturn</a> <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a> <span class="comment">// offset of start of a deferreturn call instruction from entry, if any.</span>
+
+	<a href="../../use/runtime.._func*be418.pcsp*50cf6.html" class="ident">pcsp</a>      <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>
+	<a href="../../use/runtime.._func*be418.pcfile*ae1c9.html" class="ident">pcfile</a>    <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>
+	<a href="../../use/runtime.._func*be418.pcln*8c003.html" class="ident">pcln</a>      <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>
+	<a href="../../use/runtime.._func*be418.npcdata*0cab4.html" class="ident">npcdata</a>   <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>
+	<a href="../../use/runtime.._func*be418.cuOffset*7bcbb.html" class="ident">cuOffset</a>  <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>  <span class="comment">// runtime.cutab offset of this function's CU</span>
+	<a href="../../use/runtime.._func*be418.funcID*3e610.html" class="ident">funcID</a>    <a href="symtab.go.html#line-309" class="ident">funcID</a>  <span class="comment">// set for certain special runtime functions</span>
+	_         [<span class="lit-number">2</span>]<a href="../../pkg/builtin.html#name-byte" class="ident">byte</a> <span class="comment">// pad</span>
+	<a href="../../use/runtime.._func*be418.nfuncdata*ca124.html" class="ident">nfuncdata</a> <a href="../../pkg/builtin.html#name-uint8" class="ident">uint8</a>   <span class="comment">// must be last</span>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Pseudo-Func that is returned for PCs that occur in inlined code.</span><span class="comment"> A *Func can be either a *_func or a *funcinl, and they are distinguished</span><span class="comment"> by the first uintptr.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../pkg/runtime.html#name-funcinl" class="ident">funcinl</a> <span class="keyword">struct</span> {
+	<a href="../../use/runtime..funcinl*e5a5f.zero*f9194.html" class="ident">zero</a>  <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a> <span class="comment">// set to 0 to distinguish from _func</span>
+	<a href="../../use/runtime..funcinl*e5a5f.entry*923fe.html" class="ident">entry</a> <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a> <span class="comment">// entry of the real (the "outermost") frame.</span>
+	<a href="../../use/runtime..funcinl*e5a5f.name*82a35.html" class="ident">name</a>  <a href="../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../use/runtime..funcinl*e5a5f.file*3b9c3.html" class="ident">file</a>  <a href="../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../use/runtime..funcinl*e5a5f.line*38a9c.html" class="ident">line</a>  <a href="../../pkg/builtin.html#name-int" class="ident">int</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> layout of Itab known to compilers</span><span class="comment"> allocated in non-garbage-collected memory</span><span class="comment"> Needs to be in sync with</span><span class="comment"> ../cmd/compile/internal/gc/reflect.go:/^func.dumptabs.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../pkg/runtime.html#name-itab" class="ident">itab</a> <span class="keyword">struct</span> {
+	<a href="../../use/runtime..itab*f636c.inter*c84c8.html" class="ident">inter</a> *<a href="type.go.html#line-366" class="ident">interfacetype</a>
+	<a href="../../use/runtime..itab*f636c._type*1cc4a.html" class="ident">_type</a> *<a href="type.go.html#line-31" class="ident">_type</a>
+	<a href="../../use/runtime..itab*f636c.hash*d04b9.html" class="ident">hash</a>  <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a> <span class="comment">// copy of _type.hash. Used for type switches.</span>
+	_     [<span class="lit-number">4</span>]<a href="../../pkg/builtin.html#name-byte" class="ident">byte</a>
+	<a href="../../use/runtime..itab*f636c.fun*00c42.html" class="ident">fun</a>   [<span class="lit-number">1</span>]<a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a> <span class="comment">// variable sized. fun[0]==0 means _type does not implement inter.</span>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Lock-free stack node.</span><span class="comment"> Also known to export_test.go.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../pkg/runtime.html#name-lfnode" class="ident">lfnode</a> <span class="keyword">struct</span> {
+	<a href="../../use/runtime..lfnode*0bc3b.next*c6c1c.html" class="ident">next</a>    <a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a>
+	<a href="../../use/runtime..lfnode*0bc3b.pushcnt*0ad58.html" class="ident">pushcnt</a> <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>
+}
+
+<span class="keyword">type</span> <a href="../../pkg/runtime.html#name-forcegcstate" class="ident">forcegcstate</a> <span class="keyword">struct</span> {
+	<a href="../../use/runtime..forcegcstate*f2af5.lock*0c030.html" class="ident">lock</a> <a href="#line-162" class="ident">mutex</a>
+	<a href="../../use/runtime..forcegcstate*f2af5.g*cd0aa.html" class="ident">g</a>    *<a href="#line-404" class="ident">g</a>
+	<a href="../../use/runtime..forcegcstate*f2af5.idle*4fb62.html" class="ident">idle</a> <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> extendRandom extends the random numbers in r[:n] to the whole slice r.</span><span class="comment"> Treats n&lt;0 as n==0.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r27" class="ident"><a href="../../pkg/runtime.html#name-extendRandom" class="ident">extendRandom</a></label>(<label for="r28" class="ident">r</label> []<a href="../../pkg/builtin.html#name-byte" class="ident">byte</a>, <label for="r29" class="ident">n</label> <a href="../../pkg/builtin.html#name-int" class="ident">int</a>) {
+	<span class="keyword">if</span> <label for="r29" class="ident">n</label> &lt; <span class="lit-number">0</span> {
+		<label for="r29" class="ident">n</label> = <span class="lit-number">0</span>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Extend random bits using hash function &amp; time seed</span></div>
+<div class="code"><pre><code>		<label for="r30" class="ident">w</label> := <label for="r29" class="ident">n</label>
+		<span class="keyword">if</span> <label for="r30" class="ident">w</label> &gt; <span class="lit-number">16</span> {
+			<label for="r30" class="ident">w</label> = <span class="lit-number">16</span>
+		}
+		<label for="r31" class="ident">h</label> := <a href="alg.go.html#line-47" class="ident">memhash</a>(<a href="../../pkg/unsafe.html" class="ident i3">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(&amp;<label for="r28" class="ident">r</label>[<label for="r29" class="ident">n</label>-<label for="r30" class="ident">w</label>]), <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<a href="time_nofake.go.html#line-18" class="ident">nanotime</a>()), <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<label for="r30" class="ident">w</label>))
+		<span class="keyword">for</span> <label for="r32" class="ident">i</label> := <span class="lit-number">0</span>; <label for="r32" class="ident">i</label> &lt; <a href="../../pkg/runtime/internal/sys.html" class="ident i2">sys</a>.<a href="internal/sys/stubs.go.html#line-9" class="ident">PtrSize</a> &amp;&amp; <label for="r29" class="ident">n</label> &lt; <a href="../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r28" class="ident">r</label>); <label for="r32" class="ident">i</label>++ {
+			<label for="r28" class="ident">r</label>[<label for="r29" class="ident">n</label>] = <a href="../../pkg/builtin.html#name-byte" class="ident">byte</a>(<label for="r31" class="ident">h</label>)
+			<label for="r29" class="ident">n</label>++
+			<label for="r31" class="ident">h</label> &gt;&gt;= <span class="lit-number">8</span>
+		}
+	}
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> A _defer holds an entry on the list of deferred calls.</span><span class="comment"> If you add a field here, add code to clear it in freedefer and deferProcStack</span><span class="comment"> This struct must match the code in cmd/compile/internal/gc/reflect.go:deferstruct</span><span class="comment"> and cmd/compile/internal/gc/ssa.go:(*state).call.</span><span class="comment"> Some defers will be allocated on the stack and some on the heap.</span><span class="comment"> All defers are logically part of the stack, so write barriers to</span><span class="comment"> initialize them are not required. All defers must be manually scanned,</span><span class="comment"> and for heap defers, marked.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../pkg/runtime.html#name-_defer" class="ident">_defer</a> <span class="keyword">struct</span> {
+	<a href="../../use/runtime.._defer*e53a4.siz*62ae8.html" class="ident">siz</a>     <a href="../../pkg/builtin.html#name-int32" class="ident">int32</a> <span class="comment">// includes both arguments and results</span>
+	<a href="../../use/runtime.._defer*e53a4.started*03494.html" class="ident">started</a> <a href="../../pkg/builtin.html#name-bool" class="ident">bool</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> openDefer indicates that this _defer is for a frame with open-coded</span><span class="comment">	 defers. We have only one defer record for the entire frame (which may</span><span class="comment">	 currently have 0, 1, or more defers active).</span></div>
+<div class="code"><pre><code>	<a href="../../use/runtime.._defer*e53a4.openDefer*45c6a.html" class="ident">openDefer</a> <a href="../../pkg/builtin.html#name-bool" class="ident">bool</a>
+	<a href="../../use/runtime.._defer*e53a4.sp*be18b.html" class="ident">sp</a>        <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>  <span class="comment">// sp at time of defer</span>
+	<a href="../../use/runtime.._defer*e53a4.pc*d8463.html" class="ident">pc</a>        <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>  <span class="comment">// pc at time of defer</span>
+	<a href="../../use/runtime.._defer*e53a4.fn*0f1e1.html" class="ident">fn</a>        *<a href="#line-198" class="ident">funcval</a> <span class="comment">// can be nil for open-coded defers</span>
+	<a href="../../use/runtime.._defer*e53a4._panic*49001.html" class="ident">_panic</a>    *<a href="#line-942" class="ident">_panic</a>  <span class="comment">// panic that is running defer</span>
+	<a href="../../use/runtime.._defer*e53a4.link*b1b1b.html" class="ident">link</a>      *<a href="#line-907" class="ident">_defer</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> If openDefer is true, the fields below record values about the stack</span><span class="comment">	 frame and associated function that has the open-coded defer(s). sp</span><span class="comment">	 above will be the sp for the frame, and pc will be address of the</span><span class="comment">	 deferreturn call in the function.</span></div>
+<div class="code"><pre><code>	<a href="../../use/runtime.._defer*e53a4.fd*8bd57.html" class="ident">fd</a>   <a href="../../pkg/unsafe.html" class="ident i3">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a> <span class="comment">// funcdata for the function associated with the frame</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> framepc is the current pc associated with the stack frame. Together,</span><span class="comment">	 with sp above (which is the sp associated with the stack frame),</span><span class="comment">	 framepc/sp can be used as pc/sp pair to continue a stack trace via</span><span class="comment">	 gentraceback().</span></div>
+<div class="code"><pre><code>	<a href="../../use/runtime.._defer*e53a4.framepc*be4e8.html" class="ident">framepc</a> <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> A _panic holds information about an active panic.</span><span class="comment"></span><span class="comment"> A _panic value must only ever live on the stack.</span><span class="comment"></span><span class="comment"> The argp and link fields are stack pointers, but don't need special</span><span class="comment"> handling during stack growth: because they are pointer-typed and</span><span class="comment"> _panic values only live on the stack, regular stack pointer</span><span class="comment"> adjustment takes care of them.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../pkg/runtime.html#name-_panic" class="ident">_panic</a> <span class="keyword">struct</span> {
+	<a href="../../use/runtime.._panic*49001.argp*30e0c.html" class="ident">argp</a>      <a href="../../pkg/unsafe.html" class="ident i3">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a> <span class="comment">// pointer to arguments of deferred call run during panic; cannot move - known to liblink</span>
+	<a href="../../use/runtime.._panic*49001.arg*b25f0.html" class="ident">arg</a>       <span class="keyword">interface</span>{}    <span class="comment">// argument to panic</span>
+	<a href="../../use/runtime.._panic*49001.link*b1b1b.html" class="ident">link</a>      *<a href="#line-942" class="ident">_panic</a>        <span class="comment">// link to earlier panic</span>
+	<a href="../../use/runtime.._panic*49001.pc*d8463.html" class="ident">pc</a>        <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>        <span class="comment">// where to return to in runtime if this panic is bypassed</span>
+	<a href="../../use/runtime.._panic*49001.sp*be18b.html" class="ident">sp</a>        <a href="../../pkg/unsafe.html" class="ident i3">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a> <span class="comment">// where to return to in runtime if this panic is bypassed</span>
+	<a href="../../use/runtime.._panic*49001.recovered*f6e09.html" class="ident">recovered</a> <a href="../../pkg/builtin.html#name-bool" class="ident">bool</a>           <span class="comment">// whether this panic is over</span>
+	<a href="../../use/runtime.._panic*49001.aborted*a2d1c.html" class="ident">aborted</a>   <a href="../../pkg/builtin.html#name-bool" class="ident">bool</a>           <span class="comment">// the panic was aborted</span>
+	<a href="../../use/runtime.._panic*49001.goexit*cfcf2.html" class="ident">goexit</a>    <a href="../../pkg/builtin.html#name-bool" class="ident">bool</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> stack traces</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../pkg/runtime.html#name-stkframe" class="ident">stkframe</a> <span class="keyword">struct</span> {
+	<a href="../../use/runtime..stkframe*8fe7a.fn*0f1e1.html" class="ident">fn</a>       <a href="symtab.go.html#line-658" class="ident">funcInfo</a>   <span class="comment">// function being run</span>
+	<a href="../../use/runtime..stkframe*8fe7a.pc*d8463.html" class="ident">pc</a>       <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>    <span class="comment">// program counter within fn</span>
+	<a href="../../use/runtime..stkframe*8fe7a.continpc*d2dca.html" class="ident">continpc</a> <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>    <span class="comment">// program counter where execution can continue, or 0 if not</span>
+	<a href="../../use/runtime..stkframe*8fe7a.lr*6896b.html" class="ident">lr</a>       <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>    <span class="comment">// program counter at caller aka link register</span>
+	<a href="../../use/runtime..stkframe*8fe7a.sp*be18b.html" class="ident">sp</a>       <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>    <span class="comment">// stack pointer at pc</span>
+	<a href="../../use/runtime..stkframe*8fe7a.fp*5aef9.html" class="ident">fp</a>       <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>    <span class="comment">// stack pointer at caller aka frame pointer</span>
+	<a href="../../use/runtime..stkframe*8fe7a.varp*a7004.html" class="ident">varp</a>     <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>    <span class="comment">// top of local variables</span>
+	<a href="../../use/runtime..stkframe*8fe7a.argp*30e0c.html" class="ident">argp</a>     <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>    <span class="comment">// pointer to function arguments</span>
+	<a href="../../use/runtime..stkframe*8fe7a.arglen*15e55.html" class="ident">arglen</a>   <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>    <span class="comment">// number of bytes at argp</span>
+	<a href="../../use/runtime..stkframe*8fe7a.argmap*41bed.html" class="ident">argmap</a>   *<a href="stack.go.html#line-562" class="ident">bitvector</a> <span class="comment">// force use of this argmap</span>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ancestorInfo records details of where a goroutine was started.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../pkg/runtime.html#name-ancestorInfo" class="ident">ancestorInfo</a> <span class="keyword">struct</span> {
+	<a href="../../use/runtime..ancestorInfo*8e756.pcs*d7d4f.html" class="ident">pcs</a>  []<a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a> <span class="comment">// pcs from the stack of this goroutine</span>
+	<a href="../../use/runtime..ancestorInfo*8e756.goid*02ee2.html" class="ident">goid</a> <a href="../../pkg/builtin.html#name-int64" class="ident">int64</a>     <span class="comment">// goroutine id of this goroutine; original goroutine possibly dead</span>
+	<a href="../../use/runtime..ancestorInfo*8e756.gopc*2be2d.html" class="ident">gopc</a> <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>   <span class="comment">// pc of go statement that created this goroutine</span>
+}
+
+<span class="keyword">const</span> (
+	<a href="../../pkg/runtime.html#name-_TraceRuntimeFrames" class="ident">_TraceRuntimeFrames</a> = <span class="lit-number">1</span> &lt;&lt; <a href="../../pkg/builtin.html#name-iota" class="ident">iota</a> <span class="comment">// include frames for internal runtime functions.</span>
+	<a href="../../pkg/runtime.html#name-_TraceTrap" class="ident">_TraceTrap</a>                      <span class="comment">// the initial PC, SP are from a trap, not a return PC from a call</span>
+	<a href="../../pkg/runtime.html#name-_TraceJumpStack" class="ident">_TraceJumpStack</a>                 <span class="comment">// if traceback is on a systemstack, resume trace at g that called into it</span>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> The maximum number of frames we print for a traceback</span></div>
+<div class="code"><pre><code><span class="keyword">const</span> <a href="../../pkg/runtime.html#name-_TracebackMaxFrames" class="ident">_TracebackMaxFrames</a> = <span class="lit-number">100</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> A waitReason explains why a goroutine has been stopped.</span><span class="comment"> See gopark. Do not re-use waitReasons, add new ones.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../pkg/runtime.html#name-waitReason" class="ident">waitReason</a> <a href="../../pkg/builtin.html#name-uint8" class="ident">uint8</a>
+
+<span class="keyword">const</span> (
+	<a href="../../pkg/runtime.html#name-waitReasonZero" class="ident">waitReasonZero</a>                  <a href="#line-985" class="ident">waitReason</a> = <a href="../../pkg/builtin.html#name-iota" class="ident">iota</a> <span class="comment">// ""</span>
+	<a href="../../pkg/runtime.html#name-waitReasonGCAssistMarking" class="ident">waitReasonGCAssistMarking</a>                         <span class="comment">// "GC assist marking"</span>
+	<a href="../../pkg/runtime.html#name-waitReasonIOWait" class="ident">waitReasonIOWait</a>                                  <span class="comment">// "IO wait"</span>
+	<a href="../../pkg/runtime.html#name-waitReasonChanReceiveNilChan" class="ident">waitReasonChanReceiveNilChan</a>                      <span class="comment">// "chan receive (nil chan)"</span>
+	<a href="../../pkg/runtime.html#name-waitReasonChanSendNilChan" class="ident">waitReasonChanSendNilChan</a>                         <span class="comment">// "chan send (nil chan)"</span>
+	<a href="../../pkg/runtime.html#name-waitReasonDumpingHeap" class="ident">waitReasonDumpingHeap</a>                             <span class="comment">// "dumping heap"</span>
+	<a href="../../pkg/runtime.html#name-waitReasonGarbageCollection" class="ident">waitReasonGarbageCollection</a>                       <span class="comment">// "garbage collection"</span>
+	<a href="../../pkg/runtime.html#name-waitReasonGarbageCollectionScan" class="ident">waitReasonGarbageCollectionScan</a>                   <span class="comment">// "garbage collection scan"</span>
+	<a href="../../pkg/runtime.html#name-waitReasonPanicWait" class="ident">waitReasonPanicWait</a>                               <span class="comment">// "panicwait"</span>
+	<a href="../../pkg/runtime.html#name-waitReasonSelect" class="ident">waitReasonSelect</a>                                  <span class="comment">// "select"</span>
+	<a href="../../pkg/runtime.html#name-waitReasonSelectNoCases" class="ident">waitReasonSelectNoCases</a>                           <span class="comment">// "select (no cases)"</span>
+	<a href="../../pkg/runtime.html#name-waitReasonGCAssistWait" class="ident">waitReasonGCAssistWait</a>                            <span class="comment">// "GC assist wait"</span>
+	<a href="../../pkg/runtime.html#name-waitReasonGCSweepWait" class="ident">waitReasonGCSweepWait</a>                             <span class="comment">// "GC sweep wait"</span>
+	<a href="../../pkg/runtime.html#name-waitReasonGCScavengeWait" class="ident">waitReasonGCScavengeWait</a>                          <span class="comment">// "GC scavenge wait"</span>
+	<a href="../../pkg/runtime.html#name-waitReasonChanReceive" class="ident">waitReasonChanReceive</a>                             <span class="comment">// "chan receive"</span>
+	<a href="../../pkg/runtime.html#name-waitReasonChanSend" class="ident">waitReasonChanSend</a>                                <span class="comment">// "chan send"</span>
+	<a href="../../pkg/runtime.html#name-waitReasonFinalizerWait" class="ident">waitReasonFinalizerWait</a>                           <span class="comment">// "finalizer wait"</span>
+	<a href="../../pkg/runtime.html#name-waitReasonForceGCIdle" class="ident">waitReasonForceGCIdle</a>                             <span class="comment">// "force gc (idle)"</span>
+	<a href="../../pkg/runtime.html#name-waitReasonSemacquire" class="ident">waitReasonSemacquire</a>                              <span class="comment">// "semacquire"</span>
+	<a href="../../pkg/runtime.html#name-waitReasonSleep" class="ident">waitReasonSleep</a>                                   <span class="comment">// "sleep"</span>
+	<a href="../../pkg/runtime.html#name-waitReasonSyncCondWait" class="ident">waitReasonSyncCondWait</a>                            <span class="comment">// "sync.Cond.Wait"</span>
+	<a href="../../pkg/runtime.html#name-waitReasonTimerGoroutineIdle" class="ident">waitReasonTimerGoroutineIdle</a>                      <span class="comment">// "timer goroutine (idle)"</span>
+	<a href="../../pkg/runtime.html#name-waitReasonTraceReaderBlocked" class="ident">waitReasonTraceReaderBlocked</a>                      <span class="comment">// "trace reader (blocked)"</span>
+	<a href="../../pkg/runtime.html#name-waitReasonWaitForGCCycle" class="ident">waitReasonWaitForGCCycle</a>                          <span class="comment">// "wait for GC cycle"</span>
+	<a href="../../pkg/runtime.html#name-waitReasonGCWorkerIdle" class="ident">waitReasonGCWorkerIdle</a>                            <span class="comment">// "GC worker (idle)"</span>
+	<a href="../../pkg/runtime.html#name-waitReasonPreempted" class="ident">waitReasonPreempted</a>                               <span class="comment">// "preempted"</span>
+	<a href="../../pkg/runtime.html#name-waitReasonDebugCall" class="ident">waitReasonDebugCall</a>                               <span class="comment">// "debug call"</span>
+)
+
+<span class="keyword">var</span> <a href="../../pkg/runtime.html#name-waitReasonStrings" class="ident">waitReasonStrings</a> = [...]<a href="../../pkg/builtin.html#name-string" class="ident">string</a>{
+	<a href="#line-988" class="ident">waitReasonZero</a>:                  <span class="lit-string">""</span>,
+	<a href="#line-989" class="ident">waitReasonGCAssistMarking</a>:       <span class="lit-string">"GC assist marking"</span>,
+	<a href="#line-990" class="ident">waitReasonIOWait</a>:                <span class="lit-string">"IO wait"</span>,
+	<a href="#line-991" class="ident">waitReasonChanReceiveNilChan</a>:    <span class="lit-string">"chan receive (nil chan)"</span>,
+	<a href="#line-992" class="ident">waitReasonChanSendNilChan</a>:       <span class="lit-string">"chan send (nil chan)"</span>,
+	<a href="#line-993" class="ident">waitReasonDumpingHeap</a>:           <span class="lit-string">"dumping heap"</span>,
+	<a href="#line-994" class="ident">waitReasonGarbageCollection</a>:     <span class="lit-string">"garbage collection"</span>,
+	<a href="#line-995" class="ident">waitReasonGarbageCollectionScan</a>: <span class="lit-string">"garbage collection scan"</span>,
+	<a href="#line-996" class="ident">waitReasonPanicWait</a>:             <span class="lit-string">"panicwait"</span>,
+	<a href="#line-997" class="ident">waitReasonSelect</a>:                <span class="lit-string">"select"</span>,
+	<a href="#line-998" class="ident">waitReasonSelectNoCases</a>:         <span class="lit-string">"select (no cases)"</span>,
+	<a href="#line-999" class="ident">waitReasonGCAssistWait</a>:          <span class="lit-string">"GC assist wait"</span>,
+	<a href="#line-1000" class="ident">waitReasonGCSweepWait</a>:           <span class="lit-string">"GC sweep wait"</span>,
+	<a href="#line-1001" class="ident">waitReasonGCScavengeWait</a>:        <span class="lit-string">"GC scavenge wait"</span>,
+	<a href="#line-1002" class="ident">waitReasonChanReceive</a>:           <span class="lit-string">"chan receive"</span>,
+	<a href="#line-1003" class="ident">waitReasonChanSend</a>:              <span class="lit-string">"chan send"</span>,
+	<a href="#line-1004" class="ident">waitReasonFinalizerWait</a>:         <span class="lit-string">"finalizer wait"</span>,
+	<a href="#line-1005" class="ident">waitReasonForceGCIdle</a>:           <span class="lit-string">"force gc (idle)"</span>,
+	<a href="#line-1006" class="ident">waitReasonSemacquire</a>:            <span class="lit-string">"semacquire"</span>,
+	<a href="#line-1007" class="ident">waitReasonSleep</a>:                 <span class="lit-string">"sleep"</span>,
+	<a href="#line-1008" class="ident">waitReasonSyncCondWait</a>:          <span class="lit-string">"sync.Cond.Wait"</span>,
+	<a href="#line-1009" class="ident">waitReasonTimerGoroutineIdle</a>:    <span class="lit-string">"timer goroutine (idle)"</span>,
+	<a href="#line-1010" class="ident">waitReasonTraceReaderBlocked</a>:    <span class="lit-string">"trace reader (blocked)"</span>,
+	<a href="#line-1011" class="ident">waitReasonWaitForGCCycle</a>:        <span class="lit-string">"wait for GC cycle"</span>,
+	<a href="#line-1012" class="ident">waitReasonGCWorkerIdle</a>:          <span class="lit-string">"GC worker (idle)"</span>,
+	<a href="#line-1013" class="ident">waitReasonPreempted</a>:             <span class="lit-string">"preempted"</span>,
+	<a href="#line-1014" class="ident">waitReasonDebugCall</a>:             <span class="lit-string">"debug call"</span>,
+}
+
+<span class="keyword">func</span> (<label for="r33" class="ident">w</label> <a href="#line-985" class="ident">waitReason</a>) <label for="r34" class="ident"><a href="../../use/runtime..waitReason*e0d10.String.html" class="ident">String</a></label>() <a href="../../pkg/builtin.html#name-string" class="ident">string</a> {
+	<span class="keyword">if</span> <label for="r33" class="ident">w</label> &lt; <span class="lit-number">0</span> || <label for="r33" class="ident">w</label> &gt;= <a href="#line-985" class="ident">waitReason</a>(<a href="../../pkg/builtin.html#name-len" class="ident">len</a>(<a href="#line-1017" class="ident">waitReasonStrings</a>)) {
+		<span class="keyword">return</span> <span class="lit-string">"unknown wait reason"</span>
+	}
+	<span class="keyword">return</span> <a href="#line-1017" class="ident">waitReasonStrings</a>[<label for="r33" class="ident">w</label>]
+}
+
+<span class="keyword">var</span> (
+	<a href="../../pkg/runtime.html#name-allm" class="ident">allm</a>       *<a href="#line-486" class="ident">m</a>
+	<a href="../../pkg/runtime.html#name-gomaxprocs" class="ident">gomaxprocs</a> <a href="../../pkg/builtin.html#name-int32" class="ident">int32</a>
+	<a href="../../pkg/runtime.html#name-ncpu" class="ident">ncpu</a>       <a href="../../pkg/builtin.html#name-int32" class="ident">int32</a>
+	<a href="../../pkg/runtime.html#name-forcegc" class="ident">forcegc</a>    <a href="#line-872" class="ident">forcegcstate</a>
+	<a href="../../pkg/runtime.html#name-sched" class="ident">sched</a>      <a href="#line-719" class="ident">schedt</a>
+	<a href="../../pkg/runtime.html#name-newprocs" class="ident">newprocs</a>   <a href="../../pkg/builtin.html#name-int32" class="ident">int32</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> allpLock protects P-less reads and size changes of allp, idlepMask,</span><span class="comment">	 and timerpMask, and all writes to allp.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> len(allp) == gomaxprocs; may change at safe points, otherwise</span><span class="comment">	 immutable.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Bitmask of Ps in _Pidle list, one bit per P. Reads and writes must</span><span class="comment">	 be atomic. Length may change at safe points.</span><span class="comment">	</span><span class="comment">	 Each P must update only its own bit. In order to maintain</span><span class="comment">	 consistency, a P going idle must the idle mask simultaneously with</span><span class="comment">	 updates to the idle P list under the sched.lock, otherwise a racing</span><span class="comment">	 pidleget may clear the mask before pidleput sets the mask,</span><span class="comment">	 corrupting the bitmap.</span><span class="comment">	</span><span class="comment">	 N.B., procresize takes ownership of all Ps in stopTheWorldWithSema.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Bitmask of Ps that may have a timer, one bit per P. Reads and writes</span><span class="comment">	 must be atomic. Length may change at safe points.</span></div>
+<div class="code"><pre><code>	<a href="../../pkg/runtime.html#name-timerpMask" class="ident">timerpMask</a> <a href="proc.go.html#line-5601" class="ident">pMask</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Pool of GC parked background workers. Entries are type</span><span class="comment">	 *gcBgMarkWorkerNode.</span></div>
+<div class="code"><pre><code>	<a href="../../pkg/runtime.html#name-gcBgMarkWorkerPool" class="ident">gcBgMarkWorkerPool</a> <a href="lfstack.go.html#line-23" class="ident">lfstack</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Total number of gcBgMarkWorker goroutines. Protected by worldsema.</span></div>
+<div class="code"><pre><code>	<a href="../../pkg/runtime.html#name-gcBgMarkWorkerCount" class="ident">gcBgMarkWorkerCount</a> <a href="../../pkg/builtin.html#name-int32" class="ident">int32</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Information about what cpu features are available.</span><span class="comment">	 Packages outside the runtime should not use these</span><span class="comment">	 as they are not an external api.</span><span class="comment">	 Set on startup in asm_{386,amd64}.s</span></div>
+<div class="code"><pre><code>	<a href="../../pkg/runtime.html#name-processorVersionInfo" class="ident">processorVersionInfo</a> <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>
+	<a href="../../pkg/runtime.html#name-isIntel" class="ident">isIntel</a>              <a href="../../pkg/builtin.html#name-bool" class="ident">bool</a>
+	<a href="../../pkg/runtime.html#name-lfenceBeforeRdtsc" class="ident">lfenceBeforeRdtsc</a>    <a href="../../pkg/builtin.html#name-bool" class="ident">bool</a>
+
+	<a href="../../pkg/runtime.html#name-goarm" class="ident">goarm</a> <a href="../../pkg/builtin.html#name-uint8" class="ident">uint8</a> <span class="comment">// set by cmd/link on arm systems</span>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Set by the linker so the runtime can determine the buildmode.</span></div>
+<div class="code"><pre><code><span class="keyword">var</span> (
+	<a href="../../pkg/runtime.html#name-islibrary" class="ident">islibrary</a> <a href="../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// -buildmode=c-shared</span>
+	<a href="../../pkg/runtime.html#name-isarchive" class="ident">isarchive</a> <a href="../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// -buildmode=c-archive</span>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Must agree with cmd/internal/objabi.Framepointer_enabled.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

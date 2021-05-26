@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: iterator.go in package google.golang.org/api/iterator</title>
+<link href="../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	iterator.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../pkg/google.golang.org/api/iterator.html">google.golang.org/api/iterator</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16],
+input[id=r17]:checked ~pre label[for=r17],
+input[id=r18]:checked ~pre label[for=r18],
+input[id=r19]:checked ~pre label[for=r19],
+input[id=r20]:checked ~pre label[for=r20],
+input[id=r21]:checked ~pre label[for=r21],
+input[id=r22]:checked ~pre label[for=r22],
+input[id=r23]:checked ~pre label[for=r23],
+input[id=r24]:checked ~pre label[for=r24],
+input[id=r25]:checked ~pre label[for=r25],
+input[id=r26]:checked ~pre label[for=r26],
+input[id=r27]:checked ~pre label[for=r27],
+input[id=r28]:checked ~pre label[for=r28],
+input[id=r29]:checked ~pre label[for=r29]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1,
+input[id=i2]:checked ~pre .i2
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="r17" type="radio" name="g"/>
+<input id="r18" type="radio" name="g"/>
+<input id="r19" type="radio" name="g"/>
+<input id="r20" type="radio" name="g"/>
+<input id="r21" type="radio" name="g"/>
+<input id="r22" type="radio" name="g"/>
+<input id="r23" type="radio" name="g"/>
+<input id="r24" type="radio" name="g"/>
+<input id="r25" type="radio" name="g"/>
+<input id="r26" type="radio" name="g"/>
+<input id="r27" type="radio" name="g"/>
+<input id="r28" type="radio" name="g"/>
+<input id="r29" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<input id="i2" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2016 Google LLC.</span><span class="comment"> Use of this source code is governed by a BSD-style</span><span class="comment"> license that can be found in the LICENSE file.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Package iterator provides support for standard Google API iterators.</span><span class="comment"> See https://github.com/GoogleCloudPlatform/gcloud-golang/wiki/Iterator-Guidelines.</span></div>
+<div class="code"><pre><code><span class="keyword">package</span> iterator
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"errors"</span></label>
+	<label for="i1"><span class="lit-string i1">"fmt"</span></label>
+	<label for="i2"><span class="lit-string i2">"reflect"</span></label>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Done is returned by an iterator's Next method when the iteration is</span><span class="comment"> complete; when there are no more items to return.</span></div>
+<div class="code"><pre><code><span class="keyword">var</span> <a href="../../../../pkg/google.golang.org/api/iterator.html#name-Done" class="ident">Done</a> = <a href="../../../../pkg/errors.html" class="ident i0">errors</a>.<a href="../../../errors/errors.go.html#line-58" class="ident">New</a>(<span class="lit-string">"no more items in iterator"</span>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> We don't support mixed calls to Next and NextPage because they play</span><span class="comment"> with the paging state in incompatible ways.</span></div>
+<div class="code"><pre><code><span class="keyword">var</span> <a href="../../../../pkg/google.golang.org/api/iterator.html#name-errMixed" class="ident">errMixed</a> = <a href="../../../../pkg/errors.html" class="ident i0">errors</a>.<a href="../../../errors/errors.go.html#line-58" class="ident">New</a>(<span class="lit-string">"iterator: Next and NextPage called on same iterator"</span>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> PageInfo contains information about an iterator's paging state.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Token is the token used to retrieve the next page of items from the</span><span class="comment">	 API. You may set Token immediately after creating an iterator to</span><span class="comment">	 begin iteration at a particular point. If Token is the empty string,</span><span class="comment">	 the iterator will begin with the first eligible item.</span><span class="comment">	</span><span class="comment">	 The result of setting Token after the first call to Next is undefined.</span><span class="comment">	</span><span class="comment">	 After the underlying API method is called to retrieve a page of items,</span><span class="comment">	 Token is set to the next-page token in the response.</span></div>
+<div class="code"><pre><code>	<a href="../../../../use/google.golang.org/api/iterator..PageInfo.Token.html" class="ident">Token</a> <a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> MaxSize is the maximum number of items returned by a call to the API.</span><span class="comment">	 Set MaxSize as a hint to optimize the buffering behavior of the iterator.</span><span class="comment">	 If zero, the page size is determined by the underlying service.</span><span class="comment">	</span><span class="comment">	 Use Pager to retrieve a page of a specific, exact size.</span></div>
+<div class="code"><pre><code>	<a href="../../../../use/google.golang.org/api/iterator..PageInfo.MaxSize.html" class="ident">MaxSize</a> <a href="../../../../pkg/builtin.html#name-int" class="ident">int</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> The error state of the iterator. Manipulated by PageInfo.next and Pager.</span><span class="comment">	 This is a latch: it starts as nil, and once set should never change.</span></div>
+<div class="code"><pre><code>	<a href="../../../../use/google.golang.org/api/iterator..PageInfo.err*d9eb2.html" class="ident">err</a> <a href="../../../../pkg/builtin.html#name-error" class="ident">error</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> If true, no more calls to fetch should be made. Set to true when fetch</span><span class="comment">	 returns an empty page token. The iterator is Done when this is true AND</span><span class="comment">	 the buffer is empty.</span></div>
+<div class="code"><pre><code>	<a href="../../../../use/google.golang.org/api/iterator..PageInfo.atEnd*065b7.html" class="ident">atEnd</a> <a href="../../../../pkg/builtin.html#name-bool" class="ident">bool</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Function that fetches a page from the underlying service. It should pass</span><span class="comment">	 the pageSize and pageToken arguments to the service, fill the buffer</span><span class="comment">	 with the results from the call, and return the next-page token returned</span><span class="comment">	 by the service. The function must not remove any existing items from the</span><span class="comment">	 buffer. If the underlying RPC takes an int32 page size, pageSize should</span><span class="comment">	 be silently truncated.</span></div>
+<div class="code"><pre><code>	<a href="../../../../use/google.golang.org/api/iterator..PageInfo.fetch*e7d37.html" class="ident">fetch</a> <span class="keyword">func</span>(pageSize <a href="../../../../pkg/builtin.html#name-int" class="ident">int</a>, pageToken <a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>) (nextPageToken <a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>, err <a href="../../../../pkg/builtin.html#name-error" class="ident">error</a>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Function that returns the number of currently buffered items.</span></div>
+<div class="code"><pre><code>	<a href="../../../../use/google.golang.org/api/iterator..PageInfo.bufLen*d720a.html" class="ident">bufLen</a> <span class="keyword">func</span>() <a href="../../../../pkg/builtin.html#name-int" class="ident">int</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Function that returns the buffer, after setting the buffer variable to nil.</span></div>
+<div class="code"><pre><code>	<a href="../../../../use/google.golang.org/api/iterator..PageInfo.takeBuf*0f82b.html" class="ident">takeBuf</a> <span class="keyword">func</span>() <span class="keyword">interface</span>{}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Set to true on first call to PageInfo.next or Pager.NextPage. Used to check</span><span class="comment">	 for calls to both Next and NextPage with the same iterator.</span></div>
+<div class="code"><pre><code>	<a href="../../../../use/google.golang.org/api/iterator..PageInfo.nextCalled*28909.html" class="ident">nextCalled</a>, <a href="../../../../use/google.golang.org/api/iterator..PageInfo.nextPageCalled*0075a.html" class="ident">nextPageCalled</a> <a href="../../../../pkg/builtin.html#name-bool" class="ident">bool</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> NewPageInfo exposes internals for iterator implementations.</span><span class="comment"> It is not a stable interface.</span></div>
+<div class="code"><pre><code><span class="keyword">var</span> <a href="../../../../pkg/google.golang.org/api/iterator.html#name-NewPageInfo" class="ident">NewPageInfo</a> = <a href="#line-90" class="ident">newPageInfo</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> newPageInfo creates and returns a PageInfo and a next func. If an iterator can</span><span class="comment"> support paging, its iterator-creating method should call this. Each time the</span><span class="comment"> iterator's Next is called, it should call the returned next fn to determine</span><span class="comment"> whether a next item exists, and if so it should pop an item from the buffer.</span><span class="comment"></span><span class="comment"> The fetch, bufLen and takeBuf arguments provide access to the iterator's</span><span class="comment"> internal slice of buffered items. They behave as described in PageInfo, above.</span><span class="comment"></span><span class="comment"> The return value is the PageInfo.next method bound to the returned PageInfo value.</span><span class="comment"> (Returning it avoids exporting PageInfo.next.)</span><span class="comment"></span><span class="comment"> Note: the returned PageInfo and next fn do not remove items from the buffer.</span><span class="comment"> It is up to the iterator using these to remove items from the buffer:</span><span class="comment"> typically by performing a pop in its Next. If items are not removed from the</span><span class="comment"> buffer, memory may grow unbounded.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r0" class="ident"><a href="../../../../pkg/google.golang.org/api/iterator.html#name-newPageInfo" class="ident">newPageInfo</a></label>(<label for="r1" class="ident">fetch</label> <span class="keyword">func</span>(<a href="../../../../pkg/builtin.html#name-int" class="ident">int</a>, <a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>) (<a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>, <a href="../../../../pkg/builtin.html#name-error" class="ident">error</a>), <label for="r2" class="ident">bufLen</label> <span class="keyword">func</span>() <a href="../../../../pkg/builtin.html#name-int" class="ident">int</a>, <label for="r3" class="ident">takeBuf</label> <span class="keyword">func</span>() <span class="keyword">interface</span>{}) (<label for="r4" class="ident">pi</label> *<a href="#line-24" class="ident">PageInfo</a>, <label for="r5" class="ident">next</label> <span class="keyword">func</span>() <a href="../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<label for="r4" class="ident">pi</label> = &amp;<a href="#line-24" class="ident">PageInfo</a>{
+		<a href="#line-58" class="ident">fetch</a>:   <label for="r1" class="ident">fetch</label>,
+		<a href="#line-61" class="ident">bufLen</a>:  <label for="r2" class="ident">bufLen</label>,
+		<a href="#line-64" class="ident">takeBuf</a>: <label for="r3" class="ident">takeBuf</label>,
+	}
+	<span class="keyword">return</span> <label for="r4" class="ident">pi</label>, <label for="r4" class="ident">pi</label>.<a href="#line-106" class="ident">next</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Remaining returns the number of items available before the iterator makes another API call.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r6" class="ident">pi</label> *<a href="#line-24" class="ident">PageInfo</a>) <label for="r7" class="ident"><a href="../../../../use/google.golang.org/api/iterator..PageInfo.Remaining.html" class="ident">Remaining</a></label>() <a href="../../../../pkg/builtin.html#name-int" class="ident">int</a> { <span class="keyword">return</span> <label for="r6" class="ident">pi</label>.<a href="#line-61" class="ident">bufLen</a>() }
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> next provides support for an iterator's Next function. An iterator's Next</span><span class="comment"> should return the error returned by next if non-nil; else it can assume</span><span class="comment"> there is at least one item in its buffer, and it should return that item and</span><span class="comment"> remove it from the buffer.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r8" class="ident">pi</label> *<a href="#line-24" class="ident">PageInfo</a>) <label for="r9" class="ident"><a href="../../../../use/google.golang.org/api/iterator..PageInfo.next*c6c1c.html" class="ident">next</a></label>() <a href="../../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<label for="r8" class="ident">pi</label>.<a href="#line-68" class="ident">nextCalled</a> = <a href="../../../../pkg/builtin.html#name-true" class="ident">true</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> TODO(jba): fix so users can retry on transient errors? Probably not worth it.</span></div>
+<div class="code"><pre><code>		<span class="keyword">return</span> <label for="r8" class="ident">pi</label>.<a href="#line-45" class="ident">err</a>
+	}
+	<span class="keyword">if</span> <label for="r8" class="ident">pi</label>.<a href="#line-68" class="ident">nextPageCalled</a> {
+		<label for="r8" class="ident">pi</label>.<a href="#line-45" class="ident">err</a> = <a href="#line-21" class="ident">errMixed</a>
+		<span class="keyword">return</span> <label for="r8" class="ident">pi</label>.<a href="#line-45" class="ident">err</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Loop until we get some items or reach the end.</span></div>
+<div class="code"><pre><code>	<span class="keyword">for</span> <label for="r8" class="ident">pi</label>.<a href="#line-61" class="ident">bufLen</a>() == <span class="lit-number">0</span> &amp;&amp; !<label for="r8" class="ident">pi</label>.<a href="#line-50" class="ident">atEnd</a> {
+		<span class="keyword">if</span> <label for="r10" class="ident">err</label> := <label for="r8" class="ident">pi</label>.<a href="#line-138" class="ident">fill</a>(<label for="r8" class="ident">pi</label>.<a href="#line-41" class="ident">MaxSize</a>); <label for="r10" class="ident">err</label> != <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<label for="r8" class="ident">pi</label>.<a href="#line-45" class="ident">err</a> = <label for="r10" class="ident">err</label>
+			<span class="keyword">return</span> <label for="r8" class="ident">pi</label>.<a href="#line-45" class="ident">err</a>
+		}
+		<span class="keyword">if</span> <label for="r8" class="ident">pi</label>.<a href="#line-34" class="ident">Token</a> == <span class="lit-string">""</span> {
+			<label for="r8" class="ident">pi</label>.<a href="#line-50" class="ident">atEnd</a> = <a href="../../../../pkg/builtin.html#name-true" class="ident">true</a>
+		}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Either the buffer is non-empty or pi.atEnd is true (or both).</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> The buffer is empty and pi.atEnd is true, i.e. the service has no</span><span class="comment">		 more items.</span></div>
+<div class="code"><pre><code>		<label for="r8" class="ident">pi</label>.<a href="#line-45" class="ident">err</a> = <a href="#line-17" class="ident">Done</a>
+	}
+	<span class="keyword">return</span> <label for="r8" class="ident">pi</label>.<a href="#line-45" class="ident">err</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Call the service to fill the buffer, using size and pi.Token. Set pi.Token to the</span><span class="comment"> next-page token returned by the call.</span><span class="comment"> If fill returns a non-nil error, the buffer will be empty.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r11" class="ident">pi</label> *<a href="#line-24" class="ident">PageInfo</a>) <label for="r12" class="ident"><a href="../../../../use/google.golang.org/api/iterator..PageInfo.fill*dcd32.html" class="ident">fill</a></label>(<label for="r13" class="ident">size</label> <a href="../../../../pkg/builtin.html#name-int" class="ident">int</a>) <a href="../../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<label for="r14" class="ident">tok</label>, <label for="r15" class="ident">err</label> := <label for="r11" class="ident">pi</label>.<a href="#line-58" class="ident">fetch</a>(<label for="r13" class="ident">size</label>, <label for="r11" class="ident">pi</label>.<a href="#line-34" class="ident">Token</a>)
+	<span class="keyword">if</span> <label for="r15" class="ident">err</label> != <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<label for="r11" class="ident">pi</label>.<a href="#line-64" class="ident">takeBuf</a>() <span class="comment">// clear the buffer</span>
+		<span class="keyword">return</span> <label for="r15" class="ident">err</label>
+	}
+	<label for="r11" class="ident">pi</label>.<a href="#line-34" class="ident">Token</a> = <label for="r14" class="ident">tok</label>
+	<span class="keyword">return</span> <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Pageable is implemented by iterators that support paging.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> PageInfo returns paging information associated with the iterator.</span></div>
+<div class="code"><pre><code>	PageInfo() *<a href="#line-24" class="ident">PageInfo</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Pager supports retrieving iterator items a page at a time.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../pkg/google.golang.org/api/iterator.html#name-Pager" class="ident">Pager</a> <span class="keyword">struct</span> {
+	<a href="../../../../use/google.golang.org/api/iterator..Pager.pageInfo*04433.html" class="ident">pageInfo</a> *<a href="#line-24" class="ident">PageInfo</a>
+	<a href="../../../../use/google.golang.org/api/iterator..Pager.pageSize*8a00a.html" class="ident">pageSize</a> <a href="../../../../pkg/builtin.html#name-int" class="ident">int</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> NewPager returns a pager that uses iter. Calls to its NextPage method will</span><span class="comment"> obtain exactly pageSize items, unless fewer remain. The pageToken argument</span><span class="comment"> indicates where to start the iteration. Pass the empty string to start at</span><span class="comment"> the beginning, or pass a token retrieved from a call to Pager.NextPage.</span><span class="comment"></span><span class="comment"> If you use an iterator with a Pager, you must not call Next on the iterator.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r16" class="ident"><a href="../../../../pkg/google.golang.org/api/iterator.html#name-NewPager" class="ident">NewPager</a></label>(<label for="r17" class="ident">iter</label> <a href="#line-149" class="ident">Pageable</a>, <label for="r18" class="ident">pageSize</label> <a href="../../../../pkg/builtin.html#name-int" class="ident">int</a>, <label for="r19" class="ident">pageToken</label> <a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>) *<a href="#line-155" class="ident">Pager</a> {
+	<label for="r20" class="ident">p</label> := &amp;<a href="#line-155" class="ident">Pager</a>{
+		<a href="#line-156" class="ident">pageInfo</a>: <label for="r17" class="ident">iter</label>.<a href="#line-151" class="ident">PageInfo</a>(),
+		<a href="#line-157" class="ident">pageSize</a>: <label for="r18" class="ident">pageSize</label>,
+	}
+	<label for="r20" class="ident">p</label>.<a href="#line-156" class="ident">pageInfo</a>.<a href="#line-34" class="ident">Token</a> = <label for="r19" class="ident">pageToken</label>
+	<span class="keyword">if</span> <label for="r18" class="ident">pageSize</label> &lt;= <span class="lit-number">0</span> {
+		<label for="r20" class="ident">p</label>.<a href="#line-156" class="ident">pageInfo</a>.<a href="#line-45" class="ident">err</a> = <a href="../../../../pkg/errors.html" class="ident i0">errors</a>.<a href="../../../errors/errors.go.html#line-58" class="ident">New</a>(<span class="lit-string">"iterator: page size must be positive"</span>)
+	}
+	<span class="keyword">return</span> <label for="r20" class="ident">p</label>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> NextPage retrieves a sequence of items from the iterator and appends them</span><span class="comment"> to slicep, which must be a pointer to a slice of the iterator's item type.</span><span class="comment"> Exactly p.pageSize items will be appended, unless fewer remain.</span><span class="comment"></span><span class="comment"> The first return value is the page token to use for the next page of items.</span><span class="comment"> If empty, there are no more pages. Aside from checking for the end of the</span><span class="comment"> iteration, the returned page token is only needed if the iteration is to be</span><span class="comment"> resumed a later time, in another context (possibly another process).</span><span class="comment"></span><span class="comment"> The second return value is non-nil if an error occurred. It will never be</span><span class="comment"> the special iterator sentinel value Done. To recognize the end of the</span><span class="comment"> iteration, compare nextPageToken to the empty string.</span><span class="comment"></span><span class="comment"> It is possible for NextPage to return a single zero-length page along with</span><span class="comment"> an empty page token when there are no more items in the iteration.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r21" class="ident">p</label> *<a href="#line-155" class="ident">Pager</a>) <label for="r22" class="ident"><a href="../../../../use/google.golang.org/api/iterator..Pager.NextPage.html" class="ident">NextPage</a></label>(<label for="r23" class="ident">slicep</label> <span class="keyword">interface</span>{}) (<label for="r24" class="ident">nextPageToken</label> <a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>, <label for="r25" class="ident">err</label> <a href="../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<label for="r21" class="ident">p</label>.<a href="#line-156" class="ident">pageInfo</a>.<a href="#line-68" class="ident">nextPageCalled</a> = <a href="../../../../pkg/builtin.html#name-true" class="ident">true</a>
+	<span class="keyword">if</span> <label for="r21" class="ident">p</label>.<a href="#line-156" class="ident">pageInfo</a>.<a href="#line-45" class="ident">err</a> != <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <span class="lit-string">""</span>, <label for="r21" class="ident">p</label>.<a href="#line-156" class="ident">pageInfo</a>.<a href="#line-45" class="ident">err</a>
+	}
+	<span class="keyword">if</span> <label for="r21" class="ident">p</label>.<a href="#line-156" class="ident">pageInfo</a>.<a href="#line-68" class="ident">nextCalled</a> {
+		<label for="r21" class="ident">p</label>.<a href="#line-156" class="ident">pageInfo</a>.<a href="#line-45" class="ident">err</a> = <a href="#line-21" class="ident">errMixed</a>
+		<span class="keyword">return</span> <span class="lit-string">""</span>, <label for="r21" class="ident">p</label>.<a href="#line-156" class="ident">pageInfo</a>.<a href="#line-45" class="ident">err</a>
+	}
+	<span class="keyword">if</span> <label for="r21" class="ident">p</label>.<a href="#line-156" class="ident">pageInfo</a>.<a href="#line-61" class="ident">bufLen</a>() &gt; <span class="lit-number">0</span> {
+		<span class="keyword">return</span> <span class="lit-string">""</span>, <a href="../../../../pkg/errors.html" class="ident i0">errors</a>.<a href="../../../errors/errors.go.html#line-58" class="ident">New</a>(<span class="lit-string">"must call NextPage with an empty buffer"</span>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> The buffer must be empty here, so takeBuf is a no-op. We call it just to get</span><span class="comment">	 the buffer's type.</span></div>
+<div class="code"><pre><code>	<label for="r26" class="ident">wantSliceType</label> := <a href="../../../../pkg/reflect.html" class="ident i2">reflect</a>.<a href="../../../reflect/type.go.html#line-1378" class="ident">PtrTo</a>(<a href="../../../../pkg/reflect.html" class="ident i2">reflect</a>.<a href="../../../reflect/value.go.html#line-2351" class="ident">ValueOf</a>(<label for="r21" class="ident">p</label>.<a href="#line-156" class="ident">pageInfo</a>.<a href="#line-64" class="ident">takeBuf</a>()).<a href="../../../reflect/value.go.html#line-1905" class="ident">Type</a>())
+	<span class="keyword">if</span> <label for="r23" class="ident">slicep</label> == <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <span class="lit-string">""</span>, <a href="../../../../pkg/errors.html" class="ident i0">errors</a>.<a href="../../../errors/errors.go.html#line-58" class="ident">New</a>(<span class="lit-string">"nil passed to Pager.NextPage"</span>)
+	}
+	<label for="r27" class="ident">vslicep</label> := <a href="../../../../pkg/reflect.html" class="ident i2">reflect</a>.<a href="../../../reflect/value.go.html#line-2351" class="ident">ValueOf</a>(<label for="r23" class="ident">slicep</label>)
+	<span class="keyword">if</span> <label for="r27" class="ident">vslicep</label>.<a href="../../../reflect/value.go.html#line-1905" class="ident">Type</a>() != <label for="r26" class="ident">wantSliceType</label> {
+		<span class="keyword">return</span> <span class="lit-string">""</span>, <a href="../../../../pkg/fmt.html" class="ident i1">fmt</a>.<a href="../../../fmt/errors.go.html#line-17" class="ident">Errorf</a>(<span class="lit-string">"slicep should be of type %s, got %T"</span>, <label for="r26" class="ident">wantSliceType</label>, <label for="r23" class="ident">slicep</label>)
+	}
+	<span class="keyword">for</span> <label for="r21" class="ident">p</label>.<a href="#line-156" class="ident">pageInfo</a>.<a href="#line-61" class="ident">bufLen</a>() &lt; <label for="r21" class="ident">p</label>.<a href="#line-157" class="ident">pageSize</a> {
+		<span class="keyword">if</span> <label for="r28" class="ident">err</label> := <label for="r21" class="ident">p</label>.<a href="#line-156" class="ident">pageInfo</a>.<a href="#line-138" class="ident">fill</a>(<label for="r21" class="ident">p</label>.<a href="#line-157" class="ident">pageSize</a> - <label for="r21" class="ident">p</label>.<a href="#line-156" class="ident">pageInfo</a>.<a href="#line-61" class="ident">bufLen</a>()); <label for="r28" class="ident">err</label> != <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<label for="r21" class="ident">p</label>.<a href="#line-156" class="ident">pageInfo</a>.<a href="#line-45" class="ident">err</a> = <label for="r28" class="ident">err</label>
+			<span class="keyword">return</span> <span class="lit-string">""</span>, <label for="r21" class="ident">p</label>.<a href="#line-156" class="ident">pageInfo</a>.<a href="#line-45" class="ident">err</a>
+		}
+		<span class="keyword">if</span> <label for="r21" class="ident">p</label>.<a href="#line-156" class="ident">pageInfo</a>.<a href="#line-34" class="ident">Token</a> == <span class="lit-string">""</span> {
+			<span class="keyword">break</span>
+		}
+	}
+	<label for="r29" class="ident">e</label> := <label for="r27" class="ident">vslicep</label>.<a href="../../../reflect/value.go.html#line-811" class="ident">Elem</a>()
+	<label for="r29" class="ident">e</label>.<a href="../../../reflect/value.go.html#line-1557" class="ident">Set</a>(<a href="../../../../pkg/reflect.html" class="ident i2">reflect</a>.<a href="../../../reflect/value.go.html#line-2058" class="ident">AppendSlice</a>(<label for="r29" class="ident">e</label>, <a href="../../../../pkg/reflect.html" class="ident i2">reflect</a>.<a href="../../../reflect/value.go.html#line-2351" class="ident">ValueOf</a>(<label for="r21" class="ident">p</label>.<a href="#line-156" class="ident">pageInfo</a>.<a href="#line-64" class="ident">takeBuf</a>())))
+	<span class="keyword">return</span> <label for="r21" class="ident">p</label>.<a href="#line-156" class="ident">pageInfo</a>.<a href="#line-34" class="ident">Token</a>, <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

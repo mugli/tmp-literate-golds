@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: difftree.go in package github.com/go-git/go-git/v5/utils/merkletrie</title>
+<link href="../../../../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	difftree.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../../../../pkg/github.com/go-git/go-git/v5/utils/merkletrie.html">github.com/go-git/go-git/v5/utils/merkletrie</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16],
+input[id=r17]:checked ~pre label[for=r17],
+input[id=r18]:checked ~pre label[for=r18],
+input[id=r19]:checked ~pre label[for=r19],
+input[id=r20]:checked ~pre label[for=r20],
+input[id=r21]:checked ~pre label[for=r21],
+input[id=r22]:checked ~pre label[for=r22],
+input[id=r23]:checked ~pre label[for=r23],
+input[id=r24]:checked ~pre label[for=r24],
+input[id=r25]:checked ~pre label[for=r25],
+input[id=r26]:checked ~pre label[for=r26],
+input[id=r27]:checked ~pre label[for=r27],
+input[id=r28]:checked ~pre label[for=r28],
+input[id=r29]:checked ~pre label[for=r29],
+input[id=r30]:checked ~pre label[for=r30],
+input[id=r31]:checked ~pre label[for=r31],
+input[id=r32]:checked ~pre label[for=r32],
+input[id=r33]:checked ~pre label[for=r33],
+input[id=r34]:checked ~pre label[for=r34],
+input[id=r35]:checked ~pre label[for=r35]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1,
+input[id=i2]:checked ~pre .i2,
+input[id=i3]:checked ~pre .i3
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="r17" type="radio" name="g"/>
+<input id="r18" type="radio" name="g"/>
+<input id="r19" type="radio" name="g"/>
+<input id="r20" type="radio" name="g"/>
+<input id="r21" type="radio" name="g"/>
+<input id="r22" type="radio" name="g"/>
+<input id="r23" type="radio" name="g"/>
+<input id="r24" type="radio" name="g"/>
+<input id="r25" type="radio" name="g"/>
+<input id="r26" type="radio" name="g"/>
+<input id="r27" type="radio" name="g"/>
+<input id="r28" type="radio" name="g"/>
+<input id="r29" type="radio" name="g"/>
+<input id="r30" type="radio" name="g"/>
+<input id="r31" type="radio" name="g"/>
+<input id="r32" type="radio" name="g"/>
+<input id="r33" type="radio" name="g"/>
+<input id="r34" type="radio" name="g"/>
+<input id="r35" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<input id="i2" type="radio" name="i"/>
+<input id="i3" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+</div>
+<div class="code"><pre><code><span class="keyword">package</span> merkletrie
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> The focus of this difftree implementation is to save time by</span><span class="comment"> skipping whole directories if their hash is the same in both</span><span class="comment"> trees.</span><span class="comment"></span><span class="comment"> The diff algorithm implemented here is based on the doubleiter</span><span class="comment"> type defined in this same package; we will iterate over both</span><span class="comment"> trees at the same time, while comparing the current noders in</span><span class="comment"> each iterator.  Depending on how they differ we will output the</span><span class="comment"> corresponding changes and move the iterators further over both</span><span class="comment"> trees.</span><span class="comment"></span><span class="comment"> The table bellow show all the possible comparison results, along</span><span class="comment"> with what changes should we produce and how to advance the</span><span class="comment"> iterators.</span><span class="comment"></span><span class="comment"> The table is implemented by the switches in this function,</span><span class="comment"> diffTwoNodes, diffTwoNodesSameName and diffTwoDirs.</span><span class="comment"></span><span class="comment"> Many Bothans died to bring us this information, make sure you</span><span class="comment"> understand the table before modifying this code.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> # Cases</span><span class="comment"></span><span class="comment"> When comparing noders in both trees you will find yourself in</span><span class="comment"> one of 169 possible cases, but if we ignore moves, we can</span><span class="comment"> simplify a lot the search space into the following table:</span><span class="comment"></span><span class="comment"> - "-": nothing, no file or directory</span><span class="comment"> - a&lt;&gt;: an empty file named "a".</span><span class="comment"> - a&lt;1&gt;: a file named "a", with "1" as its contents.</span><span class="comment"> - a&lt;2&gt;: a file named "a", with "2" as its contents.</span><span class="comment"> - a(): an empty dir named "a".</span><span class="comment"> - a(...): a dir named "a", with some files and/or dirs inside (possibly</span><span class="comment">   empty).</span><span class="comment"> - a(;;;): a dir named "a", with some other files and/or dirs inside</span><span class="comment">   (possibly empty), which different from the ones in "a(...)".</span><span class="comment"></span><span class="comment">     \ to     -   a&lt;&gt;  a&lt;1&gt;  a&lt;2&gt;  a()  a(...)  a(;;;)</span><span class="comment"> from \</span><span class="comment"> -           00    01    02    03   04     05      06</span><span class="comment"> a&lt;&gt;         10    11    12    13   14     15      16</span><span class="comment"> a&lt;1&gt;        20    21    22    23   24     25      26</span><span class="comment"> a&lt;2&gt;        30    31    32    33   34     35      36</span><span class="comment"> a()         40    41    42    43   44     45      46</span><span class="comment"> a(...)      50    51    52    53   54     55      56</span><span class="comment"> a(;;;)      60    61    62    63   64     65      66</span><span class="comment"></span><span class="comment"> Every (from, to) combination in the table is a special case, but</span><span class="comment"> some of them can be merged into some more general cases, for</span><span class="comment"> instance 11 and 22 can be merged into the general case: both</span><span class="comment"> noders are equal.</span><span class="comment"></span><span class="comment"> Here is a full list of all the cases that are similar and how to</span><span class="comment"> merge them together into more general cases.  Each general case</span><span class="comment"> is labeled with an uppercase letter for further reference, and it</span><span class="comment"> is followed by the pseudocode of the checks you have to perfrom</span><span class="comment"> on both noders to see if you are in such a case, the actions to</span><span class="comment"> perform (i.e. what changes to output) and how to advance the</span><span class="comment"> iterators of each tree to continue the comparison process.</span><span class="comment"></span><span class="comment"> ## A. Impossible: 00</span><span class="comment"></span><span class="comment"> ## B. Same thing on both sides: 11, 22, 33, 44, 55, 66</span><span class="comment">   - check: `SameName() &amp;&amp; SameHash()`</span><span class="comment">   - action: do nothing.</span><span class="comment">   - advance: `FromNext(); ToNext()`</span><span class="comment"></span><span class="comment"> ### C. To was created: 01, 02, 03, 04, 05, 06</span><span class="comment">   - check: `DifferentName() &amp;&amp; ToBeforeFrom()`</span><span class="comment">   - action: insertRecursively(to)</span><span class="comment">   - advance: `ToNext()`</span><span class="comment"></span><span class="comment"> ### D. From was deleted: 10, 20, 30, 40, 50, 60</span><span class="comment">   - check: `DifferentName() &amp;&amp; FromBeforeTo()`</span><span class="comment">   - action: `DeleteRecursively(from)`</span><span class="comment">   - advance: `FromNext()`</span><span class="comment"></span><span class="comment"> ### E. Empty file to file with contents: 12, 13</span><span class="comment">   - check: `SameName() &amp;&amp; DifferentHash() &amp;&amp; FromIsFile() &amp;&amp;</span><span class="comment">             ToIsFile() &amp;&amp; FromIsEmpty()`</span><span class="comment">   - action: `modifyFile(from, to)`</span><span class="comment">   - advance: `FromNext()` or `FromStep()`</span><span class="comment"></span><span class="comment"> ### E'. file with contents to empty file: 21, 31</span><span class="comment">   - check: `SameName() &amp;&amp; DifferentHash() &amp;&amp; FromIsFile() &amp;&amp;</span><span class="comment">             ToIsFile() &amp;&amp; ToIsEmpty()`</span><span class="comment">   - action: `modifyFile(from, to)`</span><span class="comment">   - advance: `FromNext()` or `FromStep()`</span><span class="comment"></span><span class="comment"> ### F. empty file to empty dir with the same name: 14</span><span class="comment">   - check: `SameName() &amp;&amp; FromIsFile() &amp;&amp; FromIsEmpty() &amp;&amp;</span><span class="comment">             ToIsDir() &amp;&amp; ToIsEmpty()`</span><span class="comment">   - action: `DeleteFile(from); InsertEmptyDir(to)`</span><span class="comment">   - advance: `FromNext(); ToNext()`</span><span class="comment"></span><span class="comment"> ### F'. empty dir to empty file of the same name: 41</span><span class="comment">   - check: `SameName() &amp;&amp; FromIsDir() &amp;&amp; FromIsEmpty &amp;&amp;</span><span class="comment">             ToIsFile() &amp;&amp; ToIsEmpty()`</span><span class="comment">   - action: `DeleteEmptyDir(from); InsertFile(to)`</span><span class="comment">   - advance: `FromNext(); ToNext()` or step for any of them.</span><span class="comment"></span><span class="comment"> ### G. empty file to non-empty dir of the same name: 15, 16</span><span class="comment">   - check: `SameName() &amp;&amp; FromIsFile() &amp;&amp; ToIsDir() &amp;&amp;</span><span class="comment">             FromIsEmpty() &amp;&amp; ToIsNotEmpty()`</span><span class="comment">   - action: `DeleteFile(from); InsertDirRecursively(to)`</span><span class="comment">   - advance: `FromNext(); ToNext()`</span><span class="comment"></span><span class="comment"> ### G'. non-empty dir to empty file of the same name: 51, 61</span><span class="comment">   - check: `SameName() &amp;&amp; FromIsDir() &amp;&amp; FromIsNotEmpty() &amp;&amp;</span><span class="comment">             ToIsFile() &amp;&amp; FromIsEmpty()`</span><span class="comment">   - action: `DeleteDirRecursively(from); InsertFile(to)`</span><span class="comment">   - advance: `FromNext(); ToNext()`</span><span class="comment"></span><span class="comment"> ### H. modify file contents: 23, 32</span><span class="comment">   - check: `SameName() &amp;&amp; FromIsFile() &amp;&amp; ToIsFile() &amp;&amp;</span><span class="comment">             FromIsNotEmpty() &amp;&amp; ToIsNotEmpty()`</span><span class="comment">   - action: `ModifyFile(from, to)`</span><span class="comment">   - advance: `FromNext(); ToNext()`</span><span class="comment"></span><span class="comment"> ### I. file with contents to empty dir: 24, 34</span><span class="comment">   - check: `SameName() &amp;&amp; DifferentHash() &amp;&amp; FromIsFile() &amp;&amp;</span><span class="comment">             FromIsNotEmpty() &amp;&amp; ToIsDir() &amp;&amp; ToIsEmpty()`</span><span class="comment">   - action: `DeleteFile(from); InsertEmptyDir(to)`</span><span class="comment">   - advance: `FromNext(); ToNext()`</span><span class="comment"></span><span class="comment"> ### I'. empty dir to file with contents: 42, 43</span><span class="comment">   - check: `SameName() &amp;&amp; DifferentHash() &amp;&amp; FromIsDir() &amp;&amp;</span><span class="comment">             FromIsEmpty() &amp;&amp; ToIsFile() &amp;&amp; ToIsEmpty()`</span><span class="comment">   - action: `DeleteDir(from); InsertFile(to)`</span><span class="comment">   - advance: `FromNext(); ToNext()`</span><span class="comment"></span><span class="comment"> ### J. file with contents to dir with contents: 25, 26, 35, 36</span><span class="comment">   - check: `SameName() &amp;&amp; DifferentHash() &amp;&amp; FromIsFile() &amp;&amp;</span><span class="comment">             FromIsNotEmpty() &amp;&amp; ToIsDir() &amp;&amp; ToIsNotEmpty()`</span><span class="comment">   - action: `DeleteFile(from); InsertDirRecursively(to)`</span><span class="comment">   - advance: `FromNext(); ToNext()`</span><span class="comment"></span><span class="comment"> ### J'. dir with contents to file with contents: 52, 62, 53, 63</span><span class="comment">   - check: `SameName() &amp;&amp; DifferentHash() &amp;&amp; FromIsDir() &amp;&amp;</span><span class="comment">             FromIsNotEmpty() &amp;&amp; ToIsFile() &amp;&amp; ToIsNotEmpty()`</span><span class="comment">   - action: `DeleteDirRecursively(from); InsertFile(to)`</span><span class="comment">   - advance: `FromNext(); ToNext()`</span><span class="comment"></span><span class="comment"> ### K. empty dir to dir with contents: 45, 46</span><span class="comment">   - check: `SameName() &amp;&amp; DifferentHash() &amp;&amp; FromIsDir() &amp;&amp;</span><span class="comment">             FromIsEmpty() &amp;&amp; ToIsDir() &amp;&amp; ToIsNotEmpty()`</span><span class="comment">   - action: `InsertChildrenRecursively(to)`</span><span class="comment">   - advance: `FromNext(); ToNext()`</span><span class="comment"></span><span class="comment"> ### K'. dir with contents to empty dir: 54, 64</span><span class="comment">   - check: `SameName() &amp;&amp; DifferentHash() &amp;&amp; FromIsDir() &amp;&amp;</span><span class="comment">             FromIsEmpty() &amp;&amp; ToIsDir() &amp;&amp; ToIsNotEmpty()`</span><span class="comment">   - action: `DeleteChildrenRecursively(from)`</span><span class="comment">   - advance: `FromNext(); ToNext()`</span><span class="comment"></span><span class="comment"> ### L. dir with contents to dir with different contents: 56, 65</span><span class="comment">   - check: `SameName() &amp;&amp; DifferentHash() &amp;&amp; FromIsDir() &amp;&amp;</span><span class="comment">             FromIsNotEmpty() &amp;&amp; ToIsDir() &amp;&amp; ToIsNotEmpty()`</span><span class="comment">   - action: nothing</span><span class="comment">   - advance: `FromStep(); ToStep()`</span><span class="comment"></span><span class="comment"></span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> All these cases can be further simplified by a truth table</span><span class="comment"> reduction process, in which we gather similar checks together to</span><span class="comment"> make the final code easier to read and understand.</span><span class="comment"></span><span class="comment"> The first 6 columns are the outputs of the checks to perform on</span><span class="comment"> both noders.  I have labeled them 1 to 6, this is what they mean:</span><span class="comment"></span><span class="comment"> 1: SameName()</span><span class="comment"> 2: SameHash()</span><span class="comment"> 3: FromIsDir()</span><span class="comment"> 4: ToIsDir()</span><span class="comment"> 5: FromIsEmpty()</span><span class="comment"> 6: ToIsEmpty()</span><span class="comment"></span><span class="comment"> The from and to columns are a fsnoder example of the elements</span><span class="comment"> that you will find on each tree under the specified comparison</span><span class="comment"> results (columns 1 to 6).</span><span class="comment"></span><span class="comment"> The type column identifies the case we are into, from the list above.</span><span class="comment"></span><span class="comment"> The type' column identifies the new set of reduced cases, using</span><span class="comment"> lowercase letters, and they are explained after the table.</span><span class="comment"></span><span class="comment"> The last column is the set of actions and advances for each case.</span><span class="comment"></span><span class="comment"> "---" means impossible except in case of hash collision.</span><span class="comment"></span><span class="comment"> advance meaning:</span><span class="comment"> - NN: from.Next(); to.Next()</span><span class="comment"> - SS: from.Step(); to.Step()</span><span class="comment"></span><span class="comment"> 1 2 3 4 5 6 | from   |  to    |type|type'|action ; advance</span><span class="comment"> ------------+--------+--------+----+------------------------------------</span><span class="comment"> 0 0 0 0 0 0 |        |        |    |     | if !SameName() {</span><span class="comment">     .       |        |        |    |     |    if FromBeforeTo() {</span><span class="comment">     .       |        |        | D  |  d  |       delete(from); from.Next()</span><span class="comment">     .       |        |        |    |     |    } else {</span><span class="comment">     .       |        |        | C  |  c  |       insert(to); to.Next()</span><span class="comment">     .       |        |        |    |     |    }</span><span class="comment"> 0 1 1 1 1 1 |        |        |    |     | }</span><span class="comment"> 1 0 0 0 0 0 |  a&lt;1&gt;  |  a&lt;2&gt;  | H  |  e  | modify(from, to); NN</span><span class="comment"> 1 0 0 0 0 1 |  a&lt;1&gt;  |   a&lt;&gt;  | E' |  e  | modify(from, to); NN</span><span class="comment"> 1 0 0 0 1 0 |   a&lt;&gt;  |  a&lt;1&gt;  | E  |  e  | modify(from, to); NN</span><span class="comment"> 1 0 0 0 1 1 |  ----  |  ----  |    |  e  |</span><span class="comment"> 1 0 0 1 0 0 |  a&lt;1&gt;  | a(...) | J  |  f  | delete(from); insert(to); NN</span><span class="comment"> 1 0 0 1 0 1 |  a&lt;1&gt;  |    a() | I  |  f  | delete(from); insert(to); NN</span><span class="comment"> 1 0 0 1 1 0 |   a&lt;&gt;  | a(...) | G  |  f  | delete(from); insert(to); NN</span><span class="comment"> 1 0 0 1 1 1 |   a&lt;&gt;  |    a() | F  |  f  | delete(from); insert(to); NN</span><span class="comment"> 1 0 1 0 0 0 | a(...) |  a&lt;1&gt;  | J' |  f  | delete(from); insert(to); NN</span><span class="comment"> 1 0 1 0 0 1 | a(...) |   a&lt;&gt;  | G' |  f  | delete(from); insert(to); NN</span><span class="comment"> 1 0 1 0 1 0 |    a() |  a&lt;1&gt;  | I' |  f  | delete(from); insert(to); NN</span><span class="comment"> 1 0 1 0 1 1 |    a() |   a&lt;&gt;  | F' |  f  | delete(from); insert(to); NN</span><span class="comment"> 1 0 1 1 0 0 | a(...) | a(;;;) | L  |  g  | nothing; SS</span><span class="comment"> 1 0 1 1 0 1 | a(...) |    a() | K' |  h  | deleteChildren(from); NN</span><span class="comment"> 1 0 1 1 1 0 |    a() | a(...) | K  |  i  | insertChildren(to); NN</span><span class="comment"> 1 0 1 1 1 1 |  ----  |  ----  |    |     |</span><span class="comment"> 1 1 0 0 0 0 |  a&lt;1&gt;  |  a&lt;1&gt;  | B  |  b  | nothing; NN</span><span class="comment"> 1 1 0 0 0 1 |  ----  |  ----  |    |  b  |</span><span class="comment"> 1 1 0 0 1 0 |  ----  |  ----  |    |  b  |</span><span class="comment"> 1 1 0 0 1 1 |   a&lt;&gt;  |   a&lt;&gt;  | B  |  b  | nothing; NN</span><span class="comment"> 1 1 0 1 0 0 |  ----  |  ----  |    |  b  |</span><span class="comment"> 1 1 0 1 0 1 |  ----  |  ----  |    |  b  |</span><span class="comment"> 1 1 0 1 1 0 |  ----  |  ----  |    |  b  |</span><span class="comment"> 1 1 0 1 1 1 |  ----  |  ----  |    |  b  |</span><span class="comment"> 1 1 1 0 0 0 |  ----  |  ----  |    |  b  |</span><span class="comment"> 1 1 1 0 0 1 |  ----  |  ----  |    |  b  |</span><span class="comment"> 1 1 1 0 1 0 |  ----  |  ----  |    |  b  |</span><span class="comment"> 1 1 1 0 1 1 |  ----  |  ----  |    |  b  |</span><span class="comment"> 1 1 1 1 0 0 | a(...) | a(...) | B  |  b  | nothing; NN</span><span class="comment"> 1 1 1 1 0 1 |  ----  |  ----  |    |  b  |</span><span class="comment"> 1 1 1 1 1 0 |  ----  |  ----  |    |  b  |</span><span class="comment"> 1 1 1 1 1 1 |   a()  |   a()  | B  |  b  | nothing; NN</span><span class="comment"></span><span class="comment"> c and d:</span><span class="comment">     if !SameName()</span><span class="comment">         d if FromBeforeTo()</span><span class="comment">         c else</span><span class="comment"> b: SameName) &amp;&amp; sameHash()</span><span class="comment"> e: SameName() &amp;&amp; !sameHash() &amp;&amp; BothAreFiles()</span><span class="comment"> f: SameName() &amp;&amp; !sameHash() &amp;&amp; FileAndDir()</span><span class="comment"> g: SameName() &amp;&amp; !sameHash() &amp;&amp; BothAreDirs() &amp;&amp; NoneIsEmpty</span><span class="comment"> i: SameName() &amp;&amp; !sameHash() &amp;&amp; BothAreDirs() &amp;&amp; FromIsEmpty</span><span class="comment"> h: else of i</span></div>
+<div class="code"><pre><code>
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"context"</span></label>
+	<label for="i1"><span class="lit-string i1">"errors"</span></label>
+	<label for="i2"><span class="lit-string i2">"fmt"</span></label>
+
+	<label for="i3"><span class="lit-string i3">"github.com/go-git/go-git/v5/utils/merkletrie/noder"</span></label>
+)
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ErrCanceled is returned whenever the operation is canceled.</span></div>
+<div class="code"><pre><code>	<a href="../../../../../../../pkg/github.com/go-git/go-git/v5/utils/merkletrie.html#name-ErrCanceled" class="ident">ErrCanceled</a> = <a href="../../../../../../../pkg/errors.html" class="ident i1">errors</a>.<a href="../../../../../../errors/errors.go.html#line-58" class="ident">New</a>(<span class="lit-string">"operation canceled"</span>)
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> DiffTree calculates the list of changes between two merkletries.  It</span><span class="comment"> uses the provided hashEqual callback to compare noders.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r0" class="ident"><a href="../../../../../../../pkg/github.com/go-git/go-git/v5/utils/merkletrie.html#name-DiffTree" class="ident">DiffTree</a></label>(
+	<label for="r1" class="ident">fromTree</label>,
+	<label for="r2" class="ident">toTree</label> <a href="../../../../../../../pkg/github.com/go-git/go-git/v5/utils/merkletrie/noder.html" class="ident i3">noder</a>.<a href="noder/noder.go.html#line-35" class="ident">Noder</a>,
+	<label for="r3" class="ident">hashEqual</label> <a href="../../../../../../../pkg/github.com/go-git/go-git/v5/utils/merkletrie/noder.html" class="ident i3">noder</a>.<a href="noder/noder.go.html#line-25" class="ident">Equal</a>,
+) (<a href="change.go.html#line-97" class="ident">Changes</a>, <a href="../../../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<span class="keyword">return</span> <a href="#line-277" class="ident">DiffTreeContext</a>(<a href="../../../../../../../pkg/context.html" class="ident i0">context</a>.<a href="../../../../../../context/context.go.html#line-208" class="ident">Background</a>(), <label for="r1" class="ident">fromTree</label>, <label for="r2" class="ident">toTree</label>, <label for="r3" class="ident">hashEqual</label>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> DiffTreeContext calculates the list of changes between two merkletries. It</span><span class="comment"> uses the provided hashEqual callback to compare noders.</span><span class="comment"> Error will be returned if context expires</span><span class="comment"> Provided context must be non nil</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r4" class="ident"><a href="../../../../../../../pkg/github.com/go-git/go-git/v5/utils/merkletrie.html#name-DiffTreeContext" class="ident">DiffTreeContext</a></label>(<label for="r5" class="ident">ctx</label> <a href="../../../../../../../pkg/context.html" class="ident i0">context</a>.<a href="../../../../../../context/context.go.html#line-62" class="ident">Context</a>, <label for="r6" class="ident">fromTree</label>, <label for="r7" class="ident">toTree</label> <a href="../../../../../../../pkg/github.com/go-git/go-git/v5/utils/merkletrie/noder.html" class="ident i3">noder</a>.<a href="noder/noder.go.html#line-35" class="ident">Noder</a>,
+	<label for="r8" class="ident">hashEqual</label> <a href="../../../../../../../pkg/github.com/go-git/go-git/v5/utils/merkletrie/noder.html" class="ident i3">noder</a>.<a href="noder/noder.go.html#line-25" class="ident">Equal</a>) (<a href="change.go.html#line-97" class="ident">Changes</a>, <a href="../../../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<label for="r9" class="ident">ret</label> := <a href="change.go.html#line-100" class="ident">NewChanges</a>()
+
+	<label for="r10" class="ident">ii</label>, <label for="r11" class="ident">err</label> := <a href="doubleiter.go.html#line-38" class="ident">newDoubleIter</a>(<label for="r6" class="ident">fromTree</label>, <label for="r7" class="ident">toTree</label>, <label for="r8" class="ident">hashEqual</label>)
+	<span class="keyword">if</span> <label for="r11" class="ident">err</label> != <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <label for="r11" class="ident">err</label>
+	}
+
+	<span class="keyword">for</span> {
+		<a href="../../../../../../runtime/chan.go.html#line-707"><span class="keyword">select</span></a> {
+		<span class="keyword">case</span> <a href="../../../../../../runtime/chan.go.html#line-438">&lt;-</a><label for="r5" class="ident">ctx</label>.<a href="../../../../../../context/context.go.html#line-99" class="ident">Done</a>():
+			<span class="keyword">return</span> <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="#line-260" class="ident">ErrCanceled</a>
+		<span class="keyword">default</span>:
+		}
+
+		<label for="r12" class="ident">from</label> := <label for="r10" class="ident">ii</label>.<a href="doubleiter.go.html#line-23" class="ident">from</a>.<a href="doubleiter.go.html#line-25" class="ident">current</a>
+		<label for="r13" class="ident">to</label> := <label for="r10" class="ident">ii</label>.<a href="doubleiter.go.html#line-27" class="ident">to</a>.<a href="doubleiter.go.html#line-29" class="ident">current</a>
+
+		<span class="keyword">switch</span> <label for="r14" class="ident">r</label> := <label for="r10" class="ident">ii</label>.<a href="doubleiter.go.html#line-110" class="ident">remaining</a>(); <label for="r14" class="ident">r</label> {
+		<span class="keyword">case</span> <a href="doubleiter.go.html#line-131" class="ident">noMoreNoders</a>:
+			<span class="keyword">return</span> <label for="r9" class="ident">ret</label>, <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+		<span class="keyword">case</span> <a href="doubleiter.go.html#line-133" class="ident">onlyFromRemains</a>:
+			<span class="keyword">if</span> <label for="r11" class="ident">err</label> = <label for="r9" class="ident">ret</label>.<a href="change.go.html#line-117" class="ident">AddRecursiveDelete</a>(<label for="r12" class="ident">from</label>); <label for="r11" class="ident">err</label> != <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+				<span class="keyword">return</span> <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <label for="r11" class="ident">err</label>
+			}
+			<span class="keyword">if</span> <label for="r11" class="ident">err</label> = <label for="r10" class="ident">ii</label>.<a href="doubleiter.go.html#line-84" class="ident">nextFrom</a>(); <label for="r11" class="ident">err</label> != <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+				<span class="keyword">return</span> <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <label for="r11" class="ident">err</label>
+			}
+		<span class="keyword">case</span> <a href="doubleiter.go.html#line-132" class="ident">onlyToRemains</a>:
+			<span class="keyword">if</span> <label for="r11" class="ident">err</label> = <label for="r9" class="ident">ret</label>.<a href="change.go.html#line-111" class="ident">AddRecursiveInsert</a>(<label for="r13" class="ident">to</label>); <label for="r11" class="ident">err</label> != <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+				<span class="keyword">return</span> <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <label for="r11" class="ident">err</label>
+			}
+			<span class="keyword">if</span> <label for="r11" class="ident">err</label> = <label for="r10" class="ident">ii</label>.<a href="doubleiter.go.html#line-91" class="ident">nextTo</a>(); <label for="r11" class="ident">err</label> != <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+				<span class="keyword">return</span> <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <label for="r11" class="ident">err</label>
+			}
+		<span class="keyword">case</span> <a href="doubleiter.go.html#line-134" class="ident">bothHaveNodes</a>:
+			<span class="keyword">if</span> <label for="r11" class="ident">err</label> = <a href="#line-323" class="ident">diffNodes</a>(&amp;<label for="r9" class="ident">ret</label>, <label for="r10" class="ident">ii</label>); <label for="r11" class="ident">err</label> != <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+				<span class="keyword">return</span> <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <label for="r11" class="ident">err</label>
+			}
+		<span class="keyword">default</span>:
+			<a href="../../../../../../../pkg/builtin.html#name-panic" class="ident">panic</a>(<a href="../../../../../../../pkg/fmt.html" class="ident i2">fmt</a>.<a href="../../../../../../fmt/print.go.html#line-217" class="ident">Sprintf</a>(<span class="lit-string">"unknown remaining value: %d"</span>, <label for="r14" class="ident">r</label>))
+		}
+	}
+}
+
+<span class="keyword">func</span> <label for="r15" class="ident"><a href="../../../../../../../pkg/github.com/go-git/go-git/v5/utils/merkletrie.html#name-diffNodes" class="ident">diffNodes</a></label>(<label for="r16" class="ident">changes</label> *<a href="change.go.html#line-97" class="ident">Changes</a>, <label for="r17" class="ident">ii</label> *<a href="doubleiter.go.html#line-22" class="ident">doubleIter</a>) <a href="../../../../../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<label for="r18" class="ident">from</label> := <label for="r17" class="ident">ii</label>.<a href="doubleiter.go.html#line-23" class="ident">from</a>.<a href="doubleiter.go.html#line-25" class="ident">current</a>
+	<label for="r19" class="ident">to</label> := <label for="r17" class="ident">ii</label>.<a href="doubleiter.go.html#line-27" class="ident">to</a>.<a href="doubleiter.go.html#line-29" class="ident">current</a>
+	<span class="keyword">var</span> <label for="r20" class="ident">err</label> <a href="../../../../../../../pkg/builtin.html#name-error" class="ident">error</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> compare their full paths as strings</span></div>
+<div class="code"><pre><code>	<span class="keyword">switch</span> <label for="r18" class="ident">from</label>.<a href="noder/path.go.html#line-70" class="ident">Compare</a>(<label for="r19" class="ident">to</label>) {
+	<span class="keyword">case</span> -<span class="lit-number">1</span>:
+		<span class="keyword">if</span> <label for="r20" class="ident">err</label> = <label for="r16" class="ident">changes</label>.<a href="change.go.html#line-117" class="ident">AddRecursiveDelete</a>(<label for="r18" class="ident">from</label>); <label for="r20" class="ident">err</label> != <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<span class="keyword">return</span> <label for="r20" class="ident">err</label>
+		}
+		<span class="keyword">if</span> <label for="r20" class="ident">err</label> = <label for="r17" class="ident">ii</label>.<a href="doubleiter.go.html#line-84" class="ident">nextFrom</a>(); <label for="r20" class="ident">err</label> != <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<span class="keyword">return</span> <label for="r20" class="ident">err</label>
+		}
+	<span class="keyword">case</span> <span class="lit-number">1</span>:
+		<span class="keyword">if</span> <label for="r20" class="ident">err</label> = <label for="r16" class="ident">changes</label>.<a href="change.go.html#line-111" class="ident">AddRecursiveInsert</a>(<label for="r19" class="ident">to</label>); <label for="r20" class="ident">err</label> != <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<span class="keyword">return</span> <label for="r20" class="ident">err</label>
+		}
+		<span class="keyword">if</span> <label for="r20" class="ident">err</label> = <label for="r17" class="ident">ii</label>.<a href="doubleiter.go.html#line-91" class="ident">nextTo</a>(); <label for="r20" class="ident">err</label> != <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<span class="keyword">return</span> <label for="r20" class="ident">err</label>
+		}
+	<span class="keyword">default</span>:
+		<span class="keyword">if</span> <label for="r21" class="ident">err</label> := <a href="#line-353" class="ident">diffNodesSameName</a>(<label for="r16" class="ident">changes</label>, <label for="r17" class="ident">ii</label>); <label for="r21" class="ident">err</label> != <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<span class="keyword">return</span> <label for="r21" class="ident">err</label>
+		}
+	}
+
+	<span class="keyword">return</span> <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+}
+
+<span class="keyword">func</span> <label for="r22" class="ident"><a href="../../../../../../../pkg/github.com/go-git/go-git/v5/utils/merkletrie.html#name-diffNodesSameName" class="ident">diffNodesSameName</a></label>(<label for="r23" class="ident">changes</label> *<a href="change.go.html#line-97" class="ident">Changes</a>, <label for="r24" class="ident">ii</label> *<a href="doubleiter.go.html#line-22" class="ident">doubleIter</a>) <a href="../../../../../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<label for="r25" class="ident">from</label> := <label for="r24" class="ident">ii</label>.<a href="doubleiter.go.html#line-23" class="ident">from</a>.<a href="doubleiter.go.html#line-25" class="ident">current</a>
+	<label for="r26" class="ident">to</label> := <label for="r24" class="ident">ii</label>.<a href="doubleiter.go.html#line-27" class="ident">to</a>.<a href="doubleiter.go.html#line-29" class="ident">current</a>
+
+	<label for="r27" class="ident">status</label>, <label for="r28" class="ident">err</label> := <label for="r24" class="ident">ii</label>.<a href="doubleiter.go.html#line-139" class="ident">compare</a>()
+	<span class="keyword">if</span> <label for="r28" class="ident">err</label> != <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <label for="r28" class="ident">err</label>
+	}
+
+	<span class="keyword">switch</span> {
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> do nothing</span></div>
+<div class="code"><pre><code>		<span class="keyword">if</span> <label for="r28" class="ident">err</label> = <label for="r24" class="ident">ii</label>.<a href="doubleiter.go.html#line-71" class="ident">nextBoth</a>(); <label for="r28" class="ident">err</label> != <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<span class="keyword">return</span> <label for="r28" class="ident">err</label>
+		}
+	<span class="keyword">case</span> <label for="r27" class="ident">status</label>.<a href="doubleiter.go.html#line-174" class="ident">bothAreFiles</a>:
+		<label for="r23" class="ident">changes</label>.<a href="change.go.html#line-105" class="ident">Add</a>(<a href="change.go.html#line-67" class="ident">NewModify</a>(<label for="r25" class="ident">from</label>, <label for="r26" class="ident">to</label>))
+		<span class="keyword">if</span> <label for="r28" class="ident">err</label> = <label for="r24" class="ident">ii</label>.<a href="doubleiter.go.html#line-71" class="ident">nextBoth</a>(); <label for="r28" class="ident">err</label> != <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<span class="keyword">return</span> <label for="r28" class="ident">err</label>
+		}
+	<span class="keyword">case</span> <label for="r27" class="ident">status</label>.<a href="doubleiter.go.html#line-180" class="ident">fileAndDir</a>:
+		<span class="keyword">if</span> <label for="r28" class="ident">err</label> = <label for="r23" class="ident">changes</label>.<a href="change.go.html#line-117" class="ident">AddRecursiveDelete</a>(<label for="r25" class="ident">from</label>); <label for="r28" class="ident">err</label> != <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<span class="keyword">return</span> <label for="r28" class="ident">err</label>
+		}
+		<span class="keyword">if</span> <label for="r28" class="ident">err</label> = <label for="r23" class="ident">changes</label>.<a href="change.go.html#line-111" class="ident">AddRecursiveInsert</a>(<label for="r26" class="ident">to</label>); <label for="r28" class="ident">err</label> != <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<span class="keyword">return</span> <label for="r28" class="ident">err</label>
+		}
+		<span class="keyword">if</span> <label for="r28" class="ident">err</label> = <label for="r24" class="ident">ii</label>.<a href="doubleiter.go.html#line-71" class="ident">nextBoth</a>(); <label for="r28" class="ident">err</label> != <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<span class="keyword">return</span> <label for="r28" class="ident">err</label>
+		}
+	<span class="keyword">case</span> <label for="r27" class="ident">status</label>.<a href="doubleiter.go.html#line-182" class="ident">bothAreDirs</a>:
+		<span class="keyword">if</span> <label for="r28" class="ident">err</label> = <a href="#line-394" class="ident">diffDirs</a>(<label for="r23" class="ident">changes</label>, <label for="r24" class="ident">ii</label>); <label for="r28" class="ident">err</label> != <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<span class="keyword">return</span> <label for="r28" class="ident">err</label>
+		}
+	<span class="keyword">default</span>:
+		<span class="keyword">return</span> <a href="../../../../../../../pkg/fmt.html" class="ident i2">fmt</a>.<a href="../../../../../../fmt/errors.go.html#line-17" class="ident">Errorf</a>(<span class="lit-string">"bad status from double iterator"</span>)
+	}
+
+	<span class="keyword">return</span> <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+}
+
+<span class="keyword">func</span> <label for="r29" class="ident"><a href="../../../../../../../pkg/github.com/go-git/go-git/v5/utils/merkletrie.html#name-diffDirs" class="ident">diffDirs</a></label>(<label for="r30" class="ident">changes</label> *<a href="change.go.html#line-97" class="ident">Changes</a>, <label for="r31" class="ident">ii</label> *<a href="doubleiter.go.html#line-22" class="ident">doubleIter</a>) <a href="../../../../../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<label for="r32" class="ident">from</label> := <label for="r31" class="ident">ii</label>.<a href="doubleiter.go.html#line-23" class="ident">from</a>.<a href="doubleiter.go.html#line-25" class="ident">current</a>
+	<label for="r33" class="ident">to</label> := <label for="r31" class="ident">ii</label>.<a href="doubleiter.go.html#line-27" class="ident">to</a>.<a href="doubleiter.go.html#line-29" class="ident">current</a>
+
+	<label for="r34" class="ident">status</label>, <label for="r35" class="ident">err</label> := <label for="r31" class="ident">ii</label>.<a href="doubleiter.go.html#line-139" class="ident">compare</a>()
+	<span class="keyword">if</span> <label for="r35" class="ident">err</label> != <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <label for="r35" class="ident">err</label>
+	}
+
+	<span class="keyword">switch</span> {
+	<span class="keyword">case</span> <label for="r34" class="ident">status</label>.<a href="doubleiter.go.html#line-184" class="ident">fromIsEmptyDir</a>:
+		<span class="keyword">if</span> <label for="r35" class="ident">err</label> = <label for="r30" class="ident">changes</label>.<a href="change.go.html#line-111" class="ident">AddRecursiveInsert</a>(<label for="r33" class="ident">to</label>); <label for="r35" class="ident">err</label> != <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<span class="keyword">return</span> <label for="r35" class="ident">err</label>
+		}
+		<span class="keyword">if</span> <label for="r35" class="ident">err</label> = <label for="r31" class="ident">ii</label>.<a href="doubleiter.go.html#line-71" class="ident">nextBoth</a>(); <label for="r35" class="ident">err</label> != <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<span class="keyword">return</span> <label for="r35" class="ident">err</label>
+		}
+	<span class="keyword">case</span> <label for="r34" class="ident">status</label>.<a href="doubleiter.go.html#line-186" class="ident">toIsEmptyDir</a>:
+		<span class="keyword">if</span> <label for="r35" class="ident">err</label> = <label for="r30" class="ident">changes</label>.<a href="change.go.html#line-117" class="ident">AddRecursiveDelete</a>(<label for="r32" class="ident">from</label>); <label for="r35" class="ident">err</label> != <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<span class="keyword">return</span> <label for="r35" class="ident">err</label>
+		}
+		<span class="keyword">if</span> <label for="r35" class="ident">err</label> = <label for="r31" class="ident">ii</label>.<a href="doubleiter.go.html#line-71" class="ident">nextBoth</a>(); <label for="r35" class="ident">err</label> != <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<span class="keyword">return</span> <label for="r35" class="ident">err</label>
+		}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> do nothing</span></div>
+<div class="code"><pre><code>		<span class="keyword">if</span> <label for="r35" class="ident">err</label> = <label for="r31" class="ident">ii</label>.<a href="doubleiter.go.html#line-98" class="ident">stepBoth</a>(); <label for="r35" class="ident">err</label> != <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<span class="keyword">return</span> <label for="r35" class="ident">err</label>
+		}
+	<span class="keyword">default</span>:
+		<span class="keyword">return</span> <a href="../../../../../../../pkg/fmt.html" class="ident i2">fmt</a>.<a href="../../../../../../fmt/errors.go.html#line-17" class="ident">Errorf</a>(<span class="lit-string">"both dirs are empty but has different hash"</span>)
+	}
+
+	<span class="keyword">return</span> <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

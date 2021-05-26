@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: debugcall.go in package runtime</title>
+<link href="../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	debugcall.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../pkg/runtime.html">runtime</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16],
+input[id=r17]:checked ~pre label[for=r17],
+input[id=r18]:checked ~pre label[for=r18],
+input[id=r19]:checked ~pre label[for=r19],
+input[id=r20]:checked ~pre label[for=r20],
+input[id=r21]:checked ~pre label[for=r21],
+input[id=r22]:checked ~pre label[for=r22],
+input[id=r23]:checked ~pre label[for=r23],
+input[id=r24]:checked ~pre label[for=r24],
+input[id=r25]:checked ~pre label[for=r25],
+input[id=r26]:checked ~pre label[for=r26],
+input[id=r27]:checked ~pre label[for=r27],
+input[id=r28]:checked ~pre label[for=r28],
+input[id=r29]:checked ~pre label[for=r29],
+input[id=r30]:checked ~pre label[for=r30],
+input[id=r31]:checked ~pre label[for=r31],
+input[id=r32]:checked ~pre label[for=r32],
+input[id=r33]:checked ~pre label[for=r33],
+input[id=r34]:checked ~pre label[for=r34],
+input[id=r35]:checked ~pre label[for=r35],
+input[id=r36]:checked ~pre label[for=r36]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="r17" type="radio" name="g"/>
+<input id="r18" type="radio" name="g"/>
+<input id="r19" type="radio" name="g"/>
+<input id="r20" type="radio" name="g"/>
+<input id="r21" type="radio" name="g"/>
+<input id="r22" type="radio" name="g"/>
+<input id="r23" type="radio" name="g"/>
+<input id="r24" type="radio" name="g"/>
+<input id="r25" type="radio" name="g"/>
+<input id="r26" type="radio" name="g"/>
+<input id="r27" type="radio" name="g"/>
+<input id="r28" type="radio" name="g"/>
+<input id="r29" type="radio" name="g"/>
+<input id="r30" type="radio" name="g"/>
+<input id="r31" type="radio" name="g"/>
+<input id="r32" type="radio" name="g"/>
+<input id="r33" type="radio" name="g"/>
+<input id="r34" type="radio" name="g"/>
+<input id="r35" type="radio" name="g"/>
+<input id="r36" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2018 The Go Authors. All rights reserved.</span><span class="comment"> Use of this source code is governed by a BSD-style</span><span class="comment"> license that can be found in the LICENSE file.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> +build amd64</span></div>
+<div class="code"><pre><code>
+<span class="keyword">package</span> runtime
+
+<span class="keyword">import</span> <label for="i0"><span class="lit-string i0">"unsafe"</span></label>
+
+<span class="keyword">const</span> (
+	<a href="../../pkg/runtime.html#name-debugCallSystemStack" class="ident">debugCallSystemStack</a> = <span class="lit-string">"executing on Go runtime stack"</span>
+	<a href="../../pkg/runtime.html#name-debugCallUnknownFunc" class="ident">debugCallUnknownFunc</a> = <span class="lit-string">"call from unknown function"</span>
+	<a href="../../pkg/runtime.html#name-debugCallRuntime" class="ident">debugCallRuntime</a>     = <span class="lit-string">"call from within the Go runtime"</span>
+	<a href="../../pkg/runtime.html#name-debugCallUnsafePoint" class="ident">debugCallUnsafePoint</a> = <span class="lit-string">"call not at safe point"</span>
+)
+
+<span class="keyword">func</span> <label for="r0" class="ident"><a href="../../pkg/runtime.html#name-debugCallV1" class="ident">debugCallV1</a></label>()
+<span class="keyword">func</span> <label for="r1" class="ident"><a href="../../pkg/runtime.html#name-debugCallPanicked" class="ident">debugCallPanicked</a></label>(<label for="r2" class="ident">val</label> <span class="keyword">interface</span>{})
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> debugCallCheck checks whether it is safe to inject a debugger</span><span class="comment"> function call with return PC pc. If not, it returns a string</span><span class="comment"> explaining why.</span><span class="comment"></span><span class="comment">go:nosplit</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> No user calls from the system stack.</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> <a href="stubs.go.html#line-18" class="ident">getg</a>() != <a href="stubs.go.html#line-18" class="ident">getg</a>().<a href="runtime2.go.html#line-418" class="ident">m</a>.<a href="runtime2.go.html#line-498" class="ident">curg</a> {
+		<span class="keyword">return</span> <a href="#line-12" class="ident">debugCallSystemStack</a>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Fast syscalls (nanotime) and racecall switch to the</span><span class="comment">		 g0 stack without switching g. We can't safely make</span><span class="comment">		 a call in this state. (We can't even safely</span><span class="comment">		 systemstack.)</span></div>
+<div class="code"><pre><code>		<span class="keyword">return</span> <a href="#line-12" class="ident">debugCallSystemStack</a>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Switch to the system stack to avoid overflowing the user</span><span class="comment">	 stack.</span></div>
+<div class="code"><pre><code>	<span class="keyword">var</span> <label for="r6" class="ident">ret</label> <a href="../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="stubs.go.html#line-54" class="ident">systemstack</a>(<span class="keyword">func</span>() {
+		<label for="r7" class="ident">f</label> := <a href="symtab.go.html#line-671" class="ident">findfunc</a>(<label for="r4" class="ident">pc</label>)
+		<span class="keyword">if</span> !<label for="r7" class="ident">f</label>.<a href="symtab.go.html#line-663" class="ident">valid</a>() {
+			<label for="r6" class="ident">ret</label> = <a href="#line-13" class="ident">debugCallUnknownFunc</a>
+			<span class="keyword">return</span>
+		}
+
+		<label for="r8" class="ident">name</label> := <a href="symtab.go.html#line-840" class="ident">funcname</a>(<label for="r7" class="ident">f</label>)
+
+		<span class="keyword">switch</span> <label for="r8" class="ident">name</label> {
+		<span class="keyword">case</span> <span class="lit-string">"debugCall32"</span>,
+			<span class="lit-string">"debugCall64"</span>,
+			<span class="lit-string">"debugCall128"</span>,
+			<span class="lit-string">"debugCall256"</span>,
+			<span class="lit-string">"debugCall512"</span>,
+			<span class="lit-string">"debugCall1024"</span>,
+			<span class="lit-string">"debugCall2048"</span>,
+			<span class="lit-string">"debugCall4096"</span>,
+			<span class="lit-string">"debugCall8192"</span>,
+			<span class="lit-string">"debugCall16384"</span>,
+			<span class="lit-string">"debugCall32768"</span>,
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> These functions are allowed so that the debugger can initiate multiple function calls.</span><span class="comment">			 See: https://golang.org/cl/161137/</span></div>
+<div class="code"><pre><code>			<span class="keyword">return</span>
+		}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Disallow calls from the runtime. We could</span><span class="comment">		 potentially make this condition tighter (e.g., not</span><span class="comment">		 when locks are held), but there are enough tightly</span><span class="comment">		 coded sequences (e.g., defer handling) that it's</span><span class="comment">		 better to play it safe.</span></div>
+<div class="code"><pre><code>		<span class="keyword">if</span> <label for="r9" class="ident">pfx</label> := <span class="lit-string">"runtime."</span>; <a href="../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r8" class="ident">name</label>) &gt; <a href="../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r9" class="ident">pfx</label>) &amp;&amp; <label for="r8" class="ident">name</label>[:<a href="../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r9" class="ident">pfx</label>)] == <label for="r9" class="ident">pfx</label> {
+			<label for="r6" class="ident">ret</label> = <a href="#line-14" class="ident">debugCallRuntime</a>
+			<span class="keyword">return</span>
+		}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Check that this isn't an unsafe-point.</span></div>
+<div class="code"><pre><code>		<span class="keyword">if</span> <label for="r4" class="ident">pc</label> != <label for="r7" class="ident">f</label>.<a href="runtime2.go.html#line-826" class="ident">entry</a> {
+			<label for="r4" class="ident">pc</label>--
+		}
+		<label for="r10" class="ident">up</label> := <a href="symtab.go.html#line-934" class="ident">pcdatavalue</a>(<label for="r7" class="ident">f</label>, <a href="symtab.go.html#line-273" class="ident">_PCDATA_UnsafePoint</a>, <label for="r4" class="ident">pc</label>, <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Not at a safe point.</span></div>
+<div class="code"><pre><code>			<label for="r6" class="ident">ret</label> = <a href="#line-15" class="ident">debugCallUnsafePoint</a>
+		}
+	})
+	<span class="keyword">return</span> <label for="r6" class="ident">ret</label>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> debugCallWrap starts a new goroutine to run a debug call and blocks</span><span class="comment"> the calling goroutine. On the goroutine, it prepares to recover</span><span class="comment"> panics from the debug call, and then calls the call dispatching</span><span class="comment"> function at PC dispatch.</span><span class="comment"></span><span class="comment"> This must be deeply nosplit because there are untyped values on the</span><span class="comment"> stack from debugCallV1.</span><span class="comment"></span><span class="comment">go:nosplit</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r11" class="ident"><a href="../../pkg/runtime.html#name-debugCallWrap" class="ident">debugCallWrap</a></label>(<label for="r12" class="ident">dispatch</label> <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>) {
+	<span class="keyword">var</span> <label for="r13" class="ident">lockedm</label> <a href="../../pkg/builtin.html#name-bool" class="ident">bool</a>
+	<span class="keyword">var</span> <label for="r14" class="ident">lockedExt</label> <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>
+	<label for="r15" class="ident">callerpc</label> := <a href="stubs.go.html#line-250" class="ident">getcallerpc</a>()
+	<label for="r16" class="ident">gp</label> := <a href="stubs.go.html#line-18" class="ident">getg</a>()
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Create a new goroutine to execute the call on. Run this on</span><span class="comment">	 the system stack to avoid growing our stack.</span></div>
+<div class="code"><pre><code>	<a href="stubs.go.html#line-54" class="ident">systemstack</a>(<span class="keyword">func</span>() {
+		<span class="keyword">var</span> <label for="r17" class="ident">args</label> <span class="keyword">struct</span> {
+			<label for="r18" class="ident">dispatch</label> <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>
+			<label for="r19" class="ident">callingG</label> *<a href="runtime2.go.html#line-404" class="ident">g</a>
+		}
+		<label for="r17" class="ident">args</label>.<label for="r18" class="ident">dispatch</label> = <label for="r12" class="ident">dispatch</label>
+		<label for="r17" class="ident">args</label>.<label for="r19" class="ident">callingG</label> = <label for="r16" class="ident">gp</label>
+		<label for="r20" class="ident">fn</label> := <a href="#line-189" class="ident">debugCallWrap1</a>
+		<label for="r21" class="ident">newg</label> := <a href="proc.go.html#line-3999" class="ident">newproc1</a>(*(**<a href="runtime2.go.html#line-198" class="ident">funcval</a>)(<a href="../../pkg/unsafe.html" class="ident i0">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(&amp;<label for="r20" class="ident">fn</label>)), <a href="../../pkg/unsafe.html" class="ident i0">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(&amp;<label for="r17" class="ident">args</label>), <a href="../../pkg/builtin.html#name-int32" class="ident">int32</a>(<a href="../../pkg/unsafe.html" class="ident i0">unsafe</a>.<a href="../../pkg/unsafe.html#name-Sizeof" class="ident">Sizeof</a>(<label for="r17" class="ident">args</label>)), <label for="r16" class="ident">gp</label>, <label for="r15" class="ident">callerpc</label>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> If the current G is locked, then transfer that</span><span class="comment">		 locked-ness to the new goroutine.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Save lock state to restore later.</span></div>
+<div class="code"><pre><code>			<label for="r22" class="ident">mp</label> := <label for="r16" class="ident">gp</label>.<a href="runtime2.go.html#line-418" class="ident">m</a>
+			<span class="keyword">if</span> <label for="r22" class="ident">mp</label> != <label for="r16" class="ident">gp</label>.<a href="runtime2.go.html#line-458" class="ident">lockedm</a>.<a href="runtime2.go.html#line-300" class="ident">ptr</a>() {
+				<a href="panic.go.html#line-1107" class="ident">throw</a>(<span class="lit-string">"inconsistent lockedm"</span>)
+			}
+
+			<label for="r13" class="ident">lockedm</label> = <a href="../../pkg/builtin.html#name-true" class="ident">true</a>
+			<label for="r14" class="ident">lockedExt</label> = <label for="r22" class="ident">mp</label>.<a href="runtime2.go.html#line-529" class="ident">lockedExt</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Transfer external lock count to internal so</span><span class="comment">			 it can't be unlocked from the debug call.</span></div>
+<div class="code"><pre><code>			<label for="r22" class="ident">mp</label>.<a href="runtime2.go.html#line-530" class="ident">lockedInt</a>++
+			<label for="r22" class="ident">mp</label>.<a href="runtime2.go.html#line-529" class="ident">lockedExt</a> = <span class="lit-number">0</span>
+
+			<label for="r22" class="ident">mp</label>.<a href="runtime2.go.html#line-527" class="ident">lockedg</a>.<a href="runtime2.go.html#line-265" class="ident">set</a>(<label for="r21" class="ident">newg</label>)
+			<label for="r21" class="ident">newg</label>.<a href="runtime2.go.html#line-458" class="ident">lockedm</a>.<a href="runtime2.go.html#line-303" class="ident">set</a>(<label for="r22" class="ident">mp</label>)
+			<label for="r16" class="ident">gp</label>.<a href="runtime2.go.html#line-458" class="ident">lockedm</a> = <span class="lit-number">0</span>
+		}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Mark the calling goroutine as being at an async</span><span class="comment">		 safe-point, since it has a few conservative frames</span><span class="comment">		 at the bottom of the stack. This also prevents</span><span class="comment">		 stack shrinks.</span></div>
+<div class="code"><pre><code>		<label for="r16" class="ident">gp</label>.<a href="runtime2.go.html#line-438" class="ident">asyncSafePoint</a> = <a href="../../pkg/builtin.html#name-true" class="ident">true</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Stash newg away so we can execute it below (mcall's</span><span class="comment">		 closure can't capture anything).</span></div>
+<div class="code"><pre><code>		<label for="r16" class="ident">gp</label>.<a href="runtime2.go.html#line-427" class="ident">schedlink</a>.<a href="runtime2.go.html#line-265" class="ident">set</a>(<label for="r21" class="ident">newg</label>)
+	})
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Switch to the new goroutine.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Get newg.</span></div>
+<div class="code"><pre><code>		<label for="r24" class="ident">newg</label> := <label for="r23" class="ident">gp</label>.<a href="runtime2.go.html#line-427" class="ident">schedlink</a>.<a href="runtime2.go.html#line-262" class="ident">ptr</a>()
+		<label for="r23" class="ident">gp</label>.<a href="runtime2.go.html#line-427" class="ident">schedlink</a> = <span class="lit-number">0</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Park the calling goroutine.</span></div>
+<div class="code"><pre><code>		<label for="r23" class="ident">gp</label>.<a href="runtime2.go.html#line-429" class="ident">waitreason</a> = <a href="runtime2.go.html#line-1014" class="ident">waitReasonDebugCall</a>
+		<span class="keyword">if</span> <a href="trace.go.html#line-109" class="ident">trace</a>.<a href="trace.go.html#line-112" class="ident">enabled</a> {
+			<a href="trace.go.html#line-1093" class="ident">traceGoPark</a>(<a href="trace.go.html#line-43" class="ident">traceEvGoBlock</a>, <span class="lit-number">1</span>)
+		}
+		<a href="proc.go.html#line-890" class="ident">casgstatus</a>(<label for="r23" class="ident">gp</label>, <a href="runtime2.go.html#line-44" class="ident">_Grunning</a>, <a href="runtime2.go.html#line-59" class="ident">_Gwaiting</a>)
+		<a href="proc.go.html#line-3174" class="ident">dropg</a>()
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Directly execute the new goroutine. The debug</span><span class="comment">		 protocol will continue on the new goroutine, so</span><span class="comment">		 it's important we not just let the scheduler do</span><span class="comment">		 this or it may resume a different goroutine.</span></div>
+<div class="code"><pre><code>		<a href="proc.go.html#line-2519" class="ident">execute</a>(<label for="r24" class="ident">newg</label>, <a href="../../pkg/builtin.html#name-true" class="ident">true</a>)
+	})
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> We'll resume here when the call returns.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Restore locked state.</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> <label for="r13" class="ident">lockedm</label> {
+		<label for="r25" class="ident">mp</label> := <label for="r16" class="ident">gp</label>.<a href="runtime2.go.html#line-418" class="ident">m</a>
+		<label for="r25" class="ident">mp</label>.<a href="runtime2.go.html#line-529" class="ident">lockedExt</a> = <label for="r14" class="ident">lockedExt</label>
+		<label for="r25" class="ident">mp</label>.<a href="runtime2.go.html#line-530" class="ident">lockedInt</a>--
+		<label for="r25" class="ident">mp</label>.<a href="runtime2.go.html#line-527" class="ident">lockedg</a>.<a href="runtime2.go.html#line-265" class="ident">set</a>(<label for="r16" class="ident">gp</label>)
+		<label for="r16" class="ident">gp</label>.<a href="runtime2.go.html#line-458" class="ident">lockedm</a>.<a href="runtime2.go.html#line-303" class="ident">set</a>(<label for="r25" class="ident">mp</label>)
+	}
+
+	<label for="r16" class="ident">gp</label>.<a href="runtime2.go.html#line-438" class="ident">asyncSafePoint</a> = <a href="../../pkg/builtin.html#name-false" class="ident">false</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> debugCallWrap1 is the continuation of debugCallWrap on the callee</span><span class="comment"> goroutine.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Dispatch call and trap panics.</span></div>
+<div class="code"><pre><code>	<a href="#line-226" class="ident">debugCallWrap2</a>(<label for="r27" class="ident">dispatch</label>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Resume the caller goroutine.</span></div>
+<div class="code"><pre><code>	<a href="stubs.go.html#line-18" class="ident">getg</a>().<a href="runtime2.go.html#line-427" class="ident">schedlink</a>.<a href="runtime2.go.html#line-265" class="ident">set</a>(<label for="r28" class="ident">callingG</label>)
+	<a href="stubs.go.html#line-34" class="ident">mcall</a>(<span class="keyword">func</span>(<label for="r29" class="ident">gp</label> *<a href="runtime2.go.html#line-404" class="ident">g</a>) {
+		<label for="r30" class="ident">callingG</label> := <label for="r29" class="ident">gp</label>.<a href="runtime2.go.html#line-427" class="ident">schedlink</a>.<a href="runtime2.go.html#line-262" class="ident">ptr</a>()
+		<label for="r29" class="ident">gp</label>.<a href="runtime2.go.html#line-427" class="ident">schedlink</a> = <span class="lit-number">0</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Unlock this goroutine from the M if necessary. The</span><span class="comment">		 calling G will relock.</span></div>
+<div class="code"><pre><code>		<span class="keyword">if</span> <label for="r29" class="ident">gp</label>.<a href="runtime2.go.html#line-458" class="ident">lockedm</a> != <span class="lit-number">0</span> {
+			<label for="r29" class="ident">gp</label>.<a href="runtime2.go.html#line-458" class="ident">lockedm</a> = <span class="lit-number">0</span>
+			<label for="r29" class="ident">gp</label>.<a href="runtime2.go.html#line-418" class="ident">m</a>.<a href="runtime2.go.html#line-527" class="ident">lockedg</a> = <span class="lit-number">0</span>
+		}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Switch back to the calling goroutine. At some point</span><span class="comment">		 the scheduler will schedule us again and we'll</span><span class="comment">		 finish exiting.</span></div>
+<div class="code"><pre><code>		<span class="keyword">if</span> <a href="trace.go.html#line-109" class="ident">trace</a>.<a href="trace.go.html#line-112" class="ident">enabled</a> {
+			<a href="trace.go.html#line-1081" class="ident">traceGoSched</a>()
+		}
+		<a href="proc.go.html#line-890" class="ident">casgstatus</a>(<label for="r29" class="ident">gp</label>, <a href="runtime2.go.html#line-44" class="ident">_Grunning</a>, <a href="runtime2.go.html#line-39" class="ident">_Grunnable</a>)
+		<a href="proc.go.html#line-3174" class="ident">dropg</a>()
+		<a href="lock_sema.go.html#line-35" class="ident">lock</a>(&amp;<a href="runtime2.go.html#line-1059" class="ident">sched</a>.<a href="runtime2.go.html#line-725" class="ident">lock</a>)
+		<a href="proc.go.html#line-5540" class="ident">globrunqput</a>(<label for="r29" class="ident">gp</label>)
+		<a href="lock_sema.go.html#line-96" class="ident">unlock</a>(&amp;<a href="runtime2.go.html#line-1059" class="ident">sched</a>.<a href="runtime2.go.html#line-725" class="ident">lock</a>)
+
+		<span class="keyword">if</span> <a href="trace.go.html#line-109" class="ident">trace</a>.<a href="trace.go.html#line-112" class="ident">enabled</a> {
+			<a href="trace.go.html#line-1100" class="ident">traceGoUnpark</a>(<label for="r30" class="ident">callingG</label>, <span class="lit-number">0</span>)
+		}
+		<a href="proc.go.html#line-890" class="ident">casgstatus</a>(<label for="r30" class="ident">callingG</label>, <a href="runtime2.go.html#line-59" class="ident">_Gwaiting</a>, <a href="runtime2.go.html#line-39" class="ident">_Grunnable</a>)
+		<a href="proc.go.html#line-2519" class="ident">execute</a>(<label for="r30" class="ident">callingG</label>, <a href="../../pkg/builtin.html#name-true" class="ident">true</a>)
+	})
+}
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Call the dispatch function and trap panics.</span></div>
+<div class="code"><pre><code>	<span class="keyword">var</span> <label for="r33" class="ident">dispatchF</label> <span class="keyword">func</span>()
+	<label for="r34" class="ident">dispatchFV</label> := <a href="runtime2.go.html#line-198" class="ident">funcval</a>{<label for="r32" class="ident">dispatch</label>}
+	*(*<a href="../../pkg/unsafe.html" class="ident i0">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>)(<a href="../../pkg/unsafe.html" class="ident i0">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(&amp;<label for="r33" class="ident">dispatchF</label>)) = <a href="stubs.go.html#line-157" class="ident">noescape</a>(<a href="../../pkg/unsafe.html" class="ident i0">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(&amp;<label for="r34" class="ident">dispatchFV</label>))
+
+	<span class="keyword">var</span> <label for="r35" class="ident">ok</label> <a href="../../pkg/builtin.html#name-bool" class="ident">bool</a>
+	<span class="keyword">defer</span> <span class="keyword">func</span>() {
+		<span class="keyword">if</span> !<label for="r35" class="ident">ok</label> {
+			<label for="r36" class="ident">err</label> := <a href="../../pkg/builtin.html#name-recover" class="ident">recover</a>()
+			<a href="#line-19" class="ident">debugCallPanicked</a>(<label for="r36" class="ident">err</label>)
+		}
+	}()
+	<label for="r33" class="ident">dispatchF</label>()
+	<label for="r35" class="ident">ok</label> = <a href="../../pkg/builtin.html#name-true" class="ident">true</a>
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: xor_amd64.s in package crypto/cipher</title>
+<link href="../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	xor_amd64.s
+
+<span class="title">Belonging Package</span>
+	<a href="../../../pkg/crypto/cipher.html">crypto/cipher</a>
+</code></pre>
+<div id="container"><div class="section">
+<div class="doc">
+</div>
+<div class="code"><pre><code>// Copyright 2018 The Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+#include "textflag.h"
+
+// func xorBytesSSE2(dst, a, b *byte, n int)
+TEXT ·xorBytesSSE2(SB), NOSPLIT, $0
+	MOVQ  dst+0(FP), BX
+	MOVQ  a+8(FP), SI
+	MOVQ  b+16(FP), CX
+	MOVQ  n+24(FP), DX
+	TESTQ $15, DX            // AND 15 &amp; len, if not zero jump to not_aligned.
+	JNZ   not_aligned
+
+aligned:
+	MOVQ $0, AX // position in slices
+
+loop16b:
+	MOVOU (SI)(AX*1), X0   // XOR 16byte forwards.
+	MOVOU (CX)(AX*1), X1
+	PXOR  X1, X0
+	MOVOU X0, (BX)(AX*1)
+	ADDQ  $16, AX
+	CMPQ  DX, AX
+	JNE   loop16b
+	RET
+
+loop_1b:
+	SUBQ  $1, DX           // XOR 1byte backwards.
+	MOVB  (SI)(DX*1), DI
+	MOVB  (CX)(DX*1), AX
+	XORB  AX, DI
+	MOVB  DI, (BX)(DX*1)
+	TESTQ $7, DX           // AND 7 &amp; len, if not zero jump to loop_1b.
+	JNZ   loop_1b
+	CMPQ  DX, $0           // if len is 0, ret.
+	JE    ret
+	TESTQ $15, DX          // AND 15 &amp; len, if zero jump to aligned.
+	JZ    aligned
+
+not_aligned:
+	TESTQ $7, DX           // AND $7 &amp; len, if not zero jump to loop_1b.
+	JNE   loop_1b
+	SUBQ  $8, DX           // XOR 8bytes backwards.
+	MOVQ  (SI)(DX*1), DI
+	MOVQ  (CX)(DX*1), AX
+	XORQ  AX, DI
+	MOVQ  DI, (BX)(DX*1)
+	CMPQ  DX, $16          // if len is greater or equal 16 here, it must be aligned.
+	JGE   aligned
+
+ret:
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: exec_libc2.go in package syscall</title>
+<link href="../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	exec_libc2.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../pkg/syscall.html">syscall</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16],
+input[id=r17]:checked ~pre label[for=r17],
+input[id=r18]:checked ~pre label[for=r18],
+input[id=r19]:checked ~pre label[for=r19],
+input[id=r20]:checked ~pre label[for=r20],
+input[id=r21]:checked ~pre label[for=r21],
+input[id=r22]:checked ~pre label[for=r22],
+input[id=r23]:checked ~pre label[for=r23],
+input[id=r24]:checked ~pre label[for=r24],
+input[id=r25]:checked ~pre label[for=r25],
+input[id=r26]:checked ~pre label[for=r26]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="r17" type="radio" name="g"/>
+<input id="r18" type="radio" name="g"/>
+<input id="r19" type="radio" name="g"/>
+<input id="r20" type="radio" name="g"/>
+<input id="r21" type="radio" name="g"/>
+<input id="r22" type="radio" name="g"/>
+<input id="r23" type="radio" name="g"/>
+<input id="r24" type="radio" name="g"/>
+<input id="r25" type="radio" name="g"/>
+<input id="r26" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2011 The Go Authors. All rights reserved.</span><span class="comment"> Use of this source code is governed by a BSD-style</span><span class="comment"> license that can be found in the LICENSE file.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> +build darwin openbsd,amd64 openbsd,arm64</span></div>
+<div class="code"><pre><code>
+<span class="keyword">package</span> syscall
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"unsafe"</span></label>
+)
+
+<span class="keyword">type</span> <a href="../../pkg/syscall.html#name-SysProcAttr" class="ident">SysProcAttr</a> <span class="keyword">struct</span> {
+	<a href="../../use/syscall..SysProcAttr.Chroot.html" class="ident">Chroot</a>     <a href="../../pkg/builtin.html#name-string" class="ident">string</a>      <span class="comment">// Chroot.</span>
+	<a href="../../use/syscall..SysProcAttr.Credential.html" class="ident">Credential</a> *<a href="exec_unix.go.html#line-122" class="ident">Credential</a> <span class="comment">// Credential.</span>
+	<a href="../../use/syscall..SysProcAttr.Ptrace.html" class="ident">Ptrace</a>     <a href="../../pkg/builtin.html#name-bool" class="ident">bool</a>        <span class="comment">// Enable tracing.</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Setpgid sets the process group ID of the child to Pgid,</span><span class="comment">	 or, if Pgid == 0, to the new child's process ID.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Setctty sets the controlling terminal of the child to</span><span class="comment">	 file descriptor Ctty. Ctty must be a descriptor number</span><span class="comment">	 in the child process: an index into ProcAttr.Files.</span><span class="comment">	 This is only meaningful if Setsid is true.</span></div>
+<div class="code"><pre><code>	<a href="../../use/syscall..SysProcAttr.Setctty.html" class="ident">Setctty</a> <a href="../../pkg/builtin.html#name-bool" class="ident">bool</a>
+	<a href="../../use/syscall..SysProcAttr.Noctty.html" class="ident">Noctty</a>  <a href="../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// Detach fd 0 from controlling terminal</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Foreground places the child process group in the foreground.</span><span class="comment">	 This implies Setpgid. The Ctty field must be set to</span><span class="comment">	 the descriptor of the controlling TTY.</span><span class="comment">	 Unlike Setctty, in this case Ctty must be a descriptor</span><span class="comment">	 number in the parent process.</span></div>
+<div class="code"><pre><code>	<a href="../../use/syscall..SysProcAttr.Foreground.html" class="ident">Foreground</a> <a href="../../pkg/builtin.html#name-bool" class="ident">bool</a>
+	<a href="../../use/syscall..SysProcAttr.Pgid.html" class="ident">Pgid</a>       <a href="../../pkg/builtin.html#name-int" class="ident">int</a> <span class="comment">// Child's process group ID if Setpgid.</span>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Implemented in runtime package.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r0" class="ident"><a href="../../pkg/syscall.html#name-runtime_BeforeFork" class="ident">runtime_BeforeFork</a></label>()
+<span class="keyword">func</span> <label for="r1" class="ident"><a href="../../pkg/syscall.html#name-runtime_AfterFork" class="ident">runtime_AfterFork</a></label>()
+<span class="keyword">func</span> <label for="r2" class="ident"><a href="../../pkg/syscall.html#name-runtime_AfterForkInChild" class="ident">runtime_AfterForkInChild</a></label>()
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Fork, dup fd onto 0..len(fd), and exec(argv0, argvv, envv) in child.</span><span class="comment"> If a dup or exec fails, write the errno error to pipe.</span><span class="comment"> (Pipe is close-on-exec so if exec succeeds, it will be closed.)</span><span class="comment"> In the child, this function must not acquire any locks, because</span><span class="comment"> they might have been locked at the time of the fork. This means</span><span class="comment"> no rescheduling, no malloc calls, and no new stack segments.</span><span class="comment"> For the same reason compiler does not race instrument it.</span><span class="comment"> The calls to rawSyscall are okay because they are assembly</span><span class="comment"> functions that do not grow the stack.</span><span class="comment">go:norace</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Declare all variables at top in case any</span><span class="comment">	 declarations require heap allocation (e.g., err1).</span></div>
+<div class="code"><pre><code>	<span class="keyword">var</span> (
+		<label for="r14" class="ident">r1</label>     <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>
+		<label for="r15" class="ident">err1</label>   <a href="syscall_unix.go.html#line-114" class="ident">Errno</a>
+		<label for="r16" class="ident">nextfd</label> <a href="../../pkg/builtin.html#name-int" class="ident">int</a>
+		<label for="r17" class="ident">i</label>      <a href="../../pkg/builtin.html#name-int" class="ident">int</a>
+	)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> guard against side effects of shuffling fds below.</span><span class="comment">	 Make sure that nextfd is beyond any currently open files so</span><span class="comment">	 that we can't run the risk of overwriting any of them.</span></div>
+<div class="code"><pre><code>	<label for="r18" class="ident">fd</label> := <a href="../../pkg/builtin.html#name-make" class="ident">make</a>([]<a href="../../pkg/builtin.html#name-int" class="ident">int</a>, <a href="../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r9" class="ident">attr</label>.<a href="exec_unix.go.html#line-134" class="ident">Files</a>))
+	<label for="r16" class="ident">nextfd</label> = <a href="../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r9" class="ident">attr</label>.<a href="exec_unix.go.html#line-134" class="ident">Files</a>)
+	<span class="keyword">for</span> <label for="r19" class="ident">i</label>, <label for="r20" class="ident">ufd</label> := <span class="keyword">range</span> <label for="r9" class="ident">attr</label>.<a href="exec_unix.go.html#line-134" class="ident">Files</a> {
+		<span class="keyword">if</span> <label for="r16" class="ident">nextfd</label> &lt; <a href="../../pkg/builtin.html#name-int" class="ident">int</a>(<label for="r20" class="ident">ufd</label>) {
+			<label for="r16" class="ident">nextfd</label> = <a href="../../pkg/builtin.html#name-int" class="ident">int</a>(<label for="r20" class="ident">ufd</label>)
+		}
+		<label for="r18" class="ident">fd</label>[<label for="r19" class="ident">i</label>] = <a href="../../pkg/builtin.html#name-int" class="ident">int</a>(<label for="r20" class="ident">ufd</label>)
+	}
+	<label for="r16" class="ident">nextfd</label>++
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> About to call fork.</span><span class="comment">	 No more allocation or calls of non-assembly functions.</span></div>
+<div class="code"><pre><code>	<a href="#line-38" class="ident">runtime_BeforeFork</a>()
+	<label for="r14" class="ident">r1</label>, _, <label for="r15" class="ident">err1</label> = <a href="syscall_darwin.go.html#line-379" class="ident">rawSyscall</a>(<a href="syscall_darwin.go.html#line-386" class="ident">funcPC</a>(<a href="zsyscall_darwin_amd64.go.html#line-1811" class="ident">libc_fork_trampoline</a>), <span class="lit-number">0</span>, <span class="lit-number">0</span>, <span class="lit-number">0</span>)
+	<span class="keyword">if</span> <label for="r15" class="ident">err1</label> != <span class="lit-number">0</span> {
+		<a href="#line-39" class="ident">runtime_AfterFork</a>()
+		<span class="keyword">return</span> <span class="lit-number">0</span>, <label for="r15" class="ident">err1</label>
+	}
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> parent; return PID</span></div>
+<div class="code"><pre><code>		<a href="#line-39" class="ident">runtime_AfterFork</a>()
+		<span class="keyword">return</span> <a href="../../pkg/builtin.html#name-int" class="ident">int</a>(<label for="r14" class="ident">r1</label>), <span class="lit-number">0</span>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Fork succeeded, now in child.</span></div>
+<div class="code"><pre><code>
+	<a href="#line-40" class="ident">runtime_AfterForkInChild</a>()
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Enable tracing if requested.</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> <label for="r10" class="ident">sys</label>.<a href="#line-16" class="ident">Ptrace</a> {
+		<span class="keyword">if</span> <label for="r21" class="ident">err</label> := <a href="ptrace_darwin.go.html#line-12" class="ident">ptrace</a>(<a href="ztypes_darwin_amd64.go.html#line-281" class="ident">PTRACE_TRACEME</a>, <span class="lit-number">0</span>, <span class="lit-number">0</span>, <span class="lit-number">0</span>); <label for="r21" class="ident">err</label> != <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<label for="r15" class="ident">err1</label> = <label for="r21" class="ident">err</label>.(<a href="syscall_unix.go.html#line-114" class="ident">Errno</a>)
+			<span class="keyword">goto</span> <label for="r22" class="ident">childerror</label>
+		}
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Session ID</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> <label for="r10" class="ident">sys</label>.<a href="#line-17" class="ident">Setsid</a> {
+		_, _, <label for="r15" class="ident">err1</label> = <a href="syscall_darwin.go.html#line-379" class="ident">rawSyscall</a>(<a href="syscall_darwin.go.html#line-386" class="ident">funcPC</a>(<a href="zsyscall_darwin_amd64.go.html#line-1557" class="ident">libc_setsid_trampoline</a>), <span class="lit-number">0</span>, <span class="lit-number">0</span>, <span class="lit-number">0</span>)
+		<span class="keyword">if</span> <label for="r15" class="ident">err1</label> != <span class="lit-number">0</span> {
+			<span class="keyword">goto</span> <label for="r22" class="ident">childerror</label>
+		}
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Set process group</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Place child in process group.</span></div>
+<div class="code"><pre><code>		_, _, <label for="r15" class="ident">err1</label> = <a href="syscall_darwin.go.html#line-379" class="ident">rawSyscall</a>(<a href="syscall_darwin.go.html#line-386" class="ident">funcPC</a>(<a href="zsyscall_darwin_amd64.go.html#line-1466" class="ident">libc_setpgid_trampoline</a>), <span class="lit-number">0</span>, <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<label for="r10" class="ident">sys</label>.<a href="#line-34" class="ident">Pgid</a>), <span class="lit-number">0</span>)
+		<span class="keyword">if</span> <label for="r15" class="ident">err1</label> != <span class="lit-number">0</span> {
+			<span class="keyword">goto</span> <label for="r22" class="ident">childerror</label>
+		}
+	}
+
+	<span class="keyword">if</span> <label for="r10" class="ident">sys</label>.<a href="#line-33" class="ident">Foreground</a> {
+		<label for="r23" class="ident">pgrp</label> := <label for="r10" class="ident">sys</label>.<a href="#line-34" class="ident">Pgid</a>
+		<span class="keyword">if</span> <label for="r23" class="ident">pgrp</label> == <span class="lit-number">0</span> {
+			<label for="r14" class="ident">r1</label>, _, <label for="r15" class="ident">err1</label> = <a href="syscall_darwin.go.html#line-379" class="ident">rawSyscall</a>(<a href="syscall_darwin.go.html#line-386" class="ident">funcPC</a>(<a href="zsyscall_darwin_amd64.go.html#line-812" class="ident">libc_getpid_trampoline</a>), <span class="lit-number">0</span>, <span class="lit-number">0</span>, <span class="lit-number">0</span>)
+			<span class="keyword">if</span> <label for="r15" class="ident">err1</label> != <span class="lit-number">0</span> {
+				<span class="keyword">goto</span> <label for="r22" class="ident">childerror</label>
+			}
+
+			<label for="r23" class="ident">pgrp</label> = <a href="../../pkg/builtin.html#name-int" class="ident">int</a>(<label for="r14" class="ident">r1</label>)
+		}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Place process group in foreground.</span></div>
+<div class="code"><pre><code>		_, _, <label for="r15" class="ident">err1</label> = <a href="syscall_darwin.go.html#line-379" class="ident">rawSyscall</a>(<a href="syscall_darwin.go.html#line-386" class="ident">funcPC</a>(<a href="zsyscall_darwin_amd64.go.html#line-1826" class="ident">libc_ioctl_trampoline</a>), <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<label for="r10" class="ident">sys</label>.<a href="#line-27" class="ident">Ctty</a>), <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<a href="zerrors_darwin_amd64.go.html#line-1094" class="ident">TIOCSPGRP</a>), <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<a href="../../pkg/unsafe.html" class="ident i0">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(&amp;<label for="r23" class="ident">pgrp</label>)))
+		<span class="keyword">if</span> <label for="r15" class="ident">err1</label> != <span class="lit-number">0</span> {
+			<span class="keyword">goto</span> <label for="r22" class="ident">childerror</label>
+		}
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Chroot</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> <label for="r7" class="ident">chroot</label> != <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		_, _, <label for="r15" class="ident">err1</label> = <a href="syscall_darwin.go.html#line-379" class="ident">rawSyscall</a>(<a href="syscall_darwin.go.html#line-386" class="ident">funcPC</a>(<a href="zsyscall_darwin_amd64.go.html#line-511" class="ident">libc_chroot_trampoline</a>), <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<a href="../../pkg/unsafe.html" class="ident i0">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(<label for="r7" class="ident">chroot</label>)), <span class="lit-number">0</span>, <span class="lit-number">0</span>)
+		<span class="keyword">if</span> <label for="r15" class="ident">err1</label> != <span class="lit-number">0</span> {
+			<span class="keyword">goto</span> <label for="r22" class="ident">childerror</label>
+		}
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> User and groups</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> <label for="r24" class="ident">cred</label> := <label for="r10" class="ident">sys</label>.<a href="#line-15" class="ident">Credential</a>; <label for="r24" class="ident">cred</label> != <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<label for="r25" class="ident">ngroups</label> := <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<a href="../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r24" class="ident">cred</label>.<a href="exec_unix.go.html#line-125" class="ident">Groups</a>))
+		<label for="r26" class="ident">groups</label> := <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<span class="lit-number">0</span>)
+		<span class="keyword">if</span> <label for="r25" class="ident">ngroups</label> &gt; <span class="lit-number">0</span> {
+			<label for="r26" class="ident">groups</label> = <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<a href="../../pkg/unsafe.html" class="ident i0">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(&amp;<label for="r24" class="ident">cred</label>.<a href="exec_unix.go.html#line-125" class="ident">Groups</a>[<span class="lit-number">0</span>]))
+		}
+		<span class="keyword">if</span> !<label for="r24" class="ident">cred</label>.<a href="exec_unix.go.html#line-126" class="ident">NoSetGroups</a> {
+			_, _, <label for="r15" class="ident">err1</label> = <a href="syscall_darwin.go.html#line-379" class="ident">rawSyscall</a>(<a href="syscall_darwin.go.html#line-386" class="ident">funcPC</a>(<a href="zsyscall_darwin_amd64.go.html#line-36" class="ident">libc_setgroups_trampoline</a>), <label for="r25" class="ident">ngroups</label>, <label for="r26" class="ident">groups</label>, <span class="lit-number">0</span>)
+			<span class="keyword">if</span> <label for="r15" class="ident">err1</label> != <span class="lit-number">0</span> {
+				<span class="keyword">goto</span> <label for="r22" class="ident">childerror</label>
+			}
+		}
+		_, _, <label for="r15" class="ident">err1</label> = <a href="syscall_darwin.go.html#line-379" class="ident">rawSyscall</a>(<a href="syscall_darwin.go.html#line-386" class="ident">funcPC</a>(<a href="zsyscall_darwin_amd64.go.html#line-1431" class="ident">libc_setgid_trampoline</a>), <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<label for="r24" class="ident">cred</label>.<a href="exec_unix.go.html#line-124" class="ident">Gid</a>), <span class="lit-number">0</span>, <span class="lit-number">0</span>)
+		<span class="keyword">if</span> <label for="r15" class="ident">err1</label> != <span class="lit-number">0</span> {
+			<span class="keyword">goto</span> <label for="r22" class="ident">childerror</label>
+		}
+		_, _, <label for="r15" class="ident">err1</label> = <a href="syscall_darwin.go.html#line-379" class="ident">rawSyscall</a>(<a href="syscall_darwin.go.html#line-386" class="ident">funcPC</a>(<a href="zsyscall_darwin_amd64.go.html#line-1587" class="ident">libc_setuid_trampoline</a>), <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<label for="r24" class="ident">cred</label>.<a href="exec_unix.go.html#line-123" class="ident">Uid</a>), <span class="lit-number">0</span>, <span class="lit-number">0</span>)
+		<span class="keyword">if</span> <label for="r15" class="ident">err1</label> != <span class="lit-number">0</span> {
+			<span class="keyword">goto</span> <label for="r22" class="ident">childerror</label>
+		}
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Chdir</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> <label for="r8" class="ident">dir</label> != <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		_, _, <label for="r15" class="ident">err1</label> = <a href="syscall_darwin.go.html#line-379" class="ident">rawSyscall</a>(<a href="syscall_darwin.go.html#line-386" class="ident">funcPC</a>(<a href="zsyscall_darwin_amd64.go.html#line-431" class="ident">libc_chdir_trampoline</a>), <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<a href="../../pkg/unsafe.html" class="ident i0">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(<label for="r8" class="ident">dir</label>)), <span class="lit-number">0</span>, <span class="lit-number">0</span>)
+		<span class="keyword">if</span> <label for="r15" class="ident">err1</label> != <span class="lit-number">0</span> {
+			<span class="keyword">goto</span> <label for="r22" class="ident">childerror</label>
+		}
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Pass 1: look for fd[i] &lt; i and move those up above len(fd)</span><span class="comment">	 so that pass 2 won't stomp on an fd it needs later.</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> <label for="r11" class="ident">pipe</label> &lt; <label for="r16" class="ident">nextfd</label> {
+		_, _, <label for="r15" class="ident">err1</label> = <a href="syscall_darwin.go.html#line-379" class="ident">rawSyscall</a>(<a href="syscall_darwin.go.html#line-386" class="ident">funcPC</a>(<a href="zsyscall_darwin_amd64.go.html#line-572" class="ident">libc_dup2_trampoline</a>), <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<label for="r11" class="ident">pipe</label>), <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<label for="r16" class="ident">nextfd</label>), <span class="lit-number">0</span>)
+		<span class="keyword">if</span> <label for="r15" class="ident">err1</label> != <span class="lit-number">0</span> {
+			<span class="keyword">goto</span> <label for="r22" class="ident">childerror</label>
+		}
+		<a href="syscall_darwin.go.html#line-379" class="ident">rawSyscall</a>(<a href="syscall_darwin.go.html#line-386" class="ident">funcPC</a>(<a href="zsyscall_darwin_amd64.go.html#line-346" class="ident">libc_fcntl_trampoline</a>), <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<label for="r16" class="ident">nextfd</label>), <a href="zerrors_darwin_amd64.go.html#line-263" class="ident">F_SETFD</a>, <a href="zerrors_darwin_amd64.go.html#line-226" class="ident">FD_CLOEXEC</a>)
+		<label for="r11" class="ident">pipe</label> = <label for="r16" class="ident">nextfd</label>
+		<label for="r16" class="ident">nextfd</label>++
+	}
+	<span class="keyword">for</span> <label for="r17" class="ident">i</label> = <span class="lit-number">0</span>; <label for="r17" class="ident">i</label> &lt; <a href="../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r18" class="ident">fd</label>); <label for="r17" class="ident">i</label>++ {
+		<span class="keyword">if</span> <label for="r18" class="ident">fd</label>[<label for="r17" class="ident">i</label>] &gt;= <span class="lit-number">0</span> &amp;&amp; <label for="r18" class="ident">fd</label>[<label for="r17" class="ident">i</label>] &lt; <a href="../../pkg/builtin.html#name-int" class="ident">int</a>(<label for="r17" class="ident">i</label>) {
+			<span class="keyword">if</span> <label for="r16" class="ident">nextfd</label> == <label for="r11" class="ident">pipe</label> { <span class="comment">// don't stomp on pipe</span>
+				<label for="r16" class="ident">nextfd</label>++
+			}
+			_, _, <label for="r15" class="ident">err1</label> = <a href="syscall_darwin.go.html#line-379" class="ident">rawSyscall</a>(<a href="syscall_darwin.go.html#line-386" class="ident">funcPC</a>(<a href="zsyscall_darwin_amd64.go.html#line-572" class="ident">libc_dup2_trampoline</a>), <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<label for="r18" class="ident">fd</label>[<label for="r17" class="ident">i</label>]), <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<label for="r16" class="ident">nextfd</label>), <span class="lit-number">0</span>)
+			<span class="keyword">if</span> <label for="r15" class="ident">err1</label> != <span class="lit-number">0</span> {
+				<span class="keyword">goto</span> <label for="r22" class="ident">childerror</label>
+			}
+			<a href="syscall_darwin.go.html#line-379" class="ident">rawSyscall</a>(<a href="syscall_darwin.go.html#line-386" class="ident">funcPC</a>(<a href="zsyscall_darwin_amd64.go.html#line-346" class="ident">libc_fcntl_trampoline</a>), <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<label for="r16" class="ident">nextfd</label>), <a href="zerrors_darwin_amd64.go.html#line-263" class="ident">F_SETFD</a>, <a href="zerrors_darwin_amd64.go.html#line-226" class="ident">FD_CLOEXEC</a>)
+			<label for="r18" class="ident">fd</label>[<label for="r17" class="ident">i</label>] = <label for="r16" class="ident">nextfd</label>
+			<label for="r16" class="ident">nextfd</label>++
+		}
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Pass 2: dup fd[i] down onto i.</span></div>
+<div class="code"><pre><code>	<span class="keyword">for</span> <label for="r17" class="ident">i</label> = <span class="lit-number">0</span>; <label for="r17" class="ident">i</label> &lt; <a href="../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r18" class="ident">fd</label>); <label for="r17" class="ident">i</label>++ {
+		<span class="keyword">if</span> <label for="r18" class="ident">fd</label>[<label for="r17" class="ident">i</label>] == -<span class="lit-number">1</span> {
+			<a href="syscall_darwin.go.html#line-379" class="ident">rawSyscall</a>(<a href="syscall_darwin.go.html#line-386" class="ident">funcPC</a>(<a href="zsyscall_darwin_amd64.go.html#line-526" class="ident">libc_close_trampoline</a>), <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<label for="r17" class="ident">i</label>), <span class="lit-number">0</span>, <span class="lit-number">0</span>)
+			<span class="keyword">continue</span>
+		}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> dup2(i, i) won't clear close-on-exec flag on Linux,</span><span class="comment">			 probably not elsewhere either.</span></div>
+<div class="code"><pre><code>			_, _, <label for="r15" class="ident">err1</label> = <a href="syscall_darwin.go.html#line-379" class="ident">rawSyscall</a>(<a href="syscall_darwin.go.html#line-386" class="ident">funcPC</a>(<a href="zsyscall_darwin_amd64.go.html#line-346" class="ident">libc_fcntl_trampoline</a>), <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<label for="r18" class="ident">fd</label>[<label for="r17" class="ident">i</label>]), <a href="zerrors_darwin_amd64.go.html#line-263" class="ident">F_SETFD</a>, <span class="lit-number">0</span>)
+			<span class="keyword">if</span> <label for="r15" class="ident">err1</label> != <span class="lit-number">0</span> {
+				<span class="keyword">goto</span> <label for="r22" class="ident">childerror</label>
+			}
+			<span class="keyword">continue</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> The new fd is created NOT close-on-exec,</span><span class="comment">		 which is exactly what we want.</span></div>
+<div class="code"><pre><code>		_, _, <label for="r15" class="ident">err1</label> = <a href="syscall_darwin.go.html#line-379" class="ident">rawSyscall</a>(<a href="syscall_darwin.go.html#line-386" class="ident">funcPC</a>(<a href="zsyscall_darwin_amd64.go.html#line-572" class="ident">libc_dup2_trampoline</a>), <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<label for="r18" class="ident">fd</label>[<label for="r17" class="ident">i</label>]), <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<label for="r17" class="ident">i</label>), <span class="lit-number">0</span>)
+		<span class="keyword">if</span> <label for="r15" class="ident">err1</label> != <span class="lit-number">0</span> {
+			<span class="keyword">goto</span> <label for="r22" class="ident">childerror</label>
+		}
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> By convention, we don't close-on-exec the fds we are</span><span class="comment">	 started with, so if len(fd) &lt; 3, close 0, 1, 2 as needed.</span><span class="comment">	 Programs that know they inherit fds &gt;= 3 will need</span><span class="comment">	 to set them close-on-exec.</span></div>
+<div class="code"><pre><code>	<span class="keyword">for</span> <label for="r17" class="ident">i</label> = <a href="../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r18" class="ident">fd</label>); <label for="r17" class="ident">i</label> &lt; <span class="lit-number">3</span>; <label for="r17" class="ident">i</label>++ {
+		<a href="syscall_darwin.go.html#line-379" class="ident">rawSyscall</a>(<a href="syscall_darwin.go.html#line-386" class="ident">funcPC</a>(<a href="zsyscall_darwin_amd64.go.html#line-526" class="ident">libc_close_trampoline</a>), <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<label for="r17" class="ident">i</label>), <span class="lit-number">0</span>, <span class="lit-number">0</span>)
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Detach fd 0 from tty</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> <label for="r10" class="ident">sys</label>.<a href="#line-26" class="ident">Noctty</a> {
+		_, _, <label for="r15" class="ident">err1</label> = <a href="syscall_darwin.go.html#line-379" class="ident">rawSyscall</a>(<a href="syscall_darwin.go.html#line-386" class="ident">funcPC</a>(<a href="zsyscall_darwin_amd64.go.html#line-1826" class="ident">libc_ioctl_trampoline</a>), <span class="lit-number">0</span>, <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<a href="zerrors_darwin_amd64.go.html#line-1068" class="ident">TIOCNOTTY</a>), <span class="lit-number">0</span>)
+		<span class="keyword">if</span> <label for="r15" class="ident">err1</label> != <span class="lit-number">0</span> {
+			<span class="keyword">goto</span> <label for="r22" class="ident">childerror</label>
+		}
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Set the controlling TTY to Ctty</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> <label for="r10" class="ident">sys</label>.<a href="#line-25" class="ident">Setctty</a> {
+		_, _, <label for="r15" class="ident">err1</label> = <a href="syscall_darwin.go.html#line-379" class="ident">rawSyscall</a>(<a href="syscall_darwin.go.html#line-386" class="ident">funcPC</a>(<a href="zsyscall_darwin_amd64.go.html#line-1826" class="ident">libc_ioctl_trampoline</a>), <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<label for="r10" class="ident">sys</label>.<a href="#line-27" class="ident">Ctty</a>), <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<a href="zerrors_darwin_amd64.go.html#line-1086" class="ident">TIOCSCTTY</a>), <span class="lit-number">0</span>)
+		<span class="keyword">if</span> <label for="r15" class="ident">err1</label> != <span class="lit-number">0</span> {
+			<span class="keyword">goto</span> <label for="r22" class="ident">childerror</label>
+		}
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Time to exec.</span></div>
+<div class="code"><pre><code>	_, _, <label for="r15" class="ident">err1</label> = <a href="syscall_darwin.go.html#line-379" class="ident">rawSyscall</a>(<a href="syscall_darwin.go.html#line-386" class="ident">funcPC</a>(<a href="zsyscall_darwin_amd64.go.html#line-1851" class="ident">libc_execve_trampoline</a>),
+		<a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<a href="../../pkg/unsafe.html" class="ident i0">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(<label for="r4" class="ident">argv0</label>)),
+		<a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<a href="../../pkg/unsafe.html" class="ident i0">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(&amp;<label for="r5" class="ident">argv</label>[<span class="lit-number">0</span>])),
+		<a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<a href="../../pkg/unsafe.html" class="ident i0">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(&amp;<label for="r6" class="ident">envv</label>[<span class="lit-number">0</span>])))
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> send error code on pipe</span></div>
+<div class="code"><pre><code>	<a href="syscall_darwin.go.html#line-379" class="ident">rawSyscall</a>(<a href="syscall_darwin.go.html#line-386" class="ident">funcPC</a>(<a href="zsyscall_darwin_amd64.go.html#line-1742" class="ident">libc_write_trampoline</a>), <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<label for="r11" class="ident">pipe</label>), <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<a href="../../pkg/unsafe.html" class="ident i0">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(&amp;<label for="r15" class="ident">err1</label>)), <a href="../../pkg/unsafe.html" class="ident i0">unsafe</a>.<a href="../../pkg/unsafe.html#name-Sizeof" class="ident">Sizeof</a>(<label for="r15" class="ident">err1</label>))
+	<span class="keyword">for</span> {
+		<a href="syscall_darwin.go.html#line-379" class="ident">rawSyscall</a>(<a href="syscall_darwin.go.html#line-386" class="ident">funcPC</a>(<a href="zsyscall_darwin_amd64.go.html#line-1866" class="ident">libc_exit_trampoline</a>), <span class="lit-number">253</span>, <span class="lit-number">0</span>, <span class="lit-number">0</span>)
+	}
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

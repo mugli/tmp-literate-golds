@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: lrumap.go in package go.opencensus.io/trace</title>
+<link href="../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	lrumap.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../pkg/go.opencensus.io/trace.html">go.opencensus.io/trace</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16],
+input[id=r17]:checked ~pre label[for=r17]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="r17" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2019, OpenCensus Authors</span><span class="comment"></span><span class="comment"> Licensed under the Apache License, Version 2.0 (the "License");</span><span class="comment"> you may not use this file except in compliance with the License.</span><span class="comment"> You may obtain a copy of the License at</span><span class="comment"></span><span class="comment">     http://www.apache.org/licenses/LICENSE-2.0</span><span class="comment"></span><span class="comment"> Unless required by applicable law or agreed to in writing, software</span><span class="comment"> distributed under the License is distributed on an "AS IS" BASIS,</span><span class="comment"> WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span><span class="comment"> See the License for the specific language governing permissions and</span><span class="comment"> limitations under the License.</span></div>
+<div class="code"><pre><code>
+<span class="keyword">package</span> trace
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"github.com/golang/groupcache/lru"</span></label>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> A simple lru.Cache wrapper that tracks the keys of the current contents and</span><span class="comment"> the cumulative number of evicted items.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../pkg/go.opencensus.io/trace.html#name-lruMap" class="ident">lruMap</a> <span class="keyword">struct</span> {
+	<a href="../../../use/go.opencensus.io/trace..lruMap*3f598.cacheKeys*61aef.html" class="ident">cacheKeys</a>    <span class="keyword">map</span>[<a href="../../../pkg/github.com/golang/groupcache/lru.html" class="ident i0">lru</a>.<a href="../../github.com/golang/groupcache/lru/lru.go.html#line-37" class="ident">Key</a>]<a href="../../../pkg/builtin.html#name-bool" class="ident">bool</a>
+	<a href="../../../use/go.opencensus.io/trace..lruMap*3f598.cache*5e1ec.html" class="ident">cache</a>        *<a href="../../../pkg/github.com/golang/groupcache/lru.html" class="ident i0">lru</a>.<a href="../../github.com/golang/groupcache/lru/lru.go.html#line-23" class="ident">Cache</a>
+	<a href="../../../use/go.opencensus.io/trace..lruMap*3f598.droppedCount*2af54.html" class="ident">droppedCount</a> <a href="../../../pkg/builtin.html#name-int" class="ident">int</a>
+}
+
+<span class="keyword">func</span> <label for="r0" class="ident"><a href="../../../pkg/go.opencensus.io/trace.html#name-newLruMap" class="ident">newLruMap</a></label>(<label for="r1" class="ident">size</label> <a href="../../../pkg/builtin.html#name-int" class="ident">int</a>) *<a href="#line-23" class="ident">lruMap</a> {
+	<label for="r2" class="ident">lm</label> := &amp;<a href="#line-23" class="ident">lruMap</a>{
+		<a href="#line-24" class="ident">cacheKeys</a>:    <a href="../../../pkg/builtin.html#name-make" class="ident">make</a>(<span class="keyword">map</span>[<a href="../../../pkg/github.com/golang/groupcache/lru.html" class="ident i0">lru</a>.<a href="../../github.com/golang/groupcache/lru/lru.go.html#line-37" class="ident">Key</a>]<a href="../../../pkg/builtin.html#name-bool" class="ident">bool</a>),
+		<a href="#line-25" class="ident">cache</a>:        <a href="../../../pkg/github.com/golang/groupcache/lru.html" class="ident i0">lru</a>.<a href="../../github.com/golang/groupcache/lru/lru.go.html#line-47" class="ident">New</a>(<label for="r1" class="ident">size</label>),
+		<a href="#line-26" class="ident">droppedCount</a>: <span class="lit-number">0</span>,
+	}
+	<label for="r2" class="ident">lm</label>.<a href="#line-25" class="ident">cache</a>.<a href="../../github.com/golang/groupcache/lru/lru.go.html#line-30" class="ident">OnEvicted</a> = <span class="keyword">func</span>(<label for="r3" class="ident">key</label> <a href="../../../pkg/github.com/golang/groupcache/lru.html" class="ident i0">lru</a>.<a href="../../github.com/golang/groupcache/lru/lru.go.html#line-37" class="ident">Key</a>, <label for="r4" class="ident">value</label> <span class="keyword">interface</span>{}) {
+		<a href="../../../pkg/builtin.html#name-delete" class="ident">delete</a>(<label for="r2" class="ident">lm</label>.<a href="#line-24" class="ident">cacheKeys</a>, <label for="r3" class="ident">key</label>)
+		<label for="r2" class="ident">lm</label>.<a href="#line-26" class="ident">droppedCount</a>++
+	}
+	<span class="keyword">return</span> <label for="r2" class="ident">lm</label>
+}
+
+<span class="keyword">func</span> (<label for="r5" class="ident">lm</label> <a href="#line-23" class="ident">lruMap</a>) <label for="r6" class="ident"><a href="../../../use/go.opencensus.io/trace..lruMap*3f598.len*71fa9.html" class="ident">len</a></label>() <a href="../../../pkg/builtin.html#name-int" class="ident">int</a> {
+	<span class="keyword">return</span> <label for="r5" class="ident">lm</label>.<a href="#line-25" class="ident">cache</a>.<a href="../../github.com/golang/groupcache/lru/lru.go.html#line-116" class="ident">Len</a>()
+}
+
+<span class="keyword">func</span> (<label for="r7" class="ident">lm</label> <a href="#line-23" class="ident">lruMap</a>) <label for="r8" class="ident"><a href="../../../use/go.opencensus.io/trace..lruMap*3f598.keys*48a53.html" class="ident">keys</a></label>() []<span class="keyword">interface</span>{} {
+	<label for="r9" class="ident">keys</label> := <a href="../../../pkg/builtin.html#name-make" class="ident">make</a>([]<span class="keyword">interface</span>{}, <a href="../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r7" class="ident">lm</label>.<a href="#line-24" class="ident">cacheKeys</a>))
+	<span class="keyword">for</span> <label for="r10" class="ident">k</label> := <span class="keyword">range</span> <label for="r7" class="ident">lm</label>.<a href="#line-24" class="ident">cacheKeys</a> {
+		<label for="r9" class="ident">keys</label> = <a href="../../../pkg/builtin.html#name-append" class="ident">append</a>(<label for="r9" class="ident">keys</label>, <label for="r10" class="ident">k</label>)
+	}
+	<span class="keyword">return</span> <label for="r9" class="ident">keys</label>
+}
+
+<span class="keyword">func</span> (<label for="r11" class="ident">lm</label> *<a href="#line-23" class="ident">lruMap</a>) <label for="r12" class="ident"><a href="../../../use/go.opencensus.io/trace..lruMap*3f598.add*7e9e5.html" class="ident">add</a></label>(<label for="r13" class="ident">key</label>, <label for="r14" class="ident">value</label> <span class="keyword">interface</span>{}) {
+	<label for="r11" class="ident">lm</label>.<a href="#line-24" class="ident">cacheKeys</a>[<a href="../../../pkg/github.com/golang/groupcache/lru.html" class="ident i0">lru</a>.<a href="../../github.com/golang/groupcache/lru/lru.go.html#line-37" class="ident">Key</a>(<label for="r13" class="ident">key</label>)] = <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>
+	<label for="r11" class="ident">lm</label>.<a href="#line-25" class="ident">cache</a>.<a href="../../github.com/golang/groupcache/lru/lru.go.html#line-56" class="ident">Add</a>(<a href="../../../pkg/github.com/golang/groupcache/lru.html" class="ident i0">lru</a>.<a href="../../github.com/golang/groupcache/lru/lru.go.html#line-37" class="ident">Key</a>(<label for="r13" class="ident">key</label>), <label for="r14" class="ident">value</label>)
+}
+
+<span class="keyword">func</span> (<label for="r15" class="ident">lm</label> *<a href="#line-23" class="ident">lruMap</a>) <label for="r16" class="ident"><a href="../../../use/go.opencensus.io/trace..lruMap*3f598.get*2998b.html" class="ident">get</a></label>(<label for="r17" class="ident">key</label> <span class="keyword">interface</span>{}) (<span class="keyword">interface</span>{}, <a href="../../../pkg/builtin.html#name-bool" class="ident">bool</a>) {
+	<span class="keyword">return</span> <label for="r15" class="ident">lm</label>.<a href="#line-25" class="ident">cache</a>.<a href="../../github.com/golang/groupcache/lru/lru.go.html#line-74" class="ident">Get</a>(<label for="r17" class="ident">key</label>)
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

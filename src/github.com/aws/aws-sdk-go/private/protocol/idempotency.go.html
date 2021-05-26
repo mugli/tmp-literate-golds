@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: idempotency.go in package github.com/aws/aws-sdk-go/private/protocol</title>
+<link href="../../../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	idempotency.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../../../pkg/github.com/aws/aws-sdk-go/private/protocol.html">github.com/aws/aws-sdk-go/private/protocol</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1,
+input[id=i2]:checked ~pre .i2
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<input id="i2" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+</div>
+<div class="code"><pre><code><span class="keyword">package</span> protocol
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"crypto/rand"</span></label>
+	<label for="i1"><span class="lit-string i1">"fmt"</span></label>
+	<label for="i2"><span class="lit-string i2">"reflect"</span></label>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> RandReader is the random reader the protocol package will use to read</span><span class="comment"> random bytes from. This is exported for testing, and should not be used.</span></div>
+<div class="code"><pre><code><span class="keyword">var</span> <a href="../../../../../../pkg/github.com/aws/aws-sdk-go/private/protocol.html#name-RandReader" class="ident">RandReader</a> = <a href="../../../../../../pkg/crypto/rand.html" class="ident i0">rand</a>.<a href="../../../../../crypto/rand/rand.go.html#line-19" class="ident">Reader</a>
+
+<span class="keyword">const</span> <a href="../../../../../../pkg/github.com/aws/aws-sdk-go/private/protocol.html#name-idempotencyTokenFillTag" class="ident">idempotencyTokenFillTag</a> = <span class="lit-string">`idempotencyToken`</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> CanSetIdempotencyToken returns true if the struct field should be</span><span class="comment"> automatically populated with a Idempotency token.</span><span class="comment"></span><span class="comment"> Only *string and string type fields that are tagged with idempotencyToken</span><span class="comment"> which are not already set can be auto filled.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r0" class="ident"><a href="../../../../../../pkg/github.com/aws/aws-sdk-go/private/protocol.html#name-CanSetIdempotencyToken" class="ident">CanSetIdempotencyToken</a></label>(<label for="r1" class="ident">v</label> <a href="../../../../../../pkg/reflect.html" class="ident i2">reflect</a>.<a href="../../../../../reflect/value.go.html#line-37" class="ident">Value</a>, <label for="r2" class="ident">f</label> <a href="../../../../../../pkg/reflect.html" class="ident i2">reflect</a>.<a href="../../../../../reflect/type.go.html#line-1090" class="ident">StructField</a>) <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> {
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> To auto fill an Idempotency token the field must be a string,</span><span class="comment">	 tagged for auto fill, and have a zero value.</span></div>
+<div class="code"><pre><code>	<span class="keyword">case</span> *<a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>:
+		<span class="keyword">return</span> <label for="r3" class="ident">u</label> == <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> &amp;&amp; <a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r2" class="ident">f</label>.<a href="../../../../../reflect/type.go.html#line-1099" class="ident">Tag</a>.<a href="../../../../../reflect/type.go.html#line-1120" class="ident">Get</a>(<a href="#line-13" class="ident">idempotencyTokenFillTag</a>)) != <span class="lit-number">0</span>
+	<span class="keyword">case</span> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>:
+		<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r4" class="ident">u</label>) == <span class="lit-number">0</span> &amp;&amp; <a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r2" class="ident">f</label>.<a href="../../../../../reflect/type.go.html#line-1099" class="ident">Tag</a>.<a href="../../../../../reflect/type.go.html#line-1120" class="ident">Get</a>(<a href="#line-13" class="ident">idempotencyTokenFillTag</a>)) != <span class="lit-number">0</span>
+	}
+
+	<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-false" class="ident">false</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> GetIdempotencyToken returns a randomly generated idempotency token.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r5" class="ident"><a href="../../../../../../pkg/github.com/aws/aws-sdk-go/private/protocol.html#name-GetIdempotencyToken" class="ident">GetIdempotencyToken</a></label>() <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a> {
+	<label for="r6" class="ident">b</label> := <a href="../../../../../../pkg/builtin.html#name-make" class="ident">make</a>([]<a href="../../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>, <span class="lit-number">16</span>)
+	<a href="#line-11" class="ident">RandReader</a>.<a href="../../../../../io/io.go.html#line-84" class="ident">Read</a>(<label for="r6" class="ident">b</label>)
+
+	<span class="keyword">return</span> <a href="#line-67" class="ident">UUIDVersion4</a>(<label for="r6" class="ident">b</label>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> SetIdempotencyToken will set the value provided with a Idempotency Token.</span><span class="comment"> Given that the value can be set. Will panic if value is not setable.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r7" class="ident"><a href="../../../../../../pkg/github.com/aws/aws-sdk-go/private/protocol.html#name-SetIdempotencyToken" class="ident">SetIdempotencyToken</a></label>(<label for="r8" class="ident">v</label> <a href="../../../../../../pkg/reflect.html" class="ident i2">reflect</a>.<a href="../../../../../reflect/value.go.html#line-37" class="ident">Value</a>) {
+	<span class="keyword">if</span> <label for="r8" class="ident">v</label>.<a href="../../../../../reflect/value.go.html#line-1140" class="ident">Kind</a>() == <a href="../../../../../../pkg/reflect.html" class="ident i2">reflect</a>.<a href="../../../../../reflect/type.go.html#line-257" class="ident">Ptr</a> {
+		<span class="keyword">if</span> <label for="r8" class="ident">v</label>.<a href="../../../../../reflect/value.go.html#line-1069" class="ident">IsNil</a>() &amp;&amp; <label for="r8" class="ident">v</label>.<a href="../../../../../reflect/value.go.html#line-322" class="ident">CanSet</a>() {
+			<label for="r8" class="ident">v</label>.<a href="../../../../../reflect/value.go.html#line-1557" class="ident">Set</a>(<a href="../../../../../../pkg/reflect.html" class="ident i2">reflect</a>.<a href="../../../../../reflect/value.go.html#line-2396" class="ident">New</a>(<label for="r8" class="ident">v</label>.<a href="../../../../../reflect/value.go.html#line-1905" class="ident">Type</a>().<a href="../../../../../reflect/type.go.html#line-151" class="ident">Elem</a>()))
+		}
+		<label for="r8" class="ident">v</label> = <label for="r8" class="ident">v</label>.<a href="../../../../../reflect/value.go.html#line-811" class="ident">Elem</a>()
+	}
+	<label for="r8" class="ident">v</label> = <a href="../../../../../../pkg/reflect.html" class="ident i2">reflect</a>.<a href="../../../../../reflect/value.go.html#line-2342" class="ident">Indirect</a>(<label for="r8" class="ident">v</label>)
+
+	<span class="keyword">if</span> !<label for="r8" class="ident">v</label>.<a href="../../../../../reflect/value.go.html#line-322" class="ident">CanSet</a>() {
+		<a href="../../../../../../pkg/builtin.html#name-panic" class="ident">panic</a>(<a href="../../../../../../pkg/fmt.html" class="ident i1">fmt</a>.<a href="../../../../../fmt/print.go.html#line-217" class="ident">Sprintf</a>(<span class="lit-string">"unable to set idempotnecy token %v"</span>, <label for="r8" class="ident">v</label>))
+	}
+
+	<label for="r9" class="ident">b</label> := <a href="../../../../../../pkg/builtin.html#name-make" class="ident">make</a>([]<a href="../../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>, <span class="lit-number">16</span>)
+	<label for="r10" class="ident">_</label>, <label for="r11" class="ident">err</label> := <a href="../../../../../../pkg/crypto/rand.html" class="ident i0">rand</a>.<a href="../../../../../crypto/rand/rand.go.html#line-23" class="ident">Read</a>(<label for="r9" class="ident">b</label>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> TODO handle error</span></div>
+<div class="code"><pre><code>		<span class="keyword">return</span>
+	}
+
+	<label for="r8" class="ident">v</label>.<a href="../../../../../reflect/value.go.html#line-1557" class="ident">Set</a>(<a href="../../../../../../pkg/reflect.html" class="ident i2">reflect</a>.<a href="../../../../../reflect/value.go.html#line-2351" class="ident">ValueOf</a>(<a href="#line-67" class="ident">UUIDVersion4</a>(<label for="r9" class="ident">b</label>)))
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> UUIDVersion4 returns a Version 4 random UUID from the byte slice provided</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> https://en.wikipedia.org/wiki/Universally_unique_identifier#Version_4_.28random.29</span><span class="comment">	 13th character is "4"</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> 17th character is "8", "9", "a", or "b"</span></div>
+<div class="code"><pre><code>	<label for="r13" class="ident">u</label>[<span class="lit-number">8</span>] = (<label for="r13" class="ident">u</label>[<span class="lit-number">8</span>] | <span class="lit-number">0x80</span>) &amp; <span class="lit-number">0xBF</span>
+
+	<span class="keyword">return</span> <a href="../../../../../../pkg/fmt.html" class="ident i1">fmt</a>.<a href="../../../../../fmt/print.go.html#line-217" class="ident">Sprintf</a>(<span class="lit-string">`%X-%X-%X-%X-%X`</span>, <label for="r13" class="ident">u</label>[<span class="lit-number">0</span>:<span class="lit-number">4</span>], <label for="r13" class="ident">u</label>[<span class="lit-number">4</span>:<span class="lit-number">6</span>], <label for="r13" class="ident">u</label>[<span class="lit-number">6</span>:<span class="lit-number">8</span>], <label for="r13" class="ident">u</label>[<span class="lit-number">8</span>:<span class="lit-number">10</span>], <label for="r13" class="ident">u</label>[<span class="lit-number">10</span>:])
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

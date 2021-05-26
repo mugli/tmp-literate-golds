@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: scope.go in package go/ast</title>
+<link href="../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	scope.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../pkg/go/ast.html">go/ast</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16],
+input[id=r17]:checked ~pre label[for=r17],
+input[id=r18]:checked ~pre label[for=r18],
+input[id=r19]:checked ~pre label[for=r19],
+input[id=r20]:checked ~pre label[for=r20],
+input[id=r21]:checked ~pre label[for=r21],
+input[id=r22]:checked ~pre label[for=r22],
+input[id=r23]:checked ~pre label[for=r23],
+input[id=r24]:checked ~pre label[for=r24],
+input[id=r25]:checked ~pre label[for=r25],
+input[id=r26]:checked ~pre label[for=r26],
+input[id=r27]:checked ~pre label[for=r27],
+input[id=r28]:checked ~pre label[for=r28],
+input[id=r29]:checked ~pre label[for=r29],
+input[id=r30]:checked ~pre label[for=r30],
+input[id=r31]:checked ~pre label[for=r31],
+input[id=r32]:checked ~pre label[for=r32],
+input[id=r33]:checked ~pre label[for=r33],
+input[id=r34]:checked ~pre label[for=r34],
+input[id=r35]:checked ~pre label[for=r35],
+input[id=r36]:checked ~pre label[for=r36],
+input[id=r37]:checked ~pre label[for=r37]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1,
+input[id=i2]:checked ~pre .i2
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="r17" type="radio" name="g"/>
+<input id="r18" type="radio" name="g"/>
+<input id="r19" type="radio" name="g"/>
+<input id="r20" type="radio" name="g"/>
+<input id="r21" type="radio" name="g"/>
+<input id="r22" type="radio" name="g"/>
+<input id="r23" type="radio" name="g"/>
+<input id="r24" type="radio" name="g"/>
+<input id="r25" type="radio" name="g"/>
+<input id="r26" type="radio" name="g"/>
+<input id="r27" type="radio" name="g"/>
+<input id="r28" type="radio" name="g"/>
+<input id="r29" type="radio" name="g"/>
+<input id="r30" type="radio" name="g"/>
+<input id="r31" type="radio" name="g"/>
+<input id="r32" type="radio" name="g"/>
+<input id="r33" type="radio" name="g"/>
+<input id="r34" type="radio" name="g"/>
+<input id="r35" type="radio" name="g"/>
+<input id="r36" type="radio" name="g"/>
+<input id="r37" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<input id="i2" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2009 The Go Authors. All rights reserved.</span><span class="comment"> Use of this source code is governed by a BSD-style</span><span class="comment"> license that can be found in the LICENSE file.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> This file implements scopes and the objects they contain.</span></div>
+<div class="code"><pre><code>
+<span class="keyword">package</span> ast
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"bytes"</span></label>
+	<label for="i1"><span class="lit-string i1">"fmt"</span></label>
+	<label for="i2"><span class="lit-string i2">"go/token"</span></label>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> A Scope maintains the set of named language entities declared</span><span class="comment"> in the scope and a link to the immediately surrounding (outer)</span><span class="comment"> scope.</span><span class="comment"></span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../pkg/go/ast.html#name-Scope" class="ident">Scope</a> <span class="keyword">struct</span> {
+	<a href="../../../use/go/ast..Scope.Outer.html" class="ident">Outer</a>   *<a href="#line-19" class="ident">Scope</a>
+	<a href="../../../use/go/ast..Scope.Objects.html" class="ident">Objects</a> <span class="keyword">map</span>[<a href="../../../pkg/builtin.html#name-string" class="ident">string</a>]*<a href="#line-76" class="ident">Object</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> NewScope creates a new scope nested in the outer scope.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r0" class="ident"><a href="../../../pkg/go/ast.html#name-NewScope" class="ident">NewScope</a></label>(<label for="r1" class="ident">outer</label> *<a href="#line-19" class="ident">Scope</a>) *<a href="#line-19" class="ident">Scope</a> {
+	<span class="keyword">const</span> <label for="r2" class="ident">n</label> = <span class="lit-number">4</span> <span class="comment">// initial scope capacity</span>
+	<span class="keyword">return</span> &amp;<a href="#line-19" class="ident">Scope</a>{<label for="r1" class="ident">outer</label>, <a href="../../../pkg/builtin.html#name-make" class="ident">make</a>(<span class="keyword">map</span>[<a href="../../../pkg/builtin.html#name-string" class="ident">string</a>]*<a href="#line-76" class="ident">Object</a>, <label for="r2" class="ident">n</label>)}
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Lookup returns the object with the given name if it is</span><span class="comment"> found in scope s, otherwise it returns nil. Outer scopes</span><span class="comment"> are ignored.</span><span class="comment"></span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r3" class="ident">s</label> *<a href="#line-19" class="ident">Scope</a>) <label for="r4" class="ident"><a href="../../../use/go/ast..Scope.Lookup.html" class="ident">Lookup</a></label>(<label for="r5" class="ident">name</label> <a href="../../../pkg/builtin.html#name-string" class="ident">string</a>) *<a href="#line-76" class="ident">Object</a> {
+	<span class="keyword">return</span> <label for="r3" class="ident">s</label>.<a href="#line-21" class="ident">Objects</a>[<label for="r5" class="ident">name</label>]
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Insert attempts to insert a named object obj into the scope s.</span><span class="comment"> If the scope already contains an object alt with the same name,</span><span class="comment"> Insert leaves the scope unchanged and returns alt. Otherwise</span><span class="comment"> it inserts obj and returns nil.</span><span class="comment"></span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r6" class="ident">s</label> *<a href="#line-19" class="ident">Scope</a>) <label for="r7" class="ident"><a href="../../../use/go/ast..Scope.Insert.html" class="ident">Insert</a></label>(<label for="r8" class="ident">obj</label> *<a href="#line-76" class="ident">Object</a>) (<label for="r9" class="ident">alt</label> *<a href="#line-76" class="ident">Object</a>) {
+	<span class="keyword">if</span> <label for="r9" class="ident">alt</label> = <label for="r6" class="ident">s</label>.<a href="#line-21" class="ident">Objects</a>[<label for="r8" class="ident">obj</label>.<a href="#line-78" class="ident">Name</a>]; <label for="r9" class="ident">alt</label> == <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<label for="r6" class="ident">s</label>.<a href="#line-21" class="ident">Objects</a>[<label for="r8" class="ident">obj</label>.<a href="#line-78" class="ident">Name</a>] = <label for="r8" class="ident">obj</label>
+	}
+	<span class="keyword">return</span>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Debugging support</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r10" class="ident">s</label> *<a href="#line-19" class="ident">Scope</a>) <label for="r11" class="ident"><a href="../../../use/go/ast..Scope.String.html" class="ident">String</a></label>() <a href="../../../pkg/builtin.html#name-string" class="ident">string</a> {
+	<span class="keyword">var</span> <label for="r12" class="ident">buf</label> <a href="../../../pkg/bytes.html" class="ident i0">bytes</a>.<a href="../../bytes/buffer.go.html#line-20" class="ident">Buffer</a>
+	<a href="../../../pkg/fmt.html" class="ident i1">fmt</a>.<a href="../../fmt/print.go.html#line-202" class="ident">Fprintf</a>(&amp;<label for="r12" class="ident">buf</label>, <span class="lit-string">"scope %p {"</span>, <label for="r10" class="ident">s</label>)
+	<span class="keyword">if</span> <label for="r10" class="ident">s</label> != <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a> &amp;&amp; <a href="../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r10" class="ident">s</label>.<a href="#line-21" class="ident">Objects</a>) &gt; <span class="lit-number">0</span> {
+		<a href="../../../pkg/fmt.html" class="ident i1">fmt</a>.<a href="../../fmt/print.go.html#line-262" class="ident">Fprintln</a>(&amp;<label for="r12" class="ident">buf</label>)
+		<span class="keyword">for</span> <label for="r13" class="ident">_</label>, <label for="r14" class="ident">obj</label> := <span class="keyword">range</span> <label for="r10" class="ident">s</label>.<a href="#line-21" class="ident">Objects</a> {
+			<a href="../../../pkg/fmt.html" class="ident i1">fmt</a>.<a href="../../fmt/print.go.html#line-202" class="ident">Fprintf</a>(&amp;<label for="r12" class="ident">buf</label>, <span class="lit-string">"\t%s %s\n"</span>, <label for="r14" class="ident">obj</label>.<a href="#line-77" class="ident">Kind</a>, <label for="r14" class="ident">obj</label>.<a href="#line-78" class="ident">Name</a>)
+		}
+	}
+	<a href="../../../pkg/fmt.html" class="ident i1">fmt</a>.<a href="../../fmt/print.go.html#line-202" class="ident">Fprintf</a>(&amp;<label for="r12" class="ident">buf</label>, <span class="lit-string">"}\n"</span>)
+	<span class="keyword">return</span> <label for="r12" class="ident">buf</label>.<a href="../../bytes/buffer.go.html#line-60" class="ident">String</a>()
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ----------------------------------------------------------------------------</span><span class="comment"> Objects</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> An Object describes a named language entity such as a package,</span><span class="comment"> constant, type, variable, function (incl. methods), or label.</span><span class="comment"></span><span class="comment"> The Data fields contains object-specific data:</span><span class="comment"></span><span class="comment">	Kind    Data type         Data value</span><span class="comment">	Pkg     *Scope            package scope</span><span class="comment">	Con     int               iota for the respective declaration</span><span class="comment"></span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../pkg/go/ast.html#name-Object" class="ident">Object</a> <span class="keyword">struct</span> {
+	<a href="../../../use/go/ast..Object.Kind.html" class="ident">Kind</a> <a href="#line-137" class="ident">ObjKind</a>
+	<a href="../../../use/go/ast..Object.Name.html" class="ident">Name</a> <a href="../../../pkg/builtin.html#name-string" class="ident">string</a>      <span class="comment">// declared name</span>
+	<a href="../../../use/go/ast..Object.Decl.html" class="ident">Decl</a> <span class="keyword">interface</span>{} <span class="comment">// corresponding Field, XxxSpec, FuncDecl, LabeledStmt, AssignStmt, Scope; or nil</span>
+	<a href="../../../use/go/ast..Object.Data.html" class="ident">Data</a> <span class="keyword">interface</span>{} <span class="comment">// object-specific data; or nil</span>
+	<a href="../../../use/go/ast..Object.Type.html" class="ident">Type</a> <span class="keyword">interface</span>{} <span class="comment">// placeholder for type information; may be nil</span>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> NewObj creates a new object of a given kind and name.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r15" class="ident"><a href="../../../pkg/go/ast.html#name-NewObj" class="ident">NewObj</a></label>(<label for="r16" class="ident">kind</label> <a href="#line-137" class="ident">ObjKind</a>, <label for="r17" class="ident">name</label> <a href="../../../pkg/builtin.html#name-string" class="ident">string</a>) *<a href="#line-76" class="ident">Object</a> {
+	<span class="keyword">return</span> &amp;<a href="#line-76" class="ident">Object</a>{<a href="#line-77" class="ident">Kind</a>: <label for="r16" class="ident">kind</label>, <a href="#line-78" class="ident">Name</a>: <label for="r17" class="ident">name</label>}
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Pos computes the source position of the declaration of an object name.</span><span class="comment"> The result may be an invalid position if it cannot be computed</span><span class="comment"> (obj.Decl may be nil or not correct).</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r18" class="ident">obj</label> *<a href="#line-76" class="ident">Object</a>) <label for="r19" class="ident"><a href="../../../use/go/ast..Object.Pos.html" class="ident">Pos</a></label>() <a href="../../../pkg/go/token.html" class="ident i2">token</a>.<a href="../token/position.go.html#line-79" class="ident">Pos</a> {
+	<label for="r20" class="ident">name</label> := <label for="r18" class="ident">obj</label>.<a href="#line-78" class="ident">Name</a>
+	<span class="keyword">switch</span> d := <label for="r18" class="ident">obj</label>.<a href="#line-79" class="ident">Decl</a>.(<span class="keyword">type</span>) {
+	<span class="keyword">case</span> *<a href="ast.go.html#line-197" class="ident">Field</a>:
+		<span class="keyword">for</span> <label for="r21" class="ident">_</label>, <label for="r22" class="ident">n</label> := <span class="keyword">range</span> <label for="r23" class="ident">d</label>.<a href="ast.go.html#line-199" class="ident">Names</a> {
+			<span class="keyword">if</span> <label for="r22" class="ident">n</label>.<a href="ast.go.html#line-280" class="ident">Name</a> == <label for="r20" class="ident">name</label> {
+				<span class="keyword">return</span> <label for="r22" class="ident">n</label>.<a href="ast.go.html#line-470" class="ident">Pos</a>()
+			}
+		}
+	<span class="keyword">case</span> *<a href="ast.go.html#line-878" class="ident">ImportSpec</a>:
+		<span class="keyword">if</span> <label for="r24" class="ident">d</label>.<a href="ast.go.html#line-880" class="ident">Name</a> != <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a> &amp;&amp; <label for="r24" class="ident">d</label>.<a href="ast.go.html#line-880" class="ident">Name</a>.<a href="ast.go.html#line-280" class="ident">Name</a> == <label for="r20" class="ident">name</label> {
+			<span class="keyword">return</span> <label for="r24" class="ident">d</label>.<a href="ast.go.html#line-880" class="ident">Name</a>.<a href="ast.go.html#line-470" class="ident">Pos</a>()
+		}
+		<span class="keyword">return</span> <label for="r24" class="ident">d</label>.<a href="ast.go.html#line-881" class="ident">Path</a>.<a href="ast.go.html#line-472" class="ident">Pos</a>()
+	<span class="keyword">case</span> *<a href="ast.go.html#line-889" class="ident">ValueSpec</a>:
+		<span class="keyword">for</span> <label for="r25" class="ident">_</label>, <label for="r26" class="ident">n</label> := <span class="keyword">range</span> <label for="r27" class="ident">d</label>.<a href="ast.go.html#line-891" class="ident">Names</a> {
+			<span class="keyword">if</span> <label for="r26" class="ident">n</label>.<a href="ast.go.html#line-280" class="ident">Name</a> == <label for="r20" class="ident">name</label> {
+				<span class="keyword">return</span> <label for="r26" class="ident">n</label>.<a href="ast.go.html#line-470" class="ident">Pos</a>()
+			}
+		}
+	<span class="keyword">case</span> *<a href="ast.go.html#line-898" class="ident">TypeSpec</a>:
+		<span class="keyword">if</span> <label for="r28" class="ident">d</label>.<a href="ast.go.html#line-900" class="ident">Name</a>.<a href="ast.go.html#line-280" class="ident">Name</a> == <label for="r20" class="ident">name</label> {
+			<span class="keyword">return</span> <label for="r28" class="ident">d</label>.<a href="ast.go.html#line-900" class="ident">Name</a>.<a href="ast.go.html#line-470" class="ident">Pos</a>()
+		}
+	<span class="keyword">case</span> *<a href="ast.go.html#line-975" class="ident">FuncDecl</a>:
+		<span class="keyword">if</span> <label for="r29" class="ident">d</label>.<a href="ast.go.html#line-978" class="ident">Name</a>.<a href="ast.go.html#line-280" class="ident">Name</a> == <label for="r20" class="ident">name</label> {
+			<span class="keyword">return</span> <label for="r29" class="ident">d</label>.<a href="ast.go.html#line-978" class="ident">Name</a>.<a href="ast.go.html#line-470" class="ident">Pos</a>()
+		}
+	<span class="keyword">case</span> *<a href="ast.go.html#line-615" class="ident">LabeledStmt</a>:
+		<span class="keyword">if</span> <label for="r30" class="ident">d</label>.<a href="ast.go.html#line-616" class="ident">Label</a>.<a href="ast.go.html#line-280" class="ident">Name</a> == <label for="r20" class="ident">name</label> {
+			<span class="keyword">return</span> <label for="r30" class="ident">d</label>.<a href="ast.go.html#line-616" class="ident">Label</a>.<a href="ast.go.html#line-470" class="ident">Pos</a>()
+		}
+	<span class="keyword">case</span> *<a href="ast.go.html#line-645" class="ident">AssignStmt</a>:
+		<span class="keyword">for</span> <label for="r31" class="ident">_</label>, <label for="r32" class="ident">x</label> := <span class="keyword">range</span> <label for="r33" class="ident">d</label>.<a href="ast.go.html#line-646" class="ident">Lhs</a> {
+			<span class="keyword">if</span> <label for="r34" class="ident">ident</label>, <label for="r35" class="ident">isIdent</label> := <label for="r32" class="ident">x</label>.(*<a href="ast.go.html#line-278" class="ident">Ident</a>); <label for="r35" class="ident">isIdent</label> &amp;&amp; <label for="r34" class="ident">ident</label>.<a href="ast.go.html#line-280" class="ident">Name</a> == <label for="r20" class="ident">name</label> {
+				<span class="keyword">return</span> <label for="r34" class="ident">ident</label>.<a href="ast.go.html#line-470" class="ident">Pos</a>()
+			}
+		}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> predeclared object - nothing to do for now</span></div>
+<div class="code"><pre><code>	}
+	<span class="keyword">return</span> <a href="../../../pkg/go/token.html" class="ident i2">token</a>.<a href="../token/position.go.html#line-86" class="ident">NoPos</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ObjKind describes what an object represents.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../pkg/go/ast.html#name-ObjKind" class="ident">ObjKind</a> <a href="../../../pkg/builtin.html#name-int" class="ident">int</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> The list of possible Object kinds.</span></div>
+<div class="code"><pre><code><span class="keyword">const</span> (
+	<a href="../../../pkg/go/ast.html#name-Bad" class="ident">Bad</a> <a href="#line-137" class="ident">ObjKind</a> = <a href="../../../pkg/builtin.html#name-iota" class="ident">iota</a> <span class="comment">// for error handling</span>
+	<a href="../../../pkg/go/ast.html#name-Pkg" class="ident">Pkg</a>                <span class="comment">// package</span>
+	<a href="../../../pkg/go/ast.html#name-Con" class="ident">Con</a>                <span class="comment">// constant</span>
+	<a href="../../../pkg/go/ast.html#name-Typ" class="ident">Typ</a>                <span class="comment">// type</span>
+	<a href="../../../pkg/go/ast.html#name-Var" class="ident">Var</a>                <span class="comment">// variable</span>
+	<a href="../../../pkg/go/ast.html#name-Fun" class="ident">Fun</a>                <span class="comment">// function or method</span>
+	<a href="../../../pkg/go/ast.html#name-Lbl" class="ident">Lbl</a>                <span class="comment">// label</span>
+)
+
+<span class="keyword">var</span> <a href="../../../pkg/go/ast.html#name-objKindStrings" class="ident">objKindStrings</a> = [...]<a href="../../../pkg/builtin.html#name-string" class="ident">string</a>{
+	<a href="#line-141" class="ident">Bad</a>: <span class="lit-string">"bad"</span>,
+	<a href="#line-142" class="ident">Pkg</a>: <span class="lit-string">"package"</span>,
+	<a href="#line-143" class="ident">Con</a>: <span class="lit-string">"const"</span>,
+	<a href="#line-144" class="ident">Typ</a>: <span class="lit-string">"type"</span>,
+	<a href="#line-145" class="ident">Var</a>: <span class="lit-string">"var"</span>,
+	<a href="#line-146" class="ident">Fun</a>: <span class="lit-string">"func"</span>,
+	<a href="#line-147" class="ident">Lbl</a>: <span class="lit-string">"label"</span>,
+}
+
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: symmetric_key_encrypted.go in package golang.org/x/crypto/openpgp/packet</title>
+<link href="../../../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	symmetric_key_encrypted.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../../../pkg/golang.org/x/crypto/openpgp/packet.html">golang.org/x/crypto/openpgp/packet</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16],
+input[id=r17]:checked ~pre label[for=r17],
+input[id=r18]:checked ~pre label[for=r18],
+input[id=r19]:checked ~pre label[for=r19],
+input[id=r20]:checked ~pre label[for=r20],
+input[id=r21]:checked ~pre label[for=r21],
+input[id=r22]:checked ~pre label[for=r22],
+input[id=r23]:checked ~pre label[for=r23],
+input[id=r24]:checked ~pre label[for=r24],
+input[id=r25]:checked ~pre label[for=r25],
+input[id=r26]:checked ~pre label[for=r26],
+input[id=r27]:checked ~pre label[for=r27],
+input[id=r28]:checked ~pre label[for=r28],
+input[id=r29]:checked ~pre label[for=r29],
+input[id=r30]:checked ~pre label[for=r30],
+input[id=r31]:checked ~pre label[for=r31],
+input[id=r32]:checked ~pre label[for=r32],
+input[id=r33]:checked ~pre label[for=r33],
+input[id=r34]:checked ~pre label[for=r34],
+input[id=r35]:checked ~pre label[for=r35]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1,
+input[id=i2]:checked ~pre .i2,
+input[id=i3]:checked ~pre .i3,
+input[id=i4]:checked ~pre .i4,
+input[id=i5]:checked ~pre .i5
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="r17" type="radio" name="g"/>
+<input id="r18" type="radio" name="g"/>
+<input id="r19" type="radio" name="g"/>
+<input id="r20" type="radio" name="g"/>
+<input id="r21" type="radio" name="g"/>
+<input id="r22" type="radio" name="g"/>
+<input id="r23" type="radio" name="g"/>
+<input id="r24" type="radio" name="g"/>
+<input id="r25" type="radio" name="g"/>
+<input id="r26" type="radio" name="g"/>
+<input id="r27" type="radio" name="g"/>
+<input id="r28" type="radio" name="g"/>
+<input id="r29" type="radio" name="g"/>
+<input id="r30" type="radio" name="g"/>
+<input id="r31" type="radio" name="g"/>
+<input id="r32" type="radio" name="g"/>
+<input id="r33" type="radio" name="g"/>
+<input id="r34" type="radio" name="g"/>
+<input id="r35" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<input id="i2" type="radio" name="i"/>
+<input id="i3" type="radio" name="i"/>
+<input id="i4" type="radio" name="i"/>
+<input id="i5" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2011 The Go Authors. All rights reserved.</span><span class="comment"> Use of this source code is governed by a BSD-style</span><span class="comment"> license that can be found in the LICENSE file.</span></div>
+<div class="code"><pre><code>
+<span class="keyword">package</span> packet
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"bytes"</span></label>
+	<label for="i1"><span class="lit-string i1">"crypto/cipher"</span></label>
+	<label for="i2"><span class="lit-string i2">"io"</span></label>
+	<label for="i3"><span class="lit-string i3">"strconv"</span></label>
+
+	<label for="i4"><span class="lit-string i4">"golang.org/x/crypto/openpgp/errors"</span></label>
+	<label for="i5"><span class="lit-string i5">"golang.org/x/crypto/openpgp/s2k"</span></label>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> This is the largest session key that we'll support. Since no 512-bit cipher</span><span class="comment"> has even been seriously used, this is comfortably large.</span></div>
+<div class="code"><pre><code><span class="keyword">const</span> <a href="../../../../../../pkg/golang.org/x/crypto/openpgp/packet.html#name-maxSessionKeySizeInBytes" class="ident">maxSessionKeySizeInBytes</a> = <span class="lit-number">64</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> SymmetricKeyEncrypted represents a passphrase protected session key. See RFC</span><span class="comment"> 4880, section 5.3.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../../pkg/golang.org/x/crypto/openpgp/packet.html#name-SymmetricKeyEncrypted" class="ident">SymmetricKeyEncrypted</a> <span class="keyword">struct</span> {
+	<a href="../../../../../../use/golang.org/x/crypto/openpgp/packet..SymmetricKeyEncrypted.CipherFunc.html" class="ident">CipherFunc</a>   <a href="packet.go.html#line-474" class="ident">CipherFunction</a>
+	<a href="../../../../../../use/golang.org/x/crypto/openpgp/packet..SymmetricKeyEncrypted.s2k*edba5.html" class="ident">s2k</a>          <span class="keyword">func</span>(out, in []<a href="../../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>)
+	<a href="../../../../../../use/golang.org/x/crypto/openpgp/packet..SymmetricKeyEncrypted.encryptedKey*3f152.html" class="ident">encryptedKey</a> []<a href="../../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>
+}
+
+<span class="keyword">const</span> <a href="../../../../../../pkg/golang.org/x/crypto/openpgp/packet.html#name-symmetricKeyEncryptedVersion" class="ident">symmetricKeyEncryptedVersion</a> = <span class="lit-number">4</span>
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> RFC 4880, section 5.3.</span></div>
+<div class="code"><pre><code>	<span class="keyword">var</span> <label for="r3" class="ident">buf</label> [<span class="lit-number">2</span>]<a href="../../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>
+	<span class="keyword">if</span> <label for="r4" class="ident">_</label>, <label for="r5" class="ident">err</label> := <a href="packet.go.html#line-25" class="ident">readFull</a>(<label for="r2" class="ident">r</label>, <label for="r3" class="ident">buf</label>[:]); <label for="r5" class="ident">err</label> != <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <label for="r5" class="ident">err</label>
+	}
+	<span class="keyword">if</span> <label for="r3" class="ident">buf</label>[<span class="lit-number">0</span>] != <a href="#line-29" class="ident">symmetricKeyEncryptedVersion</a> {
+		<span class="keyword">return</span> <a href="../../../../../../pkg/golang.org/x/crypto/openpgp/errors.html" class="ident i4">errors</a>.<a href="../errors/errors.go.html#line-22" class="ident">UnsupportedError</a>(<span class="lit-string">"SymmetricKeyEncrypted version"</span>)
+	}
+	<label for="r0" class="ident">ske</label>.<a href="#line-24" class="ident">CipherFunc</a> = <a href="packet.go.html#line-474" class="ident">CipherFunction</a>(<label for="r3" class="ident">buf</label>[<span class="lit-number">1</span>])
+
+	<span class="keyword">if</span> <label for="r0" class="ident">ske</label>.<a href="#line-24" class="ident">CipherFunc</a>.<a href="packet.go.html#line-485" class="ident">KeySize</a>() == <span class="lit-number">0</span> {
+		<span class="keyword">return</span> <a href="../../../../../../pkg/golang.org/x/crypto/openpgp/errors.html" class="ident i4">errors</a>.<a href="../errors/errors.go.html#line-22" class="ident">UnsupportedError</a>(<span class="lit-string">"unknown cipher: "</span> + <a href="../../../../../../pkg/strconv.html" class="ident i3">strconv</a>.<a href="../../../../../strconv/itoa.go.html#line-34" class="ident">Itoa</a>(<a href="../../../../../../pkg/builtin.html#name-int" class="ident">int</a>(<label for="r3" class="ident">buf</label>[<span class="lit-number">1</span>])))
+	}
+
+	<span class="keyword">var</span> <label for="r6" class="ident">err</label> <a href="../../../../../../pkg/builtin.html#name-error" class="ident">error</a>
+	<label for="r0" class="ident">ske</label>.<a href="#line-25" class="ident">s2k</a>, <label for="r6" class="ident">err</label> = <a href="../../../../../../pkg/golang.org/x/crypto/openpgp/s2k.html" class="ident i5">s2k</a>.<a href="../s2k/s2k.go.html#line-156" class="ident">Parse</a>(<label for="r2" class="ident">r</label>)
+	<span class="keyword">if</span> <label for="r6" class="ident">err</label> != <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <label for="r6" class="ident">err</label>
+	}
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> The session key may follow. We just have to try and read to find</span><span class="comment">	 out. If it exists then we limit it to maxSessionKeySizeInBytes.</span></div>
+<div class="code"><pre><code>	<label for="r8" class="ident">n</label>, <label for="r6" class="ident">err</label> := <a href="packet.go.html#line-25" class="ident">readFull</a>(<label for="r2" class="ident">r</label>, <label for="r7" class="ident">encryptedKey</label>)
+	<span class="keyword">if</span> <label for="r6" class="ident">err</label> != <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> &amp;&amp; <label for="r6" class="ident">err</label> != <a href="../../../../../../pkg/io.html" class="ident i2">io</a>.<a href="../../../../../io/io.go.html#line-48" class="ident">ErrUnexpectedEOF</a> {
+		<span class="keyword">return</span> <label for="r6" class="ident">err</label>
+	}
+
+	<span class="keyword">if</span> <label for="r8" class="ident">n</label> != <span class="lit-number">0</span> {
+		<span class="keyword">if</span> <label for="r8" class="ident">n</label> == <a href="#line-19" class="ident">maxSessionKeySizeInBytes</a> {
+			<span class="keyword">return</span> <a href="../../../../../../pkg/golang.org/x/crypto/openpgp/errors.html" class="ident i4">errors</a>.<a href="../errors/errors.go.html#line-22" class="ident">UnsupportedError</a>(<span class="lit-string">"oversized encrypted session key"</span>)
+		}
+		<label for="r0" class="ident">ske</label>.<a href="#line-26" class="ident">encryptedKey</a> = <label for="r7" class="ident">encryptedKey</label>[:<label for="r8" class="ident">n</label>]
+	}
+
+	<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Decrypt attempts to decrypt an encrypted session key and returns the key and</span><span class="comment"> the cipher to use when decrypting a subsequent Symmetrically Encrypted Data</span><span class="comment"> packet.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r9" class="ident">ske</label> *<a href="#line-23" class="ident">SymmetricKeyEncrypted</a>) <label for="r10" class="ident"><a href="../../../../../../use/golang.org/x/crypto/openpgp/packet..SymmetricKeyEncrypted.Decrypt.html" class="ident">Decrypt</a></label>(<label for="r11" class="ident">passphrase</label> []<a href="../../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>) ([]<a href="../../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>, <a href="packet.go.html#line-474" class="ident">CipherFunction</a>, <a href="../../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<label for="r12" class="ident">key</label> := <a href="../../../../../../pkg/builtin.html#name-make" class="ident">make</a>([]<a href="../../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>, <label for="r9" class="ident">ske</label>.<a href="#line-24" class="ident">CipherFunc</a>.<a href="packet.go.html#line-485" class="ident">KeySize</a>())
+	<label for="r9" class="ident">ske</label>.<a href="#line-25" class="ident">s2k</a>(<label for="r12" class="ident">key</label>, <label for="r11" class="ident">passphrase</label>)
+
+	<span class="keyword">if</span> <a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r9" class="ident">ske</label>.<a href="#line-26" class="ident">encryptedKey</a>) == <span class="lit-number">0</span> {
+		<span class="keyword">return</span> <label for="r12" class="ident">key</label>, <label for="r9" class="ident">ske</label>.<a href="#line-24" class="ident">CipherFunc</a>, <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> the IV is all zeros</span></div>
+<div class="code"><pre><code>	<label for="r13" class="ident">iv</label> := <a href="../../../../../../pkg/builtin.html#name-make" class="ident">make</a>([]<a href="../../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>, <label for="r9" class="ident">ske</label>.<a href="#line-24" class="ident">CipherFunc</a>.<a href="packet.go.html#line-502" class="ident">blockSize</a>())
+	<label for="r14" class="ident">c</label> := <a href="../../../../../../pkg/crypto/cipher.html" class="ident i1">cipher</a>.<a href="../../../../../crypto/cipher/cfb.go.html#line-60" class="ident">NewCFBDecrypter</a>(<label for="r9" class="ident">ske</label>.<a href="#line-24" class="ident">CipherFunc</a>.<a href="packet.go.html#line-515" class="ident">new</a>(<label for="r12" class="ident">key</label>), <label for="r13" class="ident">iv</label>)
+	<label for="r15" class="ident">plaintextKey</label> := <a href="../../../../../../pkg/builtin.html#name-make" class="ident">make</a>([]<a href="../../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>, <a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r9" class="ident">ske</label>.<a href="#line-26" class="ident">encryptedKey</a>))
+	<label for="r14" class="ident">c</label>.<a href="../../../../../crypto/cipher/cipher.go.html#line-40" class="ident">XORKeyStream</a>(<label for="r15" class="ident">plaintextKey</label>, <label for="r9" class="ident">ske</label>.<a href="#line-26" class="ident">encryptedKey</a>)
+	<label for="r16" class="ident">cipherFunc</label> := <a href="packet.go.html#line-474" class="ident">CipherFunction</a>(<label for="r15" class="ident">plaintextKey</label>[<span class="lit-number">0</span>])
+	<span class="keyword">if</span> <label for="r16" class="ident">cipherFunc</label>.<a href="packet.go.html#line-502" class="ident">blockSize</a>() == <span class="lit-number">0</span> {
+		<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <label for="r9" class="ident">ske</label>.<a href="#line-24" class="ident">CipherFunc</a>, <a href="../../../../../../pkg/golang.org/x/crypto/openpgp/errors.html" class="ident i4">errors</a>.<a href="../errors/errors.go.html#line-22" class="ident">UnsupportedError</a>(<span class="lit-string">"unknown cipher: "</span> + <a href="../../../../../../pkg/strconv.html" class="ident i3">strconv</a>.<a href="../../../../../strconv/itoa.go.html#line-34" class="ident">Itoa</a>(<a href="../../../../../../pkg/builtin.html#name-int" class="ident">int</a>(<label for="r16" class="ident">cipherFunc</label>)))
+	}
+	<label for="r15" class="ident">plaintextKey</label> = <label for="r15" class="ident">plaintextKey</label>[<span class="lit-number">1</span>:]
+	<span class="keyword">if</span> <label for="r17" class="ident">l</label>, <label for="r18" class="ident">cipherKeySize</label> := <a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r15" class="ident">plaintextKey</label>), <label for="r16" class="ident">cipherFunc</label>.<a href="packet.go.html#line-485" class="ident">KeySize</a>(); <label for="r17" class="ident">l</label> != <label for="r16" class="ident">cipherFunc</label>.<a href="packet.go.html#line-485" class="ident">KeySize</a>() {
+		<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <label for="r16" class="ident">cipherFunc</label>, <a href="../../../../../../pkg/golang.org/x/crypto/openpgp/errors.html" class="ident i4">errors</a>.<a href="../errors/errors.go.html#line-14" class="ident">StructuralError</a>(<span class="lit-string">"length of decrypted key ("</span> + <a href="../../../../../../pkg/strconv.html" class="ident i3">strconv</a>.<a href="../../../../../strconv/itoa.go.html#line-34" class="ident">Itoa</a>(<label for="r17" class="ident">l</label>) + <span class="lit-string">") "</span> +
+			<span class="lit-string">"not equal to cipher keysize ("</span> + <a href="../../../../../../pkg/strconv.html" class="ident i3">strconv</a>.<a href="../../../../../strconv/itoa.go.html#line-34" class="ident">Itoa</a>(<label for="r18" class="ident">cipherKeySize</label>) + <span class="lit-string">")"</span>)
+	}
+	<span class="keyword">return</span> <label for="r15" class="ident">plaintextKey</label>, <label for="r16" class="ident">cipherFunc</label>, <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> SerializeSymmetricKeyEncrypted serializes a symmetric key packet to w. The</span><span class="comment"> packet contains a random session key, encrypted by a key derived from the</span><span class="comment"> given passphrase. The session key is returned and must be passed to</span><span class="comment"> SerializeSymmetricallyEncrypted.</span><span class="comment"> If config is nil, sensible defaults will be used.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r19" class="ident"><a href="../../../../../../pkg/golang.org/x/crypto/openpgp/packet.html#name-SerializeSymmetricKeyEncrypted" class="ident">SerializeSymmetricKeyEncrypted</a></label>(<label for="r20" class="ident">w</label> <a href="../../../../../../pkg/io.html" class="ident i2">io</a>.<a href="../../../../../io/io.go.html#line-96" class="ident">Writer</a>, <label for="r21" class="ident">passphrase</label> []<a href="../../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>, <label for="r22" class="ident">config</label> *<a href="config.go.html#line-16" class="ident">Config</a>) (<label for="r23" class="ident">key</label> []<a href="../../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>, <label for="r24" class="ident">err</label> <a href="../../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<label for="r25" class="ident">cipherFunc</label> := <label for="r22" class="ident">config</label>.<a href="config.go.html#line-65" class="ident">Cipher</a>()
+	<label for="r26" class="ident">keySize</label> := <label for="r25" class="ident">cipherFunc</label>.<a href="packet.go.html#line-485" class="ident">KeySize</a>()
+	<span class="keyword">if</span> <label for="r26" class="ident">keySize</label> == <span class="lit-number">0</span> {
+		<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="../../../../../../pkg/golang.org/x/crypto/openpgp/errors.html" class="ident i4">errors</a>.<a href="../errors/errors.go.html#line-22" class="ident">UnsupportedError</a>(<span class="lit-string">"unknown cipher: "</span> + <a href="../../../../../../pkg/strconv.html" class="ident i3">strconv</a>.<a href="../../../../../strconv/itoa.go.html#line-34" class="ident">Itoa</a>(<a href="../../../../../../pkg/builtin.html#name-int" class="ident">int</a>(<label for="r25" class="ident">cipherFunc</label>)))
+	}
+
+	<label for="r27" class="ident">s2kBuf</label> := <a href="../../../../../../pkg/builtin.html#name-new" class="ident">new</a>(<a href="../../../../../../pkg/bytes.html" class="ident i0">bytes</a>.<a href="../../../../../bytes/buffer.go.html#line-20" class="ident">Buffer</a>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> s2k.Serialize salts and stretches the passphrase, and writes the</span><span class="comment">	 resulting key to keyEncryptingKey and the s2k descriptor to s2kBuf.</span></div>
+<div class="code"><pre><code>	<label for="r24" class="ident">err</label> = <a href="../../../../../../pkg/golang.org/x/crypto/openpgp/s2k.html" class="ident i5">s2k</a>.<a href="../s2k/s2k.go.html#line-207" class="ident">Serialize</a>(<label for="r27" class="ident">s2kBuf</label>, <label for="r28" class="ident">keyEncryptingKey</label>, <label for="r22" class="ident">config</label>.<a href="config.go.html#line-51" class="ident">Random</a>(), <label for="r21" class="ident">passphrase</label>, &amp;<a href="../../../../../../pkg/golang.org/x/crypto/openpgp/s2k.html" class="ident i5">s2k</a>.<a href="../s2k/s2k.go.html#line-22" class="ident">Config</a>{<a href="../s2k/s2k.go.html#line-25" class="ident">Hash</a>: <label for="r22" class="ident">config</label>.<a href="config.go.html#line-58" class="ident">Hash</a>(), <a href="../s2k/s2k.go.html#line-36" class="ident">S2KCount</a>: <label for="r22" class="ident">config</label>.<a href="config.go.html#line-86" class="ident">PasswordHashIterations</a>()})
+	<span class="keyword">if</span> <label for="r24" class="ident">err</label> != <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span>
+	}
+	<label for="r29" class="ident">s2kBytes</label> := <label for="r27" class="ident">s2kBuf</label>.<a href="../../../../../bytes/buffer.go.html#line-54" class="ident">Bytes</a>()
+
+	<label for="r30" class="ident">packetLength</label> := <span class="lit-number">2</span> <span class="comment">/* header */</span> + <a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r29" class="ident">s2kBytes</label>) + <span class="lit-number">1</span> <span class="comment">/* cipher type */</span> + <label for="r26" class="ident">keySize</label>
+	<label for="r24" class="ident">err</label> = <a href="packet.go.html#line-248" class="ident">serializeHeader</a>(<label for="r20" class="ident">w</label>, <a href="packet.go.html#line-320" class="ident">packetTypeSymmetricKeyEncrypted</a>, <label for="r30" class="ident">packetLength</label>)
+	<span class="keyword">if</span> <label for="r24" class="ident">err</label> != <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span>
+	}
+
+	<span class="keyword">var</span> <label for="r31" class="ident">buf</label> [<span class="lit-number">2</span>]<a href="../../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>
+	<label for="r31" class="ident">buf</label>[<span class="lit-number">0</span>] = <a href="#line-29" class="ident">symmetricKeyEncryptedVersion</a>
+	<label for="r31" class="ident">buf</label>[<span class="lit-number">1</span>] = <a href="../../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>(<label for="r25" class="ident">cipherFunc</label>)
+	_, <label for="r24" class="ident">err</label> = <label for="r20" class="ident">w</label>.<a href="../../../../../io/io.go.html#line-97" class="ident">Write</a>(<label for="r31" class="ident">buf</label>[:])
+	<span class="keyword">if</span> <label for="r24" class="ident">err</label> != <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span>
+	}
+	_, <label for="r24" class="ident">err</label> = <label for="r20" class="ident">w</label>.<a href="../../../../../io/io.go.html#line-97" class="ident">Write</a>(<label for="r29" class="ident">s2kBytes</label>)
+	<span class="keyword">if</span> <label for="r24" class="ident">err</label> != <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span>
+	}
+
+	<label for="r32" class="ident">sessionKey</label> := <a href="../../../../../../pkg/builtin.html#name-make" class="ident">make</a>([]<a href="../../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>, <label for="r26" class="ident">keySize</label>)
+	_, <label for="r24" class="ident">err</label> = <a href="../../../../../../pkg/io.html" class="ident i2">io</a>.<a href="../../../../../io/io.go.html#line-346" class="ident">ReadFull</a>(<label for="r22" class="ident">config</label>.<a href="config.go.html#line-51" class="ident">Random</a>(), <label for="r32" class="ident">sessionKey</label>)
+	<span class="keyword">if</span> <label for="r24" class="ident">err</label> != <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span>
+	}
+	<label for="r33" class="ident">iv</label> := <a href="../../../../../../pkg/builtin.html#name-make" class="ident">make</a>([]<a href="../../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>, <label for="r25" class="ident">cipherFunc</label>.<a href="packet.go.html#line-502" class="ident">blockSize</a>())
+	<label for="r34" class="ident">c</label> := <a href="../../../../../../pkg/crypto/cipher.html" class="ident i1">cipher</a>.<a href="../../../../../crypto/cipher/cfb.go.html#line-53" class="ident">NewCFBEncrypter</a>(<label for="r25" class="ident">cipherFunc</label>.<a href="packet.go.html#line-515" class="ident">new</a>(<label for="r28" class="ident">keyEncryptingKey</label>), <label for="r33" class="ident">iv</label>)
+	<label for="r35" class="ident">encryptedCipherAndKey</label> := <a href="../../../../../../pkg/builtin.html#name-make" class="ident">make</a>([]<a href="../../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>, <label for="r26" class="ident">keySize</label>+<span class="lit-number">1</span>)
+	<label for="r34" class="ident">c</label>.<a href="../../../../../crypto/cipher/cipher.go.html#line-40" class="ident">XORKeyStream</a>(<label for="r35" class="ident">encryptedCipherAndKey</label>, <label for="r31" class="ident">buf</label>[<span class="lit-number">1</span>:])
+	<label for="r34" class="ident">c</label>.<a href="../../../../../crypto/cipher/cipher.go.html#line-40" class="ident">XORKeyStream</a>(<label for="r35" class="ident">encryptedCipherAndKey</label>[<span class="lit-number">1</span>:], <label for="r32" class="ident">sessionKey</label>)
+	_, <label for="r24" class="ident">err</label> = <label for="r20" class="ident">w</label>.<a href="../../../../../io/io.go.html#line-97" class="ident">Write</a>(<label for="r35" class="ident">encryptedCipherAndKey</label>)
+	<span class="keyword">if</span> <label for="r24" class="ident">err</label> != <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span>
+	}
+
+	<label for="r23" class="ident">key</label> = <label for="r32" class="ident">sessionKey</label>
+	<span class="keyword">return</span>
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

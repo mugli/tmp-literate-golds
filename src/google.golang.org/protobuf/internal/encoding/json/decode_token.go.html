@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: decode_token.go in package google.golang.org/protobuf/internal/encoding/json</title>
+<link href="../../../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	decode_token.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../../../pkg/google.golang.org/protobuf/internal/encoding/json.html">google.golang.org/protobuf/internal/encoding/json</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16],
+input[id=r17]:checked ~pre label[for=r17],
+input[id=r18]:checked ~pre label[for=r18],
+input[id=r19]:checked ~pre label[for=r19],
+input[id=r20]:checked ~pre label[for=r20],
+input[id=r21]:checked ~pre label[for=r21],
+input[id=r22]:checked ~pre label[for=r22],
+input[id=r23]:checked ~pre label[for=r23],
+input[id=r24]:checked ~pre label[for=r24],
+input[id=r25]:checked ~pre label[for=r25],
+input[id=r26]:checked ~pre label[for=r26],
+input[id=r27]:checked ~pre label[for=r27],
+input[id=r28]:checked ~pre label[for=r28],
+input[id=r29]:checked ~pre label[for=r29],
+input[id=r30]:checked ~pre label[for=r30],
+input[id=r31]:checked ~pre label[for=r31],
+input[id=r32]:checked ~pre label[for=r32],
+input[id=r33]:checked ~pre label[for=r33],
+input[id=r34]:checked ~pre label[for=r34],
+input[id=r35]:checked ~pre label[for=r35],
+input[id=r36]:checked ~pre label[for=r36],
+input[id=r37]:checked ~pre label[for=r37],
+input[id=r38]:checked ~pre label[for=r38],
+input[id=r39]:checked ~pre label[for=r39]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1,
+input[id=i2]:checked ~pre .i2
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="r17" type="radio" name="g"/>
+<input id="r18" type="radio" name="g"/>
+<input id="r19" type="radio" name="g"/>
+<input id="r20" type="radio" name="g"/>
+<input id="r21" type="radio" name="g"/>
+<input id="r22" type="radio" name="g"/>
+<input id="r23" type="radio" name="g"/>
+<input id="r24" type="radio" name="g"/>
+<input id="r25" type="radio" name="g"/>
+<input id="r26" type="radio" name="g"/>
+<input id="r27" type="radio" name="g"/>
+<input id="r28" type="radio" name="g"/>
+<input id="r29" type="radio" name="g"/>
+<input id="r30" type="radio" name="g"/>
+<input id="r31" type="radio" name="g"/>
+<input id="r32" type="radio" name="g"/>
+<input id="r33" type="radio" name="g"/>
+<input id="r34" type="radio" name="g"/>
+<input id="r35" type="radio" name="g"/>
+<input id="r36" type="radio" name="g"/>
+<input id="r37" type="radio" name="g"/>
+<input id="r38" type="radio" name="g"/>
+<input id="r39" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<input id="i2" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2019 The Go Authors. All rights reserved.</span><span class="comment"> Use of this source code is governed by a BSD-style</span><span class="comment"> license that can be found in the LICENSE file.</span></div>
+<div class="code"><pre><code>
+<span class="keyword">package</span> json
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"bytes"</span></label>
+	<label for="i1"><span class="lit-string i1">"fmt"</span></label>
+	<label for="i2"><span class="lit-string i2">"strconv"</span></label>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Kind represents a token kind expressible in the JSON format.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../../pkg/google.golang.org/protobuf/internal/encoding/json.html#name-Kind" class="ident">Kind</a> <a href="../../../../../../pkg/builtin.html#name-uint16" class="ident">uint16</a>
+
+<span class="keyword">const</span> (
+	<a href="../../../../../../pkg/google.golang.org/protobuf/internal/encoding/json.html#name-Invalid" class="ident">Invalid</a> <a href="#line-14" class="ident">Kind</a> = (<span class="lit-number">1</span> &lt;&lt; <a href="../../../../../../pkg/builtin.html#name-iota" class="ident">iota</a>) / <span class="lit-number">2</span>
+	<a href="../../../../../../pkg/google.golang.org/protobuf/internal/encoding/json.html#name-EOF" class="ident">EOF</a>
+	<a href="../../../../../../pkg/google.golang.org/protobuf/internal/encoding/json.html#name-Null" class="ident">Null</a>
+	<a href="../../../../../../pkg/google.golang.org/protobuf/internal/encoding/json.html#name-Bool" class="ident">Bool</a>
+	<a href="../../../../../../pkg/google.golang.org/protobuf/internal/encoding/json.html#name-Number" class="ident">Number</a>
+	<a href="../../../../../../pkg/google.golang.org/protobuf/internal/encoding/json.html#name-String" class="ident">String</a>
+	<a href="../../../../../../pkg/google.golang.org/protobuf/internal/encoding/json.html#name-Name" class="ident">Name</a>
+	<a href="../../../../../../pkg/google.golang.org/protobuf/internal/encoding/json.html#name-ObjectOpen" class="ident">ObjectOpen</a>
+	<a href="../../../../../../pkg/google.golang.org/protobuf/internal/encoding/json.html#name-ObjectClose" class="ident">ObjectClose</a>
+	<a href="../../../../../../pkg/google.golang.org/protobuf/internal/encoding/json.html#name-ArrayOpen" class="ident">ArrayOpen</a>
+	<a href="../../../../../../pkg/google.golang.org/protobuf/internal/encoding/json.html#name-ArrayClose" class="ident">ArrayClose</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> comma is only for parsing in between tokens and</span><span class="comment">	 does not need to be exported.</span></div>
+<div class="code"><pre><code>	<a href="../../../../../../pkg/google.golang.org/protobuf/internal/encoding/json.html#name-comma" class="ident">comma</a>
+)
+
+<span class="keyword">func</span> (<label for="r0" class="ident">k</label> <a href="#line-14" class="ident">Kind</a>) <label for="r1" class="ident"><a href="../../../../../../use/google.golang.org/protobuf/internal/encoding/json..Kind.String.html" class="ident">String</a></label>() <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a> {
+	<span class="keyword">switch</span> <label for="r0" class="ident">k</label> {
+	<span class="keyword">case</span> <a href="#line-18" class="ident">EOF</a>:
+		<span class="keyword">return</span> <span class="lit-string">"eof"</span>
+	<span class="keyword">case</span> <a href="#line-19" class="ident">Null</a>:
+		<span class="keyword">return</span> <span class="lit-string">"null"</span>
+	<span class="keyword">case</span> <a href="#line-20" class="ident">Bool</a>:
+		<span class="keyword">return</span> <span class="lit-string">"bool"</span>
+	<span class="keyword">case</span> <a href="#line-21" class="ident">Number</a>:
+		<span class="keyword">return</span> <span class="lit-string">"number"</span>
+	<span class="keyword">case</span> <a href="#line-22" class="ident">String</a>:
+		<span class="keyword">return</span> <span class="lit-string">"string"</span>
+	<span class="keyword">case</span> <a href="#line-24" class="ident">ObjectOpen</a>:
+		<span class="keyword">return</span> <span class="lit-string">"{"</span>
+	<span class="keyword">case</span> <a href="#line-25" class="ident">ObjectClose</a>:
+		<span class="keyword">return</span> <span class="lit-string">"}"</span>
+	<span class="keyword">case</span> <a href="#line-23" class="ident">Name</a>:
+		<span class="keyword">return</span> <span class="lit-string">"name"</span>
+	<span class="keyword">case</span> <a href="#line-26" class="ident">ArrayOpen</a>:
+		<span class="keyword">return</span> <span class="lit-string">"["</span>
+	<span class="keyword">case</span> <a href="#line-27" class="ident">ArrayClose</a>:
+		<span class="keyword">return</span> <span class="lit-string">"]"</span>
+	<span class="keyword">case</span> <a href="#line-31" class="ident">comma</a>:
+		<span class="keyword">return</span> <span class="lit-string">","</span>
+	}
+	<span class="keyword">return</span> <span class="lit-string">"&lt;invalid&gt;"</span>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Token provides a parsed token kind and value.</span><span class="comment"></span><span class="comment"> Values are provided by the difference accessor methods. The accessor methods</span><span class="comment"> Name, Bool, and ParsedString will panic if called on the wrong kind. There</span><span class="comment"> are different accessor methods for the Number kind for converting to the</span><span class="comment"> appropriate Go numeric type and those methods have the ok return value.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Token kind.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> pos provides the position of the token in the original input.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> raw bytes of the serialized token.</span><span class="comment">	 This is a subslice into the original input.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> boo is parsed boolean value.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> str is parsed string value.</span></div>
+<div class="code"><pre><code>	<a href="../../../../../../use/google.golang.org/protobuf/internal/encoding/json..Token.str*8c25c.html" class="ident">str</a> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Kind returns the token kind.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r2" class="ident">t</label> <a href="#line-68" class="ident">Token</a>) <label for="r3" class="ident"><a href="../../../../../../use/google.golang.org/protobuf/internal/encoding/json..Token.Kind.html" class="ident">Kind</a></label>() <a href="#line-14" class="ident">Kind</a> {
+	<span class="keyword">return</span> <label for="r2" class="ident">t</label>.<a href="#line-70" class="ident">kind</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> RawString returns the read value in string.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r4" class="ident">t</label> <a href="#line-68" class="ident">Token</a>) <label for="r5" class="ident"><a href="../../../../../../use/google.golang.org/protobuf/internal/encoding/json..Token.RawString.html" class="ident">RawString</a></label>() <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a> {
+	<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>(<label for="r4" class="ident">t</label>.<a href="#line-75" class="ident">raw</a>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Pos returns the token position from the input.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r6" class="ident">t</label> <a href="#line-68" class="ident">Token</a>) <label for="r7" class="ident"><a href="../../../../../../use/google.golang.org/protobuf/internal/encoding/json..Token.Pos.html" class="ident">Pos</a></label>() <a href="../../../../../../pkg/builtin.html#name-int" class="ident">int</a> {
+	<span class="keyword">return</span> <label for="r6" class="ident">t</label>.<a href="#line-72" class="ident">pos</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Name returns the object name if token is Name, else it will return an error.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r8" class="ident">t</label> <a href="#line-68" class="ident">Token</a>) <label for="r9" class="ident"><a href="../../../../../../use/google.golang.org/protobuf/internal/encoding/json..Token.Name.html" class="ident">Name</a></label>() <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a> {
+	<span class="keyword">if</span> <label for="r8" class="ident">t</label>.<a href="#line-70" class="ident">kind</a> == <a href="#line-23" class="ident">Name</a> {
+		<span class="keyword">return</span> <label for="r8" class="ident">t</label>.<a href="#line-79" class="ident">str</a>
+	}
+	<a href="../../../../../../pkg/builtin.html#name-panic" class="ident">panic</a>(<a href="../../../../../../pkg/fmt.html" class="ident i1">fmt</a>.<a href="../../../../../fmt/print.go.html#line-217" class="ident">Sprintf</a>(<span class="lit-string">"Token is not a Name: %v"</span>, <label for="r8" class="ident">t</label>.<a href="#line-88" class="ident">RawString</a>()))
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Bool returns the bool value if token kind is Bool, else it panics.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r10" class="ident">t</label> <a href="#line-68" class="ident">Token</a>) <label for="r11" class="ident"><a href="../../../../../../use/google.golang.org/protobuf/internal/encoding/json..Token.Bool.html" class="ident">Bool</a></label>() <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> {
+	<span class="keyword">if</span> <label for="r10" class="ident">t</label>.<a href="#line-70" class="ident">kind</a> == <a href="#line-20" class="ident">Bool</a> {
+		<span class="keyword">return</span> <label for="r10" class="ident">t</label>.<a href="#line-77" class="ident">boo</a>
+	}
+	<a href="../../../../../../pkg/builtin.html#name-panic" class="ident">panic</a>(<a href="../../../../../../pkg/fmt.html" class="ident i1">fmt</a>.<a href="../../../../../fmt/print.go.html#line-217" class="ident">Sprintf</a>(<span class="lit-string">"Token is not a Bool: %v"</span>, <label for="r10" class="ident">t</label>.<a href="#line-88" class="ident">RawString</a>()))
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ParsedString returns the string value for a JSON string token or the read</span><span class="comment"> value in string if token is not a string.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r12" class="ident">t</label> <a href="#line-68" class="ident">Token</a>) <label for="r13" class="ident"><a href="../../../../../../use/google.golang.org/protobuf/internal/encoding/json..Token.ParsedString.html" class="ident">ParsedString</a></label>() <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a> {
+	<span class="keyword">if</span> <label for="r12" class="ident">t</label>.<a href="#line-70" class="ident">kind</a> == <a href="#line-22" class="ident">String</a> {
+		<span class="keyword">return</span> <label for="r12" class="ident">t</label>.<a href="#line-79" class="ident">str</a>
+	}
+	<a href="../../../../../../pkg/builtin.html#name-panic" class="ident">panic</a>(<a href="../../../../../../pkg/fmt.html" class="ident i1">fmt</a>.<a href="../../../../../fmt/print.go.html#line-217" class="ident">Sprintf</a>(<span class="lit-string">"Token is not a String: %v"</span>, <label for="r12" class="ident">t</label>.<a href="#line-88" class="ident">RawString</a>()))
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Float returns the floating-point number if token kind is Number.</span><span class="comment"></span><span class="comment"> The floating-point precision is specified by the bitSize parameter: 32 for</span><span class="comment"> float32 or 64 for float64. If bitSize=32, the result still has type float64,</span><span class="comment"> but it will be convertible to float32 without changing its value. It will</span><span class="comment"> return false if the number exceeds the floating point limits for given</span><span class="comment"> bitSize.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r14" class="ident">t</label> <a href="#line-68" class="ident">Token</a>) <label for="r15" class="ident"><a href="../../../../../../use/google.golang.org/protobuf/internal/encoding/json..Token.Float.html" class="ident">Float</a></label>(<label for="r16" class="ident">bitSize</label> <a href="../../../../../../pkg/builtin.html#name-int" class="ident">int</a>) (<a href="../../../../../../pkg/builtin.html#name-float64" class="ident">float64</a>, <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>) {
+	<span class="keyword">if</span> <label for="r14" class="ident">t</label>.<a href="#line-70" class="ident">kind</a> != <a href="#line-21" class="ident">Number</a> {
+		<span class="keyword">return</span> <span class="lit-number">0</span>, <a href="../../../../../../pkg/builtin.html#name-false" class="ident">false</a>
+	}
+	<label for="r17" class="ident">f</label>, <label for="r18" class="ident">err</label> := <a href="../../../../../../pkg/strconv.html" class="ident i2">strconv</a>.<a href="../../../../../strconv/atof.go.html#line-690" class="ident">ParseFloat</a>(<label for="r14" class="ident">t</label>.<a href="#line-88" class="ident">RawString</a>(), <label for="r16" class="ident">bitSize</label>)
+	<span class="keyword">if</span> <label for="r18" class="ident">err</label> != <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <span class="lit-number">0</span>, <a href="../../../../../../pkg/builtin.html#name-false" class="ident">false</a>
+	}
+	<span class="keyword">return</span> <label for="r17" class="ident">f</label>, <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Int returns the signed integer number if token is Number.</span><span class="comment"></span><span class="comment"> The given bitSize specifies the integer type that the result must fit into.</span><span class="comment"> It returns false if the number is not an integer value or if the result</span><span class="comment"> exceeds the limits for given bitSize.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r19" class="ident">t</label> <a href="#line-68" class="ident">Token</a>) <label for="r20" class="ident"><a href="../../../../../../use/google.golang.org/protobuf/internal/encoding/json..Token.Int.html" class="ident">Int</a></label>(<label for="r21" class="ident">bitSize</label> <a href="../../../../../../pkg/builtin.html#name-int" class="ident">int</a>) (<a href="../../../../../../pkg/builtin.html#name-int64" class="ident">int64</a>, <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>) {
+	<label for="r22" class="ident">s</label>, <label for="r23" class="ident">ok</label> := <label for="r19" class="ident">t</label>.<a href="#line-175" class="ident">getIntStr</a>()
+	<span class="keyword">if</span> !<label for="r23" class="ident">ok</label> {
+		<span class="keyword">return</span> <span class="lit-number">0</span>, <a href="../../../../../../pkg/builtin.html#name-false" class="ident">false</a>
+	}
+	<label for="r24" class="ident">n</label>, <label for="r25" class="ident">err</label> := <a href="../../../../../../pkg/strconv.html" class="ident i2">strconv</a>.<a href="../../../../../strconv/atoi.go.html#line-179" class="ident">ParseInt</a>(<label for="r22" class="ident">s</label>, <span class="lit-number">10</span>, <label for="r21" class="ident">bitSize</label>)
+	<span class="keyword">if</span> <label for="r25" class="ident">err</label> != <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <span class="lit-number">0</span>, <a href="../../../../../../pkg/builtin.html#name-false" class="ident">false</a>
+	}
+	<span class="keyword">return</span> <label for="r24" class="ident">n</label>, <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Uint returns the signed integer number if token is Number, else it will</span><span class="comment"> return an error.</span><span class="comment"></span><span class="comment"> The given bitSize specifies the unsigned integer type that the result must</span><span class="comment"> fit into. It returns false if the number is not an unsigned integer value</span><span class="comment"> or if the result exceeds the limits for given bitSize.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r26" class="ident">t</label> <a href="#line-68" class="ident">Token</a>) <label for="r27" class="ident"><a href="../../../../../../use/google.golang.org/protobuf/internal/encoding/json..Token.Uint.html" class="ident">Uint</a></label>(<label for="r28" class="ident">bitSize</label> <a href="../../../../../../pkg/builtin.html#name-int" class="ident">int</a>) (<a href="../../../../../../pkg/builtin.html#name-uint64" class="ident">uint64</a>, <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>) {
+	<label for="r29" class="ident">s</label>, <label for="r30" class="ident">ok</label> := <label for="r26" class="ident">t</label>.<a href="#line-175" class="ident">getIntStr</a>()
+	<span class="keyword">if</span> !<label for="r30" class="ident">ok</label> {
+		<span class="keyword">return</span> <span class="lit-number">0</span>, <a href="../../../../../../pkg/builtin.html#name-false" class="ident">false</a>
+	}
+	<label for="r31" class="ident">n</label>, <label for="r32" class="ident">err</label> := <a href="../../../../../../pkg/strconv.html" class="ident i2">strconv</a>.<a href="../../../../../strconv/atoi.go.html#line-60" class="ident">ParseUint</a>(<label for="r29" class="ident">s</label>, <span class="lit-number">10</span>, <label for="r28" class="ident">bitSize</label>)
+	<span class="keyword">if</span> <label for="r32" class="ident">err</label> != <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <span class="lit-number">0</span>, <a href="../../../../../../pkg/builtin.html#name-false" class="ident">false</a>
+	}
+	<span class="keyword">return</span> <label for="r31" class="ident">n</label>, <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>
+}
+
+<span class="keyword">func</span> (<label for="r33" class="ident">t</label> <a href="#line-68" class="ident">Token</a>) <label for="r34" class="ident"><a href="../../../../../../use/google.golang.org/protobuf/internal/encoding/json..Token.getIntStr*8481b.html" class="ident">getIntStr</a></label>() (<a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>, <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>) {
+	<span class="keyword">if</span> <label for="r33" class="ident">t</label>.<a href="#line-70" class="ident">kind</a> != <a href="#line-21" class="ident">Number</a> {
+		<span class="keyword">return</span> <span class="lit-string">""</span>, <a href="../../../../../../pkg/builtin.html#name-false" class="ident">false</a>
+	}
+	<label for="r35" class="ident">parts</label>, <label for="r36" class="ident">ok</label> := <a href="decode_number.go.html#line-99" class="ident">parseNumberParts</a>(<label for="r33" class="ident">t</label>.<a href="#line-75" class="ident">raw</a>)
+	<span class="keyword">if</span> !<label for="r36" class="ident">ok</label> {
+		<span class="keyword">return</span> <span class="lit-string">""</span>, <a href="../../../../../../pkg/builtin.html#name-false" class="ident">false</a>
+	}
+	<span class="keyword">return</span> <a href="decode_number.go.html#line-182" class="ident">normalizeToIntString</a>(<label for="r35" class="ident">parts</label>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> TokenEquals returns true if given Tokens are equal, else false.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r37" class="ident"><a href="../../../../../../pkg/google.golang.org/protobuf/internal/encoding/json.html#name-TokenEquals" class="ident">TokenEquals</a></label>(<label for="r38" class="ident">x</label>, <label for="r39" class="ident">y</label> <a href="#line-68" class="ident">Token</a>) <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> {
+	<span class="keyword">return</span> <label for="r38" class="ident">x</label>.<a href="#line-70" class="ident">kind</a> == <label for="r39" class="ident">y</label>.<a href="#line-70" class="ident">kind</a> &amp;&amp;
+		<label for="r38" class="ident">x</label>.<a href="#line-72" class="ident">pos</a> == <label for="r39" class="ident">y</label>.<a href="#line-72" class="ident">pos</a> &amp;&amp;
+		<a href="../../../../../../pkg/bytes.html" class="ident i0">bytes</a>.<a href="../../../../../bytes/bytes.go.html#line-18" class="ident">Equal</a>(<label for="r38" class="ident">x</label>.<a href="#line-75" class="ident">raw</a>, <label for="r39" class="ident">y</label>.<a href="#line-75" class="ident">raw</a>) &amp;&amp;
+		<label for="r38" class="ident">x</label>.<a href="#line-77" class="ident">boo</a> == <label for="r39" class="ident">y</label>.<a href="#line-77" class="ident">boo</a> &amp;&amp;
+		<label for="r38" class="ident">x</label>.<a href="#line-79" class="ident">str</a> == <label for="r39" class="ident">y</label>.<a href="#line-79" class="ident">str</a>
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

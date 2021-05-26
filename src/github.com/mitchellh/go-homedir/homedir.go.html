@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: homedir.go in package github.com/mitchellh/go-homedir</title>
+<link href="../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	homedir.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../pkg/github.com/mitchellh/go-homedir.html">github.com/mitchellh/go-homedir</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16],
+input[id=r17]:checked ~pre label[for=r17],
+input[id=r18]:checked ~pre label[for=r18],
+input[id=r19]:checked ~pre label[for=r19],
+input[id=r20]:checked ~pre label[for=r20],
+input[id=r21]:checked ~pre label[for=r21],
+input[id=r22]:checked ~pre label[for=r22],
+input[id=r23]:checked ~pre label[for=r23],
+input[id=r24]:checked ~pre label[for=r24],
+input[id=r25]:checked ~pre label[for=r25],
+input[id=r26]:checked ~pre label[for=r26],
+input[id=r27]:checked ~pre label[for=r27],
+input[id=r28]:checked ~pre label[for=r28]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1,
+input[id=i2]:checked ~pre .i2,
+input[id=i3]:checked ~pre .i3,
+input[id=i4]:checked ~pre .i4,
+input[id=i5]:checked ~pre .i5,
+input[id=i6]:checked ~pre .i6,
+input[id=i7]:checked ~pre .i7,
+input[id=i8]:checked ~pre .i8
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="r17" type="radio" name="g"/>
+<input id="r18" type="radio" name="g"/>
+<input id="r19" type="radio" name="g"/>
+<input id="r20" type="radio" name="g"/>
+<input id="r21" type="radio" name="g"/>
+<input id="r22" type="radio" name="g"/>
+<input id="r23" type="radio" name="g"/>
+<input id="r24" type="radio" name="g"/>
+<input id="r25" type="radio" name="g"/>
+<input id="r26" type="radio" name="g"/>
+<input id="r27" type="radio" name="g"/>
+<input id="r28" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<input id="i2" type="radio" name="i"/>
+<input id="i3" type="radio" name="i"/>
+<input id="i4" type="radio" name="i"/>
+<input id="i5" type="radio" name="i"/>
+<input id="i6" type="radio" name="i"/>
+<input id="i7" type="radio" name="i"/>
+<input id="i8" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+</div>
+<div class="code"><pre><code><span class="keyword">package</span> homedir
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"bytes"</span></label>
+	<label for="i1"><span class="lit-string i1">"errors"</span></label>
+	<label for="i2"><span class="lit-string i2">"os"</span></label>
+	<label for="i3"><span class="lit-string i3">"os/exec"</span></label>
+	<label for="i4"><span class="lit-string i4">"path/filepath"</span></label>
+	<label for="i5"><span class="lit-string i5">"runtime"</span></label>
+	<label for="i6"><span class="lit-string i6">"strconv"</span></label>
+	<label for="i7"><span class="lit-string i7">"strings"</span></label>
+	<label for="i8"><span class="lit-string i8">"sync"</span></label>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> DisableCache will disable caching of the home directory. Caching is enabled</span><span class="comment"> by default.</span></div>
+<div class="code"><pre><code><span class="keyword">var</span> <a href="../../../../pkg/github.com/mitchellh/go-homedir.html#name-DisableCache" class="ident">DisableCache</a> <a href="../../../../pkg/builtin.html#name-bool" class="ident">bool</a>
+
+<span class="keyword">var</span> <a href="../../../../pkg/github.com/mitchellh/go-homedir.html#name-homedirCache" class="ident">homedirCache</a> <a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>
+<span class="keyword">var</span> <a href="../../../../pkg/github.com/mitchellh/go-homedir.html#name-cacheLock" class="ident">cacheLock</a> <a href="../../../../pkg/sync.html" class="ident i8">sync</a>.<a href="../../../sync/rwmutex.go.html#line-28" class="ident">RWMutex</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Dir returns the home directory for the executing user.</span><span class="comment"></span><span class="comment"> This uses an OS-specific method for discovering the home directory.</span><span class="comment"> An error is returned if a home directory cannot be detected.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r0" class="ident"><a href="../../../../pkg/github.com/mitchellh/go-homedir.html#name-Dir" class="ident">Dir</a></label>() (<a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>, <a href="../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<span class="keyword">if</span> !<a href="#line-17" class="ident">DisableCache</a> {
+		<a href="#line-20" class="ident">cacheLock</a>.<a href="../../../sync/rwmutex.go.html#line-56" class="ident">RLock</a>()
+		<label for="r1" class="ident">cached</label> := <a href="#line-19" class="ident">homedirCache</a>
+		<a href="#line-20" class="ident">cacheLock</a>.<a href="../../../sync/rwmutex.go.html#line-75" class="ident">RUnlock</a>()
+		<span class="keyword">if</span> <label for="r1" class="ident">cached</label> != <span class="lit-string">""</span> {
+			<span class="keyword">return</span> <label for="r1" class="ident">cached</label>, <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+		}
+	}
+
+	<a href="#line-20" class="ident">cacheLock</a>.<a href="../../../sync/rwmutex.go.html#line-105" class="ident">Lock</a>()
+	<span class="keyword">defer</span> <a href="#line-20" class="ident">cacheLock</a>.<a href="../../../sync/rwmutex.go.html#line-131" class="ident">Unlock</a>()
+
+	<span class="keyword">var</span> <label for="r2" class="ident">result</label> <a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<span class="keyword">var</span> <label for="r3" class="ident">err</label> <a href="../../../../pkg/builtin.html#name-error" class="ident">error</a>
+	<span class="keyword">if</span> <a href="../../../../pkg/runtime.html" class="ident i5">runtime</a>.<a href="../../../runtime/extern.go.html#line-253" class="ident">GOOS</a> == <span class="lit-string">"windows"</span> {
+		<label for="r2" class="ident">result</label>, <label for="r3" class="ident">err</label> = <a href="#line-148" class="ident">dirWindows</a>()
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Unix-like system, so just assume Unix</span></div>
+<div class="code"><pre><code>		<label for="r2" class="ident">result</label>, <label for="r3" class="ident">err</label> = <a href="#line-89" class="ident">dirUnix</a>()
+	}
+
+	<span class="keyword">if</span> <label for="r3" class="ident">err</label> != <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <span class="lit-string">""</span>, <label for="r3" class="ident">err</label>
+	}
+	<a href="#line-19" class="ident">homedirCache</a> = <label for="r2" class="ident">result</label>
+	<span class="keyword">return</span> <label for="r2" class="ident">result</label>, <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Expand expands the path to include the home directory if the path</span><span class="comment"> is prefixed with `~`. If it isn't prefixed with `~`, the path is</span><span class="comment"> returned as-is.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r4" class="ident"><a href="../../../../pkg/github.com/mitchellh/go-homedir.html#name-Expand" class="ident">Expand</a></label>(<label for="r5" class="ident">path</label> <a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>) (<a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>, <a href="../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<span class="keyword">if</span> <a href="../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r5" class="ident">path</label>) == <span class="lit-number">0</span> {
+		<span class="keyword">return</span> <label for="r5" class="ident">path</label>, <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+	}
+
+	<span class="keyword">if</span> <label for="r5" class="ident">path</label>[<span class="lit-number">0</span>] != <span class="lit-number">'~'</span> {
+		<span class="keyword">return</span> <label for="r5" class="ident">path</label>, <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+	}
+
+	<span class="keyword">if</span> <a href="../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r5" class="ident">path</label>) &gt; <span class="lit-number">1</span> &amp;&amp; <label for="r5" class="ident">path</label>[<span class="lit-number">1</span>] != <span class="lit-number">'/'</span> &amp;&amp; <label for="r5" class="ident">path</label>[<span class="lit-number">1</span>] != <span class="lit-number">'\\'</span> {
+		<span class="keyword">return</span> <span class="lit-string">""</span>, <a href="../../../../pkg/errors.html" class="ident i1">errors</a>.<a href="../../../errors/errors.go.html#line-58" class="ident">New</a>(<span class="lit-string">"cannot expand user-specific home dir"</span>)
+	}
+
+	<label for="r6" class="ident">dir</label>, <label for="r7" class="ident">err</label> := <a href="#line-26" class="ident">Dir</a>()
+	<span class="keyword">if</span> <label for="r7" class="ident">err</label> != <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <span class="lit-string">""</span>, <label for="r7" class="ident">err</label>
+	}
+
+	<span class="keyword">return</span> <a href="../../../../pkg/path/filepath.html" class="ident i4">filepath</a>.<a href="../../../path/filepath/path.go.html#line-212" class="ident">Join</a>(<label for="r6" class="ident">dir</label>, <label for="r5" class="ident">path</label>[<span class="lit-number">1</span>:]), <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Reset clears the cache, forcing the next call to Dir to re-detect</span><span class="comment"> the home directory. This generally never has to be called, but can be</span><span class="comment"> useful in tests if you're modifying the home directory via the HOME</span><span class="comment"> env var or something.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r8" class="ident"><a href="../../../../pkg/github.com/mitchellh/go-homedir.html#name-Reset" class="ident">Reset</a></label>() {
+	<a href="#line-20" class="ident">cacheLock</a>.<a href="../../../sync/rwmutex.go.html#line-105" class="ident">Lock</a>()
+	<span class="keyword">defer</span> <a href="#line-20" class="ident">cacheLock</a>.<a href="../../../sync/rwmutex.go.html#line-131" class="ident">Unlock</a>()
+	<a href="#line-19" class="ident">homedirCache</a> = <span class="lit-string">""</span>
+}
+
+<span class="keyword">func</span> <label for="r9" class="ident"><a href="../../../../pkg/github.com/mitchellh/go-homedir.html#name-dirUnix" class="ident">dirUnix</a></label>() (<a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>, <a href="../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<label for="r10" class="ident">homeEnv</label> := <span class="lit-string">"HOME"</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> On plan9, env vars are lowercase.</span></div>
+<div class="code"><pre><code>		<label for="r10" class="ident">homeEnv</label> = <span class="lit-string">"home"</span>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> First prefer the HOME environmental variable</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> <label for="r11" class="ident">home</label> := <a href="../../../../pkg/os.html" class="ident i2">os</a>.<a href="../../../os/env.go.html#line-101" class="ident">Getenv</a>(<label for="r10" class="ident">homeEnv</label>); <label for="r11" class="ident">home</label> != <span class="lit-string">""</span> {
+		<span class="keyword">return</span> <label for="r11" class="ident">home</label>, <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+	}
+
+	<span class="keyword">var</span> <label for="r12" class="ident">stdout</label> <a href="../../../../pkg/bytes.html" class="ident i0">bytes</a>.<a href="../../../bytes/buffer.go.html#line-20" class="ident">Buffer</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> If that fails, try OS specific commands</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> <a href="../../../../pkg/runtime.html" class="ident i5">runtime</a>.<a href="../../../runtime/extern.go.html#line-253" class="ident">GOOS</a> == <span class="lit-string">"darwin"</span> {
+		<label for="r13" class="ident">cmd</label> := <a href="../../../../pkg/os/exec.html" class="ident i3">exec</a>.<a href="../../../os/exec/exec.go.html#line-169" class="ident">Command</a>(<span class="lit-string">"sh"</span>, <span class="lit-string">"-c"</span>, <span class="lit-string">`dscl -q . -read /Users/"$(whoami)" NFSHomeDirectory | sed 's/^[^ ]*: //'`</span>)
+		<label for="r13" class="ident">cmd</label>.<a href="../../../os/exec/exec.go.html#line-115" class="ident">Stdout</a> = &amp;<label for="r12" class="ident">stdout</label>
+		<span class="keyword">if</span> <label for="r14" class="ident">err</label> := <label for="r13" class="ident">cmd</label>.<a href="../../../os/exec/exec.go.html#line-337" class="ident">Run</a>(); <label for="r14" class="ident">err</label> == <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<label for="r15" class="ident">result</label> := <a href="../../../../pkg/strings.html" class="ident i7">strings</a>.<a href="../../../strings/strings.go.html#line-867" class="ident">TrimSpace</a>(<label for="r12" class="ident">stdout</label>.<a href="../../../bytes/buffer.go.html#line-60" class="ident">String</a>())
+			<span class="keyword">if</span> <label for="r15" class="ident">result</label> != <span class="lit-string">""</span> {
+				<span class="keyword">return</span> <label for="r15" class="ident">result</label>, <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+			}
+		}
+	} <span class="keyword">else</span> {
+		<label for="r16" class="ident">cmd</label> := <a href="../../../../pkg/os/exec.html" class="ident i3">exec</a>.<a href="../../../os/exec/exec.go.html#line-169" class="ident">Command</a>(<span class="lit-string">"getent"</span>, <span class="lit-string">"passwd"</span>, <a href="../../../../pkg/strconv.html" class="ident i6">strconv</a>.<a href="../../../strconv/itoa.go.html#line-34" class="ident">Itoa</a>(<a href="../../../../pkg/os.html" class="ident i2">os</a>.<a href="../../../os/proc.go.html#line-31" class="ident">Getuid</a>()))
+		<label for="r16" class="ident">cmd</label>.<a href="../../../os/exec/exec.go.html#line-115" class="ident">Stdout</a> = &amp;<label for="r12" class="ident">stdout</label>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> If the error is ErrNotFound, we ignore it. Otherwise, return it.</span></div>
+<div class="code"><pre><code>			<span class="keyword">if</span> <label for="r17" class="ident">err</label> != <a href="../../../../pkg/os/exec.html" class="ident i3">exec</a>.<a href="../../../os/exec/lp_unix.go.html#line-18" class="ident">ErrNotFound</a> {
+				<span class="keyword">return</span> <span class="lit-string">""</span>, <label for="r17" class="ident">err</label>
+			}
+		} <span class="keyword">else</span> {
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> username:password:uid:gid:gecos:home:shell</span></div>
+<div class="code"><pre><code>				<label for="r19" class="ident">passwdParts</label> := <a href="../../../../pkg/strings.html" class="ident i7">strings</a>.<a href="../../../strings/strings.go.html#line-273" class="ident">SplitN</a>(<label for="r18" class="ident">passwd</label>, <span class="lit-string">":"</span>, <span class="lit-number">7</span>)
+				<span class="keyword">if</span> <a href="../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r19" class="ident">passwdParts</label>) &gt; <span class="lit-number">5</span> {
+					<span class="keyword">return</span> <label for="r19" class="ident">passwdParts</label>[<span class="lit-number">5</span>], <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+				}
+			}
+		}
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> If all else fails, try the shell</span></div>
+<div class="code"><pre><code>	<label for="r12" class="ident">stdout</label>.<a href="../../../bytes/buffer.go.html#line-97" class="ident">Reset</a>()
+	<label for="r20" class="ident">cmd</label> := <a href="../../../../pkg/os/exec.html" class="ident i3">exec</a>.<a href="../../../os/exec/exec.go.html#line-169" class="ident">Command</a>(<span class="lit-string">"sh"</span>, <span class="lit-string">"-c"</span>, <span class="lit-string">"cd &amp;&amp; pwd"</span>)
+	<label for="r20" class="ident">cmd</label>.<a href="../../../os/exec/exec.go.html#line-115" class="ident">Stdout</a> = &amp;<label for="r12" class="ident">stdout</label>
+	<span class="keyword">if</span> <label for="r21" class="ident">err</label> := <label for="r20" class="ident">cmd</label>.<a href="../../../os/exec/exec.go.html#line-337" class="ident">Run</a>(); <label for="r21" class="ident">err</label> != <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <span class="lit-string">""</span>, <label for="r21" class="ident">err</label>
+	}
+
+	<label for="r22" class="ident">result</label> := <a href="../../../../pkg/strings.html" class="ident i7">strings</a>.<a href="../../../strings/strings.go.html#line-867" class="ident">TrimSpace</a>(<label for="r12" class="ident">stdout</label>.<a href="../../../bytes/buffer.go.html#line-60" class="ident">String</a>())
+	<span class="keyword">if</span> <label for="r22" class="ident">result</label> == <span class="lit-string">""</span> {
+		<span class="keyword">return</span> <span class="lit-string">""</span>, <a href="../../../../pkg/errors.html" class="ident i1">errors</a>.<a href="../../../errors/errors.go.html#line-58" class="ident">New</a>(<span class="lit-string">"blank output when reading home directory"</span>)
+	}
+
+	<span class="keyword">return</span> <label for="r22" class="ident">result</label>, <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+}
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> First prefer the HOME environmental variable</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> <label for="r24" class="ident">home</label> := <a href="../../../../pkg/os.html" class="ident i2">os</a>.<a href="../../../os/env.go.html#line-101" class="ident">Getenv</a>(<span class="lit-string">"HOME"</span>); <label for="r24" class="ident">home</label> != <span class="lit-string">""</span> {
+		<span class="keyword">return</span> <label for="r24" class="ident">home</label>, <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Prefer standard environment variable USERPROFILE</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> <label for="r25" class="ident">home</label> := <a href="../../../../pkg/os.html" class="ident i2">os</a>.<a href="../../../os/env.go.html#line-101" class="ident">Getenv</a>(<span class="lit-string">"USERPROFILE"</span>); <label for="r25" class="ident">home</label> != <span class="lit-string">""</span> {
+		<span class="keyword">return</span> <label for="r25" class="ident">home</label>, <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+	}
+
+	<label for="r26" class="ident">drive</label> := <a href="../../../../pkg/os.html" class="ident i2">os</a>.<a href="../../../os/env.go.html#line-101" class="ident">Getenv</a>(<span class="lit-string">"HOMEDRIVE"</span>)
+	<label for="r27" class="ident">path</label> := <a href="../../../../pkg/os.html" class="ident i2">os</a>.<a href="../../../os/env.go.html#line-101" class="ident">Getenv</a>(<span class="lit-string">"HOMEPATH"</span>)
+	<label for="r28" class="ident">home</label> := <label for="r26" class="ident">drive</label> + <label for="r27" class="ident">path</label>
+	<span class="keyword">if</span> <label for="r26" class="ident">drive</label> == <span class="lit-string">""</span> || <label for="r27" class="ident">path</label> == <span class="lit-string">""</span> {
+		<span class="keyword">return</span> <span class="lit-string">""</span>, <a href="../../../../pkg/errors.html" class="ident i1">errors</a>.<a href="../../../errors/errors.go.html#line-58" class="ident">New</a>(<span class="lit-string">"HOMEDRIVE, HOMEPATH, or USERPROFILE are blank"</span>)
+	}
+
+	<span class="keyword">return</span> <label for="r28" class="ident">home</label>, <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

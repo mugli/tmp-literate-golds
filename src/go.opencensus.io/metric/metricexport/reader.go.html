@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: reader.go in package go.opencensus.io/metric/metricexport</title>
+<link href="../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	reader.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../pkg/go.opencensus.io/metric/metricexport.html">go.opencensus.io/metric/metricexport</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16],
+input[id=r17]:checked ~pre label[for=r17],
+input[id=r18]:checked ~pre label[for=r18],
+input[id=r19]:checked ~pre label[for=r19],
+input[id=r20]:checked ~pre label[for=r20],
+input[id=r21]:checked ~pre label[for=r21],
+input[id=r22]:checked ~pre label[for=r22],
+input[id=r23]:checked ~pre label[for=r23],
+input[id=r24]:checked ~pre label[for=r24],
+input[id=r25]:checked ~pre label[for=r25],
+input[id=r26]:checked ~pre label[for=r26],
+input[id=r27]:checked ~pre label[for=r27],
+input[id=r28]:checked ~pre label[for=r28]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1,
+input[id=i2]:checked ~pre .i2,
+input[id=i3]:checked ~pre .i3,
+input[id=i4]:checked ~pre .i4,
+input[id=i5]:checked ~pre .i5,
+input[id=i6]:checked ~pre .i6
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="r17" type="radio" name="g"/>
+<input id="r18" type="radio" name="g"/>
+<input id="r19" type="radio" name="g"/>
+<input id="r20" type="radio" name="g"/>
+<input id="r21" type="radio" name="g"/>
+<input id="r22" type="radio" name="g"/>
+<input id="r23" type="radio" name="g"/>
+<input id="r24" type="radio" name="g"/>
+<input id="r25" type="radio" name="g"/>
+<input id="r26" type="radio" name="g"/>
+<input id="r27" type="radio" name="g"/>
+<input id="r28" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<input id="i2" type="radio" name="i"/>
+<input id="i3" type="radio" name="i"/>
+<input id="i4" type="radio" name="i"/>
+<input id="i5" type="radio" name="i"/>
+<input id="i6" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2019, OpenCensus Authors</span><span class="comment"></span><span class="comment"> Licensed under the Apache License, Version 2.0 (the "License");</span><span class="comment"> you may not use this file except in compliance with the License.</span><span class="comment"> You may obtain a copy of the License at</span><span class="comment"></span><span class="comment">     http://www.apache.org/licenses/LICENSE-2.0</span><span class="comment"></span><span class="comment"> Unless required by applicable law or agreed to in writing, software</span><span class="comment"> distributed under the License is distributed on an "AS IS" BASIS,</span><span class="comment"> WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span><span class="comment"> See the License for the specific language governing permissions and</span><span class="comment"> limitations under the License.</span><span class="comment"></span></div>
+<div class="code"><pre><code>
+<span class="keyword">package</span> metricexport
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"context"</span></label>
+	<label for="i1"><span class="lit-string i1">"fmt"</span></label>
+	<label for="i2"><span class="lit-string i2">"sync"</span></label>
+	<label for="i3"><span class="lit-string i3">"time"</span></label>
+
+	<label for="i4"><span class="lit-string i4">"go.opencensus.io/metric/metricdata"</span></label>
+	<label for="i5"><span class="lit-string i5">"go.opencensus.io/metric/metricproducer"</span></label>
+	<label for="i6"><span class="lit-string i6">"go.opencensus.io/trace"</span></label>
+)
+
+<span class="keyword">var</span> (
+	<a href="../../../../pkg/go.opencensus.io/metric/metricexport.html#name-defaultSampler" class="ident">defaultSampler</a>             = <a href="../../../../pkg/go.opencensus.io/trace.html" class="ident i6">trace</a>.<a href="../../trace/sampling.go.html#line-43" class="ident">ProbabilitySampler</a>(<span class="lit-number">0.0001</span>)
+	<a href="../../../../pkg/go.opencensus.io/metric/metricexport.html#name-errReportingIntervalTooLow" class="ident">errReportingIntervalTooLow</a> = <a href="../../../../pkg/fmt.html" class="ident i1">fmt</a>.<a href="../../../fmt/errors.go.html#line-17" class="ident">Errorf</a>(<span class="lit-string">"reporting interval less than %d"</span>, <a href="#line-40" class="ident">minimumReportingDuration</a>)
+	<a href="../../../../pkg/go.opencensus.io/metric/metricexport.html#name-errAlreadyStarted" class="ident">errAlreadyStarted</a>          = <a href="../../../../pkg/fmt.html" class="ident i1">fmt</a>.<a href="../../../fmt/errors.go.html#line-17" class="ident">Errorf</a>(<span class="lit-string">"already started"</span>)
+	<a href="../../../../pkg/go.opencensus.io/metric/metricexport.html#name-errIntervalReaderNil" class="ident">errIntervalReaderNil</a>       = <a href="../../../../pkg/fmt.html" class="ident i1">fmt</a>.<a href="../../../fmt/errors.go.html#line-17" class="ident">Errorf</a>(<span class="lit-string">"interval reader is nil"</span>)
+	<a href="../../../../pkg/go.opencensus.io/metric/metricexport.html#name-errExporterNil" class="ident">errExporterNil</a>             = <a href="../../../../pkg/fmt.html" class="ident i1">fmt</a>.<a href="../../../fmt/errors.go.html#line-17" class="ident">Errorf</a>(<span class="lit-string">"exporter is nil"</span>)
+	<a href="../../../../pkg/go.opencensus.io/metric/metricexport.html#name-errReaderNil" class="ident">errReaderNil</a>               = <a href="../../../../pkg/fmt.html" class="ident i1">fmt</a>.<a href="../../../fmt/errors.go.html#line-17" class="ident">Errorf</a>(<span class="lit-string">"reader is nil"</span>)
+)
+
+<span class="keyword">const</span> (
+	<a href="../../../../pkg/go.opencensus.io/metric/metricexport.html#name-defaultReportingDuration" class="ident">defaultReportingDuration</a> = <span class="lit-number">60</span> * <a href="../../../../pkg/time.html" class="ident i3">time</a>.<a href="../../../time/time.go.html#line-605" class="ident">Second</a>
+	<a href="../../../../pkg/go.opencensus.io/metric/metricexport.html#name-minimumReportingDuration" class="ident">minimumReportingDuration</a> = <span class="lit-number">1</span> * <a href="../../../../pkg/time.html" class="ident i3">time</a>.<a href="../../../time/time.go.html#line-605" class="ident">Second</a>
+	<a href="../../../../pkg/go.opencensus.io/metric/metricexport.html#name-defaultSpanName" class="ident">defaultSpanName</a>          = <span class="lit-string">"ExportMetrics"</span>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ReaderOptions contains options pertaining to metrics reader.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> SpanName is the name used for span created to export metrics.</span></div>
+<div class="code"><pre><code>	<a href="../../../../use/go.opencensus.io/metric/metricexport..ReaderOptions.SpanName.html" class="ident">SpanName</a> <a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Reader reads metrics from all producers registered</span><span class="comment"> with producer manager and exports those metrics using provided</span><span class="comment"> exporter.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../pkg/go.opencensus.io/metric/metricexport.html#name-Reader" class="ident">Reader</a> <span class="keyword">struct</span> {
+	<a href="../../../../use/go.opencensus.io/metric/metricexport..Reader.sampler*b7a56.html" class="ident">sampler</a> <a href="../../../../pkg/go.opencensus.io/trace.html" class="ident i6">trace</a>.<a href="../../trace/sampling.go.html#line-24" class="ident">Sampler</a>
+
+	<a href="../../../../use/go.opencensus.io/metric/metricexport..Reader.spanName*4ab01.html" class="ident">spanName</a> <a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> IntervalReader periodically reads metrics from all producers registered</span><span class="comment"> with producer manager and exports those metrics using provided</span><span class="comment"> exporter. Call Reader.Stop() to stop the reader.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ReportingInterval it the time duration between two consecutive</span><span class="comment">	 metrics reporting. defaultReportingDuration  is used if it is not set.</span><span class="comment">	 It cannot be set lower than minimumReportingDuration.</span></div>
+<div class="code"><pre><code>	<a href="../../../../use/go.opencensus.io/metric/metricexport..IntervalReader.ReportingInterval.html" class="ident">ReportingInterval</a> <a href="../../../../pkg/time.html" class="ident i3">time</a>.<a href="../../../time/time.go.html#line-583" class="ident">Duration</a>
+
+	<a href="../../../../use/go.opencensus.io/metric/metricexport..IntervalReader.exporter*29b22.html" class="ident">exporter</a>   <a href="export.go.html#line-24" class="ident">Exporter</a>
+	<a href="../../../../use/go.opencensus.io/metric/metricexport..IntervalReader.timer*cd94e.html" class="ident">timer</a>      *<a href="../../../../pkg/time.html" class="ident i3">time</a>.<a href="../../../time/tick.go.html#line-11" class="ident">Ticker</a>
+	<a href="../../../../use/go.opencensus.io/metric/metricexport..IntervalReader.quit*8577d.html" class="ident">quit</a>, <a href="../../../../use/go.opencensus.io/metric/metricexport..IntervalReader.done*a4c3e.html" class="ident">done</a> <span class="keyword">chan</span> <a href="../../../../pkg/builtin.html#name-bool" class="ident">bool</a>
+	<a href="../../../../use/go.opencensus.io/metric/metricexport..IntervalReader.mu*19503.html" class="ident">mu</a>         <a href="../../../../pkg/sync.html" class="ident i2">sync</a>.<a href="../../../sync/rwmutex.go.html#line-28" class="ident">RWMutex</a>
+	<a href="../../../../use/go.opencensus.io/metric/metricexport..IntervalReader.reader*3d094.html" class="ident">reader</a>     *<a href="#line-53" class="ident">Reader</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ReaderOption apply changes to ReaderOptions.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../pkg/go.opencensus.io/metric/metricexport.html#name-ReaderOption" class="ident">ReaderOption</a> <span class="keyword">func</span>(*<a href="#line-45" class="ident">ReaderOptions</a>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> WithSpanName makes new reader to use given span name when exporting metrics.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r0" class="ident"><a href="../../../../pkg/go.opencensus.io/metric/metricexport.html#name-WithSpanName" class="ident">WithSpanName</a></label>(<label for="r1" class="ident">spanName</label> <a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>) <a href="#line-76" class="ident">ReaderOption</a> {
+	<span class="keyword">return</span> <span class="keyword">func</span>(<label for="r2" class="ident">o</label> *<a href="#line-45" class="ident">ReaderOptions</a>) {
+		<label for="r2" class="ident">o</label>.<a href="#line-47" class="ident">SpanName</a> = <label for="r1" class="ident">spanName</label>
+	}
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> NewReader returns a reader configured with specified options.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r3" class="ident"><a href="../../../../pkg/go.opencensus.io/metric/metricexport.html#name-NewReader" class="ident">NewReader</a></label>(<label for="r4" class="ident">o</label> ...<a href="#line-76" class="ident">ReaderOption</a>) *<a href="#line-53" class="ident">Reader</a> {
+	<span class="keyword">var</span> <label for="r5" class="ident">opts</label> <a href="#line-45" class="ident">ReaderOptions</a>
+	<span class="keyword">for</span> <label for="r6" class="ident">_</label>, <label for="r7" class="ident">op</label> := <span class="keyword">range</span> <label for="r4" class="ident">o</label> {
+		<label for="r7" class="ident">op</label>(&amp;<label for="r5" class="ident">opts</label>)
+	}
+	<label for="r8" class="ident">reader</label> := &amp;<a href="#line-53" class="ident">Reader</a>{<a href="#line-30" class="ident">defaultSampler</a>, <a href="#line-41" class="ident">defaultSpanName</a>}
+	<span class="keyword">if</span> <label for="r5" class="ident">opts</label>.<a href="#line-47" class="ident">SpanName</a> != <span class="lit-string">""</span> {
+		<label for="r8" class="ident">reader</label>.<a href="#line-56" class="ident">spanName</a> = <label for="r5" class="ident">opts</label>.<a href="#line-47" class="ident">SpanName</a>
+	}
+	<span class="keyword">return</span> <label for="r8" class="ident">reader</label>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> NewIntervalReader creates a reader. Once started it periodically</span><span class="comment"> reads metrics from all producers and exports them using provided exporter.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r9" class="ident"><a href="../../../../pkg/go.opencensus.io/metric/metricexport.html#name-NewIntervalReader" class="ident">NewIntervalReader</a></label>(<label for="r10" class="ident">reader</label> *<a href="#line-53" class="ident">Reader</a>, <label for="r11" class="ident">exporter</label> <a href="export.go.html#line-24" class="ident">Exporter</a>) (*<a href="#line-62" class="ident">IntervalReader</a>, <a href="../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<span class="keyword">if</span> <label for="r11" class="ident">exporter</label> == <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="#line-34" class="ident">errExporterNil</a>
+	}
+	<span class="keyword">if</span> <label for="r10" class="ident">reader</label> == <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="#line-35" class="ident">errReaderNil</a>
+	}
+
+	<label for="r12" class="ident">r</label> := &amp;<a href="#line-62" class="ident">IntervalReader</a>{
+		<a href="#line-68" class="ident">exporter</a>: <label for="r11" class="ident">exporter</label>,
+		<a href="#line-72" class="ident">reader</a>:   <label for="r10" class="ident">reader</label>,
+	}
+	<span class="keyword">return</span> <label for="r12" class="ident">r</label>, <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Start starts the IntervalReader which periodically reads metrics from all</span><span class="comment"> producers registered with global producer manager. If the reporting interval</span><span class="comment"> is not set prior to calling this function then default reporting interval</span><span class="comment"> is used.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r13" class="ident">ir</label> *<a href="#line-62" class="ident">IntervalReader</a>) <label for="r14" class="ident"><a href="../../../../use/go.opencensus.io/metric/metricexport..IntervalReader.Start.html" class="ident">Start</a></label>() <a href="../../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<span class="keyword">if</span> <label for="r13" class="ident">ir</label> == <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="#line-33" class="ident">errIntervalReaderNil</a>
+	}
+	<label for="r13" class="ident">ir</label>.<a href="#line-71" class="ident">mu</a>.<a href="../../../sync/rwmutex.go.html#line-105" class="ident">Lock</a>()
+	<span class="keyword">defer</span> <label for="r13" class="ident">ir</label>.<a href="#line-71" class="ident">mu</a>.<a href="../../../sync/rwmutex.go.html#line-131" class="ident">Unlock</a>()
+	<span class="keyword">var</span> <label for="r15" class="ident">reportingInterval</label> = <a href="#line-39" class="ident">defaultReportingDuration</a>
+	<span class="keyword">if</span> <label for="r13" class="ident">ir</label>.<a href="#line-66" class="ident">ReportingInterval</a> != <span class="lit-number">0</span> {
+		<span class="keyword">if</span> <label for="r13" class="ident">ir</label>.<a href="#line-66" class="ident">ReportingInterval</a> &lt; <a href="#line-40" class="ident">minimumReportingDuration</a> {
+			<span class="keyword">return</span> <a href="#line-31" class="ident">errReportingIntervalTooLow</a>
+		}
+		<label for="r15" class="ident">reportingInterval</label> = <label for="r13" class="ident">ir</label>.<a href="#line-66" class="ident">ReportingInterval</a>
+	}
+
+	<span class="keyword">if</span> <label for="r13" class="ident">ir</label>.<a href="#line-70" class="ident">done</a> != <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="#line-32" class="ident">errAlreadyStarted</a>
+	}
+	<label for="r13" class="ident">ir</label>.<a href="#line-69" class="ident">timer</a> = <a href="../../../../pkg/time.html" class="ident i3">time</a>.<a href="../../../time/tick.go.html#line-22" class="ident">NewTicker</a>(<label for="r15" class="ident">reportingInterval</label>)
+	<label for="r13" class="ident">ir</label>.<a href="#line-70" class="ident">quit</a> = <a href="../../../runtime/chan.go.html#line-71">make</a>(<span class="keyword">chan</span> <a href="../../../../pkg/builtin.html#name-bool" class="ident">bool</a>)
+	<label for="r13" class="ident">ir</label>.<a href="#line-70" class="ident">done</a> = <a href="../../../runtime/chan.go.html#line-71">make</a>(<span class="keyword">chan</span> <a href="../../../../pkg/builtin.html#name-bool" class="ident">bool</a>)
+
+	<span class="keyword">go</span> <label for="r13" class="ident">ir</label>.<a href="#line-144" class="ident">startInternal</a>()
+	<span class="keyword">return</span> <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+}
+
+<span class="keyword">func</span> (<label for="r16" class="ident">ir</label> *<a href="#line-62" class="ident">IntervalReader</a>) <label for="r17" class="ident"><a href="../../../../use/go.opencensus.io/metric/metricexport..IntervalReader.startInternal*31be3.html" class="ident">startInternal</a></label>() {
+	<span class="keyword">for</span> {
+		<a href="../../../runtime/select.go.html#line-121"><span class="keyword">select</span></a> {
+		<span class="keyword">case</span> <a href="../../../runtime/chan.go.html#line-438">&lt;-</a><label for="r16" class="ident">ir</label>.<a href="#line-69" class="ident">timer</a>.<a href="../../../time/tick.go.html#line-12" class="ident">C</a>:
+			<label for="r16" class="ident">ir</label>.<a href="#line-72" class="ident">reader</a>.<a href="#line-177" class="ident">ReadAndExport</a>(<label for="r16" class="ident">ir</label>.<a href="#line-68" class="ident">exporter</a>)
+		<span class="keyword">case</span> <a href="../../../runtime/chan.go.html#line-438">&lt;-</a><label for="r16" class="ident">ir</label>.<a href="#line-70" class="ident">quit</a>:
+			<label for="r16" class="ident">ir</label>.<a href="#line-69" class="ident">timer</a>.<a href="../../../time/tick.go.html#line-46" class="ident">Stop</a>()
+			<label for="r16" class="ident">ir</label>.<a href="#line-70" class="ident">done</a> &lt;- <a href="../../../../pkg/builtin.html#name-true" class="ident">true</a>
+			<span class="keyword">return</span>
+		}
+	}
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Stop stops the reader from reading and exporting metrics.</span><span class="comment"> Additional call to Stop are no-ops.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r18" class="ident">ir</label> *<a href="#line-62" class="ident">IntervalReader</a>) <label for="r19" class="ident"><a href="../../../../use/go.opencensus.io/metric/metricexport..IntervalReader.Stop.html" class="ident">Stop</a></label>() {
+	<span class="keyword">if</span> <label for="r18" class="ident">ir</label> == <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span>
+	}
+	<label for="r18" class="ident">ir</label>.<a href="#line-71" class="ident">mu</a>.<a href="../../../sync/rwmutex.go.html#line-105" class="ident">Lock</a>()
+	<span class="keyword">defer</span> <label for="r18" class="ident">ir</label>.<a href="#line-71" class="ident">mu</a>.<a href="../../../sync/rwmutex.go.html#line-131" class="ident">Unlock</a>()
+	<span class="keyword">if</span> <label for="r18" class="ident">ir</label>.<a href="#line-70" class="ident">quit</a> == <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span>
+	}
+	<label for="r18" class="ident">ir</label>.<a href="#line-70" class="ident">quit</a> &lt;- <a href="../../../../pkg/builtin.html#name-true" class="ident">true</a>
+	&lt;-<label for="r18" class="ident">ir</label>.<a href="#line-70" class="ident">done</a>
+	<a href="../../../../pkg/builtin.html#name-close" class="ident">close</a>(<label for="r18" class="ident">ir</label>.<a href="#line-70" class="ident">quit</a>)
+	<a href="../../../../pkg/builtin.html#name-close" class="ident">close</a>(<label for="r18" class="ident">ir</label>.<a href="#line-70" class="ident">done</a>)
+	<label for="r18" class="ident">ir</label>.<a href="#line-70" class="ident">quit</a> = <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ReadAndExport reads metrics from all producer registered with</span><span class="comment"> producer manager and then exports them using provided exporter.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r20" class="ident">r</label> *<a href="#line-53" class="ident">Reader</a>) <label for="r21" class="ident"><a href="../../../../use/go.opencensus.io/metric/metricexport..Reader.ReadAndExport.html" class="ident">ReadAndExport</a></label>(<label for="r22" class="ident">exporter</label> <a href="export.go.html#line-24" class="ident">Exporter</a>) {
+	<label for="r23" class="ident">ctx</label>, <label for="r24" class="ident">span</label> := <a href="../../../../pkg/go.opencensus.io/trace.html" class="ident i6">trace</a>.<a href="../../trace/trace.go.html#line-169" class="ident">StartSpan</a>(<a href="../../../../pkg/context.html" class="ident i0">context</a>.<a href="../../../context/context.go.html#line-208" class="ident">Background</a>(), <label for="r20" class="ident">r</label>.<a href="#line-56" class="ident">spanName</a>, <a href="../../../../pkg/go.opencensus.io/trace.html" class="ident i6">trace</a>.<a href="../../trace/trace.go.html#line-158" class="ident">WithSampler</a>(<label for="r20" class="ident">r</label>.<a href="#line-54" class="ident">sampler</a>))
+	<span class="keyword">defer</span> <label for="r24" class="ident">span</label>.<a href="../../trace/trace.go.html#line-265" class="ident">End</a>()
+	<label for="r25" class="ident">producers</label> := <a href="../../../../pkg/go.opencensus.io/metric/metricproducer.html" class="ident i5">metricproducer</a>.<a href="../metricproducer/manager.go.html#line-35" class="ident">GlobalManager</a>().<a href="../metricproducer/manager.go.html#line-68" class="ident">GetAll</a>()
+	<label for="r26" class="ident">data</label> := []*<a href="../../../../pkg/go.opencensus.io/metric/metricdata.html" class="ident i4">metricdata</a>.<a href="../metricdata/metric.go.html#line-34" class="ident">Metric</a>{}
+	<span class="keyword">for</span> <label for="r27" class="ident">_</label>, <label for="r28" class="ident">producer</label> := <span class="keyword">range</span> <label for="r25" class="ident">producers</label> {
+		<label for="r26" class="ident">data</label> = <a href="../../../../pkg/builtin.html#name-append" class="ident">append</a>(<label for="r26" class="ident">data</label>, <label for="r28" class="ident">producer</label>.<a href="../metricproducer/producer.go.html#line-27" class="ident">Read</a>()...)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> TODO: [rghetia] add metrics for errors.</span></div>
+<div class="code"><pre><code>	<label for="r22" class="ident">exporter</label>.<a href="export.go.html#line-25" class="ident">ExportMetrics</a>(<label for="r23" class="ident">ctx</label>, <label for="r26" class="ident">data</label>)
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

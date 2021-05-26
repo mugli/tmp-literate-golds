@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: poolqueue.go in package sync</title>
+<link href="../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	poolqueue.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../pkg/sync.html">sync</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16],
+input[id=r17]:checked ~pre label[for=r17],
+input[id=r18]:checked ~pre label[for=r18],
+input[id=r19]:checked ~pre label[for=r19],
+input[id=r20]:checked ~pre label[for=r20],
+input[id=r21]:checked ~pre label[for=r21],
+input[id=r22]:checked ~pre label[for=r22],
+input[id=r23]:checked ~pre label[for=r23],
+input[id=r24]:checked ~pre label[for=r24],
+input[id=r25]:checked ~pre label[for=r25],
+input[id=r26]:checked ~pre label[for=r26],
+input[id=r27]:checked ~pre label[for=r27],
+input[id=r28]:checked ~pre label[for=r28],
+input[id=r29]:checked ~pre label[for=r29],
+input[id=r30]:checked ~pre label[for=r30],
+input[id=r31]:checked ~pre label[for=r31],
+input[id=r32]:checked ~pre label[for=r32],
+input[id=r33]:checked ~pre label[for=r33],
+input[id=r34]:checked ~pre label[for=r34],
+input[id=r35]:checked ~pre label[for=r35],
+input[id=r36]:checked ~pre label[for=r36],
+input[id=r37]:checked ~pre label[for=r37],
+input[id=r38]:checked ~pre label[for=r38],
+input[id=r39]:checked ~pre label[for=r39],
+input[id=r40]:checked ~pre label[for=r40],
+input[id=r41]:checked ~pre label[for=r41],
+input[id=r42]:checked ~pre label[for=r42],
+input[id=r43]:checked ~pre label[for=r43],
+input[id=r44]:checked ~pre label[for=r44],
+input[id=r45]:checked ~pre label[for=r45],
+input[id=r46]:checked ~pre label[for=r46],
+input[id=r47]:checked ~pre label[for=r47],
+input[id=r48]:checked ~pre label[for=r48],
+input[id=r49]:checked ~pre label[for=r49],
+input[id=r50]:checked ~pre label[for=r50],
+input[id=r51]:checked ~pre label[for=r51],
+input[id=r52]:checked ~pre label[for=r52],
+input[id=r53]:checked ~pre label[for=r53],
+input[id=r54]:checked ~pre label[for=r54],
+input[id=r55]:checked ~pre label[for=r55],
+input[id=r56]:checked ~pre label[for=r56],
+input[id=r57]:checked ~pre label[for=r57]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="r17" type="radio" name="g"/>
+<input id="r18" type="radio" name="g"/>
+<input id="r19" type="radio" name="g"/>
+<input id="r20" type="radio" name="g"/>
+<input id="r21" type="radio" name="g"/>
+<input id="r22" type="radio" name="g"/>
+<input id="r23" type="radio" name="g"/>
+<input id="r24" type="radio" name="g"/>
+<input id="r25" type="radio" name="g"/>
+<input id="r26" type="radio" name="g"/>
+<input id="r27" type="radio" name="g"/>
+<input id="r28" type="radio" name="g"/>
+<input id="r29" type="radio" name="g"/>
+<input id="r30" type="radio" name="g"/>
+<input id="r31" type="radio" name="g"/>
+<input id="r32" type="radio" name="g"/>
+<input id="r33" type="radio" name="g"/>
+<input id="r34" type="radio" name="g"/>
+<input id="r35" type="radio" name="g"/>
+<input id="r36" type="radio" name="g"/>
+<input id="r37" type="radio" name="g"/>
+<input id="r38" type="radio" name="g"/>
+<input id="r39" type="radio" name="g"/>
+<input id="r40" type="radio" name="g"/>
+<input id="r41" type="radio" name="g"/>
+<input id="r42" type="radio" name="g"/>
+<input id="r43" type="radio" name="g"/>
+<input id="r44" type="radio" name="g"/>
+<input id="r45" type="radio" name="g"/>
+<input id="r46" type="radio" name="g"/>
+<input id="r47" type="radio" name="g"/>
+<input id="r48" type="radio" name="g"/>
+<input id="r49" type="radio" name="g"/>
+<input id="r50" type="radio" name="g"/>
+<input id="r51" type="radio" name="g"/>
+<input id="r52" type="radio" name="g"/>
+<input id="r53" type="radio" name="g"/>
+<input id="r54" type="radio" name="g"/>
+<input id="r55" type="radio" name="g"/>
+<input id="r56" type="radio" name="g"/>
+<input id="r57" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2019 The Go Authors. All rights reserved.</span><span class="comment"> Use of this source code is governed by a BSD-style</span><span class="comment"> license that can be found in the LICENSE file.</span></div>
+<div class="code"><pre><code>
+<span class="keyword">package</span> sync
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"sync/atomic"</span></label>
+	<label for="i1"><span class="lit-string i1">"unsafe"</span></label>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> poolDequeue is a lock-free fixed-size single-producer,</span><span class="comment"> multi-consumer queue. The single producer can both push and pop</span><span class="comment"> from the head, and consumers can pop from the tail.</span><span class="comment"></span><span class="comment"> It has the added feature that it nils out unused slots to avoid</span><span class="comment"> unnecessary retention of objects. This is important for sync.Pool,</span><span class="comment"> but not typically a property considered in the literature.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> headTail packs together a 32-bit head index and a 32-bit</span><span class="comment">	 tail index. Both are indexes into vals modulo len(vals)-1.</span><span class="comment">	</span><span class="comment">	 tail = index of oldest data in queue</span><span class="comment">	 head = index of next slot to fill</span><span class="comment">	</span><span class="comment">	 Slots in the range [tail, head) are owned by consumers.</span><span class="comment">	 A consumer continues to own a slot outside this range until</span><span class="comment">	 it nils the slot, at which point ownership passes to the</span><span class="comment">	 producer.</span><span class="comment">	</span><span class="comment">	 The head index is stored in the most-significant bits so</span><span class="comment">	 that we can atomically add to it and the overflow is</span><span class="comment">	 harmless.</span></div>
+<div class="code"><pre><code>	<a href="../../use/sync..poolDequeue*40bdd.headTail*c286a.html" class="ident">headTail</a> <a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> vals is a ring buffer of interface{} values stored in this</span><span class="comment">	 dequeue. The size of this must be a power of 2.</span><span class="comment">	</span><span class="comment">	 vals[i].typ is nil if the slot is empty and non-nil</span><span class="comment">	 otherwise. A slot is still in use until *both* the tail</span><span class="comment">	 index has moved beyond it and typ has been set to nil. This</span><span class="comment">	 is set to nil atomically by the consumer and read</span><span class="comment">	 atomically by the producer.</span></div>
+<div class="code"><pre><code>	<a href="../../use/sync..poolDequeue*40bdd.vals*16210.html" class="ident">vals</a> []<a href="#line-47" class="ident">eface</a>
+}
+
+<span class="keyword">type</span> <a href="../../pkg/sync.html#name-eface" class="ident">eface</a> <span class="keyword">struct</span> {
+	<a href="../../use/sync..eface*8bf01.typ*5a553.html" class="ident">typ</a>, <a href="../../use/sync..eface*8bf01.val*97dfc.html" class="ident">val</a> <a href="../../pkg/unsafe.html" class="ident i1">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>
+}
+
+<span class="keyword">const</span> <a href="../../pkg/sync.html#name-dequeueBits" class="ident">dequeueBits</a> = <span class="lit-number">32</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> dequeueLimit is the maximum size of a poolDequeue.</span><span class="comment"></span><span class="comment"> This must be at most (1&lt;&lt;dequeueBits)/2 because detecting fullness</span><span class="comment"> depends on wrapping around the ring buffer without wrapping around</span><span class="comment"> the index. We divide by 4 so this fits in an int on 32-bit.</span></div>
+<div class="code"><pre><code><span class="keyword">const</span> <a href="../../pkg/sync.html#name-dequeueLimit" class="ident">dequeueLimit</a> = (<span class="lit-number">1</span> &lt;&lt; <a href="#line-51" class="ident">dequeueBits</a>) / <span class="lit-number">4</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> dequeueNil is used in poolDequeue to represent interface{}(nil).</span><span class="comment"> Since we use nil to represent empty slots, we need a sentinel value</span><span class="comment"> to represent nil.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../pkg/sync.html#name-dequeueNil" class="ident">dequeueNil</a> *<span class="keyword">struct</span>{}
+
+<span class="keyword">func</span> (<label for="r0" class="ident">d</label> *<a href="#line-19" class="ident">poolDequeue</a>) <label for="r1" class="ident"><a href="../../use/sync..poolDequeue*40bdd.unpack*79a43.html" class="ident">unpack</a></label>(<label for="r2" class="ident">ptrs</label> <a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a>) (<label for="r3" class="ident">head</label>, <label for="r4" class="ident">tail</label> <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>) {
+	<span class="keyword">const</span> <label for="r5" class="ident">mask</label> = <span class="lit-number">1</span>&lt;&lt;<a href="#line-51" class="ident">dequeueBits</a> - <span class="lit-number">1</span>
+	<label for="r3" class="ident">head</label> = <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>((<label for="r2" class="ident">ptrs</label> &gt;&gt; <a href="#line-51" class="ident">dequeueBits</a>) &amp; <label for="r5" class="ident">mask</label>)
+	<label for="r4" class="ident">tail</label> = <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>(<label for="r2" class="ident">ptrs</label> &amp; <label for="r5" class="ident">mask</label>)
+	<span class="keyword">return</span>
+}
+
+<span class="keyword">func</span> (<label for="r6" class="ident">d</label> *<a href="#line-19" class="ident">poolDequeue</a>) <label for="r7" class="ident"><a href="../../use/sync..poolDequeue*40bdd.pack*4862f.html" class="ident">pack</a></label>(<label for="r8" class="ident">head</label>, <label for="r9" class="ident">tail</label> <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>) <a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a> {
+	<span class="keyword">const</span> <label for="r10" class="ident">mask</label> = <span class="lit-number">1</span>&lt;&lt;<a href="#line-51" class="ident">dequeueBits</a> - <span class="lit-number">1</span>
+	<span class="keyword">return</span> (<a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a>(<label for="r8" class="ident">head</label>) &lt;&lt; <a href="#line-51" class="ident">dequeueBits</a>) |
+		<a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a>(<label for="r9" class="ident">tail</label>&amp;<label for="r10" class="ident">mask</label>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> pushHead adds val at the head of the queue. It returns false if the</span><span class="comment"> queue is full. It must only be called by a single producer.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r11" class="ident">d</label> *<a href="#line-19" class="ident">poolDequeue</a>) <label for="r12" class="ident"><a href="../../use/sync..poolDequeue*40bdd.pushHead*c5685.html" class="ident">pushHead</a></label>(<label for="r13" class="ident">val</label> <span class="keyword">interface</span>{}) <a href="../../pkg/builtin.html#name-bool" class="ident">bool</a> {
+	<label for="r14" class="ident">ptrs</label> := <a href="../../pkg/sync/atomic.html" class="ident i0">atomic</a>.<a href="atomic/doc.go.html#line-120" class="ident">LoadUint64</a>(&amp;<label for="r11" class="ident">d</label>.<a href="#line-34" class="ident">headTail</a>)
+	<label for="r15" class="ident">head</label>, <label for="r16" class="ident">tail</label> := <label for="r11" class="ident">d</label>.<a href="#line-65" class="ident">unpack</a>(<label for="r14" class="ident">ptrs</label>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Queue is full.</span></div>
+<div class="code"><pre><code>		<span class="keyword">return</span> <a href="../../pkg/builtin.html#name-false" class="ident">false</a>
+	}
+	<label for="r17" class="ident">slot</label> := &amp;<label for="r11" class="ident">d</label>.<a href="#line-44" class="ident">vals</a>[<label for="r15" class="ident">head</label>&amp;<a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>(<a href="../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r11" class="ident">d</label>.<a href="#line-44" class="ident">vals</a>)-<span class="lit-number">1</span>)]
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Check if the head slot has been released by popTail.</span></div>
+<div class="code"><pre><code>	<label for="r18" class="ident">typ</label> := <a href="../../pkg/sync/atomic.html" class="ident i0">atomic</a>.<a href="atomic/doc.go.html#line-126" class="ident">LoadPointer</a>(&amp;<label for="r17" class="ident">slot</label>.<a href="#line-48" class="ident">typ</a>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Another goroutine is still cleaning up the tail, so</span><span class="comment">		 the queue is actually still full.</span></div>
+<div class="code"><pre><code>		<span class="keyword">return</span> <a href="../../pkg/builtin.html#name-false" class="ident">false</a>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> The head slot is free, so we own it.</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> <label for="r13" class="ident">val</label> == <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<label for="r13" class="ident">val</label> = <a href="#line-63" class="ident">dequeueNil</a>(<a href="../../pkg/builtin.html#name-nil" class="ident">nil</a>)
+	}
+	*(*<span class="keyword">interface</span>{})(<a href="../../pkg/unsafe.html" class="ident i1">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(<label for="r17" class="ident">slot</label>)) = <label for="r13" class="ident">val</label>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Increment head. This passes ownership of slot to popTail</span><span class="comment">	 and acts as a store barrier for writing the slot.</span></div>
+<div class="code"><pre><code>	<a href="../../pkg/sync/atomic.html" class="ident i0">atomic</a>.<a href="atomic/doc.go.html#line-105" class="ident">AddUint64</a>(&amp;<label for="r11" class="ident">d</label>.<a href="#line-34" class="ident">headTail</a>, <span class="lit-number">1</span>&lt;&lt;<a href="#line-51" class="ident">dequeueBits</a>)
+	<span class="keyword">return</span> <a href="../../pkg/builtin.html#name-true" class="ident">true</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> popHead removes and returns the element at the head of the queue.</span><span class="comment"> It returns false if the queue is empty. It must only be called by a</span><span class="comment"> single producer.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r19" class="ident">d</label> *<a href="#line-19" class="ident">poolDequeue</a>) <label for="r20" class="ident"><a href="../../use/sync..poolDequeue*40bdd.popHead*ec3d3.html" class="ident">popHead</a></label>() (<span class="keyword">interface</span>{}, <a href="../../pkg/builtin.html#name-bool" class="ident">bool</a>) {
+	<span class="keyword">var</span> <label for="r21" class="ident">slot</label> *<a href="#line-47" class="ident">eface</a>
+	<span class="keyword">for</span> {
+		<label for="r22" class="ident">ptrs</label> := <a href="../../pkg/sync/atomic.html" class="ident i0">atomic</a>.<a href="atomic/doc.go.html#line-120" class="ident">LoadUint64</a>(&amp;<label for="r19" class="ident">d</label>.<a href="#line-34" class="ident">headTail</a>)
+		<label for="r23" class="ident">head</label>, <label for="r24" class="ident">tail</label> := <label for="r19" class="ident">d</label>.<a href="#line-65" class="ident">unpack</a>(<label for="r22" class="ident">ptrs</label>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Queue is empty.</span></div>
+<div class="code"><pre><code>			<span class="keyword">return</span> <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="../../pkg/builtin.html#name-false" class="ident">false</a>
+		}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Confirm tail and decrement head. We do this before</span><span class="comment">		 reading the value to take back ownership of this</span><span class="comment">		 slot.</span></div>
+<div class="code"><pre><code>		<label for="r23" class="ident">head</label>--
+		<label for="r25" class="ident">ptrs2</label> := <label for="r19" class="ident">d</label>.<a href="#line-72" class="ident">pack</a>(<label for="r23" class="ident">head</label>, <label for="r24" class="ident">tail</label>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> We successfully took back slot.</span></div>
+<div class="code"><pre><code>			<label for="r21" class="ident">slot</label> = &amp;<label for="r19" class="ident">d</label>.<a href="#line-44" class="ident">vals</a>[<label for="r23" class="ident">head</label>&amp;<a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>(<a href="../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r19" class="ident">d</label>.<a href="#line-44" class="ident">vals</a>)-<span class="lit-number">1</span>)]
+			<span class="keyword">break</span>
+		}
+	}
+
+	<label for="r26" class="ident">val</label> := *(*<span class="keyword">interface</span>{})(<a href="../../pkg/unsafe.html" class="ident i1">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(<label for="r21" class="ident">slot</label>))
+	<span class="keyword">if</span> <label for="r26" class="ident">val</label> == <a href="#line-63" class="ident">dequeueNil</a>(<a href="../../pkg/builtin.html#name-nil" class="ident">nil</a>) {
+		<label for="r26" class="ident">val</label> = <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Zero the slot. Unlike popTail, this isn't racing with</span><span class="comment">	 pushHead, so we don't need to be careful here.</span></div>
+<div class="code"><pre><code>	*<label for="r21" class="ident">slot</label> = <a href="#line-47" class="ident">eface</a>{}
+	<span class="keyword">return</span> <label for="r26" class="ident">val</label>, <a href="../../pkg/builtin.html#name-true" class="ident">true</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> popTail removes and returns the element at the tail of the queue.</span><span class="comment"> It returns false if the queue is empty. It may be called by any</span><span class="comment"> number of consumers.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r27" class="ident">d</label> *<a href="#line-19" class="ident">poolDequeue</a>) <label for="r28" class="ident"><a href="../../use/sync..poolDequeue*40bdd.popTail*770d9.html" class="ident">popTail</a></label>() (<span class="keyword">interface</span>{}, <a href="../../pkg/builtin.html#name-bool" class="ident">bool</a>) {
+	<span class="keyword">var</span> <label for="r29" class="ident">slot</label> *<a href="#line-47" class="ident">eface</a>
+	<span class="keyword">for</span> {
+		<label for="r30" class="ident">ptrs</label> := <a href="../../pkg/sync/atomic.html" class="ident i0">atomic</a>.<a href="atomic/doc.go.html#line-120" class="ident">LoadUint64</a>(&amp;<label for="r27" class="ident">d</label>.<a href="#line-34" class="ident">headTail</a>)
+		<label for="r31" class="ident">head</label>, <label for="r32" class="ident">tail</label> := <label for="r27" class="ident">d</label>.<a href="#line-65" class="ident">unpack</a>(<label for="r30" class="ident">ptrs</label>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Queue is empty.</span></div>
+<div class="code"><pre><code>			<span class="keyword">return</span> <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="../../pkg/builtin.html#name-false" class="ident">false</a>
+		}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Confirm head and tail (for our speculative check</span><span class="comment">		 above) and increment tail. If this succeeds, then</span><span class="comment">		 we own the slot at tail.</span></div>
+<div class="code"><pre><code>		<label for="r33" class="ident">ptrs2</label> := <label for="r27" class="ident">d</label>.<a href="#line-72" class="ident">pack</a>(<label for="r31" class="ident">head</label>, <label for="r32" class="ident">tail</label>+<span class="lit-number">1</span>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Success.</span></div>
+<div class="code"><pre><code>			<label for="r29" class="ident">slot</label> = &amp;<label for="r27" class="ident">d</label>.<a href="#line-44" class="ident">vals</a>[<label for="r32" class="ident">tail</label>&amp;<a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>(<a href="../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r27" class="ident">d</label>.<a href="#line-44" class="ident">vals</a>)-<span class="lit-number">1</span>)]
+			<span class="keyword">break</span>
+		}
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> We now own slot.</span></div>
+<div class="code"><pre><code>	<label for="r34" class="ident">val</label> := *(*<span class="keyword">interface</span>{})(<a href="../../pkg/unsafe.html" class="ident i1">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(<label for="r29" class="ident">slot</label>))
+	<span class="keyword">if</span> <label for="r34" class="ident">val</label> == <a href="#line-63" class="ident">dequeueNil</a>(<a href="../../pkg/builtin.html#name-nil" class="ident">nil</a>) {
+		<label for="r34" class="ident">val</label> = <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Tell pushHead that we're done with this slot. Zeroing the</span><span class="comment">	 slot is also important so we don't leave behind references</span><span class="comment">	 that could keep this object live longer than necessary.</span><span class="comment">	</span><span class="comment">	 We write to val first and then publish that we're done with</span><span class="comment">	 this slot by atomically writing to typ.</span></div>
+<div class="code"><pre><code>	<label for="r29" class="ident">slot</label>.<a href="#line-48" class="ident">val</a> = <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> At this point pushHead owns the slot.</span></div>
+<div class="code"><pre><code>
+	<span class="keyword">return</span> <label for="r34" class="ident">val</label>, <a href="../../pkg/builtin.html#name-true" class="ident">true</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> poolChain is a dynamically-sized version of poolDequeue.</span><span class="comment"></span><span class="comment"> This is implemented as a doubly-linked list queue of poolDequeues</span><span class="comment"> where each dequeue is double the size of the previous one. Once a</span><span class="comment"> dequeue fills up, this allocates a new one and only ever pushes to</span><span class="comment"> the latest dequeue. Pops happen from the other end of the list and</span><span class="comment"> once a dequeue is exhausted, it gets removed from the list.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> head is the poolDequeue to push to. This is only accessed</span><span class="comment">	 by the producer, so doesn't need to be synchronized.</span></div>
+<div class="code"><pre><code>	<a href="../../use/sync..poolChain*bfff3.head*9f2e6.html" class="ident">head</a> *<a href="#line-204" class="ident">poolChainElt</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> tail is the poolDequeue to popTail from. This is accessed</span><span class="comment">	 by consumers, so reads and writes must be atomic.</span></div>
+<div class="code"><pre><code>	<a href="../../use/sync..poolChain*bfff3.tail*0c62f.html" class="ident">tail</a> *<a href="#line-204" class="ident">poolChainElt</a>
+}
+
+<span class="keyword">type</span> <a href="../../pkg/sync.html#name-poolChainElt" class="ident">poolChainElt</a> <span class="keyword">struct</span> {
+	<a href="#line-19" class="ident">poolDequeue</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> next and prev link to the adjacent poolChainElts in this</span><span class="comment">	 poolChain.</span><span class="comment">	</span><span class="comment">	 next is written atomically by the producer and read</span><span class="comment">	 atomically by the consumer. It only transitions from nil to</span><span class="comment">	 non-nil.</span><span class="comment">	</span><span class="comment">	 prev is written atomically by the consumer and read</span><span class="comment">	 atomically by the producer. It only transitions from</span><span class="comment">	 non-nil to nil.</span></div>
+<div class="code"><pre><code>	<a href="../../use/sync..poolChainElt*6599f.next*c6c1c.html" class="ident">next</a>, <a href="../../use/sync..poolChainElt*6599f.prev*84fd9.html" class="ident">prev</a> *<a href="#line-204" class="ident">poolChainElt</a>
+}
+
+<span class="keyword">func</span> <label for="r35" class="ident"><a href="../../pkg/sync.html#name-storePoolChainElt" class="ident">storePoolChainElt</a></label>(<label for="r36" class="ident">pp</label> **<a href="#line-204" class="ident">poolChainElt</a>, <label for="r37" class="ident">v</label> *<a href="#line-204" class="ident">poolChainElt</a>) {
+	<a href="../../pkg/sync/atomic.html" class="ident i0">atomic</a>.<a href="atomic/doc.go.html#line-144" class="ident">StorePointer</a>((*<a href="../../pkg/unsafe.html" class="ident i1">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>)(<a href="../../pkg/unsafe.html" class="ident i1">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(<label for="r36" class="ident">pp</label>)), <a href="../../pkg/unsafe.html" class="ident i1">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(<label for="r37" class="ident">v</label>))
+}
+
+<span class="keyword">func</span> <label for="r38" class="ident"><a href="../../pkg/sync.html#name-loadPoolChainElt" class="ident">loadPoolChainElt</a></label>(<label for="r39" class="ident">pp</label> **<a href="#line-204" class="ident">poolChainElt</a>) *<a href="#line-204" class="ident">poolChainElt</a> {
+	<span class="keyword">return</span> (*<a href="#line-204" class="ident">poolChainElt</a>)(<a href="../../pkg/sync/atomic.html" class="ident i0">atomic</a>.<a href="atomic/doc.go.html#line-126" class="ident">LoadPointer</a>((*<a href="../../pkg/unsafe.html" class="ident i1">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>)(<a href="../../pkg/unsafe.html" class="ident i1">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(<label for="r39" class="ident">pp</label>))))
+}
+
+<span class="keyword">func</span> (<label for="r40" class="ident">c</label> *<a href="#line-194" class="ident">poolChain</a>) <label for="r41" class="ident"><a href="../../use/sync..poolChain*bfff3.pushHead*c5685.html" class="ident">pushHead</a></label>(<label for="r42" class="ident">val</label> <span class="keyword">interface</span>{}) {
+	<label for="r43" class="ident">d</label> := <label for="r40" class="ident">c</label>.<a href="#line-197" class="ident">head</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Initialize the chain.</span></div>
+<div class="code"><pre><code>		<span class="keyword">const</span> <label for="r44" class="ident">initSize</label> = <span class="lit-number">8</span> <span class="comment">// Must be a power of 2</span>
+		<label for="r43" class="ident">d</label> = <a href="../../pkg/builtin.html#name-new" class="ident">new</a>(<a href="#line-204" class="ident">poolChainElt</a>)
+		<label for="r43" class="ident">d</label>.<a href="#line-44" class="ident">vals</a> = <a href="../../pkg/builtin.html#name-make" class="ident">make</a>([]<a href="#line-47" class="ident">eface</a>, <label for="r44" class="ident">initSize</label>)
+		<label for="r40" class="ident">c</label>.<a href="#line-197" class="ident">head</a> = <label for="r43" class="ident">d</label>
+		<a href="#line-220" class="ident">storePoolChainElt</a>(&amp;<label for="r40" class="ident">c</label>.<a href="#line-201" class="ident">tail</a>, <label for="r43" class="ident">d</label>)
+	}
+
+	<span class="keyword">if</span> <label for="r43" class="ident">d</label>.<a href="#line-80" class="ident">pushHead</a>(<label for="r42" class="ident">val</label>) {
+		<span class="keyword">return</span>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> The current dequeue is full. Allocate a new one of twice</span><span class="comment">	 the size.</span></div>
+<div class="code"><pre><code>	<label for="r45" class="ident">newSize</label> := <a href="../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r43" class="ident">d</label>.<a href="#line-44" class="ident">vals</a>) * <span class="lit-number">2</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Can't make it any bigger.</span></div>
+<div class="code"><pre><code>		<label for="r45" class="ident">newSize</label> = <a href="#line-58" class="ident">dequeueLimit</a>
+	}
+
+	<label for="r46" class="ident">d2</label> := &amp;<a href="#line-204" class="ident">poolChainElt</a>{<a href="#line-217" class="ident">prev</a>: <label for="r43" class="ident">d</label>}
+	<label for="r46" class="ident">d2</label>.<a href="#line-44" class="ident">vals</a> = <a href="../../pkg/builtin.html#name-make" class="ident">make</a>([]<a href="#line-47" class="ident">eface</a>, <label for="r45" class="ident">newSize</label>)
+	<label for="r40" class="ident">c</label>.<a href="#line-197" class="ident">head</a> = <label for="r46" class="ident">d2</label>
+	<a href="#line-220" class="ident">storePoolChainElt</a>(&amp;<label for="r43" class="ident">d</label>.<a href="#line-217" class="ident">next</a>, <label for="r46" class="ident">d2</label>)
+	<label for="r46" class="ident">d2</label>.<a href="#line-80" class="ident">pushHead</a>(<label for="r42" class="ident">val</label>)
+}
+
+<span class="keyword">func</span> (<label for="r47" class="ident">c</label> *<a href="#line-194" class="ident">poolChain</a>) <label for="r48" class="ident"><a href="../../use/sync..poolChain*bfff3.popHead*ec3d3.html" class="ident">popHead</a></label>() (<span class="keyword">interface</span>{}, <a href="../../pkg/builtin.html#name-bool" class="ident">bool</a>) {
+	<label for="r49" class="ident">d</label> := <label for="r47" class="ident">c</label>.<a href="#line-197" class="ident">head</a>
+	<span class="keyword">for</span> <label for="r49" class="ident">d</label> != <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">if</span> <label for="r50" class="ident">val</label>, <label for="r51" class="ident">ok</label> := <label for="r49" class="ident">d</label>.<a href="#line-112" class="ident">popHead</a>(); <label for="r51" class="ident">ok</label> {
+			<span class="keyword">return</span> <label for="r50" class="ident">val</label>, <label for="r51" class="ident">ok</label>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> There may still be unconsumed elements in the</span><span class="comment">		 previous dequeue, so try backing up.</span></div>
+<div class="code"><pre><code>		<label for="r49" class="ident">d</label> = <a href="#line-224" class="ident">loadPoolChainElt</a>(&amp;<label for="r49" class="ident">d</label>.<a href="#line-217" class="ident">prev</a>)
+	}
+	<span class="keyword">return</span> <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="../../pkg/builtin.html#name-false" class="ident">false</a>
+}
+
+<span class="keyword">func</span> (<label for="r52" class="ident">c</label> *<a href="#line-194" class="ident">poolChain</a>) <label for="r53" class="ident"><a href="../../use/sync..poolChain*bfff3.popTail*770d9.html" class="ident">popTail</a></label>() (<span class="keyword">interface</span>{}, <a href="../../pkg/builtin.html#name-bool" class="ident">bool</a>) {
+	<label for="r54" class="ident">d</label> := <a href="#line-224" class="ident">loadPoolChainElt</a>(&amp;<label for="r52" class="ident">c</label>.<a href="#line-201" class="ident">tail</a>)
+	<span class="keyword">if</span> <label for="r54" class="ident">d</label> == <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="../../pkg/builtin.html#name-false" class="ident">false</a>
+	}
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> It's important that we load the next pointer</span><span class="comment">		 *before* popping the tail. In general, d may be</span><span class="comment">		 transiently empty, but if next is non-nil before</span><span class="comment">		 the pop and the pop fails, then d is permanently</span><span class="comment">		 empty, which is the only condition under which it's</span><span class="comment">		 safe to drop d from the chain.</span></div>
+<div class="code"><pre><code>		<label for="r55" class="ident">d2</label> := <a href="#line-224" class="ident">loadPoolChainElt</a>(&amp;<label for="r54" class="ident">d</label>.<a href="#line-217" class="ident">next</a>)
+
+		<span class="keyword">if</span> <label for="r56" class="ident">val</label>, <label for="r57" class="ident">ok</label> := <label for="r54" class="ident">d</label>.<a href="#line-147" class="ident">popTail</a>(); <label for="r57" class="ident">ok</label> {
+			<span class="keyword">return</span> <label for="r56" class="ident">val</label>, <label for="r57" class="ident">ok</label>
+		}
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> This is the only dequeue. It's empty right</span><span class="comment">			 now, but could be pushed to in the future.</span></div>
+<div class="code"><pre><code>			<span class="keyword">return</span> <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="../../pkg/builtin.html#name-false" class="ident">false</a>
+		}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> The tail of the chain has been drained, so move on</span><span class="comment">		 to the next dequeue. Try to drop it from the chain</span><span class="comment">		 so the next pop doesn't have to look at the empty</span><span class="comment">		 dequeue again.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> We won the race. Clear the prev pointer so</span><span class="comment">			 the garbage collector can collect the empty</span><span class="comment">			 dequeue and so popHead doesn't back up</span><span class="comment">			 further than necessary.</span></div>
+<div class="code"><pre><code>			<a href="#line-220" class="ident">storePoolChainElt</a>(&amp;<label for="r55" class="ident">d2</label>.<a href="#line-217" class="ident">prev</a>, <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a>)
+		}
+		<label for="r54" class="ident">d</label> = <label for="r55" class="ident">d2</label>
+	}
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: channel.go in package golang.org/x/crypto/ssh</title>
+<link href="../../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	channel.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../../pkg/golang.org/x/crypto/ssh.html">golang.org/x/crypto/ssh</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16],
+input[id=r17]:checked ~pre label[for=r17],
+input[id=r18]:checked ~pre label[for=r18],
+input[id=r19]:checked ~pre label[for=r19],
+input[id=r20]:checked ~pre label[for=r20],
+input[id=r21]:checked ~pre label[for=r21],
+input[id=r22]:checked ~pre label[for=r22],
+input[id=r23]:checked ~pre label[for=r23],
+input[id=r24]:checked ~pre label[for=r24],
+input[id=r25]:checked ~pre label[for=r25],
+input[id=r26]:checked ~pre label[for=r26],
+input[id=r27]:checked ~pre label[for=r27],
+input[id=r28]:checked ~pre label[for=r28],
+input[id=r29]:checked ~pre label[for=r29],
+input[id=r30]:checked ~pre label[for=r30],
+input[id=r31]:checked ~pre label[for=r31],
+input[id=r32]:checked ~pre label[for=r32],
+input[id=r33]:checked ~pre label[for=r33],
+input[id=r34]:checked ~pre label[for=r34],
+input[id=r35]:checked ~pre label[for=r35],
+input[id=r36]:checked ~pre label[for=r36],
+input[id=r37]:checked ~pre label[for=r37],
+input[id=r38]:checked ~pre label[for=r38],
+input[id=r39]:checked ~pre label[for=r39],
+input[id=r40]:checked ~pre label[for=r40],
+input[id=r41]:checked ~pre label[for=r41],
+input[id=r42]:checked ~pre label[for=r42],
+input[id=r43]:checked ~pre label[for=r43],
+input[id=r44]:checked ~pre label[for=r44],
+input[id=r45]:checked ~pre label[for=r45],
+input[id=r46]:checked ~pre label[for=r46],
+input[id=r47]:checked ~pre label[for=r47],
+input[id=r48]:checked ~pre label[for=r48],
+input[id=r49]:checked ~pre label[for=r49],
+input[id=r50]:checked ~pre label[for=r50],
+input[id=r51]:checked ~pre label[for=r51],
+input[id=r52]:checked ~pre label[for=r52],
+input[id=r53]:checked ~pre label[for=r53],
+input[id=r54]:checked ~pre label[for=r54],
+input[id=r55]:checked ~pre label[for=r55],
+input[id=r56]:checked ~pre label[for=r56],
+input[id=r57]:checked ~pre label[for=r57],
+input[id=r58]:checked ~pre label[for=r58],
+input[id=r59]:checked ~pre label[for=r59],
+input[id=r60]:checked ~pre label[for=r60],
+input[id=r61]:checked ~pre label[for=r61],
+input[id=r62]:checked ~pre label[for=r62],
+input[id=r63]:checked ~pre label[for=r63],
+input[id=r64]:checked ~pre label[for=r64],
+input[id=r65]:checked ~pre label[for=r65],
+input[id=r66]:checked ~pre label[for=r66],
+input[id=r67]:checked ~pre label[for=r67],
+input[id=r68]:checked ~pre label[for=r68],
+input[id=r69]:checked ~pre label[for=r69],
+input[id=r70]:checked ~pre label[for=r70],
+input[id=r71]:checked ~pre label[for=r71],
+input[id=r72]:checked ~pre label[for=r72],
+input[id=r73]:checked ~pre label[for=r73],
+input[id=r74]:checked ~pre label[for=r74],
+input[id=r75]:checked ~pre label[for=r75],
+input[id=r76]:checked ~pre label[for=r76],
+input[id=r77]:checked ~pre label[for=r77],
+input[id=r78]:checked ~pre label[for=r78],
+input[id=r79]:checked ~pre label[for=r79],
+input[id=r80]:checked ~pre label[for=r80],
+input[id=r81]:checked ~pre label[for=r81],
+input[id=r82]:checked ~pre label[for=r82],
+input[id=r83]:checked ~pre label[for=r83],
+input[id=r84]:checked ~pre label[for=r84],
+input[id=r85]:checked ~pre label[for=r85],
+input[id=r86]:checked ~pre label[for=r86],
+input[id=r87]:checked ~pre label[for=r87],
+input[id=r88]:checked ~pre label[for=r88],
+input[id=r89]:checked ~pre label[for=r89],
+input[id=r90]:checked ~pre label[for=r90],
+input[id=r91]:checked ~pre label[for=r91],
+input[id=r92]:checked ~pre label[for=r92],
+input[id=r93]:checked ~pre label[for=r93],
+input[id=r94]:checked ~pre label[for=r94],
+input[id=r95]:checked ~pre label[for=r95],
+input[id=r96]:checked ~pre label[for=r96],
+input[id=r97]:checked ~pre label[for=r97],
+input[id=r98]:checked ~pre label[for=r98],
+input[id=r99]:checked ~pre label[for=r99],
+input[id=r100]:checked ~pre label[for=r100],
+input[id=r101]:checked ~pre label[for=r101],
+input[id=r102]:checked ~pre label[for=r102],
+input[id=r103]:checked ~pre label[for=r103],
+input[id=r104]:checked ~pre label[for=r104],
+input[id=r105]:checked ~pre label[for=r105],
+input[id=r106]:checked ~pre label[for=r106],
+input[id=r107]:checked ~pre label[for=r107],
+input[id=r108]:checked ~pre label[for=r108],
+input[id=r109]:checked ~pre label[for=r109],
+input[id=r110]:checked ~pre label[for=r110],
+input[id=r111]:checked ~pre label[for=r111],
+input[id=r112]:checked ~pre label[for=r112],
+input[id=r113]:checked ~pre label[for=r113],
+input[id=r114]:checked ~pre label[for=r114],
+input[id=r115]:checked ~pre label[for=r115],
+input[id=r116]:checked ~pre label[for=r116],
+input[id=r117]:checked ~pre label[for=r117],
+input[id=r118]:checked ~pre label[for=r118],
+input[id=r119]:checked ~pre label[for=r119]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1,
+input[id=i2]:checked ~pre .i2,
+input[id=i3]:checked ~pre .i3,
+input[id=i4]:checked ~pre .i4,
+input[id=i5]:checked ~pre .i5
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="r17" type="radio" name="g"/>
+<input id="r18" type="radio" name="g"/>
+<input id="r19" type="radio" name="g"/>
+<input id="r20" type="radio" name="g"/>
+<input id="r21" type="radio" name="g"/>
+<input id="r22" type="radio" name="g"/>
+<input id="r23" type="radio" name="g"/>
+<input id="r24" type="radio" name="g"/>
+<input id="r25" type="radio" name="g"/>
+<input id="r26" type="radio" name="g"/>
+<input id="r27" type="radio" name="g"/>
+<input id="r28" type="radio" name="g"/>
+<input id="r29" type="radio" name="g"/>
+<input id="r30" type="radio" name="g"/>
+<input id="r31" type="radio" name="g"/>
+<input id="r32" type="radio" name="g"/>
+<input id="r33" type="radio" name="g"/>
+<input id="r34" type="radio" name="g"/>
+<input id="r35" type="radio" name="g"/>
+<input id="r36" type="radio" name="g"/>
+<input id="r37" type="radio" name="g"/>
+<input id="r38" type="radio" name="g"/>
+<input id="r39" type="radio" name="g"/>
+<input id="r40" type="radio" name="g"/>
+<input id="r41" type="radio" name="g"/>
+<input id="r42" type="radio" name="g"/>
+<input id="r43" type="radio" name="g"/>
+<input id="r44" type="radio" name="g"/>
+<input id="r45" type="radio" name="g"/>
+<input id="r46" type="radio" name="g"/>
+<input id="r47" type="radio" name="g"/>
+<input id="r48" type="radio" name="g"/>
+<input id="r49" type="radio" name="g"/>
+<input id="r50" type="radio" name="g"/>
+<input id="r51" type="radio" name="g"/>
+<input id="r52" type="radio" name="g"/>
+<input id="r53" type="radio" name="g"/>
+<input id="r54" type="radio" name="g"/>
+<input id="r55" type="radio" name="g"/>
+<input id="r56" type="radio" name="g"/>
+<input id="r57" type="radio" name="g"/>
+<input id="r58" type="radio" name="g"/>
+<input id="r59" type="radio" name="g"/>
+<input id="r60" type="radio" name="g"/>
+<input id="r61" type="radio" name="g"/>
+<input id="r62" type="radio" name="g"/>
+<input id="r63" type="radio" name="g"/>
+<input id="r64" type="radio" name="g"/>
+<input id="r65" type="radio" name="g"/>
+<input id="r66" type="radio" name="g"/>
+<input id="r67" type="radio" name="g"/>
+<input id="r68" type="radio" name="g"/>
+<input id="r69" type="radio" name="g"/>
+<input id="r70" type="radio" name="g"/>
+<input id="r71" type="radio" name="g"/>
+<input id="r72" type="radio" name="g"/>
+<input id="r73" type="radio" name="g"/>
+<input id="r74" type="radio" name="g"/>
+<input id="r75" type="radio" name="g"/>
+<input id="r76" type="radio" name="g"/>
+<input id="r77" type="radio" name="g"/>
+<input id="r78" type="radio" name="g"/>
+<input id="r79" type="radio" name="g"/>
+<input id="r80" type="radio" name="g"/>
+<input id="r81" type="radio" name="g"/>
+<input id="r82" type="radio" name="g"/>
+<input id="r83" type="radio" name="g"/>
+<input id="r84" type="radio" name="g"/>
+<input id="r85" type="radio" name="g"/>
+<input id="r86" type="radio" name="g"/>
+<input id="r87" type="radio" name="g"/>
+<input id="r88" type="radio" name="g"/>
+<input id="r89" type="radio" name="g"/>
+<input id="r90" type="radio" name="g"/>
+<input id="r91" type="radio" name="g"/>
+<input id="r92" type="radio" name="g"/>
+<input id="r93" type="radio" name="g"/>
+<input id="r94" type="radio" name="g"/>
+<input id="r95" type="radio" name="g"/>
+<input id="r96" type="radio" name="g"/>
+<input id="r97" type="radio" name="g"/>
+<input id="r98" type="radio" name="g"/>
+<input id="r99" type="radio" name="g"/>
+<input id="r100" type="radio" name="g"/>
+<input id="r101" type="radio" name="g"/>
+<input id="r102" type="radio" name="g"/>
+<input id="r103" type="radio" name="g"/>
+<input id="r104" type="radio" name="g"/>
+<input id="r105" type="radio" name="g"/>
+<input id="r106" type="radio" name="g"/>
+<input id="r107" type="radio" name="g"/>
+<input id="r108" type="radio" name="g"/>
+<input id="r109" type="radio" name="g"/>
+<input id="r110" type="radio" name="g"/>
+<input id="r111" type="radio" name="g"/>
+<input id="r112" type="radio" name="g"/>
+<input id="r113" type="radio" name="g"/>
+<input id="r114" type="radio" name="g"/>
+<input id="r115" type="radio" name="g"/>
+<input id="r116" type="radio" name="g"/>
+<input id="r117" type="radio" name="g"/>
+<input id="r118" type="radio" name="g"/>
+<input id="r119" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<input id="i2" type="radio" name="i"/>
+<input id="i3" type="radio" name="i"/>
+<input id="i4" type="radio" name="i"/>
+<input id="i5" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2011 The Go Authors. All rights reserved.</span><span class="comment"> Use of this source code is governed by a BSD-style</span><span class="comment"> license that can be found in the LICENSE file.</span></div>
+<div class="code"><pre><code>
+<span class="keyword">package</span> ssh
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"encoding/binary"</span></label>
+	<label for="i1"><span class="lit-string i1">"errors"</span></label>
+	<label for="i2"><span class="lit-string i2">"fmt"</span></label>
+	<label for="i3"><span class="lit-string i3">"io"</span></label>
+	<label for="i4"><span class="lit-string i4">"log"</span></label>
+	<label for="i5"><span class="lit-string i5">"sync"</span></label>
+)
+
+<span class="keyword">const</span> (
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> channelMaxPacket contains the maximum number of bytes that will be</span><span class="comment">	 sent in a single packet. As per RFC 4253, section 6.1, 32k is also</span><span class="comment">	 the minimum.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> We follow OpenSSH here.</span></div>
+<div class="code"><pre><code>	<a href="../../../../../pkg/golang.org/x/crypto/ssh.html#name-channelWindowSize" class="ident">channelWindowSize</a> = <span class="lit-number">64</span> * <a href="#line-21" class="ident">channelMaxPacket</a>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> NewChannel represents an incoming request to a channel. It must either be</span><span class="comment"> accepted for use by calling Accept, or rejected by calling Reject.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Accept accepts the channel creation request. It returns the Channel</span><span class="comment">	 and a Go channel containing SSH requests. The Go channel must be</span><span class="comment">	 serviced otherwise the Channel will hang.</span></div>
+<div class="code"><pre><code>	Accept() (<a href="#line-49" class="ident">Channel</a>, &lt;-<span class="keyword">chan</span> *<a href="#line-84" class="ident">Request</a>, <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Reject rejects the channel creation request. After calling</span><span class="comment">	 this, no other methods on the Channel may be called.</span></div>
+<div class="code"><pre><code>	Reject(reason <a href="#line-110" class="ident">RejectionReason</a>, message <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>) <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ChannelType returns the type of the channel, as supplied by the</span><span class="comment">	 client.</span></div>
+<div class="code"><pre><code>	ChannelType() <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ExtraData returns the arbitrary payload for this channel, as supplied</span><span class="comment">	 by the client. This data is specific to the channel type.</span></div>
+<div class="code"><pre><code>	ExtraData() []<a href="../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> A Channel is an ordered, reliable, flow-controlled, duplex stream</span><span class="comment"> that is multiplexed over an SSH connection.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Read reads up to len(data) bytes from the channel.</span></div>
+<div class="code"><pre><code>	Read(data []<a href="../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>) (<a href="../../../../../pkg/builtin.html#name-int" class="ident">int</a>, <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Write writes len(data) bytes to the channel.</span></div>
+<div class="code"><pre><code>	Write(data []<a href="../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>) (<a href="../../../../../pkg/builtin.html#name-int" class="ident">int</a>, <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Close signals end of channel use. No data may be sent after this</span><span class="comment">	 call.</span></div>
+<div class="code"><pre><code>	Close() <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> CloseWrite signals the end of sending in-band</span><span class="comment">	 data. Requests may still be sent, and the other side may</span><span class="comment">	 still send data</span></div>
+<div class="code"><pre><code>	CloseWrite() <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> SendRequest sends a channel request.  If wantReply is true,</span><span class="comment">	 it will wait for a reply and return the result as a</span><span class="comment">	 boolean, otherwise the return value will be false. Channel</span><span class="comment">	 requests are out-of-band messages so they may be sent even</span><span class="comment">	 if the data stream is closed or blocked by flow control.</span><span class="comment">	 If the channel is closed before a reply is returned, io.EOF</span><span class="comment">	 is returned.</span></div>
+<div class="code"><pre><code>	SendRequest(name <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>, wantReply <a href="../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>, payload []<a href="../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>) (<a href="../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>, <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Stderr returns an io.ReadWriter that writes to this channel</span><span class="comment">	 with the extended data type set to stderr. Stderr may</span><span class="comment">	 safely be read and written from a different goroutine than</span><span class="comment">	 Read and Write respectively.</span></div>
+<div class="code"><pre><code>	Stderr() <a href="../../../../../pkg/io.html" class="ident i3">io</a>.<a href="../../../../io/io.go.html#line-126" class="ident">ReadWriter</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Request is a request sent outside of the normal stream of</span><span class="comment"> data. Requests can either be specific to an SSH channel, or they</span><span class="comment"> can be global.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../pkg/golang.org/x/crypto/ssh.html#name-Request" class="ident">Request</a> <span class="keyword">struct</span> {
+	<a href="../../../../../use/golang.org/x/crypto/ssh..Request.Type.html" class="ident">Type</a>      <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../use/golang.org/x/crypto/ssh..Request.WantReply.html" class="ident">WantReply</a> <a href="../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>
+	<a href="../../../../../use/golang.org/x/crypto/ssh..Request.Payload.html" class="ident">Payload</a>   []<a href="../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>
+
+	<a href="../../../../../use/golang.org/x/crypto/ssh..Request.ch*34367.html" class="ident">ch</a>  *<a href="#line-150" class="ident">channel</a>
+	<a href="../../../../../use/golang.org/x/crypto/ssh..Request.mux*99830.html" class="ident">mux</a> *<a href="mux.go.html#line-88" class="ident">mux</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Reply sends a response to a request. It must be called for all requests</span><span class="comment"> where WantReply is true and is a no-op otherwise. The payload argument is</span><span class="comment"> ignored for replies to channel-specific requests.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r0" class="ident">r</label> *<a href="#line-84" class="ident">Request</a>) <label for="r1" class="ident"><a href="../../../../../use/golang.org/x/crypto/ssh..Request.Reply.html" class="ident">Reply</a></label>(<label for="r2" class="ident">ok</label> <a href="../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>, <label for="r3" class="ident">payload</label> []<a href="../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>) <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<span class="keyword">if</span> !<label for="r0" class="ident">r</label>.<a href="#line-86" class="ident">WantReply</a> {
+		<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+	}
+
+	<span class="keyword">if</span> <label for="r0" class="ident">r</label>.<a href="#line-89" class="ident">ch</a> == <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <label for="r0" class="ident">r</label>.<a href="#line-90" class="ident">mux</a>.<a href="mux.go.html#line-174" class="ident">ackRequest</a>(<label for="r2" class="ident">ok</label>, <label for="r3" class="ident">payload</label>)
+	}
+
+	<span class="keyword">return</span> <label for="r0" class="ident">r</label>.<a href="#line-89" class="ident">ch</a>.<a href="#line-609" class="ident">ackRequest</a>(<label for="r2" class="ident">ok</label>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> RejectionReason is an enumeration used when rejecting channel creation</span><span class="comment"> requests. See RFC 4254, section 5.1.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../pkg/golang.org/x/crypto/ssh.html#name-RejectionReason" class="ident">RejectionReason</a> <a href="../../../../../pkg/builtin.html#name-uint32" class="ident">uint32</a>
+
+<span class="keyword">const</span> (
+	<a href="../../../../../pkg/golang.org/x/crypto/ssh.html#name-Prohibited" class="ident">Prohibited</a> <a href="#line-110" class="ident">RejectionReason</a> = <a href="../../../../../pkg/builtin.html#name-iota" class="ident">iota</a> + <span class="lit-number">1</span>
+	<a href="../../../../../pkg/golang.org/x/crypto/ssh.html#name-ConnectionFailed" class="ident">ConnectionFailed</a>
+	<a href="../../../../../pkg/golang.org/x/crypto/ssh.html#name-UnknownChannelType" class="ident">UnknownChannelType</a>
+	<a href="../../../../../pkg/golang.org/x/crypto/ssh.html#name-ResourceShortage" class="ident">ResourceShortage</a>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> String converts the rejection reason to human readable form.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r4" class="ident">r</label> <a href="#line-110" class="ident">RejectionReason</a>) <label for="r5" class="ident"><a href="../../../../../use/golang.org/x/crypto/ssh..RejectionReason.String.html" class="ident">String</a></label>() <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a> {
+	<span class="keyword">switch</span> <label for="r4" class="ident">r</label> {
+	<span class="keyword">case</span> <a href="#line-113" class="ident">Prohibited</a>:
+		<span class="keyword">return</span> <span class="lit-string">"administratively prohibited"</span>
+	<span class="keyword">case</span> <a href="#line-114" class="ident">ConnectionFailed</a>:
+		<span class="keyword">return</span> <span class="lit-string">"connect failed"</span>
+	<span class="keyword">case</span> <a href="#line-115" class="ident">UnknownChannelType</a>:
+		<span class="keyword">return</span> <span class="lit-string">"unknown channel type"</span>
+	<span class="keyword">case</span> <a href="#line-116" class="ident">ResourceShortage</a>:
+		<span class="keyword">return</span> <span class="lit-string">"resource shortage"</span>
+	}
+	<span class="keyword">return</span> <a href="../../../../../pkg/fmt.html" class="ident i2">fmt</a>.<a href="../../../../fmt/print.go.html#line-217" class="ident">Sprintf</a>(<span class="lit-string">"unknown reason %d"</span>, <a href="../../../../../pkg/builtin.html#name-int" class="ident">int</a>(<label for="r4" class="ident">r</label>))
+}
+
+<span class="keyword">func</span> <label for="r6" class="ident"><a href="../../../../../pkg/golang.org/x/crypto/ssh.html#name-min" class="ident">min</a></label>(<label for="r7" class="ident">a</label> <a href="../../../../../pkg/builtin.html#name-uint32" class="ident">uint32</a>, <label for="r8" class="ident">b</label> <a href="../../../../../pkg/builtin.html#name-int" class="ident">int</a>) <a href="../../../../../pkg/builtin.html#name-uint32" class="ident">uint32</a> {
+	<span class="keyword">if</span> <label for="r7" class="ident">a</label> &lt; <a href="../../../../../pkg/builtin.html#name-uint32" class="ident">uint32</a>(<label for="r8" class="ident">b</label>) {
+		<span class="keyword">return</span> <label for="r7" class="ident">a</label>
+	}
+	<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-uint32" class="ident">uint32</a>(<label for="r8" class="ident">b</label>)
+}
+
+<span class="keyword">type</span> <a href="../../../../../pkg/golang.org/x/crypto/ssh.html#name-channelDirection" class="ident">channelDirection</a> <a href="../../../../../pkg/builtin.html#name-uint8" class="ident">uint8</a>
+
+<span class="keyword">const</span> (
+	<a href="../../../../../pkg/golang.org/x/crypto/ssh.html#name-channelInbound" class="ident">channelInbound</a> <a href="#line-141" class="ident">channelDirection</a> = <a href="../../../../../pkg/builtin.html#name-iota" class="ident">iota</a>
+	<a href="../../../../../pkg/golang.org/x/crypto/ssh.html#name-channelOutbound" class="ident">channelOutbound</a>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> channel is an implementation of the Channel interface that works</span><span class="comment"> with the mux class.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> R/O after creation</span></div>
+<div class="code"><pre><code>	<a href="../../../../../use/golang.org/x/crypto/ssh..channel*69e36.chanType*c5fbc.html" class="ident">chanType</a>          <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../use/golang.org/x/crypto/ssh..channel*69e36.extraData*21fd6.html" class="ident">extraData</a>         []<a href="../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>
+	<a href="../../../../../use/golang.org/x/crypto/ssh..channel*69e36.localId*1c8a9.html" class="ident">localId</a>, <a href="../../../../../use/golang.org/x/crypto/ssh..channel*69e36.remoteId*33d26.html" class="ident">remoteId</a> <a href="../../../../../pkg/builtin.html#name-uint32" class="ident">uint32</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> maxIncomingPayload and maxRemotePayload are the maximum</span><span class="comment">	 payload sizes of normal and extended data packets for</span><span class="comment">	 receiving and sending, respectively. The wire packet will</span><span class="comment">	 be 9 or 13 bytes larger (excluding encryption overhead).</span></div>
+<div class="code"><pre><code>	<a href="../../../../../use/golang.org/x/crypto/ssh..channel*69e36.maxIncomingPayload*e78f2.html" class="ident">maxIncomingPayload</a> <a href="../../../../../pkg/builtin.html#name-uint32" class="ident">uint32</a>
+	<a href="../../../../../use/golang.org/x/crypto/ssh..channel*69e36.maxRemotePayload*743b3.html" class="ident">maxRemotePayload</a>   <a href="../../../../../pkg/builtin.html#name-uint32" class="ident">uint32</a>
+
+	<a href="../../../../../use/golang.org/x/crypto/ssh..channel*69e36.mux*99830.html" class="ident">mux</a> *<a href="mux.go.html#line-88" class="ident">mux</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> decided is set to true if an accept or reject message has been sent</span><span class="comment">	 (for outbound channels) or received (for inbound channels).</span></div>
+<div class="code"><pre><code>	<a href="../../../../../use/golang.org/x/crypto/ssh..channel*69e36.decided*8d3c6.html" class="ident">decided</a> <a href="../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> direction contains either channelOutbound, for channels created</span><span class="comment">	 locally, or channelInbound, for channels created by the peer.</span></div>
+<div class="code"><pre><code>	<a href="../../../../../use/golang.org/x/crypto/ssh..channel*69e36.direction*93c4a.html" class="ident">direction</a> <a href="#line-141" class="ident">channelDirection</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Pending internal channel messages.</span></div>
+<div class="code"><pre><code>	<a href="../../../../../use/golang.org/x/crypto/ssh..channel*69e36.msg*e46b3.html" class="ident">msg</a> <span class="keyword">chan</span> <span class="keyword">interface</span>{}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Since requests have no ID, there can be only one request</span><span class="comment">	 with WantReply=true outstanding.  This lock is held by a</span><span class="comment">	 goroutine that has such an outgoing request pending.</span></div>
+<div class="code"><pre><code>	<a href="../../../../../use/golang.org/x/crypto/ssh..channel*69e36.sentRequestMu*5ee15.html" class="ident">sentRequestMu</a> <a href="../../../../../pkg/sync.html" class="ident i5">sync</a>.<a href="../../../../sync/mutex.go.html#line-25" class="ident">Mutex</a>
+
+	<a href="../../../../../use/golang.org/x/crypto/ssh..channel*69e36.incomingRequests*00804.html" class="ident">incomingRequests</a> <span class="keyword">chan</span> *<a href="#line-84" class="ident">Request</a>
+
+	<a href="../../../../../use/golang.org/x/crypto/ssh..channel*69e36.sentEOF*41e5e.html" class="ident">sentEOF</a> <a href="../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> thread-safe data</span></div>
+<div class="code"><pre><code>	<a href="../../../../../use/golang.org/x/crypto/ssh..channel*69e36.remoteWin*2a724.html" class="ident">remoteWin</a>  <a href="common.go.html#line-336" class="ident">window</a>
+	<a href="../../../../../use/golang.org/x/crypto/ssh..channel*69e36.pending*62a2f.html" class="ident">pending</a>    *<a href="buffer.go.html#line-15" class="ident">buffer</a>
+	<a href="../../../../../use/golang.org/x/crypto/ssh..channel*69e36.extPending*05b9b.html" class="ident">extPending</a> *<a href="buffer.go.html#line-15" class="ident">buffer</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> windowMu protects myWindow, the flow-control window.</span></div>
+<div class="code"><pre><code>	<a href="../../../../../use/golang.org/x/crypto/ssh..channel*69e36.windowMu*a6efd.html" class="ident">windowMu</a> <a href="../../../../../pkg/sync.html" class="ident i5">sync</a>.<a href="../../../../sync/mutex.go.html#line-25" class="ident">Mutex</a>
+	<a href="../../../../../use/golang.org/x/crypto/ssh..channel*69e36.myWindow*126b7.html" class="ident">myWindow</a> <a href="../../../../../pkg/builtin.html#name-uint32" class="ident">uint32</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> writeMu serializes calls to mux.conn.writePacket() and</span><span class="comment">	 protects sentClose and packetPool. This mutex must be</span><span class="comment">	 different from windowMu, as writePacket can block if there</span><span class="comment">	 is a key exchange pending.</span></div>
+<div class="code"><pre><code>	<a href="../../../../../use/golang.org/x/crypto/ssh..channel*69e36.writeMu*93ea4.html" class="ident">writeMu</a>   <a href="../../../../../pkg/sync.html" class="ident i5">sync</a>.<a href="../../../../sync/mutex.go.html#line-25" class="ident">Mutex</a>
+	<a href="../../../../../use/golang.org/x/crypto/ssh..channel*69e36.sentClose*8b815.html" class="ident">sentClose</a> <a href="../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> packetPool has a buffer for each extended channel ID to</span><span class="comment">	 save allocations during writes.</span></div>
+<div class="code"><pre><code>	<a href="../../../../../use/golang.org/x/crypto/ssh..channel*69e36.packetPool*2f0b1.html" class="ident">packetPool</a> <span class="keyword">map</span>[<a href="../../../../../pkg/builtin.html#name-uint32" class="ident">uint32</a>][]<a href="../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> writePacket sends a packet. If the packet is a channel close, it updates</span><span class="comment"> sentClose. This method takes the lock c.writeMu.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r9" class="ident">ch</label> *<a href="#line-150" class="ident">channel</a>) <label for="r10" class="ident"><a href="../../../../../use/golang.org/x/crypto/ssh..channel*69e36.writePacket*dd22c.html" class="ident">writePacket</a></label>(<label for="r11" class="ident">packet</label> []<a href="../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>) <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<label for="r9" class="ident">ch</label>.<a href="#line-198" class="ident">writeMu</a>.<a href="../../../../sync/mutex.go.html#line-72" class="ident">Lock</a>()
+	<span class="keyword">if</span> <label for="r9" class="ident">ch</label>.<a href="#line-199" class="ident">sentClose</a> {
+		<label for="r9" class="ident">ch</label>.<a href="#line-198" class="ident">writeMu</a>.<a href="../../../../sync/mutex.go.html#line-179" class="ident">Unlock</a>()
+		<span class="keyword">return</span> <a href="../../../../../pkg/io.html" class="ident i3">io</a>.<a href="../../../../io/io.go.html#line-44" class="ident">EOF</a>
+	}
+	<label for="r9" class="ident">ch</label>.<a href="#line-199" class="ident">sentClose</a> = (<label for="r11" class="ident">packet</label>[<span class="lit-number">0</span>] == <a href="messages.go.html#line-256" class="ident">msgChannelClose</a>)
+	<label for="r12" class="ident">err</label> := <label for="r9" class="ident">ch</label>.<a href="#line-163" class="ident">mux</a>.<a href="mux.go.html#line-89" class="ident">conn</a>.<a href="transport.go.html#line-29" class="ident">writePacket</a>(<label for="r11" class="ident">packet</label>)
+	<label for="r9" class="ident">ch</label>.<a href="#line-198" class="ident">writeMu</a>.<a href="../../../../sync/mutex.go.html#line-179" class="ident">Unlock</a>()
+	<span class="keyword">return</span> <label for="r12" class="ident">err</label>
+}
+
+<span class="keyword">func</span> (<label for="r13" class="ident">ch</label> *<a href="#line-150" class="ident">channel</a>) <label for="r14" class="ident"><a href="../../../../../use/golang.org/x/crypto/ssh..channel*69e36.sendMessage*cf8ad.html" class="ident">sendMessage</a></label>(<label for="r15" class="ident">msg</label> <span class="keyword">interface</span>{}) <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<span class="keyword">if</span> <a href="mux.go.html#line-18" class="ident">debugMux</a> {
+		<a href="../../../../../pkg/log.html" class="ident i4">log</a>.<a href="../../../../log/log.go.html#line-322" class="ident">Printf</a>(<span class="lit-string">"send(%d): %#v"</span>, <label for="r13" class="ident">ch</label>.<a href="#line-163" class="ident">mux</a>.<a href="mux.go.html#line-90" class="ident">chanList</a>.<a href="mux.go.html#line-32" class="ident">offset</a>, <label for="r15" class="ident">msg</label>)
+	}
+
+	<label for="r16" class="ident">p</label> := <a href="messages.go.html#line-497" class="ident">Marshal</a>(<label for="r15" class="ident">msg</label>)
+	<a href="../../../../../pkg/encoding/binary.html" class="ident i0">binary</a>.<a href="../../../../encoding/binary/binary.go.html#line-48" class="ident">BigEndian</a>.<a href="../../../../encoding/binary/binary.go.html#line-116" class="ident">PutUint32</a>(<label for="r16" class="ident">p</label>[<span class="lit-number">1</span>:], <label for="r13" class="ident">ch</label>.<a href="#line-154" class="ident">remoteId</a>)
+	<span class="keyword">return</span> <label for="r13" class="ident">ch</label>.<a href="#line-208" class="ident">writePacket</a>(<label for="r16" class="ident">p</label>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> WriteExtended writes data to a specific extended stream. These streams are</span><span class="comment"> used, for example, for stderr.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r17" class="ident">ch</label> *<a href="#line-150" class="ident">channel</a>) <label for="r18" class="ident"><a href="../../../../../use/golang.org/x/crypto/ssh..channel*69e36.WriteExtended.html" class="ident">WriteExtended</a></label>(<label for="r19" class="ident">data</label> []<a href="../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>, <label for="r20" class="ident">extendedCode</label> <a href="../../../../../pkg/builtin.html#name-uint32" class="ident">uint32</a>) (<label for="r21" class="ident">n</label> <a href="../../../../../pkg/builtin.html#name-int" class="ident">int</a>, <label for="r22" class="ident">err</label> <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<span class="keyword">if</span> <label for="r17" class="ident">ch</label>.<a href="#line-183" class="ident">sentEOF</a> {
+		<span class="keyword">return</span> <span class="lit-number">0</span>, <a href="../../../../../pkg/io.html" class="ident i3">io</a>.<a href="../../../../io/io.go.html#line-44" class="ident">EOF</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> 1 byte message type, 4 bytes remoteId, 4 bytes data length</span></div>
+<div class="code"><pre><code>	<label for="r23" class="ident">opCode</label> := <a href="../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>(<a href="messages.go.html#line-202" class="ident">msgChannelData</a>)
+	<label for="r24" class="ident">headerLength</label> := <a href="../../../../../pkg/builtin.html#name-uint32" class="ident">uint32</a>(<span class="lit-number">9</span>)
+	<span class="keyword">if</span> <label for="r20" class="ident">extendedCode</label> &gt; <span class="lit-number">0</span> {
+		<label for="r24" class="ident">headerLength</label> += <span class="lit-number">4</span>
+		<label for="r23" class="ident">opCode</label> = <a href="messages.go.html#line-201" class="ident">msgChannelExtendedData</a>
+	}
+
+	<label for="r17" class="ident">ch</label>.<a href="#line-198" class="ident">writeMu</a>.<a href="../../../../sync/mutex.go.html#line-72" class="ident">Lock</a>()
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> We don't remove the buffer from packetPool, so</span><span class="comment">	 WriteExtended calls from different goroutines will be</span><span class="comment">	 flagged as errors by the race detector.</span></div>
+<div class="code"><pre><code>	<label for="r17" class="ident">ch</label>.<a href="#line-198" class="ident">writeMu</a>.<a href="../../../../sync/mutex.go.html#line-179" class="ident">Unlock</a>()
+
+	<span class="keyword">for</span> <a href="../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r19" class="ident">data</label>) &gt; <span class="lit-number">0</span> {
+		<label for="r26" class="ident">space</label> := <a href="#line-134" class="ident">min</a>(<label for="r17" class="ident">ch</label>.<a href="#line-161" class="ident">maxRemotePayload</a>, <a href="../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r19" class="ident">data</label>))
+		<span class="keyword">if</span> <label for="r26" class="ident">space</label>, <label for="r22" class="ident">err</label> = <label for="r17" class="ident">ch</label>.<a href="#line-186" class="ident">remoteWin</a>.<a href="common.go.html#line-376" class="ident">reserve</a>(<label for="r26" class="ident">space</label>); <label for="r22" class="ident">err</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<span class="keyword">return</span> <label for="r21" class="ident">n</label>, <label for="r22" class="ident">err</label>
+		}
+		<span class="keyword">if</span> <label for="r27" class="ident">want</label> := <label for="r24" class="ident">headerLength</label> + <label for="r26" class="ident">space</label>; <a href="../../../../../pkg/builtin.html#name-uint32" class="ident">uint32</a>(<a href="../../../../../pkg/builtin.html#name-cap" class="ident">cap</a>(<label for="r25" class="ident">packet</label>)) &lt; <label for="r27" class="ident">want</label> {
+			<label for="r25" class="ident">packet</label> = <a href="../../../../../pkg/builtin.html#name-make" class="ident">make</a>([]<a href="../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>, <label for="r27" class="ident">want</label>)
+		} <span class="keyword">else</span> {
+			<label for="r25" class="ident">packet</label> = <label for="r25" class="ident">packet</label>[:<label for="r27" class="ident">want</label>]
+		}
+
+		<label for="r28" class="ident">todo</label> := <label for="r19" class="ident">data</label>[:<label for="r26" class="ident">space</label>]
+
+		<label for="r25" class="ident">packet</label>[<span class="lit-number">0</span>] = <label for="r23" class="ident">opCode</label>
+		<a href="../../../../../pkg/encoding/binary.html" class="ident i0">binary</a>.<a href="../../../../encoding/binary/binary.go.html#line-48" class="ident">BigEndian</a>.<a href="../../../../encoding/binary/binary.go.html#line-116" class="ident">PutUint32</a>(<label for="r25" class="ident">packet</label>[<span class="lit-number">1</span>:], <label for="r17" class="ident">ch</label>.<a href="#line-154" class="ident">remoteId</a>)
+		<span class="keyword">if</span> <label for="r20" class="ident">extendedCode</label> &gt; <span class="lit-number">0</span> {
+			<a href="../../../../../pkg/encoding/binary.html" class="ident i0">binary</a>.<a href="../../../../encoding/binary/binary.go.html#line-48" class="ident">BigEndian</a>.<a href="../../../../encoding/binary/binary.go.html#line-116" class="ident">PutUint32</a>(<label for="r25" class="ident">packet</label>[<span class="lit-number">5</span>:], <a href="../../../../../pkg/builtin.html#name-uint32" class="ident">uint32</a>(<label for="r20" class="ident">extendedCode</label>))
+		}
+		<a href="../../../../../pkg/encoding/binary.html" class="ident i0">binary</a>.<a href="../../../../encoding/binary/binary.go.html#line-48" class="ident">BigEndian</a>.<a href="../../../../encoding/binary/binary.go.html#line-116" class="ident">PutUint32</a>(<label for="r25" class="ident">packet</label>[<label for="r24" class="ident">headerLength</label>-<span class="lit-number">4</span>:], <a href="../../../../../pkg/builtin.html#name-uint32" class="ident">uint32</a>(<a href="../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r28" class="ident">todo</label>)))
+		<a href="../../../../../pkg/builtin.html#name-copy" class="ident">copy</a>(<label for="r25" class="ident">packet</label>[<label for="r24" class="ident">headerLength</label>:], <label for="r28" class="ident">todo</label>)
+		<span class="keyword">if</span> <label for="r22" class="ident">err</label> = <label for="r17" class="ident">ch</label>.<a href="#line-208" class="ident">writePacket</a>(<label for="r25" class="ident">packet</label>); <label for="r22" class="ident">err</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<span class="keyword">return</span> <label for="r21" class="ident">n</label>, <label for="r22" class="ident">err</label>
+		}
+
+		<label for="r21" class="ident">n</label> += <a href="../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r28" class="ident">todo</label>)
+		<label for="r19" class="ident">data</label> = <label for="r19" class="ident">data</label>[<a href="../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r28" class="ident">todo</label>):]
+	}
+
+	<label for="r17" class="ident">ch</label>.<a href="#line-198" class="ident">writeMu</a>.<a href="../../../../sync/mutex.go.html#line-72" class="ident">Lock</a>()
+	<label for="r17" class="ident">ch</label>.<a href="#line-203" class="ident">packetPool</a>[<label for="r20" class="ident">extendedCode</label>] = <label for="r25" class="ident">packet</label>
+	<label for="r17" class="ident">ch</label>.<a href="#line-198" class="ident">writeMu</a>.<a href="../../../../sync/mutex.go.html#line-179" class="ident">Unlock</a>()
+
+	<span class="keyword">return</span> <label for="r21" class="ident">n</label>, <label for="r22" class="ident">err</label>
+}
+
+<span class="keyword">func</span> (<label for="r29" class="ident">ch</label> *<a href="#line-150" class="ident">channel</a>) <label for="r30" class="ident"><a href="../../../../../use/golang.org/x/crypto/ssh..channel*69e36.handleData*3b294.html" class="ident">handleData</a></label>(<label for="r31" class="ident">packet</label> []<a href="../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>) <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<label for="r32" class="ident">headerLen</label> := <span class="lit-number">9</span>
+	<label for="r33" class="ident">isExtendedData</label> := <label for="r31" class="ident">packet</label>[<span class="lit-number">0</span>] == <a href="messages.go.html#line-201" class="ident">msgChannelExtendedData</a>
+	<span class="keyword">if</span> <label for="r33" class="ident">isExtendedData</label> {
+		<label for="r32" class="ident">headerLen</label> = <span class="lit-number">13</span>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> malformed data packet</span></div>
+<div class="code"><pre><code>		<span class="keyword">return</span> <a href="common.go.html#line-112" class="ident">parseError</a>(<label for="r31" class="ident">packet</label>[<span class="lit-number">0</span>])
+	}
+
+	<span class="keyword">var</span> <label for="r34" class="ident">extended</label> <a href="../../../../../pkg/builtin.html#name-uint32" class="ident">uint32</a>
+	<span class="keyword">if</span> <label for="r33" class="ident">isExtendedData</label> {
+		<label for="r34" class="ident">extended</label> = <a href="../../../../../pkg/encoding/binary.html" class="ident i0">binary</a>.<a href="../../../../encoding/binary/binary.go.html#line-48" class="ident">BigEndian</a>.<a href="../../../../encoding/binary/binary.go.html#line-111" class="ident">Uint32</a>(<label for="r31" class="ident">packet</label>[<span class="lit-number">5</span>:])
+	}
+
+	<label for="r35" class="ident">length</label> := <a href="../../../../../pkg/encoding/binary.html" class="ident i0">binary</a>.<a href="../../../../encoding/binary/binary.go.html#line-48" class="ident">BigEndian</a>.<a href="../../../../encoding/binary/binary.go.html#line-111" class="ident">Uint32</a>(<label for="r31" class="ident">packet</label>[<label for="r32" class="ident">headerLen</label>-<span class="lit-number">4</span> : <label for="r32" class="ident">headerLen</label>])
+	<span class="keyword">if</span> <label for="r35" class="ident">length</label> == <span class="lit-number">0</span> {
+		<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> TODO(hanwen): should send Disconnect?</span></div>
+<div class="code"><pre><code>		<span class="keyword">return</span> <a href="../../../../../pkg/errors.html" class="ident i1">errors</a>.<a href="../../../../errors/errors.go.html#line-58" class="ident">New</a>(<span class="lit-string">"ssh: incoming packet exceeds maximum payload size"</span>)
+	}
+
+	<label for="r36" class="ident">data</label> := <label for="r31" class="ident">packet</label>[<label for="r32" class="ident">headerLen</label>:]
+	<span class="keyword">if</span> <label for="r35" class="ident">length</label> != <a href="../../../../../pkg/builtin.html#name-uint32" class="ident">uint32</a>(<a href="../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r36" class="ident">data</label>)) {
+		<span class="keyword">return</span> <a href="../../../../../pkg/errors.html" class="ident i1">errors</a>.<a href="../../../../errors/errors.go.html#line-58" class="ident">New</a>(<span class="lit-string">"ssh: wrong packet length"</span>)
+	}
+
+	<label for="r29" class="ident">ch</label>.<a href="#line-191" class="ident">windowMu</a>.<a href="../../../../sync/mutex.go.html#line-72" class="ident">Lock</a>()
+	<span class="keyword">if</span> <label for="r29" class="ident">ch</label>.<a href="#line-192" class="ident">myWindow</a> &lt; <label for="r35" class="ident">length</label> {
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> TODO(hanwen): should send Disconnect with reason?</span></div>
+<div class="code"><pre><code>		<span class="keyword">return</span> <a href="../../../../../pkg/errors.html" class="ident i1">errors</a>.<a href="../../../../errors/errors.go.html#line-58" class="ident">New</a>(<span class="lit-string">"ssh: remote side wrote too much"</span>)
+	}
+	<label for="r29" class="ident">ch</label>.<a href="#line-192" class="ident">myWindow</a> -= <label for="r35" class="ident">length</label>
+	<label for="r29" class="ident">ch</label>.<a href="#line-191" class="ident">windowMu</a>.<a href="../../../../sync/mutex.go.html#line-179" class="ident">Unlock</a>()
+
+	<span class="keyword">if</span> <label for="r34" class="ident">extended</label> == <span class="lit-number">1</span> {
+		<label for="r29" class="ident">ch</label>.<a href="#line-188" class="ident">extPending</a>.<a href="buffer.go.html#line-44" class="ident">write</a>(<label for="r36" class="ident">data</label>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> discard other extended data.</span></div>
+<div class="code"><pre><code>	} <span class="keyword">else</span> {
+		<label for="r29" class="ident">ch</label>.<a href="#line-187" class="ident">pending</a>.<a href="buffer.go.html#line-44" class="ident">write</a>(<label for="r36" class="ident">data</label>)
+	}
+	<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+}
+
+<span class="keyword">func</span> (<label for="r37" class="ident">c</label> *<a href="#line-150" class="ident">channel</a>) <label for="r38" class="ident"><a href="../../../../../use/golang.org/x/crypto/ssh..channel*69e36.adjustWindow*2d60b.html" class="ident">adjustWindow</a></label>(<label for="r39" class="ident">n</label> <a href="../../../../../pkg/builtin.html#name-uint32" class="ident">uint32</a>) <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a> {
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Since myWindow is managed on our side, and can never exceed</span><span class="comment">	 the initial window setting, we don't worry about overflow.</span></div>
+<div class="code"><pre><code>	<label for="r37" class="ident">c</label>.<a href="#line-192" class="ident">myWindow</a> += <a href="../../../../../pkg/builtin.html#name-uint32" class="ident">uint32</a>(<label for="r39" class="ident">n</label>)
+	<label for="r37" class="ident">c</label>.<a href="#line-191" class="ident">windowMu</a>.<a href="../../../../sync/mutex.go.html#line-179" class="ident">Unlock</a>()
+	<span class="keyword">return</span> <label for="r37" class="ident">c</label>.<a href="#line-220" class="ident">sendMessage</a>(<a href="messages.go.html#line-295" class="ident">windowAdjustMsg</a>{
+		<a href="messages.go.html#line-297" class="ident">AdditionalBytes</a>: <a href="../../../../../pkg/builtin.html#name-uint32" class="ident">uint32</a>(<label for="r39" class="ident">n</label>),
+	})
+}
+
+<span class="keyword">func</span> (<label for="r40" class="ident">c</label> *<a href="#line-150" class="ident">channel</a>) <label for="r41" class="ident"><a href="../../../../../use/golang.org/x/crypto/ssh..channel*69e36.ReadExtended.html" class="ident">ReadExtended</a></label>(<label for="r42" class="ident">data</label> []<a href="../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>, <label for="r43" class="ident">extended</label> <a href="../../../../../pkg/builtin.html#name-uint32" class="ident">uint32</a>) (<label for="r44" class="ident">n</label> <a href="../../../../../pkg/builtin.html#name-int" class="ident">int</a>, <label for="r45" class="ident">err</label> <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<span class="keyword">switch</span> <label for="r43" class="ident">extended</label> {
+	<span class="keyword">case</span> <span class="lit-number">1</span>:
+		<label for="r44" class="ident">n</label>, <label for="r45" class="ident">err</label> = <label for="r40" class="ident">c</label>.<a href="#line-188" class="ident">extPending</a>.<a href="buffer.go.html#line-64" class="ident">Read</a>(<label for="r42" class="ident">data</label>)
+	<span class="keyword">case</span> <span class="lit-number">0</span>:
+		<label for="r44" class="ident">n</label>, <label for="r45" class="ident">err</label> = <label for="r40" class="ident">c</label>.<a href="#line-187" class="ident">pending</a>.<a href="buffer.go.html#line-64" class="ident">Read</a>(<label for="r42" class="ident">data</label>)
+	<span class="keyword">default</span>:
+		<span class="keyword">return</span> <span class="lit-number">0</span>, <a href="../../../../../pkg/fmt.html" class="ident i2">fmt</a>.<a href="../../../../fmt/errors.go.html#line-17" class="ident">Errorf</a>(<span class="lit-string">"ssh: extended code %d unimplemented"</span>, <label for="r43" class="ident">extended</label>)
+	}
+
+	<span class="keyword">if</span> <label for="r44" class="ident">n</label> &gt; <span class="lit-number">0</span> {
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> sendWindowAdjust can return io.EOF if the remote</span><span class="comment">		 peer has closed the connection, however we want to</span><span class="comment">		 defer forwarding io.EOF to the caller of Read until</span><span class="comment">		 the buffer has been drained.</span></div>
+<div class="code"><pre><code>		<span class="keyword">if</span> <label for="r44" class="ident">n</label> &gt; <span class="lit-number">0</span> &amp;&amp; <label for="r45" class="ident">err</label> == <a href="../../../../../pkg/io.html" class="ident i3">io</a>.<a href="../../../../io/io.go.html#line-44" class="ident">EOF</a> {
+			<label for="r45" class="ident">err</label> = <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+		}
+	}
+
+	<span class="keyword">return</span> <label for="r44" class="ident">n</label>, <label for="r45" class="ident">err</label>
+}
+
+<span class="keyword">func</span> (<label for="r46" class="ident">c</label> *<a href="#line-150" class="ident">channel</a>) <label for="r47" class="ident"><a href="../../../../../use/golang.org/x/crypto/ssh..channel*69e36.close*310ff.html" class="ident">close</a></label>() {
+	<label for="r46" class="ident">c</label>.<a href="#line-187" class="ident">pending</a>.<a href="buffer.go.html#line-55" class="ident">eof</a>()
+	<label for="r46" class="ident">c</label>.<a href="#line-188" class="ident">extPending</a>.<a href="buffer.go.html#line-55" class="ident">eof</a>()
+	<a href="../../../../../pkg/builtin.html#name-close" class="ident">close</a>(<label for="r46" class="ident">c</label>.<a href="#line-174" class="ident">msg</a>)
+	<a href="../../../../../pkg/builtin.html#name-close" class="ident">close</a>(<label for="r46" class="ident">c</label>.<a href="#line-181" class="ident">incomingRequests</a>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> This is not necessary for a normal channel teardown, but if</span><span class="comment">	 there was another error, it is.</span></div>
+<div class="code"><pre><code>	<label for="r46" class="ident">c</label>.<a href="#line-199" class="ident">sentClose</a> = <a href="../../../../../pkg/builtin.html#name-true" class="ident">true</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Unblock writers.</span></div>
+<div class="code"><pre><code>	<label for="r46" class="ident">c</label>.<a href="#line-186" class="ident">remoteWin</a>.<a href="common.go.html#line-366" class="ident">close</a>()
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> responseMessageReceived is called when a success or failure message is</span><span class="comment"> received on a channel to check that such a message is reasonable for the</span><span class="comment"> given channel.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r48" class="ident">ch</label> *<a href="#line-150" class="ident">channel</a>) <label for="r49" class="ident"><a href="../../../../../use/golang.org/x/crypto/ssh..channel*69e36.responseMessageReceived*a6247.html" class="ident">responseMessageReceived</a></label>() <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<span class="keyword">if</span> <label for="r48" class="ident">ch</label>.<a href="#line-171" class="ident">direction</a> == <a href="#line-144" class="ident">channelInbound</a> {
+		<span class="keyword">return</span> <a href="../../../../../pkg/errors.html" class="ident i1">errors</a>.<a href="../../../../errors/errors.go.html#line-58" class="ident">New</a>(<span class="lit-string">"ssh: channel response message received on inbound channel"</span>)
+	}
+	<span class="keyword">if</span> <label for="r48" class="ident">ch</label>.<a href="#line-167" class="ident">decided</a> {
+		<span class="keyword">return</span> <a href="../../../../../pkg/errors.html" class="ident i1">errors</a>.<a href="../../../../errors/errors.go.html#line-58" class="ident">New</a>(<span class="lit-string">"ssh: duplicate response received for channel"</span>)
+	}
+	<label for="r48" class="ident">ch</label>.<a href="#line-167" class="ident">decided</a> = <a href="../../../../../pkg/builtin.html#name-true" class="ident">true</a>
+	<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+}
+
+<span class="keyword">func</span> (<label for="r50" class="ident">ch</label> *<a href="#line-150" class="ident">channel</a>) <label for="r51" class="ident"><a href="../../../../../use/golang.org/x/crypto/ssh..channel*69e36.handlePacket*14b39.html" class="ident">handlePacket</a></label>(<label for="r52" class="ident">packet</label> []<a href="../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>) <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<span class="keyword">switch</span> <label for="r52" class="ident">packet</label>[<span class="lit-number">0</span>] {
+	<span class="keyword">case</span> <a href="messages.go.html#line-202" class="ident">msgChannelData</a>, <a href="messages.go.html#line-201" class="ident">msgChannelExtendedData</a>:
+		<span class="keyword">return</span> <label for="r50" class="ident">ch</label>.<a href="#line-286" class="ident">handleData</a>(<label for="r52" class="ident">packet</label>)
+	<span class="keyword">case</span> <a href="messages.go.html#line-256" class="ident">msgChannelClose</a>:
+		<label for="r50" class="ident">ch</label>.<a href="#line-220" class="ident">sendMessage</a>(<a href="messages.go.html#line-258" class="ident">channelCloseMsg</a>{<a href="messages.go.html#line-259" class="ident">PeersID</a>: <label for="r50" class="ident">ch</label>.<a href="#line-154" class="ident">remoteId</a>})
+		<label for="r50" class="ident">ch</label>.<a href="#line-163" class="ident">mux</a>.<a href="mux.go.html#line-90" class="ident">chanList</a>.<a href="mux.go.html#line-61" class="ident">remove</a>(<label for="r50" class="ident">ch</label>.<a href="#line-154" class="ident">localId</a>)
+		<label for="r50" class="ident">ch</label>.<a href="#line-370" class="ident">close</a>()
+		<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> RFC 4254 is mute on how EOF affects dataExt messages but</span><span class="comment">		 it is logical to signal EOF at the same time.</span></div>
+<div class="code"><pre><code>		<label for="r50" class="ident">ch</label>.<a href="#line-188" class="ident">extPending</a>.<a href="buffer.go.html#line-55" class="ident">eof</a>()
+		<label for="r50" class="ident">ch</label>.<a href="#line-187" class="ident">pending</a>.<a href="buffer.go.html#line-55" class="ident">eof</a>()
+		<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+	}
+
+	<label for="r53" class="ident">decoded</label>, <label for="r54" class="ident">err</label> := <a href="messages.go.html#line-776" class="ident">decode</a>(<label for="r52" class="ident">packet</label>)
+	<span class="keyword">if</span> <label for="r54" class="ident">err</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <label for="r54" class="ident">err</label>
+	}
+
+	<span class="keyword">switch</span> msg := <label for="r53" class="ident">decoded</label>.(<span class="keyword">type</span>) {
+	<span class="keyword">case</span> *<a href="messages.go.html#line-225" class="ident">channelOpenFailureMsg</a>:
+		<span class="keyword">if</span> <label for="r55" class="ident">err</label> := <label for="r50" class="ident">ch</label>.<a href="#line-387" class="ident">responseMessageReceived</a>(); <label for="r55" class="ident">err</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<span class="keyword">return</span> <label for="r55" class="ident">err</label>
+		}
+		<label for="r50" class="ident">ch</label>.<a href="#line-163" class="ident">mux</a>.<a href="mux.go.html#line-90" class="ident">chanList</a>.<a href="mux.go.html#line-61" class="ident">remove</a>(<label for="r56" class="ident">msg</label>.<a href="messages.go.html#line-226" class="ident">PeersID</a>)
+		<label for="r50" class="ident">ch</label>.<a href="#line-174" class="ident">msg</a> &lt;- <label for="r56" class="ident">msg</label>
+	<span class="keyword">case</span> *<a href="messages.go.html#line-214" class="ident">channelOpenConfirmMsg</a>:
+		<span class="keyword">if</span> <label for="r57" class="ident">err</label> := <label for="r50" class="ident">ch</label>.<a href="#line-387" class="ident">responseMessageReceived</a>(); <label for="r57" class="ident">err</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<span class="keyword">return</span> <label for="r57" class="ident">err</label>
+		}
+		<span class="keyword">if</span> <label for="r58" class="ident">msg</label>.<a href="messages.go.html#line-218" class="ident">MaxPacketSize</a> &lt; <a href="#line-17" class="ident">minPacketLength</a> || <label for="r58" class="ident">msg</label>.<a href="messages.go.html#line-218" class="ident">MaxPacketSize</a> &gt; <span class="lit-number">1</span>&lt;&lt;<span class="lit-number">31</span> {
+			<span class="keyword">return</span> <a href="../../../../../pkg/fmt.html" class="ident i2">fmt</a>.<a href="../../../../fmt/errors.go.html#line-17" class="ident">Errorf</a>(<span class="lit-string">"ssh: invalid MaxPacketSize %d from peer"</span>, <label for="r58" class="ident">msg</label>.<a href="messages.go.html#line-218" class="ident">MaxPacketSize</a>)
+		}
+		<label for="r50" class="ident">ch</label>.<a href="#line-154" class="ident">remoteId</a> = <label for="r58" class="ident">msg</label>.<a href="messages.go.html#line-216" class="ident">MyID</a>
+		<label for="r50" class="ident">ch</label>.<a href="#line-161" class="ident">maxRemotePayload</a> = <label for="r58" class="ident">msg</label>.<a href="messages.go.html#line-218" class="ident">MaxPacketSize</a>
+		<label for="r50" class="ident">ch</label>.<a href="#line-186" class="ident">remoteWin</a>.<a href="common.go.html#line-345" class="ident">add</a>(<label for="r58" class="ident">msg</label>.<a href="messages.go.html#line-217" class="ident">MyWindow</a>)
+		<label for="r50" class="ident">ch</label>.<a href="#line-174" class="ident">msg</a> &lt;- <label for="r58" class="ident">msg</label>
+	<span class="keyword">case</span> *<a href="messages.go.html#line-295" class="ident">windowAdjustMsg</a>:
+		<span class="keyword">if</span> !<label for="r50" class="ident">ch</label>.<a href="#line-186" class="ident">remoteWin</a>.<a href="common.go.html#line-345" class="ident">add</a>(<label for="r59" class="ident">msg</label>.<a href="messages.go.html#line-297" class="ident">AdditionalBytes</a>) {
+			<span class="keyword">return</span> <a href="../../../../../pkg/fmt.html" class="ident i2">fmt</a>.<a href="../../../../fmt/errors.go.html#line-17" class="ident">Errorf</a>(<span class="lit-string">"ssh: invalid window update for %d bytes"</span>, <label for="r59" class="ident">msg</label>.<a href="messages.go.html#line-297" class="ident">AdditionalBytes</a>)
+		}
+	<span class="keyword">case</span> *<a href="messages.go.html#line-234" class="ident">channelRequestMsg</a>:
+		<label for="r60" class="ident">req</label> := <a href="#line-84" class="ident">Request</a>{
+			<a href="#line-85" class="ident">Type</a>:      <label for="r61" class="ident">msg</label>.<a href="messages.go.html#line-236" class="ident">Request</a>,
+			<a href="#line-86" class="ident">WantReply</a>: <label for="r61" class="ident">msg</label>.<a href="messages.go.html#line-237" class="ident">WantReply</a>,
+			<a href="#line-87" class="ident">Payload</a>:   <label for="r61" class="ident">msg</label>.<a href="messages.go.html#line-238" class="ident">RequestSpecificData</a>,
+			<a href="#line-89" class="ident">ch</a>:        <label for="r50" class="ident">ch</label>,
+		}
+
+		<label for="r50" class="ident">ch</label>.<a href="#line-181" class="ident">incomingRequests</a> &lt;- &amp;<label for="r60" class="ident">req</label>
+	<span class="keyword">default</span>:
+		<label for="r50" class="ident">ch</label>.<a href="#line-174" class="ident">msg</a> &lt;- <label for="r62" class="ident">msg</label>
+	}
+	<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+}
+
+<span class="keyword">func</span> (<label for="r63" class="ident">m</label> *<a href="mux.go.html#line-88" class="ident">mux</a>) <label for="r64" class="ident"><a href="../../../../../use/golang.org/x/crypto/ssh..mux*99830.newChannel*215d3.html" class="ident">newChannel</a></label>(<label for="r65" class="ident">chanType</label> <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>, <label for="r66" class="ident">direction</label> <a href="#line-141" class="ident">channelDirection</a>, <label for="r67" class="ident">extraData</label> []<a href="../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>) *<a href="#line-150" class="ident">channel</a> {
+	<label for="r68" class="ident">ch</label> := &amp;<a href="#line-150" class="ident">channel</a>{
+		<a href="#line-186" class="ident">remoteWin</a>:        <a href="common.go.html#line-336" class="ident">window</a>{<a href="common.go.html#line-337" class="ident">Cond</a>: <a href="common.go.html#line-332" class="ident">newCond</a>()},
+		<a href="#line-192" class="ident">myWindow</a>:         <a href="#line-23" class="ident">channelWindowSize</a>,
+		<a href="#line-187" class="ident">pending</a>:          <a href="buffer.go.html#line-32" class="ident">newBuffer</a>(),
+		<a href="#line-188" class="ident">extPending</a>:       <a href="buffer.go.html#line-32" class="ident">newBuffer</a>(),
+		<a href="#line-171" class="ident">direction</a>:        <label for="r66" class="ident">direction</label>,
+		<a href="#line-181" class="ident">incomingRequests</a>: <a href="../../../../runtime/chan.go.html#line-71">make</a>(<span class="keyword">chan</span> *<a href="#line-84" class="ident">Request</a>, <a href="handshake.go.html#line-25" class="ident">chanSize</a>),
+		<a href="#line-174" class="ident">msg</a>:              <a href="../../../../runtime/chan.go.html#line-71">make</a>(<span class="keyword">chan</span> <span class="keyword">interface</span>{}, <a href="handshake.go.html#line-25" class="ident">chanSize</a>),
+		<a href="#line-152" class="ident">chanType</a>:         <label for="r65" class="ident">chanType</label>,
+		<a href="#line-153" class="ident">extraData</a>:        <label for="r67" class="ident">extraData</label>,
+		<a href="#line-163" class="ident">mux</a>:              <label for="r63" class="ident">m</label>,
+		<a href="#line-203" class="ident">packetPool</a>:       <a href="../../../../../pkg/builtin.html#name-make" class="ident">make</a>(<span class="keyword">map</span>[<a href="../../../../../pkg/builtin.html#name-uint32" class="ident">uint32</a>][]<a href="../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>),
+	}
+	<label for="r68" class="ident">ch</label>.<a href="#line-154" class="ident">localId</a> = <label for="r63" class="ident">m</label>.<a href="mux.go.html#line-90" class="ident">chanList</a>.<a href="mux.go.html#line-36" class="ident">add</a>(<label for="r68" class="ident">ch</label>)
+	<span class="keyword">return</span> <label for="r68" class="ident">ch</label>
+}
+
+<span class="keyword">var</span> <a href="../../../../../pkg/golang.org/x/crypto/ssh.html#name-errUndecided" class="ident">errUndecided</a> = <a href="../../../../../pkg/errors.html" class="ident i1">errors</a>.<a href="../../../../errors/errors.go.html#line-58" class="ident">New</a>(<span class="lit-string">"ssh: must Accept or Reject channel"</span>)
+<span class="keyword">var</span> <a href="../../../../../pkg/golang.org/x/crypto/ssh.html#name-errDecidedAlready" class="ident">errDecidedAlready</a> = <a href="../../../../../pkg/errors.html" class="ident i1">errors</a>.<a href="../../../../errors/errors.go.html#line-58" class="ident">New</a>(<span class="lit-string">"ssh: can call Accept or Reject only once"</span>)
+
+<span class="keyword">type</span> <a href="../../../../../pkg/golang.org/x/crypto/ssh.html#name-extChannel" class="ident">extChannel</a> <span class="keyword">struct</span> {
+	<a href="../../../../../use/golang.org/x/crypto/ssh..extChannel*63125.code*5694d.html" class="ident">code</a> <a href="../../../../../pkg/builtin.html#name-uint32" class="ident">uint32</a>
+	<a href="../../../../../use/golang.org/x/crypto/ssh..extChannel*63125.ch*34367.html" class="ident">ch</a>   *<a href="#line-150" class="ident">channel</a>
+}
+
+<span class="keyword">func</span> (<label for="r69" class="ident">e</label> *<a href="#line-478" class="ident">extChannel</a>) <label for="r70" class="ident"><a href="../../../../../use/golang.org/x/crypto/ssh..extChannel*63125.Write.html" class="ident">Write</a></label>(<label for="r71" class="ident">data</label> []<a href="../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>) (<label for="r72" class="ident">n</label> <a href="../../../../../pkg/builtin.html#name-int" class="ident">int</a>, <label for="r73" class="ident">err</label> <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<span class="keyword">return</span> <label for="r69" class="ident">e</label>.<a href="#line-480" class="ident">ch</a>.<a href="#line-232" class="ident">WriteExtended</a>(<label for="r71" class="ident">data</label>, <label for="r69" class="ident">e</label>.<a href="#line-479" class="ident">code</a>)
+}
+
+<span class="keyword">func</span> (<label for="r74" class="ident">e</label> *<a href="#line-478" class="ident">extChannel</a>) <label for="r75" class="ident"><a href="../../../../../use/golang.org/x/crypto/ssh..extChannel*63125.Read.html" class="ident">Read</a></label>(<label for="r76" class="ident">data</label> []<a href="../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>) (<label for="r77" class="ident">n</label> <a href="../../../../../pkg/builtin.html#name-int" class="ident">int</a>, <label for="r78" class="ident">err</label> <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<span class="keyword">return</span> <label for="r74" class="ident">e</label>.<a href="#line-480" class="ident">ch</a>.<a href="#line-346" class="ident">ReadExtended</a>(<label for="r76" class="ident">data</label>, <label for="r74" class="ident">e</label>.<a href="#line-479" class="ident">code</a>)
+}
+
+<span class="keyword">func</span> (<label for="r79" class="ident">ch</label> *<a href="#line-150" class="ident">channel</a>) <label for="r80" class="ident"><a href="../../../../../use/golang.org/x/crypto/ssh..channel*69e36.Accept.html" class="ident">Accept</a></label>() (<a href="#line-49" class="ident">Channel</a>, &lt;-<span class="keyword">chan</span> *<a href="#line-84" class="ident">Request</a>, <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<span class="keyword">if</span> <label for="r79" class="ident">ch</label>.<a href="#line-167" class="ident">decided</a> {
+		<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="#line-476" class="ident">errDecidedAlready</a>
+	}
+	<label for="r79" class="ident">ch</label>.<a href="#line-160" class="ident">maxIncomingPayload</a> = <a href="#line-21" class="ident">channelMaxPacket</a>
+	<label for="r81" class="ident">confirm</label> := <a href="messages.go.html#line-214" class="ident">channelOpenConfirmMsg</a>{
+		<a href="messages.go.html#line-215" class="ident">PeersID</a>:       <label for="r79" class="ident">ch</label>.<a href="#line-154" class="ident">remoteId</a>,
+		<a href="messages.go.html#line-216" class="ident">MyID</a>:          <label for="r79" class="ident">ch</label>.<a href="#line-154" class="ident">localId</a>,
+		<a href="messages.go.html#line-217" class="ident">MyWindow</a>:      <label for="r79" class="ident">ch</label>.<a href="#line-192" class="ident">myWindow</a>,
+		<a href="messages.go.html#line-218" class="ident">MaxPacketSize</a>: <label for="r79" class="ident">ch</label>.<a href="#line-160" class="ident">maxIncomingPayload</a>,
+	}
+	<label for="r79" class="ident">ch</label>.<a href="#line-167" class="ident">decided</a> = <a href="../../../../../pkg/builtin.html#name-true" class="ident">true</a>
+	<span class="keyword">if</span> <label for="r82" class="ident">err</label> := <label for="r79" class="ident">ch</label>.<a href="#line-220" class="ident">sendMessage</a>(<label for="r81" class="ident">confirm</label>); <label for="r82" class="ident">err</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <label for="r82" class="ident">err</label>
+	}
+
+	<span class="keyword">return</span> <label for="r79" class="ident">ch</label>, <label for="r79" class="ident">ch</label>.<a href="#line-181" class="ident">incomingRequests</a>, <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+}
+
+<span class="keyword">func</span> (<label for="r83" class="ident">ch</label> *<a href="#line-150" class="ident">channel</a>) <label for="r84" class="ident"><a href="../../../../../use/golang.org/x/crypto/ssh..channel*69e36.Reject.html" class="ident">Reject</a></label>(<label for="r85" class="ident">reason</label> <a href="#line-110" class="ident">RejectionReason</a>, <label for="r86" class="ident">message</label> <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>) <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<span class="keyword">if</span> <label for="r83" class="ident">ch</label>.<a href="#line-167" class="ident">decided</a> {
+		<span class="keyword">return</span> <a href="#line-476" class="ident">errDecidedAlready</a>
+	}
+	<label for="r87" class="ident">reject</label> := <a href="messages.go.html#line-225" class="ident">channelOpenFailureMsg</a>{
+		<a href="messages.go.html#line-226" class="ident">PeersID</a>:  <label for="r83" class="ident">ch</label>.<a href="#line-154" class="ident">remoteId</a>,
+		<a href="messages.go.html#line-227" class="ident">Reason</a>:   <label for="r85" class="ident">reason</label>,
+		<a href="messages.go.html#line-228" class="ident">Message</a>:  <label for="r86" class="ident">message</label>,
+		<a href="messages.go.html#line-229" class="ident">Language</a>: <span class="lit-string">"en"</span>,
+	}
+	<label for="r83" class="ident">ch</label>.<a href="#line-167" class="ident">decided</a> = <a href="../../../../../pkg/builtin.html#name-true" class="ident">true</a>
+	<span class="keyword">return</span> <label for="r83" class="ident">ch</label>.<a href="#line-220" class="ident">sendMessage</a>(<label for="r87" class="ident">reject</label>)
+}
+
+<span class="keyword">func</span> (<label for="r88" class="ident">ch</label> *<a href="#line-150" class="ident">channel</a>) <label for="r89" class="ident"><a href="../../../../../use/golang.org/x/crypto/ssh..channel*69e36.Read.html" class="ident">Read</a></label>(<label for="r90" class="ident">data</label> []<a href="../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>) (<a href="../../../../../pkg/builtin.html#name-int" class="ident">int</a>, <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<span class="keyword">if</span> !<label for="r88" class="ident">ch</label>.<a href="#line-167" class="ident">decided</a> {
+		<span class="keyword">return</span> <span class="lit-number">0</span>, <a href="#line-475" class="ident">errUndecided</a>
+	}
+	<span class="keyword">return</span> <label for="r88" class="ident">ch</label>.<a href="#line-346" class="ident">ReadExtended</a>(<label for="r90" class="ident">data</label>, <span class="lit-number">0</span>)
+}
+
+<span class="keyword">func</span> (<label for="r91" class="ident">ch</label> *<a href="#line-150" class="ident">channel</a>) <label for="r92" class="ident"><a href="../../../../../use/golang.org/x/crypto/ssh..channel*69e36.Write.html" class="ident">Write</a></label>(<label for="r93" class="ident">data</label> []<a href="../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>) (<a href="../../../../../pkg/builtin.html#name-int" class="ident">int</a>, <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<span class="keyword">if</span> !<label for="r91" class="ident">ch</label>.<a href="#line-167" class="ident">decided</a> {
+		<span class="keyword">return</span> <span class="lit-number">0</span>, <a href="#line-475" class="ident">errUndecided</a>
+	}
+	<span class="keyword">return</span> <label for="r91" class="ident">ch</label>.<a href="#line-232" class="ident">WriteExtended</a>(<label for="r93" class="ident">data</label>, <span class="lit-number">0</span>)
+}
+
+<span class="keyword">func</span> (<label for="r94" class="ident">ch</label> *<a href="#line-150" class="ident">channel</a>) <label for="r95" class="ident"><a href="../../../../../use/golang.org/x/crypto/ssh..channel*69e36.CloseWrite.html" class="ident">CloseWrite</a></label>() <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<span class="keyword">if</span> !<label for="r94" class="ident">ch</label>.<a href="#line-167" class="ident">decided</a> {
+		<span class="keyword">return</span> <a href="#line-475" class="ident">errUndecided</a>
+	}
+	<label for="r94" class="ident">ch</label>.<a href="#line-183" class="ident">sentEOF</a> = <a href="../../../../../pkg/builtin.html#name-true" class="ident">true</a>
+	<span class="keyword">return</span> <label for="r94" class="ident">ch</label>.<a href="#line-220" class="ident">sendMessage</a>(<a href="messages.go.html#line-265" class="ident">channelEOFMsg</a>{
+		<a href="messages.go.html#line-266" class="ident">PeersID</a>: <label for="r94" class="ident">ch</label>.<a href="#line-154" class="ident">remoteId</a>})
+}
+
+<span class="keyword">func</span> (<label for="r96" class="ident">ch</label> *<a href="#line-150" class="ident">channel</a>) <label for="r97" class="ident"><a href="../../../../../use/golang.org/x/crypto/ssh..channel*69e36.Close.html" class="ident">Close</a></label>() <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<span class="keyword">if</span> !<label for="r96" class="ident">ch</label>.<a href="#line-167" class="ident">decided</a> {
+		<span class="keyword">return</span> <a href="#line-475" class="ident">errUndecided</a>
+	}
+
+	<span class="keyword">return</span> <label for="r96" class="ident">ch</label>.<a href="#line-220" class="ident">sendMessage</a>(<a href="messages.go.html#line-258" class="ident">channelCloseMsg</a>{
+		<a href="messages.go.html#line-259" class="ident">PeersID</a>: <label for="r96" class="ident">ch</label>.<a href="#line-154" class="ident">remoteId</a>})
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Extended returns an io.ReadWriter that sends and receives data on the given,</span><span class="comment"> SSH extended stream. Such streams are used, for example, for stderr.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r98" class="ident">ch</label> *<a href="#line-150" class="ident">channel</a>) <label for="r99" class="ident"><a href="../../../../../use/golang.org/x/crypto/ssh..channel*69e36.Extended.html" class="ident">Extended</a></label>(<label for="r100" class="ident">code</label> <a href="../../../../../pkg/builtin.html#name-uint32" class="ident">uint32</a>) <a href="../../../../../pkg/io.html" class="ident i3">io</a>.<a href="../../../../io/io.go.html#line-126" class="ident">ReadWriter</a> {
+	<span class="keyword">if</span> !<label for="r98" class="ident">ch</label>.<a href="#line-167" class="ident">decided</a> {
+		<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+	}
+	<span class="keyword">return</span> &amp;<a href="#line-478" class="ident">extChannel</a>{<label for="r100" class="ident">code</label>, <label for="r98" class="ident">ch</label>}
+}
+
+<span class="keyword">func</span> (<label for="r101" class="ident">ch</label> *<a href="#line-150" class="ident">channel</a>) <label for="r102" class="ident"><a href="../../../../../use/golang.org/x/crypto/ssh..channel*69e36.Stderr.html" class="ident">Stderr</a></label>() <a href="../../../../../pkg/io.html" class="ident i3">io</a>.<a href="../../../../io/io.go.html#line-126" class="ident">ReadWriter</a> {
+	<span class="keyword">return</span> <label for="r101" class="ident">ch</label>.<a href="#line-558" class="ident">Extended</a>(<span class="lit-number">1</span>)
+}
+
+<span class="keyword">func</span> (<label for="r103" class="ident">ch</label> *<a href="#line-150" class="ident">channel</a>) <label for="r104" class="ident"><a href="../../../../../use/golang.org/x/crypto/ssh..channel*69e36.SendRequest.html" class="ident">SendRequest</a></label>(<label for="r105" class="ident">name</label> <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>, <label for="r106" class="ident">wantReply</label> <a href="../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>, <label for="r107" class="ident">payload</label> []<a href="../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>) (<a href="../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>, <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<span class="keyword">if</span> !<label for="r103" class="ident">ch</label>.<a href="#line-167" class="ident">decided</a> {
+		<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-false" class="ident">false</a>, <a href="#line-475" class="ident">errUndecided</a>
+	}
+
+	<span class="keyword">if</span> <label for="r106" class="ident">wantReply</label> {
+		<label for="r103" class="ident">ch</label>.<a href="#line-179" class="ident">sentRequestMu</a>.<a href="../../../../sync/mutex.go.html#line-72" class="ident">Lock</a>()
+		<span class="keyword">defer</span> <label for="r103" class="ident">ch</label>.<a href="#line-179" class="ident">sentRequestMu</a>.<a href="../../../../sync/mutex.go.html#line-179" class="ident">Unlock</a>()
+	}
+
+	<label for="r108" class="ident">msg</label> := <a href="messages.go.html#line-234" class="ident">channelRequestMsg</a>{
+		<a href="messages.go.html#line-235" class="ident">PeersID</a>:             <label for="r103" class="ident">ch</label>.<a href="#line-154" class="ident">remoteId</a>,
+		<a href="messages.go.html#line-236" class="ident">Request</a>:             <label for="r105" class="ident">name</label>,
+		<a href="messages.go.html#line-237" class="ident">WantReply</a>:           <label for="r106" class="ident">wantReply</label>,
+		<a href="messages.go.html#line-238" class="ident">RequestSpecificData</a>: <label for="r107" class="ident">payload</label>,
+	}
+
+	<span class="keyword">if</span> <label for="r109" class="ident">err</label> := <label for="r103" class="ident">ch</label>.<a href="#line-220" class="ident">sendMessage</a>(<label for="r108" class="ident">msg</label>); <label for="r109" class="ident">err</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-false" class="ident">false</a>, <label for="r109" class="ident">err</label>
+	}
+
+	<span class="keyword">if</span> <label for="r106" class="ident">wantReply</label> {
+		<label for="r110" class="ident">m</label>, <label for="r111" class="ident">ok</label> := (&lt;-<label for="r103" class="ident">ch</label>.<a href="#line-174" class="ident">msg</a>)
+		<span class="keyword">if</span> !<label for="r111" class="ident">ok</label> {
+			<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-false" class="ident">false</a>, <a href="../../../../../pkg/io.html" class="ident i3">io</a>.<a href="../../../../io/io.go.html#line-44" class="ident">EOF</a>
+		}
+		<span class="keyword">switch</span> <label for="r110" class="ident">m</label>.(<span class="keyword">type</span>) {
+		<span class="keyword">case</span> *<a href="messages.go.html#line-251" class="ident">channelRequestFailureMsg</a>:
+			<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-false" class="ident">false</a>, <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+		<span class="keyword">case</span> *<a href="messages.go.html#line-244" class="ident">channelRequestSuccessMsg</a>:
+			<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+		<span class="keyword">default</span>:
+			<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-false" class="ident">false</a>, <a href="../../../../../pkg/fmt.html" class="ident i2">fmt</a>.<a href="../../../../fmt/errors.go.html#line-17" class="ident">Errorf</a>(<span class="lit-string">"ssh: unexpected response to channel request: %#v"</span>, <label for="r110" class="ident">m</label>)
+		}
+	}
+
+	<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-false" class="ident">false</a>, <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ackRequest either sends an ack or nack to the channel request.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r112" class="ident">ch</label> *<a href="#line-150" class="ident">channel</a>) <label for="r113" class="ident"><a href="../../../../../use/golang.org/x/crypto/ssh..channel*69e36.ackRequest*d87a6.html" class="ident">ackRequest</a></label>(<label for="r114" class="ident">ok</label> <a href="../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>) <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<span class="keyword">if</span> !<label for="r112" class="ident">ch</label>.<a href="#line-167" class="ident">decided</a> {
+		<span class="keyword">return</span> <a href="#line-475" class="ident">errUndecided</a>
+	}
+
+	<span class="keyword">var</span> <label for="r115" class="ident">msg</label> <span class="keyword">interface</span>{}
+	<span class="keyword">if</span> !<label for="r114" class="ident">ok</label> {
+		<label for="r115" class="ident">msg</label> = <a href="messages.go.html#line-251" class="ident">channelRequestFailureMsg</a>{
+			<a href="messages.go.html#line-252" class="ident">PeersID</a>: <label for="r112" class="ident">ch</label>.<a href="#line-154" class="ident">remoteId</a>,
+		}
+	} <span class="keyword">else</span> {
+		<label for="r115" class="ident">msg</label> = <a href="messages.go.html#line-244" class="ident">channelRequestSuccessMsg</a>{
+			<a href="messages.go.html#line-245" class="ident">PeersID</a>: <label for="r112" class="ident">ch</label>.<a href="#line-154" class="ident">remoteId</a>,
+		}
+	}
+	<span class="keyword">return</span> <label for="r112" class="ident">ch</label>.<a href="#line-220" class="ident">sendMessage</a>(<label for="r115" class="ident">msg</label>)
+}
+
+<span class="keyword">func</span> (<label for="r116" class="ident">ch</label> *<a href="#line-150" class="ident">channel</a>) <label for="r117" class="ident"><a href="../../../../../use/golang.org/x/crypto/ssh..channel*69e36.ChannelType.html" class="ident">ChannelType</a></label>() <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a> {
+	<span class="keyword">return</span> <label for="r116" class="ident">ch</label>.<a href="#line-152" class="ident">chanType</a>
+}
+
+<span class="keyword">func</span> (<label for="r118" class="ident">ch</label> *<a href="#line-150" class="ident">channel</a>) <label for="r119" class="ident"><a href="../../../../../use/golang.org/x/crypto/ssh..channel*69e36.ExtraData.html" class="ident">ExtraData</a></label>() []<a href="../../../../../pkg/builtin.html#name-byte" class="ident">byte</a> {
+	<span class="keyword">return</span> <label for="r118" class="ident">ch</label>.<a href="#line-153" class="ident">extraData</a>
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

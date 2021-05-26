@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: observability.go in package contrib.go.opencensus.io/integrations/ocsql</title>
+<link href="../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	observability.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../pkg/contrib.go.opencensus.io/integrations/ocsql.html">contrib.go.opencensus.io/integrations/ocsql</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1,
+input[id=i2]:checked ~pre .i2,
+input[id=i3]:checked ~pre .i3,
+input[id=i4]:checked ~pre .i4
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<input id="i2" type="radio" name="i"/>
+<input id="i3" type="radio" name="i"/>
+<input id="i4" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+</div>
+<div class="code"><pre><code><span class="keyword">package</span> ocsql
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"context"</span></label>
+	<label for="i1"><span class="lit-string i1">"time"</span></label>
+
+	<label for="i2"><span class="lit-string i2">"go.opencensus.io/stats"</span></label>
+	<label for="i3"><span class="lit-string i3">"go.opencensus.io/stats/view"</span></label>
+	<label for="i4"><span class="lit-string i4">"go.opencensus.io/tag"</span></label>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> The following tags are applied to stats recorded by this package.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> GoSQLMethod is the SQL method called.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> GoSQLError is the error received while calling a SQL method.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> GoSQLStatus identifies success vs. error from the SQL method response.</span></div>
+<div class="code"><pre><code>	<a href="../../../../pkg/contrib.go.opencensus.io/integrations/ocsql.html#name-GoSQLStatus" class="ident">GoSQLStatus</a>, _ = <a href="../../../../pkg/go.opencensus.io/tag.html" class="ident i4">tag</a>.<a href="../../../go.opencensus.io/tag/key.go.html#line-25" class="ident">NewKey</a>(<span class="lit-string">"go_sql_status"</span>)
+
+	<a href="../../../../pkg/contrib.go.opencensus.io/integrations/ocsql.html#name-valueOK" class="ident">valueOK</a>  = <a href="../../../../pkg/go.opencensus.io/tag.html" class="ident i4">tag</a>.<a href="../../../go.opencensus.io/tag/map.go.html#line-107" class="ident">Insert</a>(<a href="#line-19" class="ident">GoSQLStatus</a>, <span class="lit-string">"OK"</span>)
+	<a href="../../../../pkg/contrib.go.opencensus.io/integrations/ocsql.html#name-valueErr" class="ident">valueErr</a> = <a href="../../../../pkg/go.opencensus.io/tag.html" class="ident i4">tag</a>.<a href="../../../go.opencensus.io/tag/map.go.html#line-107" class="ident">Insert</a>(<a href="#line-19" class="ident">GoSQLStatus</a>, <span class="lit-string">"ERROR"</span>)
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> The following measures are supported for use in custom views.</span></div>
+<div class="code"><pre><code><span class="keyword">var</span> (
+	<a href="../../../../pkg/contrib.go.opencensus.io/integrations/ocsql.html#name-MeasureLatencyMs" class="ident">MeasureLatencyMs</a>         = <a href="../../../../pkg/go.opencensus.io/stats.html" class="ident i2">stats</a>.<a href="../../../go.opencensus.io/stats/measure_float64.go.html#line-37" class="ident">Float64</a>(<span class="lit-string">"go.sql/latency"</span>, <span class="lit-string">"The latency of calls in milliseconds"</span>, <a href="../../../../pkg/go.opencensus.io/stats.html" class="ident i2">stats</a>.<a href="../../../go.opencensus.io/stats/units.go.html#line-24" class="ident">UnitMilliseconds</a>)
+	<a href="../../../../pkg/contrib.go.opencensus.io/integrations/ocsql.html#name-MeasureOpenConnections" class="ident">MeasureOpenConnections</a>   = <a href="../../../../pkg/go.opencensus.io/stats.html" class="ident i2">stats</a>.<a href="../../../go.opencensus.io/stats/measure_int64.go.html#line-37" class="ident">Int64</a>(<span class="lit-string">"go.sql/connections/open"</span>, <span class="lit-string">"Count of open connections in the pool"</span>, <a href="../../../../pkg/go.opencensus.io/stats.html" class="ident i2">stats</a>.<a href="../../../go.opencensus.io/stats/units.go.html#line-22" class="ident">UnitDimensionless</a>)
+	<a href="../../../../pkg/contrib.go.opencensus.io/integrations/ocsql.html#name-MeasureIdleConnections" class="ident">MeasureIdleConnections</a>   = <a href="../../../../pkg/go.opencensus.io/stats.html" class="ident i2">stats</a>.<a href="../../../go.opencensus.io/stats/measure_int64.go.html#line-37" class="ident">Int64</a>(<span class="lit-string">"go.sql/connections/idle"</span>, <span class="lit-string">"Count of idle connections in the pool"</span>, <a href="../../../../pkg/go.opencensus.io/stats.html" class="ident i2">stats</a>.<a href="../../../go.opencensus.io/stats/units.go.html#line-22" class="ident">UnitDimensionless</a>)
+	<a href="../../../../pkg/contrib.go.opencensus.io/integrations/ocsql.html#name-MeasureActiveConnections" class="ident">MeasureActiveConnections</a> = <a href="../../../../pkg/go.opencensus.io/stats.html" class="ident i2">stats</a>.<a href="../../../go.opencensus.io/stats/measure_int64.go.html#line-37" class="ident">Int64</a>(<span class="lit-string">"go.sql/connections/active"</span>, <span class="lit-string">"Count of active connections in the pool"</span>, <a href="../../../../pkg/go.opencensus.io/stats.html" class="ident i2">stats</a>.<a href="../../../go.opencensus.io/stats/units.go.html#line-22" class="ident">UnitDimensionless</a>)
+	<a href="../../../../pkg/contrib.go.opencensus.io/integrations/ocsql.html#name-MeasureWaitCount" class="ident">MeasureWaitCount</a>         = <a href="../../../../pkg/go.opencensus.io/stats.html" class="ident i2">stats</a>.<a href="../../../go.opencensus.io/stats/measure_int64.go.html#line-37" class="ident">Int64</a>(<span class="lit-string">"go.sql/connections/wait_count"</span>, <span class="lit-string">"The total number of connections waited for"</span>, <a href="../../../../pkg/go.opencensus.io/stats.html" class="ident i2">stats</a>.<a href="../../../go.opencensus.io/stats/units.go.html#line-22" class="ident">UnitDimensionless</a>)
+	<a href="../../../../pkg/contrib.go.opencensus.io/integrations/ocsql.html#name-MeasureWaitDuration" class="ident">MeasureWaitDuration</a>      = <a href="../../../../pkg/go.opencensus.io/stats.html" class="ident i2">stats</a>.<a href="../../../go.opencensus.io/stats/measure_float64.go.html#line-37" class="ident">Float64</a>(<span class="lit-string">"go.sql/connections/wait_duration"</span>, <span class="lit-string">"The total time blocked waiting for a new connection"</span>, <a href="../../../../pkg/go.opencensus.io/stats.html" class="ident i2">stats</a>.<a href="../../../go.opencensus.io/stats/units.go.html#line-24" class="ident">UnitMilliseconds</a>)
+	<a href="../../../../pkg/contrib.go.opencensus.io/integrations/ocsql.html#name-MeasureIdleClosed" class="ident">MeasureIdleClosed</a>        = <a href="../../../../pkg/go.opencensus.io/stats.html" class="ident i2">stats</a>.<a href="../../../go.opencensus.io/stats/measure_int64.go.html#line-37" class="ident">Int64</a>(<span class="lit-string">"go.sql/connections/idle_closed"</span>, <span class="lit-string">"The total number of connections closed due to SetMaxIdleConns"</span>, <a href="../../../../pkg/go.opencensus.io/stats.html" class="ident i2">stats</a>.<a href="../../../go.opencensus.io/stats/units.go.html#line-22" class="ident">UnitDimensionless</a>)
+	<a href="../../../../pkg/contrib.go.opencensus.io/integrations/ocsql.html#name-MeasureLifetimeClosed" class="ident">MeasureLifetimeClosed</a>    = <a href="../../../../pkg/go.opencensus.io/stats.html" class="ident i2">stats</a>.<a href="../../../go.opencensus.io/stats/measure_int64.go.html#line-37" class="ident">Int64</a>(<span class="lit-string">"go.sql/connections/lifetime_closed"</span>, <span class="lit-string">"The total number of connections closed due to SetConnMaxLifetime"</span>, <a href="../../../../pkg/go.opencensus.io/stats.html" class="ident i2">stats</a>.<a href="../../../go.opencensus.io/stats/units.go.html#line-22" class="ident">UnitDimensionless</a>)
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Default distributions used by views in this package</span></div>
+<div class="code"><pre><code><span class="keyword">var</span> (
+	<a href="../../../../pkg/contrib.go.opencensus.io/integrations/ocsql.html#name-DefaultMillisecondsDistribution" class="ident">DefaultMillisecondsDistribution</a> = <a href="../../../../pkg/go.opencensus.io/stats/view.html" class="ident i3">view</a>.<a href="../../../go.opencensus.io/stats/view/aggregation.go.html#line-101" class="ident">Distribution</a>(
+		<span class="lit-number">0.0</span>,
+		<span class="lit-number">0.001</span>,
+		<span class="lit-number">0.005</span>,
+		<span class="lit-number">0.01</span>,
+		<span class="lit-number">0.05</span>,
+		<span class="lit-number">0.1</span>,
+		<span class="lit-number">0.5</span>,
+		<span class="lit-number">1.0</span>,
+		<span class="lit-number">1.5</span>,
+		<span class="lit-number">2.0</span>,
+		<span class="lit-number">2.5</span>,
+		<span class="lit-number">5.0</span>,
+		<span class="lit-number">10.0</span>,
+		<span class="lit-number">25.0</span>,
+		<span class="lit-number">50.0</span>,
+		<span class="lit-number">100.0</span>,
+		<span class="lit-number">200.0</span>,
+		<span class="lit-number">400.0</span>,
+		<span class="lit-number">600.0</span>,
+		<span class="lit-number">800.0</span>,
+		<span class="lit-number">1000.0</span>,
+		<span class="lit-number">1500.0</span>,
+		<span class="lit-number">2000.0</span>,
+		<span class="lit-number">2500.0</span>,
+		<span class="lit-number">5000.0</span>,
+		<span class="lit-number">10000.0</span>,
+		<span class="lit-number">20000.0</span>,
+		<span class="lit-number">40000.0</span>,
+		<span class="lit-number">100000.0</span>,
+		<span class="lit-number">200000.0</span>,
+		<span class="lit-number">500000.0</span>)
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Package ocsql provides some convenience views.</span><span class="comment"> You still need to register these views for data to actually be collected.</span><span class="comment"> You can use the RegisterAllViews function for this.</span></div>
+<div class="code"><pre><code><span class="keyword">var</span> (
+	<a href="../../../../pkg/contrib.go.opencensus.io/integrations/ocsql.html#name-SQLClientLatencyView" class="ident">SQLClientLatencyView</a> = &amp;<a href="../../../../pkg/go.opencensus.io/stats/view.html" class="ident i3">view</a>.<a href="../../../go.opencensus.io/stats/view/view.go.html#line-35" class="ident">View</a>{
+		<a href="../../../go.opencensus.io/stats/view/view.go.html#line-36" class="ident">Name</a>:        <span class="lit-string">"go.sql/client/latency"</span>,
+		<a href="../../../go.opencensus.io/stats/view/view.go.html#line-37" class="ident">Description</a>: <span class="lit-string">"The distribution of latencies of various calls in milliseconds"</span>,
+		<a href="../../../go.opencensus.io/stats/view/view.go.html#line-44" class="ident">Measure</a>:     <a href="#line-27" class="ident">MeasureLatencyMs</a>,
+		<a href="../../../go.opencensus.io/stats/view/view.go.html#line-47" class="ident">Aggregation</a>: <a href="#line-39" class="ident">DefaultMillisecondsDistribution</a>,
+		<a href="../../../go.opencensus.io/stats/view/view.go.html#line-41" class="ident">TagKeys</a>:     []<a href="../../../../pkg/go.opencensus.io/tag.html" class="ident i4">tag</a>.<a href="../../../go.opencensus.io/tag/key.go.html#line-19" class="ident">Key</a>{<a href="#line-15" class="ident">GoSQLMethod</a>, <a href="#line-17" class="ident">GoSQLError</a>, <a href="#line-19" class="ident">GoSQLStatus</a>},
+	}
+
+	<a href="../../../../pkg/contrib.go.opencensus.io/integrations/ocsql.html#name-SQLClientCallsView" class="ident">SQLClientCallsView</a> = &amp;<a href="../../../../pkg/go.opencensus.io/stats/view.html" class="ident i3">view</a>.<a href="../../../go.opencensus.io/stats/view/view.go.html#line-35" class="ident">View</a>{
+		<a href="../../../go.opencensus.io/stats/view/view.go.html#line-36" class="ident">Name</a>:        <span class="lit-string">"go.sql/client/calls"</span>,
+		<a href="../../../go.opencensus.io/stats/view/view.go.html#line-37" class="ident">Description</a>: <span class="lit-string">"The number of various calls of methods"</span>,
+		<a href="../../../go.opencensus.io/stats/view/view.go.html#line-44" class="ident">Measure</a>:     <a href="#line-27" class="ident">MeasureLatencyMs</a>,
+		<a href="../../../go.opencensus.io/stats/view/view.go.html#line-47" class="ident">Aggregation</a>: <a href="../../../../pkg/go.opencensus.io/stats/view.html" class="ident i3">view</a>.<a href="../../../go.opencensus.io/stats/view/aggregation.go.html#line-70" class="ident">Count</a>(),
+		<a href="../../../go.opencensus.io/stats/view/view.go.html#line-41" class="ident">TagKeys</a>:     []<a href="../../../../pkg/go.opencensus.io/tag.html" class="ident i4">tag</a>.<a href="../../../go.opencensus.io/tag/key.go.html#line-19" class="ident">Key</a>{<a href="#line-15" class="ident">GoSQLMethod</a>, <a href="#line-17" class="ident">GoSQLError</a>, <a href="#line-19" class="ident">GoSQLStatus</a>},
+	}
+
+	<a href="../../../../pkg/contrib.go.opencensus.io/integrations/ocsql.html#name-SQLClientOpenConnectionsView" class="ident">SQLClientOpenConnectionsView</a> = &amp;<a href="../../../../pkg/go.opencensus.io/stats/view.html" class="ident i3">view</a>.<a href="../../../go.opencensus.io/stats/view/view.go.html#line-35" class="ident">View</a>{
+		<a href="../../../go.opencensus.io/stats/view/view.go.html#line-36" class="ident">Name</a>:        <span class="lit-string">"go.sql/db/connections/open"</span>,
+		<a href="../../../go.opencensus.io/stats/view/view.go.html#line-37" class="ident">Description</a>: <span class="lit-string">"The number of open connections"</span>,
+		<a href="../../../go.opencensus.io/stats/view/view.go.html#line-44" class="ident">Measure</a>:     <a href="#line-28" class="ident">MeasureOpenConnections</a>,
+		<a href="../../../go.opencensus.io/stats/view/view.go.html#line-47" class="ident">Aggregation</a>: <a href="../../../../pkg/go.opencensus.io/stats/view.html" class="ident i3">view</a>.<a href="../../../go.opencensus.io/stats/view/aggregation.go.html#line-114" class="ident">LastValue</a>(),
+	}
+
+	<a href="../../../../pkg/contrib.go.opencensus.io/integrations/ocsql.html#name-SQLClientIdleConnectionsView" class="ident">SQLClientIdleConnectionsView</a> = &amp;<a href="../../../../pkg/go.opencensus.io/stats/view.html" class="ident i3">view</a>.<a href="../../../go.opencensus.io/stats/view/view.go.html#line-35" class="ident">View</a>{
+		<a href="../../../go.opencensus.io/stats/view/view.go.html#line-36" class="ident">Name</a>:        <span class="lit-string">"go.sql/db/connections/idle"</span>,
+		<a href="../../../go.opencensus.io/stats/view/view.go.html#line-37" class="ident">Description</a>: <span class="lit-string">"The number of idle connections"</span>,
+		<a href="../../../go.opencensus.io/stats/view/view.go.html#line-44" class="ident">Measure</a>:     <a href="#line-29" class="ident">MeasureIdleConnections</a>,
+		<a href="../../../go.opencensus.io/stats/view/view.go.html#line-47" class="ident">Aggregation</a>: <a href="../../../../pkg/go.opencensus.io/stats/view.html" class="ident i3">view</a>.<a href="../../../go.opencensus.io/stats/view/aggregation.go.html#line-114" class="ident">LastValue</a>(),
+	}
+
+	<a href="../../../../pkg/contrib.go.opencensus.io/integrations/ocsql.html#name-SQLClientActiveConnectionsView" class="ident">SQLClientActiveConnectionsView</a> = &amp;<a href="../../../../pkg/go.opencensus.io/stats/view.html" class="ident i3">view</a>.<a href="../../../go.opencensus.io/stats/view/view.go.html#line-35" class="ident">View</a>{
+		<a href="../../../go.opencensus.io/stats/view/view.go.html#line-36" class="ident">Name</a>:        <span class="lit-string">"go.sql/db/connections/active"</span>,
+		<a href="../../../go.opencensus.io/stats/view/view.go.html#line-37" class="ident">Description</a>: <span class="lit-string">"The number of active connections"</span>,
+		<a href="../../../go.opencensus.io/stats/view/view.go.html#line-44" class="ident">Measure</a>:     <a href="#line-30" class="ident">MeasureActiveConnections</a>,
+		<a href="../../../go.opencensus.io/stats/view/view.go.html#line-47" class="ident">Aggregation</a>: <a href="../../../../pkg/go.opencensus.io/stats/view.html" class="ident i3">view</a>.<a href="../../../go.opencensus.io/stats/view/aggregation.go.html#line-114" class="ident">LastValue</a>(),
+	}
+
+	<a href="../../../../pkg/contrib.go.opencensus.io/integrations/ocsql.html#name-SQLClientWaitCountView" class="ident">SQLClientWaitCountView</a> = &amp;<a href="../../../../pkg/go.opencensus.io/stats/view.html" class="ident i3">view</a>.<a href="../../../go.opencensus.io/stats/view/view.go.html#line-35" class="ident">View</a>{
+		<a href="../../../go.opencensus.io/stats/view/view.go.html#line-36" class="ident">Name</a>:        <span class="lit-string">"go.sql/db/connections/wait_count"</span>,
+		<a href="../../../go.opencensus.io/stats/view/view.go.html#line-37" class="ident">Description</a>: <span class="lit-string">"The total number of connections waited for"</span>,
+		<a href="../../../go.opencensus.io/stats/view/view.go.html#line-44" class="ident">Measure</a>:     <a href="#line-31" class="ident">MeasureWaitCount</a>,
+		<a href="../../../go.opencensus.io/stats/view/view.go.html#line-47" class="ident">Aggregation</a>: <a href="../../../../pkg/go.opencensus.io/stats/view.html" class="ident i3">view</a>.<a href="../../../go.opencensus.io/stats/view/aggregation.go.html#line-114" class="ident">LastValue</a>(),
+	}
+
+	<a href="../../../../pkg/contrib.go.opencensus.io/integrations/ocsql.html#name-SQLClientWaitDurationView" class="ident">SQLClientWaitDurationView</a> = &amp;<a href="../../../../pkg/go.opencensus.io/stats/view.html" class="ident i3">view</a>.<a href="../../../go.opencensus.io/stats/view/view.go.html#line-35" class="ident">View</a>{
+		<a href="../../../go.opencensus.io/stats/view/view.go.html#line-36" class="ident">Name</a>:        <span class="lit-string">"go.sql/db/connections/wait_duration"</span>,
+		<a href="../../../go.opencensus.io/stats/view/view.go.html#line-37" class="ident">Description</a>: <span class="lit-string">"The total time blocked waiting for a new connection"</span>,
+		<a href="../../../go.opencensus.io/stats/view/view.go.html#line-44" class="ident">Measure</a>:     <a href="#line-32" class="ident">MeasureWaitDuration</a>,
+		<a href="../../../go.opencensus.io/stats/view/view.go.html#line-47" class="ident">Aggregation</a>: <a href="../../../../pkg/go.opencensus.io/stats/view.html" class="ident i3">view</a>.<a href="../../../go.opencensus.io/stats/view/aggregation.go.html#line-114" class="ident">LastValue</a>(),
+	}
+
+	<a href="../../../../pkg/contrib.go.opencensus.io/integrations/ocsql.html#name-SQLClientIdleClosedView" class="ident">SQLClientIdleClosedView</a> = &amp;<a href="../../../../pkg/go.opencensus.io/stats/view.html" class="ident i3">view</a>.<a href="../../../go.opencensus.io/stats/view/view.go.html#line-35" class="ident">View</a>{
+		<a href="../../../go.opencensus.io/stats/view/view.go.html#line-36" class="ident">Name</a>:        <span class="lit-string">"go.sql/db/connections/idle_closed_count"</span>,
+		<a href="../../../go.opencensus.io/stats/view/view.go.html#line-37" class="ident">Description</a>: <span class="lit-string">"The total number of connections closed due to SetMaxIdleConns"</span>,
+		<a href="../../../go.opencensus.io/stats/view/view.go.html#line-44" class="ident">Measure</a>:     <a href="#line-33" class="ident">MeasureIdleClosed</a>,
+		<a href="../../../go.opencensus.io/stats/view/view.go.html#line-47" class="ident">Aggregation</a>: <a href="../../../../pkg/go.opencensus.io/stats/view.html" class="ident i3">view</a>.<a href="../../../go.opencensus.io/stats/view/aggregation.go.html#line-114" class="ident">LastValue</a>(),
+	}
+
+	<a href="../../../../pkg/contrib.go.opencensus.io/integrations/ocsql.html#name-SQLClientLifetimeClosedView" class="ident">SQLClientLifetimeClosedView</a> = &amp;<a href="../../../../pkg/go.opencensus.io/stats/view.html" class="ident i3">view</a>.<a href="../../../go.opencensus.io/stats/view/view.go.html#line-35" class="ident">View</a>{
+		<a href="../../../go.opencensus.io/stats/view/view.go.html#line-36" class="ident">Name</a>:        <span class="lit-string">"go.sql/db/connections/lifetime_closed_count"</span>,
+		<a href="../../../go.opencensus.io/stats/view/view.go.html#line-37" class="ident">Description</a>: <span class="lit-string">"The total number of connections closed due to SetConnMaxLifetime"</span>,
+		<a href="../../../go.opencensus.io/stats/view/view.go.html#line-44" class="ident">Measure</a>:     <a href="#line-34" class="ident">MeasureLifetimeClosed</a>,
+		<a href="../../../go.opencensus.io/stats/view/view.go.html#line-47" class="ident">Aggregation</a>: <a href="../../../../pkg/go.opencensus.io/stats/view.html" class="ident i3">view</a>.<a href="../../../go.opencensus.io/stats/view/aggregation.go.html#line-114" class="ident">LastValue</a>(),
+	}
+
+	<a href="../../../../pkg/contrib.go.opencensus.io/integrations/ocsql.html#name-DefaultViews" class="ident">DefaultViews</a> = []*<a href="../../../../pkg/go.opencensus.io/stats/view.html" class="ident i3">view</a>.<a href="../../../go.opencensus.io/stats/view/view.go.html#line-35" class="ident">View</a>{
+		<a href="#line-77" class="ident">SQLClientLatencyView</a>, <a href="#line-85" class="ident">SQLClientCallsView</a>, <a href="#line-93" class="ident">SQLClientOpenConnectionsView</a>,
+		<a href="#line-100" class="ident">SQLClientIdleConnectionsView</a>, <a href="#line-107" class="ident">SQLClientActiveConnectionsView</a>,
+		<a href="#line-114" class="ident">SQLClientWaitCountView</a>, <a href="#line-121" class="ident">SQLClientWaitDurationView</a>,
+		<a href="#line-128" class="ident">SQLClientIdleClosedView</a>, <a href="#line-135" class="ident">SQLClientLifetimeClosedView</a>,
+	}
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> RegisterAllViews registers all ocsql views to enable collection of stats.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r0" class="ident"><a href="../../../../pkg/contrib.go.opencensus.io/integrations/ocsql.html#name-RegisterAllViews" class="ident">RegisterAllViews</a></label>() {
+	<span class="keyword">if</span> <label for="r1" class="ident">err</label> := <a href="../../../../pkg/go.opencensus.io/stats/view.html" class="ident i3">view</a>.<a href="../../../go.opencensus.io/stats/view/worker.go.html#line-139" class="ident">Register</a>(<a href="#line-142" class="ident">DefaultViews</a>...); <label for="r1" class="ident">err</label> != <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<a href="../../../../pkg/builtin.html#name-panic" class="ident">panic</a>(<label for="r1" class="ident">err</label>)
+	}
+}
+
+<span class="keyword">func</span> <label for="r2" class="ident"><a href="../../../../pkg/contrib.go.opencensus.io/integrations/ocsql.html#name-recordCallStats" class="ident">recordCallStats</a></label>(<label for="r3" class="ident">ctx</label> <a href="../../../../pkg/context.html" class="ident i0">context</a>.<a href="../../../context/context.go.html#line-62" class="ident">Context</a>, <label for="r4" class="ident">method</label> <a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>) <span class="keyword">func</span>(<label for="r5" class="ident">err</label> <a href="../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<span class="keyword">var</span> <label for="r6" class="ident">tags</label> []<a href="../../../../pkg/go.opencensus.io/tag.html" class="ident i4">tag</a>.<a href="../../../go.opencensus.io/tag/map.go.html#line-96" class="ident">Mutator</a>
+	<label for="r7" class="ident">startTime</label> := <a href="../../../../pkg/time.html" class="ident i1">time</a>.<a href="../../../time/time.go.html#line-1066" class="ident">Now</a>()
+
+	<span class="keyword">return</span> <span class="keyword">func</span>(<label for="r8" class="ident">err</label> <a href="../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+		<label for="r9" class="ident">timeSpentMs</label> := <a href="../../../../pkg/builtin.html#name-float64" class="ident">float64</a>(<a href="../../../../pkg/time.html" class="ident i1">time</a>.<a href="../../../time/time.go.html#line-868" class="ident">Since</a>(<label for="r7" class="ident">startTime</label>).<a href="../../../time/time.go.html#line-729" class="ident">Nanoseconds</a>()) / <span class="lit-number">1e6</span>
+
+		<span class="keyword">if</span> <label for="r8" class="ident">err</label> != <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<label for="r6" class="ident">tags</label> = []<a href="../../../../pkg/go.opencensus.io/tag.html" class="ident i4">tag</a>.<a href="../../../go.opencensus.io/tag/map.go.html#line-96" class="ident">Mutator</a>{
+				<a href="../../../../pkg/go.opencensus.io/tag.html" class="ident i4">tag</a>.<a href="../../../go.opencensus.io/tag/map.go.html#line-107" class="ident">Insert</a>(<a href="#line-15" class="ident">GoSQLMethod</a>, <label for="r4" class="ident">method</label>), <a href="#line-22" class="ident">valueErr</a>, <a href="../../../../pkg/go.opencensus.io/tag.html" class="ident i4">tag</a>.<a href="../../../go.opencensus.io/tag/map.go.html#line-107" class="ident">Insert</a>(<a href="#line-17" class="ident">GoSQLError</a>, <label for="r8" class="ident">err</label>.Error()),
+			}
+		} <span class="keyword">else</span> {
+			<label for="r6" class="ident">tags</label> = []<a href="../../../../pkg/go.opencensus.io/tag.html" class="ident i4">tag</a>.<a href="../../../go.opencensus.io/tag/map.go.html#line-96" class="ident">Mutator</a>{
+				<a href="../../../../pkg/go.opencensus.io/tag.html" class="ident i4">tag</a>.<a href="../../../go.opencensus.io/tag/map.go.html#line-107" class="ident">Insert</a>(<a href="#line-15" class="ident">GoSQLMethod</a>, <label for="r4" class="ident">method</label>), <a href="#line-21" class="ident">valueOK</a>,
+			}
+		}
+
+		_ = <a href="../../../../pkg/go.opencensus.io/stats.html" class="ident i2">stats</a>.<a href="../../../go.opencensus.io/stats/record.go.html#line-100" class="ident">RecordWithTags</a>(<label for="r3" class="ident">ctx</label>, <label for="r6" class="ident">tags</label>, <a href="#line-27" class="ident">MeasureLatencyMs</a>.<a href="../../../go.opencensus.io/stats/measure_float64.go.html#line-25" class="ident">M</a>(<label for="r9" class="ident">timeSpentMs</label>))
+	}
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

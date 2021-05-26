@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Package: github.com/go-git/go-git/v5/plumbing/format/config</title>
+<link href="../../../../../../../css/light-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="package-details"><code><span style="font-size:xx-large;">package <b>config</b></span>
+
+<span class="title">Import Path</span>
+	<a href="../../../../../../../index.html#pkg-github.com/go-git/go-git/v5/plumbing/format/config">github.com/go-git/go-git/v5/plumbing/format/config</a><i> (on <a href="https://pkg.go.dev/github.com/go-git/go-git/v5/plumbing/format/config" target="_blank">go.dev</a>)</i>
+
+<span class="title">Dependency Relation</span>
+	imports <a href="../../../../../../../dep/github.com/go-git/go-git/v5/plumbing/format/config.html">4 packages</a>, and imported by <a href="../../../../../../../dep/github.com/go-git/go-git/v5/plumbing/format/config.html#imported-by">2 packages</a>
+
+<div id="files"><span class="title">Involved Source Files</span>
+
+	<span class="nodocs">      <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/common.go.html">common.go</a></span>
+	<span class="nodocs">      <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/decoder.go.html">decoder.go</a></span>
+	<input type='checkbox' checked class="fold" id="file-2-fold-content"><label for="file-2-fold-content">   <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/doc.go.html#doc">d➜</a> <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/doc.go.html">doc.go</a></label><span id='file-2-fold-content-items' class="fold-items">
+		Package config implements encoding and decoding of git config files.
+
+			Configuration File
+			------------------
+
+			The Git configuration file contains a number of variables that affect
+			the Git commands' behavior. The `.git/config` file in each repository
+			is used to store the configuration for that repository, and
+			`$HOME/.gitconfig` is used to store a per-user configuration as
+			fallback values for the `.git/config` file. The file `/etc/gitconfig`
+			can be used to store a system-wide default configuration.
+
+			The configuration variables are used by both the Git plumbing
+			and the porcelains. The variables are divided into sections, wherein
+			the fully qualified variable name of the variable itself is the last
+			dot-separated segment and the section name is everything before the last
+			dot. The variable names are case-insensitive, allow only alphanumeric
+			characters and `-`, and must start with an alphabetic character.  Some
+			variables may appear multiple times; we say then that the variable is
+			multivalued.
+
+			Syntax
+			~~~~~~
+
+			The syntax is fairly flexible and permissive; whitespaces are mostly
+			ignored.  The '#' and ';' characters begin comments to the end of line,
+			blank lines are ignored.
+
+			The file consists of sections and variables.  A section begins with
+			the name of the section in square brackets and continues until the next
+			section begins.  Section names are case-insensitive.  Only alphanumeric
+			characters, `-` and `.` are allowed in section names.  Each variable
+			must belong to some section, which means that there must be a section
+			header before the first setting of a variable.
+
+			Sections can be further divided into subsections.  To begin a subsection
+			put its name in double quotes, separated by space from the section name,
+			in the section header, like in the example below:
+
+			--------
+				[section "subsection"]
+
+			--------
+
+			Subsection names are case sensitive and can contain any characters except
+			newline (doublequote `"` and backslash can be included by escaping them
+			as `\"` and `\\`, respectively).  Section headers cannot span multiple
+			lines.  Variables may belong directly to a section or to a given subsection.
+			You can have `[section]` if you have `[section "subsection"]`, but you
+			don't need to.
+
+			There is also a deprecated `[section.subsection]` syntax. With this
+			syntax, the subsection name is converted to lower-case and is also
+			compared case sensitively. These subsection names follow the same
+			restrictions as section names.
+
+			All the other lines (and the remainder of the line after the section
+			header) are recognized as setting variables, in the form
+			'name = value' (or just 'name', which is a short-hand to say that
+			the variable is the boolean "true").
+			The variable names are case-insensitive, allow only alphanumeric characters
+			and `-`, and must start with an alphabetic character.
+
+			A line that defines a value can be continued to the next line by
+			ending it with a `\`; the backquote and the end-of-line are
+			stripped.  Leading whitespaces after 'name =', the remainder of the
+			line after the first comment character '#' or ';', and trailing
+			whitespaces of the line are discarded unless they are enclosed in
+			double quotes.  Internal whitespaces within the value are retained
+			verbatim.
+
+			Inside double quotes, double quote `"` and backslash `\` characters
+			must be escaped: use `\"` for `"` and `\\` for `\`.
+
+			The following escape sequences (beside `\"` and `\\`) are recognized:
+			`\n` for newline character (NL), `\t` for horizontal tabulation (HT, TAB)
+			and `\b` for backspace (BS).  Other char escape sequences (including octal
+			escape sequences) are invalid.
+
+			Includes
+			~~~~~~~~
+
+			You can include one config file from another by setting the special
+			`include.path` variable to the name of the file to be included. The
+			variable takes a pathname as its value, and is subject to tilde
+			expansion.
+
+			The included file is expanded immediately, as if its contents had been
+			found at the location of the include directive. If the value of the
+			`include.path` variable is a relative path, the path is considered to be
+			relative to the configuration file in which the include directive was
+			found.  See below for examples.
+
+			Example
+			~~~~~~~
+
+				# Core variables
+				[core]
+					; Don't trust file modes
+					filemode = false
+
+				# Our diff algorithm
+				[diff]
+					external = /usr/local/bin/diff-wrapper
+					renames = true
+
+				[branch "devel"]
+					remote = origin
+					merge = refs/heads/devel
+
+				# Proxy settings
+				[core]
+					gitProxy="ssh" for "kernel.org"
+					gitProxy=default-proxy ; for the rest
+
+				[include]
+					path = /path/to/foo.inc ; include by absolute path
+					path = foo ; expand "foo" relative to the current file
+					path = ~/foo ; expand "foo" in your `$HOME` directory
+</span>
+	<span class="nodocs">      <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/encoder.go.html">encoder.go</a></span>
+	<span class="nodocs">      <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/option.go.html">option.go</a></span>
+	<span class="nodocs">      <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/section.go.html">section.go</a></span></div>
+<div id="exported-types"><span class="title">Package-Level Type Names<span class="title-stat"><i> (total 12, all are exported)</i></span></span>
+
+<div id="exported-types-buttons" class="js-on">	/* sort exporteds by: <label id="sort-types-by-alphabet" class="button">alphabet</label> | <label id="sort-types-by-popularity" class="button">popularity</label> */</div><div class="anchor type-res" id="name-Comment" data-popularity="0">	<input type='checkbox' class="fold" id="Comment-fold-content"><label for="Comment-fold-content"> <a href="../../../../../../../use/github.com/go-git/go-git/v5/plumbing/format/config..Comment.html">type</a> <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/common.go.html#line-25">Comment</a> <a href="../../../../../../builtin.html#name-string">string</a> <i>(basic type)</i></label><span id='Comment-fold-content-docs' class="fold-docs">
+		Comment string without the prefix '#' or ';'.
+
+
+</span></div><div class="anchor type-res" id="name-Config" data-popularity="730">	<input type='checkbox' class="fold" id="Config-fold-content"><label for="Config-fold-content"> <a href="../../../../../../../use/github.com/go-git/go-git/v5/plumbing/format/config..Config.html">type</a> <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/common.go.html#line-9">Config</a> <i>(struct)</i></label><span id='Config-fold-content-docs' class="fold-docs">
+		Config contains all the sections, comments and includes from a config file.
+
+		<input type='checkbox' class="fold" id="Config-fold-fields"><label for="Config-fold-fields">Fields (<i>total 3, all are exported</i>)</label><span id='Config-fold-fields-items' class="fold-items"><span>
+			<span class="nodocs"><a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/common.go.html#line-10">Comment</a> <i>*<a href="#name-Comment">Comment</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/common.go.html#line-12">Includes</a> <i><a href="#name-Includes">Includes</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/common.go.html#line-11">Sections</a> <i><a href="#name-Sections">Sections</a></i></span></span></span>
+		<input type='checkbox' class="fold" id="Config-fold-methods"><label for="Config-fold-methods">Methods (<i>total 5, all are exported</i>)</label><span id='Config-fold-methods-items' class="fold-items"><span>
+			<input type='checkbox' class="fold" id="Config-fold-method-AddOption"><label for="Config-fold-method-AddOption">(*T) <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/common.go.html#line-49">AddOption</a>(section <a href="../../../../../../builtin.html#name-string">string</a>, subsection <a href="../../../../../../builtin.html#name-string">string</a>, key <a href="../../../../../../builtin.html#name-string">string</a>, value <a href="../../../../../../builtin.html#name-string">string</a>) *<b>Config</b></label><span id='Config-fold-method-AddOption-docs' class="fold-docs">
+				AddOption adds an option to a given section and subsection. Use the
+				NoSubsection constant for the subsection argument if no subsection is wanted.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Config-fold-method-RemoveSection"><label for="Config-fold-method-RemoveSection">(*T) <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/common.go.html#line-72">RemoveSection</a>(name <a href="../../../../../../builtin.html#name-string">string</a>) *<b>Config</b></label><span id='Config-fold-method-RemoveSection-docs' class="fold-docs">
+				RemoveSection removes a section from a config file.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Config-fold-method-RemoveSubsection"><label for="Config-fold-method-RemoveSubsection">(*T) <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/common.go.html#line-85">RemoveSubsection</a>(section <a href="../../../../../../builtin.html#name-string">string</a>, subsection <a href="../../../../../../builtin.html#name-string">string</a>) *<b>Config</b></label><span id='Config-fold-method-RemoveSubsection-docs' class="fold-docs">
+				RemoveSubsection remove	s a subsection from a config file.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Config-fold-method-Section"><label for="Config-fold-method-Section">(*T) <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/common.go.html#line-34">Section</a>(name <a href="../../../../../../builtin.html#name-string">string</a>) *<a href="#name-Section">Section</a></label><span id='Config-fold-method-Section-docs' class="fold-docs">
+				Section returns a existing section with the given name or creates a new one.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Config-fold-method-SetOption"><label for="Config-fold-method-SetOption">(*T) <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/common.go.html#line-61">SetOption</a>(section <a href="../../../../../../builtin.html#name-string">string</a>, subsection <a href="../../../../../../builtin.html#name-string">string</a>, key <a href="../../../../../../builtin.html#name-string">string</a>, value <a href="../../../../../../builtin.html#name-string">string</a>) *<b>Config</b></label><span id='Config-fold-method-SetOption-docs' class="fold-docs">
+				SetOption sets an option to a given section and subsection. Use the
+				NoSubsection constant for the subsection argument if no subsection is wanted.
+</span></span></span>
+		<input type='checkbox' class="fold" id="Config-fold-results"><label for="Config-fold-results">As Outputs Of (<i>at least 5, all are exported</i>)</label><span id='Config-fold-results-items' class="fold-items"><span>
+			func <a href="#name-New">New</a>() *<b>Config</b></span><span>
+			func (*Config).<a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/common.go.html#line-49">AddOption</a>(section <a href="../../../../../../builtin.html#name-string">string</a>, subsection <a href="../../../../../../builtin.html#name-string">string</a>, key <a href="../../../../../../builtin.html#name-string">string</a>, value <a href="../../../../../../builtin.html#name-string">string</a>) *<b>Config</b></span><span>
+			func (*Config).<a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/common.go.html#line-72">RemoveSection</a>(name <a href="../../../../../../builtin.html#name-string">string</a>) *<b>Config</b></span><span>
+			func (*Config).<a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/common.go.html#line-85">RemoveSubsection</a>(section <a href="../../../../../../builtin.html#name-string">string</a>, subsection <a href="../../../../../../builtin.html#name-string">string</a>) *<b>Config</b></span><span>
+			func (*Config).<a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/common.go.html#line-61">SetOption</a>(section <a href="../../../../../../builtin.html#name-string">string</a>, subsection <a href="../../../../../../builtin.html#name-string">string</a>, key <a href="../../../../../../builtin.html#name-string">string</a>, value <a href="../../../../../../builtin.html#name-string">string</a>) *<b>Config</b></span></span>
+		<input type='checkbox' class="fold" id="Config-fold-params"><label for="Config-fold-params">As Inputs Of (<i>at least 3, in which 2 are exported</i>)</label><span id='Config-fold-params-items' class="fold-items"><span>
+			func (*<a href="#name-Decoder">Decoder</a>).<a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/decoder.go.html#line-21">Decode</a>(config *<b>Config</b>) <a href="../../../../../../builtin.html#name-error">error</a></span><span>
+			func (*<a href="#name-Encoder">Encoder</a>).<a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/encoder.go.html#line-20">Encode</a>(cfg *<b>Config</b>) <a href="../../../../../../builtin.html#name-error">error</a></span>
+			<input type='checkbox' class="showhide" id="Config-showhide-outputofs"><i><label for="Config-showhide-outputofs" class="show-inline">/* at least one unexported ... */</label><label for="Config-showhide-outputofs" class="hide-inline">/* at least one unexported: */</label></i><span class="hidden"><i>
+			func github.com/go-git/go-git/v5/config.<a href="../../config.html#name-unmarshalSubmodules">unmarshalSubmodules</a>(fc *<b>Config</b>, submodules map[<a href="../../../../../../builtin.html#name-string">string</a>]*<a href="../../config.html">config</a>.<a href="../../config.html#name-Submodule">Submodule</a>)</i></span></span>
+
+</span></div><div class="anchor type-res" id="name-Decoder" data-popularity="275">	<input type='checkbox' class="fold" id="Decoder-fold-content"><label for="Decoder-fold-content"> <a href="../../../../../../../use/github.com/go-git/go-git/v5/plumbing/format/config..Decoder.html">type</a> <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/decoder.go.html#line-10">Decoder</a> <i>(struct)</i></label><span id='Decoder-fold-content-docs' class="fold-docs">
+		A Decoder reads and decodes config files from an input stream.
+
+		<input type='checkbox' class="fold" id="Decoder-fold-fields"><label for="Decoder-fold-fields">Fields (<i>only one, which is exported</i>)</label><span id='Decoder-fold-fields-items' class="fold-items"><span>
+			<span class="nodocs"><a href="../../../../../../../src/io/io.go.html#line-617">Reader</a> <i><a href="../../../../../../io.html">io</a>.<a href="../../../../../../io.html#name-Reader">Reader</a></i></span></span></span>
+		<input type='checkbox' class="fold" id="Decoder-fold-methods"><label for="Decoder-fold-methods">Methods (<i>total 2, both are exported</i>)</label><span id='Decoder-fold-methods-items' class="fold-items"><span>
+			<input type='checkbox' class="fold" id="Decoder-fold-method-Decode"><label for="Decoder-fold-method-Decode">(*T) <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/decoder.go.html#line-21">Decode</a>(config *<a href="#name-Config">Config</a>) <a href="../../../../../../builtin.html#name-error">error</a></label><span id='Decoder-fold-method-Decode-docs' class="fold-docs">
+				Decode reads the whole config from its input and stores it in the
+				value pointed to by config.
+</span></span><span>
+			<span class="nodocs">( T) <a href="../../../../../../../src/io/io.go.html#line-84">Read</a>(p []<a href="../../../../../../builtin.html#name-byte">byte</a>) (n <a href="../../../../../../builtin.html#name-int">int</a>, err <a href="../../../../../../builtin.html#name-error">error</a>)</span></span></span>
+		<input type='checkbox' class="fold" id="Decoder-fold-impls"><label for="Decoder-fold-impls">Implements (<i>at least 2, both are exported</i>)</label><span id='Decoder-fold-impls-items' class="fold-items"><span>
+			 T : github.com/jbenet/go-context/io.<a href="../../../../../jbenet/go-context/io.html#name-Reader">Reader</a></span><span>
+			 T : io.<a href="../../../../../../io.html#name-Reader">Reader</a></span></span>
+		<input type='checkbox' class="fold" id="Decoder-fold-results"><label for="Decoder-fold-results">As Outputs Of (<i>at least one exported</i>)</label><span id='Decoder-fold-results-items' class="fold-items"><span>
+			func <a href="#name-NewDecoder">NewDecoder</a>(r <a href="../../../../../../io.html">io</a>.<a href="../../../../../../io.html#name-Reader">Reader</a>) *<b>Decoder</b></span></span>
+
+</span></div><div class="anchor type-res" id="name-Encoder" data-popularity="325">	<input type='checkbox' class="fold" id="Encoder-fold-content"><label for="Encoder-fold-content"> <a href="../../../../../../../use/github.com/go-git/go-git/v5/plumbing/format/config..Encoder.html">type</a> <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/encoder.go.html#line-10">Encoder</a> <i>(struct)</i></label><span id='Encoder-fold-content-docs' class="fold-docs">
+		An Encoder writes config files to an output stream.
+
+		<input type='checkbox' class="fold" id="Encoder-fold-fields"><label for="Encoder-fold-fields">Fields (<i>only one, which is unexported</i>)</label><span id='Encoder-fold-fields-items' class="fold-items">
+			<input type='checkbox' class="showhide" id="Encoder-showhide-fields"><i><label for="Encoder-showhide-fields" class="show-inline">/* one unexported ... */</label><label for="Encoder-showhide-fields" class="hide-inline">/* one unexported: */</label></i><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/encoder.go.html#line-11">w</a> <i><a href="../../../../../../io.html">io</a>.<a href="../../../../../../io.html#name-Writer">Writer</a></i></span></i></span></span>
+		<input type='checkbox' class="fold" id="Encoder-fold-methods"><label for="Encoder-fold-methods">Methods (<i>total 5, in which 1 are exported</i>)</label><span id='Encoder-fold-methods-items' class="fold-items"><span>
+			<input type='checkbox' class="fold" id="Encoder-fold-method-Encode"><label for="Encoder-fold-method-Encode">(*T) <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/encoder.go.html#line-20">Encode</a>(cfg *<a href="#name-Config">Config</a>) <a href="../../../../../../builtin.html#name-error">error</a></label><span id='Encoder-fold-method-Encode-docs' class="fold-docs">
+				Encode writes the config in git config format to the stream of the encoder.
+</span></span>
+			<input type='checkbox' class="showhide" id="Encoder-showhide-methods"><i><label for="Encoder-showhide-methods" class="show-inline">/* 4 unexporteds ... */</label><label for="Encoder-showhide-methods" class="hide-inline">/* 4 unexporteds: */</label></i><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/encoder.go.html#line-59">encodeOptions</a>(opts <a href="#name-Options">Options</a>) <a href="../../../../../../builtin.html#name-error">error</a></span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/encoder.go.html#line-30">encodeSection</a>(s *<a href="#name-Section">Section</a>) <a href="../../../../../../builtin.html#name-error">error</a></span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/encoder.go.html#line-50">encodeSubsection</a>(sectionName <a href="../../../../../../builtin.html#name-string">string</a>, s *<a href="#name-Subsection">Subsection</a>) <a href="../../../../../../builtin.html#name-error">error</a></span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/encoder.go.html#line-74">printf</a>(msg <a href="../../../../../../builtin.html#name-string">string</a>, args ...interface{}) <a href="../../../../../../builtin.html#name-error">error</a></span></i></span></span>
+		<input type='checkbox' class="fold" id="Encoder-fold-results"><label for="Encoder-fold-results">As Outputs Of (<i>at least one exported</i>)</label><span id='Encoder-fold-results-items' class="fold-items"><span>
+			func <a href="#name-NewEncoder">NewEncoder</a>(w <a href="../../../../../../io.html">io</a>.<a href="../../../../../../io.html#name-Writer">Writer</a>) *<b>Encoder</b></span></span>
+
+</span></div><div class="anchor type-res" id="name-Include" data-popularity="0">	<input type='checkbox' class="fold" id="Include-fold-content"><label for="Include-fold-content"> <a href="../../../../../../../use/github.com/go-git/go-git/v5/plumbing/format/config..Include.html">type</a> <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/common.go.html#line-19">Include</a> <i>(struct)</i></label><span id='Include-fold-content-docs' class="fold-docs">
+		Include is a reference to an included config file.
+
+		<input type='checkbox' class="fold" id="Include-fold-fields"><label for="Include-fold-fields">Fields (<i>total 2, both are exported</i>)</label><span id='Include-fold-fields-items' class="fold-items"><span>
+			<span class="nodocs"><a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/common.go.html#line-21">Config</a> <i>*<a href="#name-Config">Config</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/common.go.html#line-20">Path</a> <i><a href="../../../../../../builtin.html#name-string">string</a></i></span></span></span>
+
+</span></div><div class="anchor type-res" id="name-Includes" data-popularity="0">	<input type='checkbox' class="fold" id="Includes-fold-content"><label for="Includes-fold-content"> <a href="../../../../../../../use/github.com/go-git/go-git/v5/plumbing/format/config..Includes.html">type</a> <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/common.go.html#line-16">Includes</a> <i>([]T)</i></label><span id='Includes-fold-content-docs' class="fold-docs">
+		Includes is a list of Includes in a config file.
+
+
+</span></div><div class="anchor type-res" id="name-Option" data-popularity="50">	<input type='checkbox' class="fold" id="Option-fold-content"><label for="Option-fold-content"> <a href="../../../../../../../use/github.com/go-git/go-git/v5/plumbing/format/config..Option.html">type</a> <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/option.go.html#line-9">Option</a> <i>(struct)</i></label><span id='Option-fold-content-docs' class="fold-docs">
+		Option defines a key/value entity in a config file.
+
+		<input type='checkbox' class="fold" id="Option-fold-fields"><label for="Option-fold-fields">Fields (<i>total 2, both are exported</i>)</label><span id='Option-fold-fields-items' class="fold-items"><span>
+			<input type='checkbox' class="fold" id="Option-fold-field-Key"><label for="Option-fold-field-Key"><a href="../../../../../../../src/go.opencensus.io/trace/tracestate/tracestate.go.html#line-51">Key</a> <i><a href="../../../../../../builtin.html#name-string">string</a></i></label><span id='Option-fold-field-Key-docs' class="fold-docs">
+				Key is an opaque string up to 256 characters printable. It MUST begin with a lowercase letter,
+				and can only contain lowercase letters a-z, digits 0-9, underscores _, dashes -, asterisks *, and
+				forward slashes /.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Option-fold-field-Value"><label for="Option-fold-field-Value"><a href="../../../../../../../src/go.opencensus.io/trace/tracestate/tracestate.go.html#line-55">Value</a> <i><a href="../../../../../../builtin.html#name-string">string</a></i></label><span id='Option-fold-field-Value-docs' class="fold-docs">
+				Value is an opaque string up to 256 characters printable ASCII RFC0020 characters (i.e., the
+				range 0x20 to 0x7E) except comma , and =.
+</span></span></span>
+		<input type='checkbox' class="fold" id="Option-fold-methods"><label for="Option-fold-methods">Methods (<i>only one, which is exported</i>)</label><span id='Option-fold-methods-items' class="fold-items"><span>
+			<input type='checkbox' class="fold" id="Option-fold-method-IsKey"><label for="Option-fold-method-IsKey">(*T) <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/option.go.html#line-21">IsKey</a>(key <a href="../../../../../../builtin.html#name-string">string</a>) <a href="../../../../../../builtin.html#name-bool">bool</a></label><span id='Option-fold-method-IsKey-docs' class="fold-docs">
+				IsKey returns true if the given key matches
+				this option's key in a case-insensitive comparison.
+</span></span></span>
+
+</span></div><div class="anchor type-res" id="name-Options" data-popularity="660">	<input type='checkbox' class="fold" id="Options-fold-content"><label for="Options-fold-content"> <a href="../../../../../../../use/github.com/go-git/go-git/v5/plumbing/format/config..Options.html">type</a> <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/option.go.html#line-17">Options</a> <i>([]T)</i></label><span id='Options-fold-content-docs' class="fold-docs">
+
+		<input type='checkbox' class="fold" id="Options-fold-methods"><label for="Options-fold-methods">Methods (<i>total 6, in which 3 are exported</i>)</label><span id='Options-fold-methods-items' class="fold-items"><span>
+			<input type='checkbox' class="fold" id="Options-fold-method-Get"><label for="Options-fold-method-Get">( T) <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/option.go.html#line-47">Get</a>(key <a href="../../../../../../builtin.html#name-string">string</a>) <a href="../../../../../../builtin.html#name-string">string</a></label><span id='Options-fold-method-Get-docs' class="fold-docs">
+				Get gets the value for the given key if set,
+				otherwise it returns the empty string.
+
+				Note that there is no difference
+
+				This matches git behaviour since git v1.8.1-rc1,
+				if there are multiple definitions of a key, the
+				last one wins.
+
+				See: http://article.gmane.org/gmane.linux.kernel/1407184
+
+				In order to get all possible values for the same key,
+				use GetAll.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Options-fold-method-GetAll"><label for="Options-fold-method-GetAll">( T) <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/option.go.html#line-58">GetAll</a>(key <a href="../../../../../../builtin.html#name-string">string</a>) []<a href="../../../../../../builtin.html#name-string">string</a></label><span id='Options-fold-method-GetAll-docs' class="fold-docs">
+				GetAll returns all possible values for the same key.
+</span></span><span>
+			<span class="nodocs">( T) <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/option.go.html#line-25">GoString</a>() <a href="../../../../../../builtin.html#name-string">string</a></span></span>
+			<input type='checkbox' class="showhide" id="Options-showhide-methods"><i><label for="Options-showhide-methods" class="show-inline">/* 3 unexporteds ... */</label><label for="Options-showhide-methods" class="hide-inline">/* 3 unexporteds: */</label></i><span class="hidden"><i>
+			<span class="nodocs">( T) <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/option.go.html#line-78">withAddedOption</a>(key <a href="../../../../../../builtin.html#name-string">string</a>, value <a href="../../../../../../builtin.html#name-string">string</a>) <b>Options</b></span></i></span><span class="hidden"><i>
+			<span class="nodocs">( T) <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/option.go.html#line-82">withSettedOption</a>(key <a href="../../../../../../builtin.html#name-string">string</a>, values ...<a href="../../../../../../builtin.html#name-string">string</a>) <b>Options</b></span></i></span><span class="hidden"><i>
+			<span class="nodocs">( T) <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/option.go.html#line-68">withoutOption</a>(key <a href="../../../../../../builtin.html#name-string">string</a>) <b>Options</b></span></i></span></span>
+		<input type='checkbox' class="fold" id="Options-fold-impls"><label for="Options-fold-impls">Implements (<i>at least 2, both are exported</i>)</label><span id='Options-fold-impls-items' class="fold-items"><span>
+			 T : github.com/go-redis/redis/v8.<a href="../../../../../go-redis/redis/v8.html#name-ConsistentHash">ConsistentHash</a></span><span>
+			 T : fmt.<a href="../../../../../../fmt.html#name-GoStringer">GoStringer</a></span></span>
+		<input type='checkbox' class="fold" id="Options-fold-results"><label for="Options-fold-results">As Outputs Of (<i>at least 3, none are exported</i>)</label><span id='Options-fold-results-items' class="fold-items">
+			<input type='checkbox' class="showhide" id="Options-showhide-inputofs"><i><label for="Options-showhide-inputofs" class="show-inline">/* 3+ unexporteds ... */</label><label for="Options-showhide-inputofs" class="hide-inline">/* 3+ unexporteds: */</label></i><span class="hidden"><i>
+			func Options.<a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/option.go.html#line-78">withAddedOption</a>(key <a href="../../../../../../builtin.html#name-string">string</a>, value <a href="../../../../../../builtin.html#name-string">string</a>) <b>Options</b></i></span><span class="hidden"><i>
+			func Options.<a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/option.go.html#line-68">withoutOption</a>(key <a href="../../../../../../builtin.html#name-string">string</a>) <b>Options</b></i></span><span class="hidden"><i>
+			func Options.<a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/option.go.html#line-82">withSettedOption</a>(key <a href="../../../../../../builtin.html#name-string">string</a>, values ...<a href="../../../../../../builtin.html#name-string">string</a>) <b>Options</b></i></span></span>
+		<input type='checkbox' class="fold" id="Options-fold-params"><label for="Options-fold-params">As Inputs Of (<i>at least one unexported</i>)</label><span id='Options-fold-params-items' class="fold-items">
+			<input type='checkbox' class="showhide" id="Options-showhide-outputofs"><i><label for="Options-showhide-outputofs" class="show-inline">/* at least one unexported ... */</label><label for="Options-showhide-outputofs" class="hide-inline">/* at least one unexported: */</label></i><span class="hidden"><i>
+			func (*<a href="#name-Encoder">Encoder</a>).<a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/encoder.go.html#line-59">encodeOptions</a>(opts <b>Options</b>) <a href="../../../../../../builtin.html#name-error">error</a></i></span></span>
+
+</span></div><div class="anchor type-res" id="name-Section" data-popularity="685">	<input type='checkbox' class="fold" id="Section-fold-content"><label for="Section-fold-content"> <a href="../../../../../../../use/github.com/go-git/go-git/v5/plumbing/format/config..Section.html">type</a> <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/section.go.html#line-29">Section</a> <i>(struct)</i></label><span id='Section-fold-content-docs' class="fold-docs">
+		Section is the representation of a section inside git configuration files.
+		Each Section contains Options that are used by both the Git plumbing
+		and the porcelains.
+		Sections can be further divided into subsections. To begin a subsection
+		put its name in double quotes, separated by space from the section name,
+		in the section header, like in the example below:
+
+		    [section "subsection"]
+
+		All the other lines (and the remainder of the line after the section header)
+		are recognized as option variables, in the form "name = value" (or just name,
+		which is a short-hand to say that the variable is the boolean "true").
+		The variable names are case-insensitive, allow only alphanumeric characters
+		and -, and must start with an alphabetic character:
+
+		    [section "subsection1"]
+		        option1 = value1
+		        option2
+		    [section "subsection2"]
+		        option3 = value2
+
+		<input type='checkbox' class="fold" id="Section-fold-fields"><label for="Section-fold-fields">Fields (<i>total 3, all are exported</i>)</label><span id='Section-fold-fields-items' class="fold-items"><span>
+			<span class="nodocs"><a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/section.go.html#line-30">Name</a> <i><a href="../../../../../../builtin.html#name-string">string</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/section.go.html#line-31">Options</a> <i><a href="#name-Options">Options</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/section.go.html#line-32">Subsections</a> <i><a href="#name-Subsections">Subsections</a></i></span></span></span>
+		<input type='checkbox' class="fold" id="Section-fold-methods"><label for="Section-fold-methods">Methods (<i>total 7, all are exported</i>)</label><span id='Section-fold-methods-items' class="fold-items"><span>
+			<input type='checkbox' class="fold" id="Section-fold-method-AddOption"><label for="Section-fold-method-AddOption">(*T) <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/section.go.html#line-74">AddOption</a>(key <a href="../../../../../../builtin.html#name-string">string</a>, value <a href="../../../../../../builtin.html#name-string">string</a>) *<b>Section</b></label><span id='Section-fold-method-AddOption-docs' class="fold-docs">
+				AddOption adds a new Option to the Section. The updated Section is returned.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Section-fold-method-HasSubsection"><label for="Section-fold-method-HasSubsection">(*T) <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/section.go.html#line-108">HasSubsection</a>(name <a href="../../../../../../builtin.html#name-string">string</a>) <a href="../../../../../../builtin.html#name-bool">bool</a></label><span id='Section-fold-method-HasSubsection-docs' class="fold-docs">
+				HasSubsection checks if the Section has a Subsection with the specified name.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Section-fold-method-IsName"><label for="Section-fold-method-IsName">(*T) <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/section.go.html#line-63">IsName</a>(name <a href="../../../../../../builtin.html#name-string">string</a>) <a href="../../../../../../builtin.html#name-bool">bool</a></label><span id='Section-fold-method-IsName-docs' class="fold-docs">
+				IsName checks if the name provided is equals to the Section name, case insensitive.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Section-fold-method-Option"><label for="Section-fold-method-Option">(*T) <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/section.go.html#line-69">Option</a>(key <a href="../../../../../../builtin.html#name-string">string</a>) <a href="../../../../../../builtin.html#name-string">string</a></label><span id='Section-fold-method-Option-docs' class="fold-docs">
+				Option return the value for the specified key. Empty string is returned if
+				key does not exists.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Section-fold-method-RemoveOption"><label for="Section-fold-method-RemoveOption">(*T) <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/section.go.html#line-87">RemoveOption</a>(key <a href="../../../../../../builtin.html#name-string">string</a>) *<b>Section</b></label><span id='Section-fold-method-RemoveOption-docs' class="fold-docs">
+				Remove an option with the specified key. The updated Section is returned.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Section-fold-method-SetOption"><label for="Section-fold-method-SetOption">(*T) <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/section.go.html#line-81">SetOption</a>(key <a href="../../../../../../builtin.html#name-string">string</a>, value <a href="../../../../../../builtin.html#name-string">string</a>) *<b>Section</b></label><span id='Section-fold-method-SetOption-docs' class="fold-docs">
+				SetOption adds a new Option to the Section. If the option already exists, is replaced.
+				The updated Section is returned.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Section-fold-method-Subsection"><label for="Section-fold-method-Subsection">(*T) <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/section.go.html#line-94">Subsection</a>(name <a href="../../../../../../builtin.html#name-string">string</a>) *<a href="#name-Subsection">Subsection</a></label><span id='Section-fold-method-Subsection-docs' class="fold-docs">
+				Subsection returns a Subsection from the specified Section. If the
+				Subsection does not exists, new one is created and added to Section.
+</span></span></span>
+		<input type='checkbox' class="fold" id="Section-fold-results"><label for="Section-fold-results">As Outputs Of (<i>at least 4, all are exported</i>)</label><span id='Section-fold-results-items' class="fold-items"><span>
+			func (*<a href="#name-Config">Config</a>).<a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/common.go.html#line-34">Section</a>(name <a href="../../../../../../builtin.html#name-string">string</a>) *<b>Section</b></span><span>
+			func (*Section).<a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/section.go.html#line-74">AddOption</a>(key <a href="../../../../../../builtin.html#name-string">string</a>, value <a href="../../../../../../builtin.html#name-string">string</a>) *<b>Section</b></span><span>
+			func (*Section).<a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/section.go.html#line-87">RemoveOption</a>(key <a href="../../../../../../builtin.html#name-string">string</a>) *<b>Section</b></span><span>
+			func (*Section).<a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/section.go.html#line-81">SetOption</a>(key <a href="../../../../../../builtin.html#name-string">string</a>, value <a href="../../../../../../builtin.html#name-string">string</a>) *<b>Section</b></span></span>
+		<input type='checkbox' class="fold" id="Section-fold-params"><label for="Section-fold-params">As Inputs Of (<i>at least one unexported</i>)</label><span id='Section-fold-params-items' class="fold-items">
+			<input type='checkbox' class="showhide" id="Section-showhide-outputofs"><i><label for="Section-showhide-outputofs" class="show-inline">/* at least one unexported ... */</label><label for="Section-showhide-outputofs" class="hide-inline">/* at least one unexported: */</label></i><span class="hidden"><i>
+			func (*<a href="#name-Encoder">Encoder</a>).<a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/encoder.go.html#line-30">encodeSection</a>(s *<b>Section</b>) <a href="../../../../../../builtin.html#name-error">error</a></i></span></span>
+
+</span></div><div class="anchor type-res" id="name-Sections" data-popularity="100">	<input type='checkbox' class="fold" id="Sections-fold-content"><label for="Sections-fold-content"> <a href="../../../../../../../use/github.com/go-git/go-git/v5/plumbing/format/config..Sections.html">type</a> <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/section.go.html#line-40">Sections</a> <i>([]T)</i></label><span id='Sections-fold-content-docs' class="fold-docs">
+
+		<input type='checkbox' class="fold" id="Sections-fold-methods"><label for="Sections-fold-methods">Methods (<i>only one, which is exported</i>)</label><span id='Sections-fold-methods-items' class="fold-items"><span>
+			<span class="nodocs">( T) <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/section.go.html#line-42">GoString</a>() <a href="../../../../../../builtin.html#name-string">string</a></span></span></span>
+		<input type='checkbox' class="fold" id="Sections-fold-impls"><label for="Sections-fold-impls">Implements (<i>at least one exported</i>)</label><span id='Sections-fold-impls-items' class="fold-items"><span>
+			 T : fmt.<a href="../../../../../../fmt.html#name-GoStringer">GoStringer</a></span></span>
+
+</span></div><div class="anchor type-res" id="name-Subsection" data-popularity="915">	<input type='checkbox' class="fold" id="Subsection-fold-content"><label for="Subsection-fold-content"> <a href="../../../../../../../use/github.com/go-git/go-git/v5/plumbing/format/config..Subsection.html">type</a> <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/section.go.html#line-35">Subsection</a> <i>(struct)</i></label><span id='Subsection-fold-content-docs' class="fold-docs">
+
+		<input type='checkbox' class="fold" id="Subsection-fold-fields"><label for="Subsection-fold-fields">Fields (<i>total 2, both are exported</i>)</label><span id='Subsection-fold-fields-items' class="fold-items"><span>
+			<span class="nodocs"><a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/section.go.html#line-36">Name</a> <i><a href="../../../../../../builtin.html#name-string">string</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/section.go.html#line-37">Options</a> <i><a href="#name-Options">Options</a></i></span></span></span>
+		<input type='checkbox' class="fold" id="Subsection-fold-methods"><label for="Subsection-fold-methods">Methods (<i>total 5, all are exported</i>)</label><span id='Subsection-fold-methods-items' class="fold-items"><span>
+			<input type='checkbox' class="fold" id="Subsection-fold-method-AddOption"><label for="Subsection-fold-method-AddOption">(*T) <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/section.go.html#line-130">AddOption</a>(key <a href="../../../../../../builtin.html#name-string">string</a>, value <a href="../../../../../../builtin.html#name-string">string</a>) *<b>Subsection</b></label><span id='Subsection-fold-method-AddOption-docs' class="fold-docs">
+				AddOption adds a new Option to the Subsection. The updated Subsection is returned.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Subsection-fold-method-IsName"><label for="Subsection-fold-method-IsName">(*T) <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/section.go.html#line-119">IsName</a>(name <a href="../../../../../../builtin.html#name-string">string</a>) <a href="../../../../../../builtin.html#name-bool">bool</a></label><span id='Subsection-fold-method-IsName-docs' class="fold-docs">
+				IsName checks if the name of the subsection is exactly the specified name.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Subsection-fold-method-Option"><label for="Subsection-fold-method-Option">(*T) <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/section.go.html#line-125">Option</a>(key <a href="../../../../../../builtin.html#name-string">string</a>) <a href="../../../../../../builtin.html#name-string">string</a></label><span id='Subsection-fold-method-Option-docs' class="fold-docs">
+				Option returns an option with the specified key. If the option does not exists,
+				empty spring will be returned.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Subsection-fold-method-RemoveOption"><label for="Subsection-fold-method-RemoveOption">(*T) <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/section.go.html#line-143">RemoveOption</a>(key <a href="../../../../../../builtin.html#name-string">string</a>) *<b>Subsection</b></label><span id='Subsection-fold-method-RemoveOption-docs' class="fold-docs">
+				RemoveOption removes the option with the specified key. The updated Subsection is returned.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Subsection-fold-method-SetOption"><label for="Subsection-fold-method-SetOption">(*T) <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/section.go.html#line-137">SetOption</a>(key <a href="../../../../../../builtin.html#name-string">string</a>, value ...<a href="../../../../../../builtin.html#name-string">string</a>) *<b>Subsection</b></label><span id='Subsection-fold-method-SetOption-docs' class="fold-docs">
+				SetOption adds a new Option to the Subsection. If the option already exists, is replaced.
+				The updated Subsection is returned.
+</span></span></span>
+		<input type='checkbox' class="fold" id="Subsection-fold-results"><label for="Subsection-fold-results">As Outputs Of (<i>at least 7, in which 4 are exported</i>)</label><span id='Subsection-fold-results-items' class="fold-items"><span>
+			func (*<a href="#name-Section">Section</a>).<a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/section.go.html#line-94">Subsection</a>(name <a href="../../../../../../builtin.html#name-string">string</a>) *<b>Subsection</b></span><span>
+			func (*Subsection).<a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/section.go.html#line-130">AddOption</a>(key <a href="../../../../../../builtin.html#name-string">string</a>, value <a href="../../../../../../builtin.html#name-string">string</a>) *<b>Subsection</b></span><span>
+			func (*Subsection).<a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/section.go.html#line-143">RemoveOption</a>(key <a href="../../../../../../builtin.html#name-string">string</a>) *<b>Subsection</b></span><span>
+			func (*Subsection).<a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/section.go.html#line-137">SetOption</a>(key <a href="../../../../../../builtin.html#name-string">string</a>, value ...<a href="../../../../../../builtin.html#name-string">string</a>) *<b>Subsection</b></span>
+			<input type='checkbox' class="showhide" id="Subsection-showhide-inputofs"><i><label for="Subsection-showhide-inputofs" class="show-inline">/* 3+ unexporteds ... */</label><label for="Subsection-showhide-inputofs" class="hide-inline">/* 3+ unexporteds: */</label></i><span class="hidden"><i>
+			func github.com/go-git/go-git/v5/config.(*<a href="../../config.html#name-Branch">Branch</a>).<a href="../../../../../../../src/github.com/go-git/go-git/v5/config/branch.go.html#line-53">marshal</a>() *<b>Subsection</b></i></span><span class="hidden"><i>
+			func github.com/go-git/go-git/v5/config.(*<a href="../../config.html#name-RemoteConfig">RemoteConfig</a>).<a href="../../../../../../../src/github.com/go-git/go-git/v5/config/config.go.html#line-536">marshal</a>() *<b>Subsection</b></i></span><span class="hidden"><i>
+			func github.com/go-git/go-git/v5/config.(*<a href="../../config.html#name-Submodule">Submodule</a>).<a href="../../../../../../../src/github.com/go-git/go-git/v5/config/modules.go.html#line-121">marshal</a>() *<b>Subsection</b></i></span></span>
+		<input type='checkbox' class="fold" id="Subsection-fold-params"><label for="Subsection-fold-params">As Inputs Of (<i>at least 4, none are exported</i>)</label><span id='Subsection-fold-params-items' class="fold-items">
+			<input type='checkbox' class="showhide" id="Subsection-showhide-outputofs"><i><label for="Subsection-showhide-outputofs" class="show-inline">/* 4+ unexporteds ... */</label><label for="Subsection-showhide-outputofs" class="hide-inline">/* 4+ unexporteds: */</label></i><span class="hidden"><i>
+			func (*<a href="#name-Encoder">Encoder</a>).<a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/encoder.go.html#line-50">encodeSubsection</a>(sectionName <a href="../../../../../../builtin.html#name-string">string</a>, s *<b>Subsection</b>) <a href="../../../../../../builtin.html#name-error">error</a></i></span><span class="hidden"><i>
+			func github.com/go-git/go-git/v5/config.(*<a href="../../config.html#name-Branch">Branch</a>).<a href="../../../../../../../src/github.com/go-git/go-git/v5/config/branch.go.html#line-81">unmarshal</a>(s *<b>Subsection</b>) <a href="../../../../../../builtin.html#name-error">error</a></i></span><span class="hidden"><i>
+			func github.com/go-git/go-git/v5/config.(*<a href="../../config.html#name-RemoteConfig">RemoteConfig</a>).<a href="../../../../../../../src/github.com/go-git/go-git/v5/config/config.go.html#line-516">unmarshal</a>(s *<b>Subsection</b>) <a href="../../../../../../builtin.html#name-error">error</a></i></span><span class="hidden"><i>
+			func github.com/go-git/go-git/v5/config.(*<a href="../../config.html#name-Submodule">Submodule</a>).<a href="../../../../../../../src/github.com/go-git/go-git/v5/config/modules.go.html#line-112">unmarshal</a>(s *<b>Subsection</b>)</i></span></span>
+
+</span></div><div class="anchor type-res" id="name-Subsections" data-popularity="100">	<input type='checkbox' class="fold" id="Subsections-fold-content"><label for="Subsections-fold-content"> <a href="../../../../../../../use/github.com/go-git/go-git/v5/plumbing/format/config..Subsections.html">type</a> <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/section.go.html#line-51">Subsections</a> <i>([]T)</i></label><span id='Subsections-fold-content-docs' class="fold-docs">
+
+		<input type='checkbox' class="fold" id="Subsections-fold-methods"><label for="Subsections-fold-methods">Methods (<i>only one, which is exported</i>)</label><span id='Subsections-fold-methods-items' class="fold-items"><span>
+			<span class="nodocs">( T) <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/section.go.html#line-53">GoString</a>() <a href="../../../../../../builtin.html#name-string">string</a></span></span></span>
+		<input type='checkbox' class="fold" id="Subsections-fold-impls"><label for="Subsections-fold-impls">Implements (<i>at least one exported</i>)</label><span id='Subsections-fold-impls-items' class="fold-items"><span>
+			 T : fmt.<a href="../../../../../../fmt.html#name-GoStringer">GoStringer</a></span></span>
+
+</span></div></div>
+<div id="exported-functions"><span class="title">Package-Level Functions<span class="title-stat"><i> (total 4, in which 3 are exported)</i></span></span>
+
+<div class="anchor value-res" id="name-New">	<input type='checkbox' class="fold" id="New-fold-content"><label for="New-fold-content"> <a href="../../../../../../../use/github.com/go-git/go-git/v5/plumbing/format/config..New.html">func</a> <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/common.go.html#line-4">New</a>() *<a href="#name-Config">Config</a></label><span id='New-fold-content-docs' class="fold-docs">
+		New creates a new config instance.
+
+</span></div><div class="anchor value-res" id="name-NewDecoder">	<input type='checkbox' class="fold" id="NewDecoder-fold-content"><label for="NewDecoder-fold-content"> <a href="../../../../../../../use/github.com/go-git/go-git/v5/plumbing/format/config..NewDecoder.html">func</a> <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/decoder.go.html#line-15">NewDecoder</a>(r <a href="../../../../../../io.html">io</a>.<a href="../../../../../../io.html#name-Reader">Reader</a>) *<a href="#name-Decoder">Decoder</a></label><span id='NewDecoder-fold-content-docs' class="fold-docs">
+		NewDecoder returns a new decoder that reads from r.
+
+</span></div><div class="anchor value-res" id="name-NewEncoder">	<input type='checkbox' class="fold" id="NewEncoder-fold-content"><label for="NewEncoder-fold-content"> <a href="../../../../../../../use/github.com/go-git/go-git/v5/plumbing/format/config..NewEncoder.html">func</a> <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/encoder.go.html#line-15">NewEncoder</a>(w <a href="../../../../../../io.html">io</a>.<a href="../../../../../../io.html#name-Writer">Writer</a>) *<a href="#name-Encoder">Encoder</a></label><span id='NewEncoder-fold-content-docs' class="fold-docs">
+		NewEncoder returns a new encoder that writes to w.
+
+</span></div>	<input type='checkbox' class="showhide" id="unexported-functions-showhide"><i><label for="unexported-functions-showhide" class="show-inline">/* one unexported ... */</label><label for="unexported-functions-showhide" class="hide-inline">/* one unexported: */</label></i><div class="anchor value-res hidden" id="name-contains"><i>	<span class="nodocs"> <a href="../../../../../../../use/github.com/go-git/go-git/v5/plumbing/format/config..contains*beeb2.html">func</a> <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/option.go.html#line-109">contains</a>(haystack []<a href="../../../../../../builtin.html#name-string">string</a>, needle <a href="../../../../../../builtin.html#name-string">string</a>) <a href="../../../../../../builtin.html#name-bool">bool</a></span></i></div></div>
+<div id="exported-constants"><span class="title">Package-Level Constants<span class="title-stat"><i> (only one, which is exported)</i></span></span>
+
+<div class="anchor value-res" id="name-NoSubsection">	<input type='checkbox' class="fold" id="NoSubsection-fold-content"><label for="NoSubsection-fold-content"><a href="../../../../../../../use/github.com/go-git/go-git/v5/plumbing/format/config..NoSubsection.html">const</a> <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/config/common.go.html#line-30">NoSubsection</a> = ""</label><span id='NoSubsection-fold-content-docs' class="fold-docs">
+		NoSubsection token is passed to Config.Section and Config.SetSection to
+		represent the absence of a section.
+
+</span></div></div></code></pre><pre id="footer">
+<table><tr><td><img src="../../../../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: resolver.go in package google.golang.org/grpc/resolver</title>
+<link href="../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	resolver.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../pkg/google.golang.org/grpc/resolver.html">google.golang.org/grpc/resolver</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1,
+input[id=i2]:checked ~pre .i2,
+input[id=i3]:checked ~pre .i3,
+input[id=i4]:checked ~pre .i4
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<input id="i2" type="radio" name="i"/>
+<input id="i3" type="radio" name="i"/>
+<input id="i4" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"></span><span class="comment"> *</span><span class="comment"> * Copyright 2017 gRPC authors.</span><span class="comment"> *</span><span class="comment"> * Licensed under the Apache License, Version 2.0 (the "License");</span><span class="comment"> * you may not use this file except in compliance with the License.</span><span class="comment"> * You may obtain a copy of the License at</span><span class="comment"> *</span><span class="comment"> *     http:www.apache.org/licenses/LICENSE-2.0</span><span class="comment"> *</span><span class="comment"> * Unless required by applicable law or agreed to in writing, software</span><span class="comment"> * distributed under the License is distributed on an "AS IS" BASIS,</span><span class="comment"> * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span><span class="comment"> * See the License for the specific language governing permissions and</span><span class="comment"> * limitations under the License.</span><span class="comment"> *</span><span class="comment"> </span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Package resolver defines APIs for name resolution in gRPC.</span><span class="comment"> All APIs in this package are experimental.</span></div>
+<div class="code"><pre><code><span class="keyword">package</span> resolver
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"context"</span></label>
+	<label for="i1"><span class="lit-string i1">"net"</span></label>
+
+	<label for="i2"><span class="lit-string i2">"google.golang.org/grpc/attributes"</span></label>
+	<label for="i3"><span class="lit-string i3">"google.golang.org/grpc/credentials"</span></label>
+	<label for="i4"><span class="lit-string i4">"google.golang.org/grpc/serviceconfig"</span></label>
+)
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> m is a map from scheme to resolver builder.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> defaultScheme is the default scheme to use.</span></div>
+<div class="code"><pre><code>	<a href="../../../../pkg/google.golang.org/grpc/resolver.html#name-defaultScheme" class="ident">defaultScheme</a> = <span class="lit-string">"passthrough"</span>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> TODO(bar) install dns resolver in init(){}.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Register registers the resolver builder to the resolver map. b.Scheme will be</span><span class="comment"> used as the scheme registered with this builder.</span><span class="comment"></span><span class="comment"> NOTE: this function must only be called during initialization time (i.e. in</span><span class="comment"> an init() function), and is not thread-safe. If multiple Resolvers are</span><span class="comment"> registered with the same name, the one registered last will take effect.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r0" class="ident"><a href="../../../../pkg/google.golang.org/grpc/resolver.html#name-Register" class="ident">Register</a></label>(<label for="r1" class="ident">b</label> <a href="#line-225" class="ident">Builder</a>) {
+	<a href="#line-34" class="ident">m</a>[<label for="r1" class="ident">b</label>.<a href="#line-233" class="ident">Scheme</a>()] = <label for="r1" class="ident">b</label>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Get returns the resolver builder registered with the given scheme.</span><span class="comment"></span><span class="comment"> If no builder is register with the scheme, nil will be returned.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r2" class="ident"><a href="../../../../pkg/google.golang.org/grpc/resolver.html#name-Get" class="ident">Get</a></label>(<label for="r3" class="ident">scheme</label> <a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>) <a href="#line-225" class="ident">Builder</a> {
+	<span class="keyword">if</span> <label for="r4" class="ident">b</label>, <label for="r5" class="ident">ok</label> := <a href="#line-34" class="ident">m</a>[<label for="r3" class="ident">scheme</label>]; <label for="r5" class="ident">ok</label> {
+		<span class="keyword">return</span> <label for="r4" class="ident">b</label>
+	}
+	<span class="keyword">return</span> <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> SetDefaultScheme sets the default scheme that will be used. The default</span><span class="comment"> default scheme is "passthrough".</span><span class="comment"></span><span class="comment"> NOTE: this function must only be called during initialization time (i.e. in</span><span class="comment"> an init() function), and is not thread-safe. The scheme set last overrides</span><span class="comment"> previously set values.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r6" class="ident"><a href="../../../../pkg/google.golang.org/grpc/resolver.html#name-SetDefaultScheme" class="ident">SetDefaultScheme</a></label>(<label for="r7" class="ident">scheme</label> <a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>) {
+	<a href="#line-36" class="ident">defaultScheme</a> = <label for="r7" class="ident">scheme</label>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> GetDefaultScheme gets the default scheme that will be used.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r8" class="ident"><a href="../../../../pkg/google.golang.org/grpc/resolver.html#name-GetDefaultScheme" class="ident">GetDefaultScheme</a></label>() <a href="../../../../pkg/builtin.html#name-string" class="ident">string</a> {
+	<span class="keyword">return</span> <a href="#line-36" class="ident">defaultScheme</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> AddressType indicates the address type returned by name resolution.</span><span class="comment"></span><span class="comment"> Deprecated: use Attributes in Address instead.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../pkg/google.golang.org/grpc/resolver.html#name-AddressType" class="ident">AddressType</a> <a href="../../../../pkg/builtin.html#name-uint8" class="ident">uint8</a>
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Backend indicates the address is for a backend server.</span><span class="comment">	</span><span class="comment">	 Deprecated: use Attributes in Address instead.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> GRPCLB indicates the address is for a grpclb load balancer.</span><span class="comment">	</span><span class="comment">	 Deprecated: to select the GRPCLB load balancing policy, use a service</span><span class="comment">	 config with a corresponding loadBalancingConfig.  To supply balancer</span><span class="comment">	 addresses to the GRPCLB load balancing policy, set State.Attributes</span><span class="comment">	 using balancer/grpclb/state.Set.</span></div>
+<div class="code"><pre><code>	<a href="../../../../pkg/google.golang.org/grpc/resolver.html#name-GRPCLB" class="ident">GRPCLB</a>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Address represents a server the client connects to.</span><span class="comment"> This is the EXPERIMENTAL API and may be changed or extended in the future.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Addr is the server address on which a connection will be established.</span></div>
+<div class="code"><pre><code>	<a href="../../../../use/google.golang.org/grpc/resolver..Address.Addr.html" class="ident">Addr</a> <a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ServerName is the name of this address.</span><span class="comment">	 If non-empty, the ServerName is used as the transport certification authority for</span><span class="comment">	 the address, instead of the hostname from the Dial target string. In most cases,</span><span class="comment">	 this should not be set.</span><span class="comment">	</span><span class="comment">	 If Type is GRPCLB, ServerName should be the name of the remote load</span><span class="comment">	 balancer, not the name of the backend.</span><span class="comment">	</span><span class="comment">	 WARNING: ServerName must only be populated with trusted values. It</span><span class="comment">	 is insecure to populate it with data from untrusted inputs since untrusted</span><span class="comment">	 values could be used to bypass the authority checks performed by TLS.</span></div>
+<div class="code"><pre><code>	<a href="../../../../use/google.golang.org/grpc/resolver..Address.ServerName.html" class="ident">ServerName</a> <a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Attributes contains arbitrary data about this address intended for</span><span class="comment">	 consumption by the load balancing policy.</span></div>
+<div class="code"><pre><code>	<a href="../../../../use/google.golang.org/grpc/resolver..Address.Attributes.html" class="ident">Attributes</a> *<a href="../../../../pkg/google.golang.org/grpc/attributes.html" class="ident i2">attributes</a>.<a href="../attributes/attributes.go.html#line-30" class="ident">Attributes</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Type is the type of this address.</span><span class="comment">	</span><span class="comment">	 Deprecated: use Attributes instead.</span></div>
+<div class="code"><pre><code>	<a href="../../../../use/google.golang.org/grpc/resolver..Address.Type.html" class="ident">Type</a> <a href="#line-79" class="ident">AddressType</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Metadata is the information associated with Addr, which may be used</span><span class="comment">	 to make load balancing decision.</span><span class="comment">	</span><span class="comment">	 Deprecated: use Attributes instead.</span></div>
+<div class="code"><pre><code>	<a href="../../../../use/google.golang.org/grpc/resolver..Address.Metadata.html" class="ident">Metadata</a> <span class="keyword">interface</span>{}
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> BuildOptions includes additional information for the builder to create</span><span class="comment"> the resolver.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> DisableServiceConfig indicates whether a resolver implementation should</span><span class="comment">	 fetch service config data.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> DialCreds is the transport credentials used by the ClientConn for</span><span class="comment">	 communicating with the target gRPC service (set via</span><span class="comment">	 WithTransportCredentials). In cases where a name resolution service</span><span class="comment">	 requires the same credentials, the resolver may use this field. In most</span><span class="comment">	 cases though, it is not appropriate, and this field may be ignored.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> CredsBundle is the credentials bundle used by the ClientConn for</span><span class="comment">	 communicating with the target gRPC service (set via</span><span class="comment">	 WithCredentialsBundle). In cases where a name resolution service</span><span class="comment">	 requires the same credentials, the resolver may use this field. In most</span><span class="comment">	 cases though, it is not appropriate, and this field may be ignored.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Dialer is the custom dialer used by the ClientConn for dialling the</span><span class="comment">	 target gRPC service (set via WithDialer). In cases where a name</span><span class="comment">	 resolution service requires the same dialer, the resolver may use this</span><span class="comment">	 field. In most cases though, it is not appropriate, and this field may</span><span class="comment">	 be ignored.</span></div>
+<div class="code"><pre><code>	<a href="../../../../use/google.golang.org/grpc/resolver..BuildOptions.Dialer.html" class="ident">Dialer</a> <span class="keyword">func</span>(<a href="../../../../pkg/context.html" class="ident i0">context</a>.<a href="../../../context/context.go.html#line-62" class="ident">Context</a>, <a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>) (<a href="../../../../pkg/net.html" class="ident i1">net</a>.<a href="../../../net/net.go.html#line-113" class="ident">Conn</a>, <a href="../../../../pkg/builtin.html#name-error" class="ident">error</a>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> State contains the current Resolver state relevant to the ClientConn.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Addresses is the latest set of resolved addresses for the target.</span></div>
+<div class="code"><pre><code>	<a href="../../../../use/google.golang.org/grpc/resolver..State.Addresses.html" class="ident">Addresses</a> []<a href="#line-97" class="ident">Address</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ServiceConfig contains the result from parsing the latest service</span><span class="comment">	 config.  If it is nil, it indicates no service config is present or the</span><span class="comment">	 resolver does not provide service configs.</span></div>
+<div class="code"><pre><code>	<a href="../../../../use/google.golang.org/grpc/resolver..State.ServiceConfig.html" class="ident">ServiceConfig</a> *<a href="../../../../pkg/google.golang.org/grpc/serviceconfig.html" class="ident i4">serviceconfig</a>.<a href="../serviceconfig/serviceconfig.go.html#line-38" class="ident">ParseResult</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Attributes contains arbitrary data about the resolver intended for</span><span class="comment">	 consumption by the load balancing policy.</span></div>
+<div class="code"><pre><code>	<a href="../../../../use/google.golang.org/grpc/resolver..State.Attributes.html" class="ident">Attributes</a> *<a href="../../../../pkg/google.golang.org/grpc/attributes.html" class="ident i2">attributes</a>.<a href="../attributes/attributes.go.html#line-30" class="ident">Attributes</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ClientConn contains the callbacks for resolver to notify any updates</span><span class="comment"> to the gRPC ClientConn.</span><span class="comment"></span><span class="comment"> This interface is to be implemented by gRPC. Users should not need a</span><span class="comment"> brand new implementation of this interface. For the situations like</span><span class="comment"> testing, the new implementation should embed this interface. This allows</span><span class="comment"> gRPC to add new methods to this interface.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> UpdateState updates the state of the ClientConn appropriately.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ReportError notifies the ClientConn that the Resolver encountered an</span><span class="comment">	 error.  The ClientConn will notify the load balancer and begin calling</span><span class="comment">	 ResolveNow on the Resolver with exponential backoff.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> NewAddress is called by resolver to notify ClientConn a new list</span><span class="comment">	 of resolved addresses.</span><span class="comment">	 The address list should be the complete list of resolved addresses.</span><span class="comment">	</span><span class="comment">	 Deprecated: Use UpdateState instead.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> NewServiceConfig is called by resolver to notify ClientConn a new</span><span class="comment">	 service config. The service config should be provided as a json string.</span><span class="comment">	</span><span class="comment">	 Deprecated: Use UpdateState instead.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ParseServiceConfig parses the provided service config and returns an</span><span class="comment">	 object that provides the parsed config.</span></div>
+<div class="code"><pre><code>	ParseServiceConfig(serviceConfigJSON <a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>) *<a href="../../../../pkg/google.golang.org/grpc/serviceconfig.html" class="ident i4">serviceconfig</a>.<a href="../serviceconfig/serviceconfig.go.html#line-38" class="ident">ParseResult</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Target represents a target for gRPC, as specified in:</span><span class="comment"> https://github.com/grpc/grpc/blob/master/doc/naming.md.</span><span class="comment"> It is parsed from the target string that gets passed into Dial or DialContext by the user. And</span><span class="comment"> grpc passes it to the resolver and the balancer.</span><span class="comment"></span><span class="comment"> If the target follows the naming spec, and the parsed scheme is registered with grpc, we will</span><span class="comment"> parse the target string according to the spec. e.g. "dns://some_authority/foo.bar" will be parsed</span><span class="comment"> into &amp;Target{Scheme: "dns", Authority: "some_authority", Endpoint: "foo.bar"}</span><span class="comment"></span><span class="comment"> If the target does not contain a scheme, we will apply the default scheme, and set the Target to</span><span class="comment"> be the full target string. e.g. "foo.bar" will be parsed into</span><span class="comment"> &amp;Target{Scheme: resolver.GetDefaultScheme(), Endpoint: "foo.bar"}.</span><span class="comment"></span><span class="comment"> If the parsed scheme is not registered (i.e. no corresponding resolver available to resolve the</span><span class="comment"> endpoint), we set the Scheme to be the default scheme, and set the Endpoint to be the full target</span><span class="comment"> string. e.g. target string "unknown_scheme://authority/endpoint" will be parsed into</span><span class="comment"> &amp;Target{Scheme: resolver.GetDefaultScheme(), Endpoint: "unknown_scheme://authority/endpoint"}.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../pkg/google.golang.org/grpc/resolver.html#name-Target" class="ident">Target</a> <span class="keyword">struct</span> {
+	<a href="../../../../use/google.golang.org/grpc/resolver..Target.Scheme.html" class="ident">Scheme</a>    <a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../use/google.golang.org/grpc/resolver..Target.Authority.html" class="ident">Authority</a> <a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../use/google.golang.org/grpc/resolver..Target.Endpoint.html" class="ident">Endpoint</a>  <a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Builder creates a resolver that will be used to watch name resolution updates.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Build creates a new resolver for the given target.</span><span class="comment">	</span><span class="comment">	 gRPC dial calls Build synchronously, and fails if the returned error is</span><span class="comment">	 not nil.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Scheme returns the scheme supported by this resolver.</span><span class="comment">	 Scheme is defined at https://github.com/grpc/grpc/blob/master/doc/naming.md.</span></div>
+<div class="code"><pre><code>	Scheme() <a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ResolveNowOptions includes additional information for ResolveNow.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../pkg/google.golang.org/grpc/resolver.html#name-ResolveNowOptions" class="ident">ResolveNowOptions</a> <span class="keyword">struct</span>{}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Resolver watches for the updates on the specified target.</span><span class="comment"> Updates include address updates and service config updates.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ResolveNow will be called by gRPC to try to resolve the target name</span><span class="comment">	 again. It's just a hint, resolver can ignore this if it's not necessary.</span><span class="comment">	</span><span class="comment">	 It could be called multiple times concurrently.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Close closes the resolver.</span></div>
+<div class="code"><pre><code>	Close()
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> UnregisterForTesting removes the resolver builder with the given scheme from the</span><span class="comment"> resolver map.</span><span class="comment"> This function is for testing only.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r9" class="ident"><a href="../../../../pkg/google.golang.org/grpc/resolver.html#name-UnregisterForTesting" class="ident">UnregisterForTesting</a></label>(<label for="r10" class="ident">scheme</label> <a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>) {
+	<a href="../../../../pkg/builtin.html#name-delete" class="ident">delete</a>(<a href="#line-34" class="ident">m</a>, <label for="r10" class="ident">scheme</label>)
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: httplex.go in package golang.org/x/net/http/httpguts</title>
+<link href="../../../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	httplex.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../../../pkg/golang.org/x/net/http/httpguts.html">golang.org/x/net/http/httpguts</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16],
+input[id=r17]:checked ~pre label[for=r17],
+input[id=r18]:checked ~pre label[for=r18],
+input[id=r19]:checked ~pre label[for=r19],
+input[id=r20]:checked ~pre label[for=r20],
+input[id=r21]:checked ~pre label[for=r21],
+input[id=r22]:checked ~pre label[for=r22],
+input[id=r23]:checked ~pre label[for=r23],
+input[id=r24]:checked ~pre label[for=r24],
+input[id=r25]:checked ~pre label[for=r25],
+input[id=r26]:checked ~pre label[for=r26],
+input[id=r27]:checked ~pre label[for=r27],
+input[id=r28]:checked ~pre label[for=r28],
+input[id=r29]:checked ~pre label[for=r29],
+input[id=r30]:checked ~pre label[for=r30],
+input[id=r31]:checked ~pre label[for=r31],
+input[id=r32]:checked ~pre label[for=r32],
+input[id=r33]:checked ~pre label[for=r33],
+input[id=r34]:checked ~pre label[for=r34],
+input[id=r35]:checked ~pre label[for=r35],
+input[id=r36]:checked ~pre label[for=r36],
+input[id=r37]:checked ~pre label[for=r37],
+input[id=r38]:checked ~pre label[for=r38],
+input[id=r39]:checked ~pre label[for=r39],
+input[id=r40]:checked ~pre label[for=r40],
+input[id=r41]:checked ~pre label[for=r41],
+input[id=r42]:checked ~pre label[for=r42],
+input[id=r43]:checked ~pre label[for=r43],
+input[id=r44]:checked ~pre label[for=r44],
+input[id=r45]:checked ~pre label[for=r45],
+input[id=r46]:checked ~pre label[for=r46],
+input[id=r47]:checked ~pre label[for=r47],
+input[id=r48]:checked ~pre label[for=r48]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1,
+input[id=i2]:checked ~pre .i2,
+input[id=i3]:checked ~pre .i3
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="r17" type="radio" name="g"/>
+<input id="r18" type="radio" name="g"/>
+<input id="r19" type="radio" name="g"/>
+<input id="r20" type="radio" name="g"/>
+<input id="r21" type="radio" name="g"/>
+<input id="r22" type="radio" name="g"/>
+<input id="r23" type="radio" name="g"/>
+<input id="r24" type="radio" name="g"/>
+<input id="r25" type="radio" name="g"/>
+<input id="r26" type="radio" name="g"/>
+<input id="r27" type="radio" name="g"/>
+<input id="r28" type="radio" name="g"/>
+<input id="r29" type="radio" name="g"/>
+<input id="r30" type="radio" name="g"/>
+<input id="r31" type="radio" name="g"/>
+<input id="r32" type="radio" name="g"/>
+<input id="r33" type="radio" name="g"/>
+<input id="r34" type="radio" name="g"/>
+<input id="r35" type="radio" name="g"/>
+<input id="r36" type="radio" name="g"/>
+<input id="r37" type="radio" name="g"/>
+<input id="r38" type="radio" name="g"/>
+<input id="r39" type="radio" name="g"/>
+<input id="r40" type="radio" name="g"/>
+<input id="r41" type="radio" name="g"/>
+<input id="r42" type="radio" name="g"/>
+<input id="r43" type="radio" name="g"/>
+<input id="r44" type="radio" name="g"/>
+<input id="r45" type="radio" name="g"/>
+<input id="r46" type="radio" name="g"/>
+<input id="r47" type="radio" name="g"/>
+<input id="r48" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<input id="i2" type="radio" name="i"/>
+<input id="i3" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2016 The Go Authors. All rights reserved.</span><span class="comment"> Use of this source code is governed by a BSD-style</span><span class="comment"> license that can be found in the LICENSE file.</span></div>
+<div class="code"><pre><code>
+<span class="keyword">package</span> httpguts
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"net"</span></label>
+	<label for="i1"><span class="lit-string i1">"strings"</span></label>
+	<label for="i2"><span class="lit-string i2">"unicode/utf8"</span></label>
+
+	<label for="i3"><span class="lit-string i3">"golang.org/x/net/idna"</span></label>
+)
+
+<span class="keyword">var</span> <a href="../../../../../../pkg/golang.org/x/net/http/httpguts.html#name-isTokenTable" class="ident">isTokenTable</a> = [<span class="lit-number">127</span>]<a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>{
+	<span class="lit-number">'!'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'#'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'$'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'%'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'&amp;'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'\''</span>: <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'*'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'+'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'-'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'.'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'0'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'1'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'2'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'3'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'4'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'5'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'6'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'7'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'8'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'9'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'A'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'B'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'C'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'D'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'E'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'F'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'G'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'H'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'I'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'J'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'K'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'L'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'M'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'N'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'O'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'P'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'Q'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'R'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'S'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'T'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'U'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'W'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'V'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'X'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'Y'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'Z'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'^'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'_'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'`'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'a'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'b'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'c'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'d'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'e'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'f'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'g'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'h'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'i'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'j'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'k'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'l'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'m'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'n'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'o'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'p'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'q'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'r'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'s'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'t'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'u'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'v'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'w'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'x'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'y'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'z'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'|'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'~'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+}
+
+<span class="keyword">func</span> <label for="r0" class="ident"><a href="../../../../../../pkg/golang.org/x/net/http/httpguts.html#name-IsTokenRune" class="ident">IsTokenRune</a></label>(<label for="r1" class="ident">r</label> <a href="../../../../../../pkg/builtin.html#name-rune" class="ident">rune</a>) <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> {
+	<label for="r2" class="ident">i</label> := <a href="../../../../../../pkg/builtin.html#name-int" class="ident">int</a>(<label for="r1" class="ident">r</label>)
+	<span class="keyword">return</span> <label for="r2" class="ident">i</label> &lt; <a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<a href="#line-15" class="ident">isTokenTable</a>) &amp;&amp; <a href="#line-15" class="ident">isTokenTable</a>[<label for="r2" class="ident">i</label>]
+}
+
+<span class="keyword">func</span> <label for="r3" class="ident"><a href="../../../../../../pkg/golang.org/x/net/http/httpguts.html#name-isNotToken" class="ident">isNotToken</a></label>(<label for="r4" class="ident">r</label> <a href="../../../../../../pkg/builtin.html#name-rune" class="ident">rune</a>) <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> {
+	<span class="keyword">return</span> !<a href="#line-95" class="ident">IsTokenRune</a>(<label for="r4" class="ident">r</label>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> HeaderValuesContainsToken reports whether any string in values</span><span class="comment"> contains the provided token, ASCII case-insensitively.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r5" class="ident"><a href="../../../../../../pkg/golang.org/x/net/http/httpguts.html#name-HeaderValuesContainsToken" class="ident">HeaderValuesContainsToken</a></label>(<label for="r6" class="ident">values</label> []<a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>, <label for="r7" class="ident">token</label> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>) <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> {
+	<span class="keyword">for</span> <label for="r8" class="ident">_</label>, <label for="r9" class="ident">v</label> := <span class="keyword">range</span> <label for="r6" class="ident">values</label> {
+		<span class="keyword">if</span> <a href="#line-139" class="ident">headerValueContainsToken</a>(<label for="r9" class="ident">v</label>, <label for="r7" class="ident">token</label>) {
+			<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>
+		}
+	}
+	<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-false" class="ident">false</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> isOWS reports whether b is an optional whitespace byte, as defined</span><span class="comment"> by RFC 7230 section 3.2.3.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r10" class="ident"><a href="../../../../../../pkg/golang.org/x/net/http/httpguts.html#name-isOWS" class="ident">isOWS</a></label>(<label for="r11" class="ident">b</label> <a href="../../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>) <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> { <span class="keyword">return</span> <label for="r11" class="ident">b</label> == <span class="lit-number">' '</span> || <label for="r11" class="ident">b</label> == <span class="lit-number">'\t'</span> }
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> trimOWS returns x with all optional whitespace removes from the</span><span class="comment"> beginning and end.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> TODO: consider using strings.Trim(x, " \t") instead,</span><span class="comment">	 if and when it's fast enough. See issue 10292.</span><span class="comment">	 But this ASCII-only code will probably always beat UTF-8</span><span class="comment">	 aware code.</span></div>
+<div class="code"><pre><code>	<span class="keyword">for</span> <a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r13" class="ident">x</label>) &gt; <span class="lit-number">0</span> &amp;&amp; <a href="#line-117" class="ident">isOWS</a>(<label for="r13" class="ident">x</label>[<span class="lit-number">0</span>]) {
+		<label for="r13" class="ident">x</label> = <label for="r13" class="ident">x</label>[<span class="lit-number">1</span>:]
+	}
+	<span class="keyword">for</span> <a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r13" class="ident">x</label>) &gt; <span class="lit-number">0</span> &amp;&amp; <a href="#line-117" class="ident">isOWS</a>(<label for="r13" class="ident">x</label>[<a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r13" class="ident">x</label>)-<span class="lit-number">1</span>]) {
+		<label for="r13" class="ident">x</label> = <label for="r13" class="ident">x</label>[:<a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r13" class="ident">x</label>)-<span class="lit-number">1</span>]
+	}
+	<span class="keyword">return</span> <label for="r13" class="ident">x</label>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> headerValueContainsToken reports whether v (assumed to be a</span><span class="comment"> 0#element, in the ABNF extension described in RFC 7230 section 7)</span><span class="comment"> contains token amongst its comma-separated tokens, ASCII</span><span class="comment"> case-insensitively.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r14" class="ident"><a href="../../../../../../pkg/golang.org/x/net/http/httpguts.html#name-headerValueContainsToken" class="ident">headerValueContainsToken</a></label>(<label for="r15" class="ident">v</label> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>, <label for="r16" class="ident">token</label> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>) <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> {
+	<label for="r15" class="ident">v</label> = <a href="#line-121" class="ident">trimOWS</a>(<label for="r15" class="ident">v</label>)
+	<span class="keyword">if</span> <label for="r17" class="ident">comma</label> := <a href="../../../../../../pkg/strings.html" class="ident i1">strings</a>.<a href="../../../../../strings/strings.go.html#line-113" class="ident">IndexByte</a>(<label for="r15" class="ident">v</label>, <span class="lit-number">','</span>); <label for="r17" class="ident">comma</label> != -<span class="lit-number">1</span> {
+		<span class="keyword">return</span> <a href="#line-156" class="ident">tokenEqual</a>(<a href="#line-121" class="ident">trimOWS</a>(<label for="r15" class="ident">v</label>[:<label for="r17" class="ident">comma</label>]), <label for="r16" class="ident">token</label>) || <label for="r14" class="ident">headerValueContainsToken</label>(<label for="r15" class="ident">v</label>[<label for="r17" class="ident">comma</label>+<span class="lit-number">1</span>:], <label for="r16" class="ident">token</label>)
+	}
+	<span class="keyword">return</span> <a href="#line-156" class="ident">tokenEqual</a>(<label for="r15" class="ident">v</label>, <label for="r16" class="ident">token</label>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> lowerASCII returns the ASCII lowercase version of b.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r18" class="ident"><a href="../../../../../../pkg/golang.org/x/net/http/httpguts.html#name-lowerASCII" class="ident">lowerASCII</a></label>(<label for="r19" class="ident">b</label> <a href="../../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>) <a href="../../../../../../pkg/builtin.html#name-byte" class="ident">byte</a> {
+	<span class="keyword">if</span> <span class="lit-number">'A'</span> &lt;= <label for="r19" class="ident">b</label> &amp;&amp; <label for="r19" class="ident">b</label> &lt;= <span class="lit-number">'Z'</span> {
+		<span class="keyword">return</span> <label for="r19" class="ident">b</label> + (<span class="lit-number">'a'</span> - <span class="lit-number">'A'</span>)
+	}
+	<span class="keyword">return</span> <label for="r19" class="ident">b</label>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> tokenEqual reports whether t1 and t2 are equal, ASCII case-insensitively.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r20" class="ident"><a href="../../../../../../pkg/golang.org/x/net/http/httpguts.html#name-tokenEqual" class="ident">tokenEqual</a></label>(<label for="r21" class="ident">t1</label>, <label for="r22" class="ident">t2</label> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>) <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> {
+	<span class="keyword">if</span> <a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r21" class="ident">t1</label>) != <a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r22" class="ident">t2</label>) {
+		<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-false" class="ident">false</a>
+	}
+	<span class="keyword">for</span> <label for="r23" class="ident">i</label>, <label for="r24" class="ident">b</label> := <span class="keyword">range</span> <label for="r21" class="ident">t1</label> {
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> No UTF-8 or non-ASCII allowed in tokens.</span></div>
+<div class="code"><pre><code>			<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-false" class="ident">false</a>
+		}
+		<span class="keyword">if</span> <a href="#line-148" class="ident">lowerASCII</a>(<a href="../../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>(<label for="r24" class="ident">b</label>)) != <a href="#line-148" class="ident">lowerASCII</a>(<label for="r22" class="ident">t2</label>[<label for="r23" class="ident">i</label>]) {
+			<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-false" class="ident">false</a>
+		}
+	}
+	<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> isLWS reports whether b is linear white space, according</span><span class="comment"> to http://www.w3.org/Protocols/rfc2616/rfc2616-sec2.html#sec2.2</span><span class="comment">      LWS            = [CRLF] 1*( SP | HT )</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r25" class="ident"><a href="../../../../../../pkg/golang.org/x/net/http/httpguts.html#name-isLWS" class="ident">isLWS</a></label>(<label for="r26" class="ident">b</label> <a href="../../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>) <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> { <span class="keyword">return</span> <label for="r26" class="ident">b</label> == <span class="lit-number">' '</span> || <label for="r26" class="ident">b</label> == <span class="lit-number">'\t'</span> }
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> isCTL reports whether b is a control byte, according</span><span class="comment"> to http://www.w3.org/Protocols/rfc2616/rfc2616-sec2.html#sec2.2</span><span class="comment">      CTL            = &lt;any US-ASCII control character</span><span class="comment">                       (octets 0 - 31) and DEL (127)&gt;</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r27" class="ident"><a href="../../../../../../pkg/golang.org/x/net/http/httpguts.html#name-isCTL" class="ident">isCTL</a></label>(<label for="r28" class="ident">b</label> <a href="../../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>) <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> {
+	<span class="keyword">const</span> <label for="r29" class="ident">del</label> = <span class="lit-number">0x7f</span> <span class="comment">// a CTL</span>
+	<span class="keyword">return</span> <label for="r28" class="ident">b</label> &lt; <span class="lit-number">' '</span> || <label for="r28" class="ident">b</label> == <label for="r29" class="ident">del</label>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ValidHeaderFieldName reports whether v is a valid HTTP/1.x header name.</span><span class="comment"> HTTP/2 imposes the additional restriction that uppercase ASCII</span><span class="comment"> letters are not allowed.</span><span class="comment"></span><span class="comment">  RFC 7230 says:</span><span class="comment">   header-field   = field-name ":" OWS field-value OWS</span><span class="comment">   field-name     = token</span><span class="comment">   token          = 1*tchar</span><span class="comment">   tchar = "!" / "#" / "$" / "%" / "&amp;" / "'" / "*" / "+" / "-" / "." /</span><span class="comment">           "^" / "_" / "`" / "|" / "~" / DIGIT / ALPHA</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r30" class="ident"><a href="../../../../../../pkg/golang.org/x/net/http/httpguts.html#name-ValidHeaderFieldName" class="ident">ValidHeaderFieldName</a></label>(<label for="r31" class="ident">v</label> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>) <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> {
+	<span class="keyword">if</span> <a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r31" class="ident">v</label>) == <span class="lit-number">0</span> {
+		<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-false" class="ident">false</a>
+	}
+	<span class="keyword">for</span> <label for="r32" class="ident">_</label>, <label for="r33" class="ident">r</label> := <span class="keyword">range</span> <label for="r31" class="ident">v</label> {
+		<span class="keyword">if</span> !<a href="#line-95" class="ident">IsTokenRune</a>(<label for="r33" class="ident">r</label>) {
+			<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-false" class="ident">false</a>
+		}
+	}
+	<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ValidHostHeader reports whether h is a valid host header.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> The latest spec is actually this:</span><span class="comment">	</span><span class="comment">	 http://tools.ietf.org/html/rfc7230#section-5.4</span><span class="comment">	     Host = uri-host [ ":" port ]</span><span class="comment">	</span><span class="comment">	 Where uri-host is:</span><span class="comment">	     http://tools.ietf.org/html/rfc3986#section-3.2.2</span><span class="comment">	</span><span class="comment">	 But we're going to be much more lenient for now and just</span><span class="comment">	 search for any byte that's not a valid byte in any of those</span><span class="comment">	 expressions.</span></div>
+<div class="code"><pre><code>	<span class="keyword">for</span> <label for="r36" class="ident">i</label> := <span class="lit-number">0</span>; <label for="r36" class="ident">i</label> &lt; <a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r35" class="ident">h</label>); <label for="r36" class="ident">i</label>++ {
+		<span class="keyword">if</span> !<a href="#line-230" class="ident">validHostByte</a>[<label for="r35" class="ident">h</label>[<label for="r36" class="ident">i</label>]] {
+			<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-false" class="ident">false</a>
+		}
+	}
+	<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> See the validHostHeader comment.</span></div>
+<div class="code"><pre><code><span class="keyword">var</span> <a href="../../../../../../pkg/golang.org/x/net/http/httpguts.html#name-validHostByte" class="ident">validHostByte</a> = [<span class="lit-number">256</span>]<a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>{
+	<span class="lit-number">'0'</span>: <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <span class="lit-number">'1'</span>: <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <span class="lit-number">'2'</span>: <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <span class="lit-number">'3'</span>: <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <span class="lit-number">'4'</span>: <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <span class="lit-number">'5'</span>: <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <span class="lit-number">'6'</span>: <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <span class="lit-number">'7'</span>: <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'8'</span>: <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <span class="lit-number">'9'</span>: <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+
+	<span class="lit-number">'a'</span>: <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <span class="lit-number">'b'</span>: <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <span class="lit-number">'c'</span>: <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <span class="lit-number">'d'</span>: <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <span class="lit-number">'e'</span>: <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <span class="lit-number">'f'</span>: <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <span class="lit-number">'g'</span>: <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <span class="lit-number">'h'</span>: <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'i'</span>: <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <span class="lit-number">'j'</span>: <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <span class="lit-number">'k'</span>: <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <span class="lit-number">'l'</span>: <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <span class="lit-number">'m'</span>: <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <span class="lit-number">'n'</span>: <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <span class="lit-number">'o'</span>: <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <span class="lit-number">'p'</span>: <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'q'</span>: <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <span class="lit-number">'r'</span>: <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <span class="lit-number">'s'</span>: <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <span class="lit-number">'t'</span>: <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <span class="lit-number">'u'</span>: <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <span class="lit-number">'v'</span>: <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <span class="lit-number">'w'</span>: <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <span class="lit-number">'x'</span>: <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'y'</span>: <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <span class="lit-number">'z'</span>: <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+
+	<span class="lit-number">'A'</span>: <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <span class="lit-number">'B'</span>: <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <span class="lit-number">'C'</span>: <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <span class="lit-number">'D'</span>: <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <span class="lit-number">'E'</span>: <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <span class="lit-number">'F'</span>: <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <span class="lit-number">'G'</span>: <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <span class="lit-number">'H'</span>: <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'I'</span>: <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <span class="lit-number">'J'</span>: <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <span class="lit-number">'K'</span>: <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <span class="lit-number">'L'</span>: <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <span class="lit-number">'M'</span>: <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <span class="lit-number">'N'</span>: <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <span class="lit-number">'O'</span>: <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <span class="lit-number">'P'</span>: <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'Q'</span>: <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <span class="lit-number">'R'</span>: <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <span class="lit-number">'S'</span>: <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <span class="lit-number">'T'</span>: <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <span class="lit-number">'U'</span>: <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <span class="lit-number">'V'</span>: <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <span class="lit-number">'W'</span>: <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <span class="lit-number">'X'</span>: <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'Y'</span>: <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <span class="lit-number">'Z'</span>: <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+
+	<span class="lit-number">'!'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <span class="comment">// sub-delims</span>
+	<span class="lit-number">'$'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <span class="comment">// sub-delims</span>
+	<span class="lit-number">'%'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <span class="comment">// pct-encoded (and used in IPv6 zones)</span>
+	<span class="lit-number">'&amp;'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <span class="comment">// sub-delims</span>
+	<span class="lit-number">'('</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <span class="comment">// sub-delims</span>
+	<span class="lit-number">')'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <span class="comment">// sub-delims</span>
+	<span class="lit-number">'*'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <span class="comment">// sub-delims</span>
+	<span class="lit-number">'+'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <span class="comment">// sub-delims</span>
+	<span class="lit-number">','</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <span class="comment">// sub-delims</span>
+	<span class="lit-number">'-'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <span class="comment">// unreserved</span>
+	<span class="lit-number">'.'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <span class="comment">// unreserved</span>
+	<span class="lit-number">':'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <span class="comment">// IPv6address + Host expression's optional port</span>
+	<span class="lit-number">';'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <span class="comment">// sub-delims</span>
+	<span class="lit-number">'='</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <span class="comment">// sub-delims</span>
+	<span class="lit-number">'['</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'\''</span>: <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <span class="comment">// sub-delims</span>
+	<span class="lit-number">']'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'_'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <span class="comment">// unreserved</span>
+	<span class="lit-number">'~'</span>:  <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <span class="comment">// unreserved</span>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ValidHeaderFieldValue reports whether v is a valid "field-value" according to</span><span class="comment"> http://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html#sec4.2 :</span><span class="comment"></span><span class="comment">        message-header = field-name ":" [ field-value ]</span><span class="comment">        field-value    = *( field-content | LWS )</span><span class="comment">        field-content  = &lt;the OCTETs making up the field-value</span><span class="comment">                         and consisting of either *TEXT or combinations</span><span class="comment">                         of token, separators, and quoted-string&gt;</span><span class="comment"></span><span class="comment"> http://www.w3.org/Protocols/rfc2616/rfc2616-sec2.html#sec2.2 :</span><span class="comment"></span><span class="comment">        TEXT           = &lt;any OCTET except CTLs,</span><span class="comment">                          but including LWS&gt;</span><span class="comment">        LWS            = [CRLF] 1*( SP | HT )</span><span class="comment">        CTL            = &lt;any US-ASCII control character</span><span class="comment">                         (octets 0 - 31) and DEL (127)&gt;</span><span class="comment"></span><span class="comment"> RFC 7230 says:</span><span class="comment">  field-value    = *( field-content / obs-fold )</span><span class="comment">  obj-fold       =  N/A to http2, and deprecated</span><span class="comment">  field-content  = field-vchar [ 1*( SP / HTAB ) field-vchar ]</span><span class="comment">  field-vchar    = VCHAR / obs-text</span><span class="comment">  obs-text       = %x80-FF</span><span class="comment">  VCHAR          = "any visible [USASCII] character"</span><span class="comment"></span><span class="comment"> http2 further says: "Similarly, HTTP/2 allows header field values</span><span class="comment"> that are not valid. While most of the values that can be encoded</span><span class="comment"> will not alter header field parsing, carriage return (CR, ASCII</span><span class="comment"> 0xd), line feed (LF, ASCII 0xa), and the zero character (NUL, ASCII</span><span class="comment"> 0x0) might be exploited by an attacker if they are translated</span><span class="comment"> verbatim. Any request or response that contains a character not</span><span class="comment"> permitted in a header field value MUST be treated as malformed</span><span class="comment"> (Section 8.1.2.6). Valid characters are defined by the</span><span class="comment"> field-content ABNF rule in Section 3.2 of [RFC7230]."</span><span class="comment"></span><span class="comment"> This function does not (yet?) properly handle the rejection of</span><span class="comment"> strings that begin or end with SP or HTAB.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r37" class="ident"><a href="../../../../../../pkg/golang.org/x/net/http/httpguts.html#name-ValidHeaderFieldValue" class="ident">ValidHeaderFieldValue</a></label>(<label for="r38" class="ident">v</label> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>) <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> {
+	<span class="keyword">for</span> <label for="r39" class="ident">i</label> := <span class="lit-number">0</span>; <label for="r39" class="ident">i</label> &lt; <a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r38" class="ident">v</label>); <label for="r39" class="ident">i</label>++ {
+		<label for="r40" class="ident">b</label> := <label for="r38" class="ident">v</label>[<label for="r39" class="ident">i</label>]
+		<span class="keyword">if</span> <a href="#line-181" class="ident">isCTL</a>(<label for="r40" class="ident">b</label>) &amp;&amp; !<a href="#line-175" class="ident">isLWS</a>(<label for="r40" class="ident">b</label>) {
+			<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-false" class="ident">false</a>
+		}
+	}
+	<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>
+}
+
+<span class="keyword">func</span> <label for="r41" class="ident"><a href="../../../../../../pkg/golang.org/x/net/http/httpguts.html#name-isASCII" class="ident">isASCII</a></label>(<label for="r42" class="ident">s</label> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>) <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> {
+	<span class="keyword">for</span> <label for="r43" class="ident">i</label> := <span class="lit-number">0</span>; <label for="r43" class="ident">i</label> &lt; <a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r42" class="ident">s</label>); <label for="r43" class="ident">i</label>++ {
+		<span class="keyword">if</span> <label for="r42" class="ident">s</label>[<label for="r43" class="ident">i</label>] &gt;= <a href="../../../../../../pkg/unicode/utf8.html" class="ident i2">utf8</a>.<a href="../../../../../unicode/utf8/utf8.go.html#line-17" class="ident">RuneSelf</a> {
+			<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-false" class="ident">false</a>
+		}
+	}
+	<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> PunycodeHostPort returns the IDNA Punycode version</span><span class="comment"> of the provided "host" or "host:port" string.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r44" class="ident"><a href="../../../../../../pkg/golang.org/x/net/http/httpguts.html#name-PunycodeHostPort" class="ident">PunycodeHostPort</a></label>(<label for="r45" class="ident">v</label> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>) (<a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>, <a href="../../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<span class="keyword">if</span> <a href="#line-312" class="ident">isASCII</a>(<label for="r45" class="ident">v</label>) {
+		<span class="keyword">return</span> <label for="r45" class="ident">v</label>, <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+	}
+
+	<label for="r46" class="ident">host</label>, <label for="r47" class="ident">port</label>, <label for="r48" class="ident">err</label> := <a href="../../../../../../pkg/net.html" class="ident i0">net</a>.<a href="../../../../../net/ipsock.go.html#line-156" class="ident">SplitHostPort</a>(<label for="r45" class="ident">v</label>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> The input 'v' argument was just a "host" argument,</span><span class="comment">		 without a port. This error should not be returned</span><span class="comment">		 to the caller.</span></div>
+<div class="code"><pre><code>		<label for="r46" class="ident">host</label> = <label for="r45" class="ident">v</label>
+		<label for="r47" class="ident">port</label> = <span class="lit-string">""</span>
+	}
+	<label for="r46" class="ident">host</label>, <label for="r48" class="ident">err</label> = <a href="../../../../../../pkg/golang.org/x/net/idna.html" class="ident i3">idna</a>.<a href="../../idna/idna10.0.0.go.html#line-47" class="ident">ToASCII</a>(<label for="r46" class="ident">host</label>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Non-UTF-8? Not representable in Punycode, in any</span><span class="comment">		 case.</span></div>
+<div class="code"><pre><code>		<span class="keyword">return</span> <span class="lit-string">""</span>, <label for="r48" class="ident">err</label>
+	}
+	<span class="keyword">if</span> <label for="r47" class="ident">port</label> == <span class="lit-string">""</span> {
+		<span class="keyword">return</span> <label for="r46" class="ident">host</label>, <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+	}
+	<span class="keyword">return</span> <a href="../../../../../../pkg/net.html" class="ident i0">net</a>.<a href="../../../../../net/ipsock.go.html#line-227" class="ident">JoinHostPort</a>(<label for="r46" class="ident">host</label>, <label for="r47" class="ident">port</label>), <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

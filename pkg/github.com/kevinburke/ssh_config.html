@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Package: github.com/kevinburke/ssh_config</title>
+<link href="../../../css/light-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="package-details"><code><span style="font-size:xx-large;">package <b>ssh_config</b></span>
+
+<span class="title">Import Path</span>
+	<a href="../../../index.html#pkg-github.com/kevinburke/ssh_config">github.com/kevinburke/ssh_config</a><i> (on <a href="https://pkg.go.dev/github.com/kevinburke/ssh_config" target="_blank">go.dev</a>)</i>
+
+<span class="title">Dependency Relation</span>
+	imports <a href="../../../dep/github.com/kevinburke/ssh_config.html">13 packages</a>, and imported by <a href="../../../dep/github.com/kevinburke/ssh_config.html#imported-by">one package</a>
+
+<div id="files"><span class="title">Involved Source Files</span>
+
+	<input type='checkbox' checked class="fold" id="file-0-fold-content"><label for="file-0-fold-content">   <a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#doc">d➜</a> <a href="../../../src/github.com/kevinburke/ssh_config/config.go.html">config.go</a></label><span id='file-0-fold-content-items' class="fold-items">
+		Package ssh_config provides tools for manipulating SSH config files.
+
+		Importantly, this parser attempts to preserve comments in a given file, so
+		you can manipulate a `ssh_config` file from a program, if your heart desires.
+
+		The Get() and GetStrict() functions will attempt to read values from
+		$HOME/.ssh/config, falling back to /etc/ssh/ssh_config. The first argument is
+		the host name to match on ("example.com"), and the second argument is the key
+		you want to retrieve ("Port"). The keywords are case insensitive.
+
+				port := ssh_config.Get("myhost", "Port")
+
+		You can also manipulate an SSH config file and then print it or write it back
+		to disk.
+
+			f, _ := os.Open(filepath.Join(os.Getenv("HOME"), ".ssh", "config"))
+			cfg, _ := ssh_config.Decode(f)
+			for _, host := range cfg.Hosts {
+				fmt.Println("patterns:", host.Patterns)
+				for _, node := range host.Nodes {
+					fmt.Println(node.String())
+				}
+			}
+
+			// Write the cfg back to disk:
+			fmt.Println(cfg.String())
+
+		BUG: the Match directive is currently unsupported; parsing a config with
+		a Match directive will trigger an error.
+</span>
+	<span class="nodocs">      <a href="../../../src/github.com/kevinburke/ssh_config/lexer.go.html">lexer.go</a></span>
+	<span class="nodocs">      <a href="../../../src/github.com/kevinburke/ssh_config/parser.go.html">parser.go</a></span>
+	<span class="nodocs">      <a href="../../../src/github.com/kevinburke/ssh_config/position.go.html">position.go</a></span>
+	<span class="nodocs">      <a href="../../../src/github.com/kevinburke/ssh_config/token.go.html">token.go</a></span>
+	<span class="nodocs">      <a href="../../../src/github.com/kevinburke/ssh_config/validators.go.html">validators.go</a></span></div>
+<div id="examples"><span class="title">Code Examples</span>
+
+	<input type='checkbox' class="fold" id="example-0-fold-content"><label for="example-0-fold-content">Decode</label><span id='example-0-fold-content-items' class="fold-items">
+		package main
+		
+		import (
+			"fmt"
+			"github.com/kevinburke/ssh_config"
+			"strings"
+		)
+		
+		func main() {
+			var config = `
+		Host *.example.com
+		  Compression yes
+		`
+		
+			cfg, _ := ssh_config.Decode(strings.NewReader(config))
+			val, _ := cfg.Get("test.example.com", "Compression")
+			fmt.Println(val)
+		}
+
+</span>
+	<input type='checkbox' class="fold" id="example-1-fold-content"><label for="example-1-fold-content">Default</label><span id='example-1-fold-content-items' class="fold-items">
+		package main
+		
+		import (
+			"fmt"
+			"github.com/kevinburke/ssh_config"
+		)
+		
+		func main() {
+			fmt.Println(ssh_config.Default("Port"))
+			fmt.Println(ssh_config.Default("UnknownVar"))
+		}
+
+</span>
+	<input type='checkbox' class="fold" id="example-2-fold-content"><label for="example-2-fold-content">Host_Matches</label><span id='example-2-fold-content-items' class="fold-items">
+		package main
+		
+		import (
+			"fmt"
+			"github.com/kevinburke/ssh_config"
+		)
+		
+		func main() {
+			pat, _ := ssh_config.NewPattern("test.*.example.com")
+			host := &ssh_config.Host{Patterns: []*ssh_config.Pattern{pat}}
+			fmt.Println(host.Matches("test.stage.example.com"))
+			fmt.Println(host.Matches("othersubdomain.example.com"))
+		}
+
+</span>
+	<input type='checkbox' class="fold" id="example-3-fold-content"><label for="example-3-fold-content">Pattern</label><span id='example-3-fold-content-items' class="fold-items">
+		package main
+		
+		import (
+			"fmt"
+			"github.com/kevinburke/ssh_config"
+		)
+		
+		func main() {
+			pat, _ := ssh_config.NewPattern("*")
+			host := &ssh_config.Host{Patterns: []*ssh_config.Pattern{pat}}
+			fmt.Println(host.Matches("test.stage.example.com"))
+			fmt.Println(host.Matches("othersubdomain.any.any"))
+		}
+</span>
+</div>
+<div id="exported-types"><span class="title">Package-Level Type Names<span class="title-stat"><i> (total 16, in which 9 are exported)</i></span></span>
+
+<div id="exported-types-buttons" class="js-on">	/* sort exporteds by: <label id="sort-types-by-alphabet" class="button">alphabet</label> | <label id="sort-types-by-popularity" class="button">popularity</label> */</div><div class="anchor type-res" id="name-Config" data-popularity="920">	<input type='checkbox' class="fold" id="Config-fold-content"><label for="Config-fold-content"> <a href="../../../use/github.com/kevinburke/ssh_config..Config.html">type</a> <a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-240">Config</a> <i>(struct)</i></label><span id='Config-fold-content-docs' class="fold-docs">
+		Config represents an SSH config file.
+
+		<input type='checkbox' class="fold" id="Config-fold-fields"><label for="Config-fold-fields">Fields (<i>total 3, in which 1 are exported</i>)</label><span id='Config-fold-fields-items' class="fold-items"><span>
+			<input type='checkbox' class="fold" id="Config-fold-field-Hosts"><label for="Config-fold-field-Hosts"><a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-243">Hosts</a> <i>[]*<a href="#name-Host">Host</a></i></label><span id='Config-fold-field-Hosts-docs' class="fold-docs">
+				A list of hosts to match against. The file begins with an implicit
+				"Host *" declaration matching all hosts.
+</span></span>
+			<input type='checkbox' class="showhide" id="Config-showhide-fields"><i><label for="Config-showhide-fields" class="show-inline">/* 2 unexporteds ... */</label><label for="Config-showhide-fields" class="hide-inline">/* 2 unexporteds: */</label></i><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-244">depth</a> <i><a href="../../builtin.html#name-uint8">uint8</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-245">position</a> <i><a href="#name-Position">Position</a></i></span></i></span></span>
+		<input type='checkbox' class="fold" id="Config-fold-methods"><label for="Config-fold-methods">Methods (<i>total 3, all are exported</i>)</label><span id='Config-fold-methods-items' class="fold-items"><span>
+			<input type='checkbox' class="fold" id="Config-fold-method-Get"><label for="Config-fold-method-Get">(*T) <a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-253">Get</a>(alias, key <a href="../../builtin.html#name-string">string</a>) (<a href="../../builtin.html#name-string">string</a>, <a href="../../builtin.html#name-error">error</a>)</label><span id='Config-fold-method-Get-docs' class="fold-docs">
+				Get finds the first value in the configuration that matches the alias and
+				contains key. Get returns the empty string if no value was found, or if the
+				Config contains an invalid conditional Include value.
+
+				The match for key is case insensitive.
+</span></span><span>
+			<span class="nodocs">( T) <a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-290">MarshalText</a>() ([]<a href="../../builtin.html#name-byte">byte</a>, <a href="../../builtin.html#name-error">error</a>)</span></span><span>
+			<input type='checkbox' class="fold" id="Config-fold-method-String"><label for="Config-fold-method-String">( T) <a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-286">String</a>() <a href="../../builtin.html#name-string">string</a></label><span id='Config-fold-method-String-docs' class="fold-docs">
+				String returns a string representation of the Config file.
+</span></span></span>
+		<input type='checkbox' class="fold" id="Config-fold-impls"><label for="Config-fold-impls">Implements (<i>at least 5, in which 3 are exported</i>)</label><span id='Config-fold-impls-items' class="fold-items"><span>
+			 T : encoding.<a href="../../encoding.html#name-TextMarshaler">TextMarshaler</a></span><span>
+			 T : expvar.<a href="../../expvar.html#name-Var">Var</a></span><span>
+			 T : fmt.<a href="../../fmt.html#name-Stringer">Stringer</a></span>
+			<input type='checkbox' class="showhide" id="Config-showhide-impls"><i><label for="Config-showhide-impls" class="show-inline">/* 2+ unexporteds ... */</label><label for="Config-showhide-impls" class="hide-inline">/* 2+ unexporteds: */</label></i><span class="hidden"><i>
+			 T : context.<a href="../../context.html#name-stringer">stringer</a></i></span><span class="hidden"><i>
+			 T : runtime.<a href="../../runtime.html#name-stringer">stringer</a></i></span></span>
+		<input type='checkbox' class="fold" id="Config-fold-results"><label for="Config-fold-results">As Outputs Of (<i>at least 6, in which 1 are exported</i>)</label><span id='Config-fold-results-items' class="fold-items"><span>
+			func <a href="#name-Decode">Decode</a>(r <a href="../../io.html">io</a>.<a href="../../io.html#name-Reader">Reader</a>) (*<b>Config</b>, <a href="../../builtin.html#name-error">error</a>)</span>
+			<input type='checkbox' class="showhide" id="Config-showhide-inputofs"><i><label for="Config-showhide-inputofs" class="show-inline">/* 5+ unexporteds ... */</label><label for="Config-showhide-inputofs" class="hide-inline">/* 5+ unexporteds: */</label></i><span class="hidden"><i>
+			func <a href="#name-decodeBytes">decodeBytes</a>(b []<a href="../../builtin.html#name-byte">byte</a>, system <a href="../../builtin.html#name-bool">bool</a>, depth <a href="../../builtin.html#name-uint8">uint8</a>) (c *<b>Config</b>, err <a href="../../builtin.html#name-error">error</a>)</i></span><span class="hidden"><i>
+			func <a href="#name-newConfig">newConfig</a>() *<b>Config</b></i></span><span class="hidden"><i>
+			func <a href="#name-parseFile">parseFile</a>(filename <a href="../../builtin.html#name-string">string</a>) (*<b>Config</b>, <a href="../../builtin.html#name-error">error</a>)</i></span><span class="hidden"><i>
+			func <a href="#name-parseSSH">parseSSH</a>(flow chan <a href="#name-token">token</a>, system <a href="../../builtin.html#name-bool">bool</a>, depth <a href="../../builtin.html#name-uint8">uint8</a>) *<b>Config</b></i></span><span class="hidden"><i>
+			func <a href="#name-parseWithDepth">parseWithDepth</a>(filename <a href="../../builtin.html#name-string">string</a>, depth <a href="../../builtin.html#name-uint8">uint8</a>) (*<b>Config</b>, <a href="../../builtin.html#name-error">error</a>)</i></span></span>
+		<input type='checkbox' class="fold" id="Config-fold-params"><label for="Config-fold-params">As Inputs Of (<i>at least 2, neither is exported</i>)</label><span id='Config-fold-params-items' class="fold-items">
+			<input type='checkbox' class="showhide" id="Config-showhide-outputofs"><i><label for="Config-showhide-outputofs" class="show-inline">/* 2+ unexporteds ... */</label><label for="Config-showhide-outputofs" class="hide-inline">/* 2+ unexporteds: */</label></i><span class="hidden"><i>
+			func <a href="#name-findVal">findVal</a>(c *<b>Config</b>, alias, key <a href="../../builtin.html#name-string">string</a>) (<a href="../../builtin.html#name-string">string</a>, <a href="../../builtin.html#name-error">error</a>)</i></span><span class="hidden"><i>
+			func <a href="#name-marshal">marshal</a>(c <b>Config</b>) *<a href="../../bytes.html">bytes</a>.<a href="../../bytes.html#name-Buffer">Buffer</a></i></span></span>
+
+</span></div><div class="anchor type-res" id="name-Empty" data-popularity="350">	<input type='checkbox' class="fold" id="Empty-fold-content"><label for="Empty-fold-content"> <a href="../../../use/github.com/kevinburke/ssh_config..Empty.html">type</a> <a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-478">Empty</a> <i>(struct)</i></label><span id='Empty-fold-content-docs' class="fold-docs">
+		Empty is a line in the config file that contains only whitespace or comments.
+
+		<input type='checkbox' class="fold" id="Empty-fold-fields"><label for="Empty-fold-fields">Fields (<i>total 3, in which 1 are exported</i>)</label><span id='Empty-fold-fields-items' class="fold-items"><span>
+			<span class="nodocs"><a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-479">Comment</a> <i><a href="../../builtin.html#name-string">string</a></i></span></span>
+			<input type='checkbox' class="showhide" id="Empty-showhide-fields"><i><label for="Empty-showhide-fields" class="show-inline">/* 2 unexporteds ... */</label><label for="Empty-showhide-fields" class="hide-inline">/* 2 unexporteds: */</label></i><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="Empty-fold-field-leadingSpace"><label for="Empty-fold-field-leadingSpace"><a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-480">leadingSpace</a> <i><a href="../../builtin.html#name-int">int</a></i></label><span id='Empty-fold-field-leadingSpace-docs' class="fold-docs">
+				// TODO handle spaces vs tabs.
+</span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-481">position</a> <i><a href="#name-Position">Position</a></i></span></i></span></span>
+		<input type='checkbox' class="fold" id="Empty-fold-methods"><label for="Empty-fold-methods">Methods (<i>total 2, both are exported</i>)</label><span id='Empty-fold-methods-items' class="fold-items"><span>
+			<input type='checkbox' class="fold" id="Empty-fold-method-Pos"><label for="Empty-fold-method-Pos">(*T) <a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-485">Pos</a>() <a href="#name-Position">Position</a></label><span id='Empty-fold-method-Pos-docs' class="fold-docs">
+				Pos returns e's Position.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Empty-fold-method-String"><label for="Empty-fold-method-String">(*T) <a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-490">String</a>() <a href="../../builtin.html#name-string">string</a></label><span id='Empty-fold-method-String-docs' class="fold-docs">
+				String prints e as it was parsed in the config file.
+</span></span></span>
+		<input type='checkbox' class="fold" id="Empty-fold-impls"><label for="Empty-fold-impls">Implements (<i>at least 5, in which 3 are exported</i>)</label><span id='Empty-fold-impls-items' class="fold-items"><span>
+			*T : <a href="#name-Node">Node</a></span><span>
+			*T : expvar.<a href="../../expvar.html#name-Var">Var</a></span><span>
+			*T : fmt.<a href="../../fmt.html#name-Stringer">Stringer</a></span>
+			<input type='checkbox' class="showhide" id="Empty-showhide-impls"><i><label for="Empty-showhide-impls" class="show-inline">/* 2+ unexporteds ... */</label><label for="Empty-showhide-impls" class="hide-inline">/* 2+ unexporteds: */</label></i><span class="hidden"><i>
+			*T : context.<a href="../../context.html#name-stringer">stringer</a></i></span><span class="hidden"><i>
+			*T : runtime.<a href="../../runtime.html#name-stringer">stringer</a></i></span></span>
+
+</span></div><div class="anchor type-res" id="name-Host" data-popularity="300">	<input type='checkbox' class="fold" id="Host-fold-content"><label for="Host-fold-content"> <a href="../../../use/github.com/kevinburke/ssh_config..Host.html">type</a> <a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-371">Host</a> <i>(struct)</i></label><span id='Host-fold-content-docs' class="fold-docs">
+		Host describes a Host directive and the keywords that follow it.
+
+		<input type='checkbox' class="fold" id="Host-fold-fields"><label for="Host-fold-fields">Fields (<i>total 6, in which 3 are exported</i>)</label><span id='Host-fold-fields-items' class="fold-items"><span>
+			<input type='checkbox' class="fold" id="Host-fold-field-EOLComment"><label for="Host-fold-field-EOLComment"><a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-377">EOLComment</a> <i><a href="../../builtin.html#name-string">string</a></i></label><span id='Host-fold-field-EOLComment-docs' class="fold-docs">
+				EOLComment is the comment (if any) terminating the Host line.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Host-fold-field-Nodes"><label for="Host-fold-field-Nodes"><a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-375">Nodes</a> <i>[]<a href="#name-Node">Node</a></i></label><span id='Host-fold-field-Nodes-docs' class="fold-docs">
+				A Node is either a key/value pair or a comment line.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Host-fold-field-Patterns"><label for="Host-fold-field-Patterns"><a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-373">Patterns</a> <i>[]*<a href="#name-Pattern">Pattern</a></i></label><span id='Host-fold-field-Patterns-docs' class="fold-docs">
+				A list of host patterns that should match this host.
+</span></span>
+			<input type='checkbox' class="showhide" id="Host-showhide-fields"><i><label for="Host-showhide-fields" class="show-inline">/* 3 unexporteds ... */</label><label for="Host-showhide-fields" class="hide-inline">/* 3 unexporteds: */</label></i><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-378">hasEquals</a> <i><a href="../../builtin.html#name-bool">bool</a></i></span></i></span><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="Host-fold-field-implicit"><label for="Host-fold-field-implicit"><a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-381">implicit</a> <i><a href="../../builtin.html#name-bool">bool</a></i></label><span id='Host-fold-field-implicit-docs' class="fold-docs">
+				The file starts with an implicit "Host *" declaration.
+</span></i></span><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="Host-fold-field-leadingSpace"><label for="Host-fold-field-leadingSpace"><a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-379">leadingSpace</a> <i><a href="../../builtin.html#name-int">int</a></i></label><span id='Host-fold-field-leadingSpace-docs' class="fold-docs">
+				// TODO: handle spaces vs tabs here.
+</span></i></span></span>
+		<input type='checkbox' class="fold" id="Host-fold-methods"><label for="Host-fold-methods">Methods (<i>total 2, both are exported</i>)</label><span id='Host-fold-methods-items' class="fold-items"><span>
+			<input type='checkbox' class="fold" id="Host-fold-method-Matches"><label for="Host-fold-method-Matches">(*T) <a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-387">Matches</a>(alias <a href="../../builtin.html#name-string">string</a>) <a href="../../builtin.html#name-bool">bool</a></label><span id='Host-fold-method-Matches-docs' class="fold-docs">
+				Matches returns true if the Host matches for the given alias. For
+				a description of the rules that provide a match, see the manpage for
+				ssh_config.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Host-fold-method-String"><label for="Host-fold-method-String">(*T) <a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-408">String</a>() <a href="../../builtin.html#name-string">string</a></label><span id='Host-fold-method-String-docs' class="fold-docs">
+				String prints h as it would appear in a config file. Minor tweaks may be
+				present in the whitespace in the printed file.
+</span></span></span>
+		<input type='checkbox' class="fold" id="Host-fold-impls"><label for="Host-fold-impls">Implements (<i>at least 4, in which 2 are exported</i>)</label><span id='Host-fold-impls-items' class="fold-items"><span>
+			*T : expvar.<a href="../../expvar.html#name-Var">Var</a></span><span>
+			*T : fmt.<a href="../../fmt.html#name-Stringer">Stringer</a></span>
+			<input type='checkbox' class="showhide" id="Host-showhide-impls"><i><label for="Host-showhide-impls" class="show-inline">/* 2+ unexporteds ... */</label><label for="Host-showhide-impls" class="hide-inline">/* 2+ unexporteds: */</label></i><span class="hidden"><i>
+			*T : context.<a href="../../context.html#name-stringer">stringer</a></i></span><span class="hidden"><i>
+			*T : runtime.<a href="../../runtime.html#name-stringer">stringer</a></i></span></span>
+
+</span></div><div class="anchor type-res" id="name-Include" data-popularity="525">	<input type='checkbox' class="fold" id="Include-fold-content"><label for="Include-fold-content"> <a href="../../../use/github.com/kevinburke/ssh_config..Include.html">type</a> <a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-503">Include</a> <i>(struct)</i></label><span id='Include-fold-content-docs' class="fold-docs">
+		Include holds the result of an Include directive, including the config files
+		that have been parsed as part of that directive. At most 5 levels of Include
+		statements will be parsed.
+
+		<input type='checkbox' class="fold" id="Include-fold-fields"><label for="Include-fold-fields">Fields (<i>total 9, in which 1 are exported</i>)</label><span id='Include-fold-fields-items' class="fold-items"><span>
+			<input type='checkbox' class="fold" id="Include-fold-field-Comment"><label for="Include-fold-field-Comment"><a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-506">Comment</a> <i><a href="../../builtin.html#name-string">string</a></i></label><span id='Include-fold-field-Comment-docs' class="fold-docs">
+				Comment is the contents of any comment at the end of the Include
+				statement.
+</span></span>
+			<input type='checkbox' class="showhide" id="Include-showhide-fields"><i><label for="Include-showhide-fields" class="show-inline">/* 8 unexporteds ... */</label><label for="Include-showhide-fields" class="hide-inline">/* 8 unexporteds: */</label></i><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-518">depth</a> <i><a href="../../builtin.html#name-uint8">uint8</a></i></span></i></span><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="Include-fold-field-directives"><label for="Include-fold-field-directives"><a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-508">directives</a> <i>[]<a href="../../builtin.html#name-string">string</a></i></label><span id='Include-fold-field-directives-docs' class="fold-docs">
+				an include directive can include several different files, and wildcards
+</span></i></span><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="Include-fold-field-files"><label for="Include-fold-field-files"><a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-515">files</a> <i>map[<a href="../../builtin.html#name-string">string</a>]*<a href="#name-Config">Config</a></i></label><span id='Include-fold-field-files-docs' class="fold-docs">
+				actual filenames are listed here
+</span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-519">hasEquals</a> <i><a href="../../builtin.html#name-bool">bool</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-516">leadingSpace</a> <i><a href="../../builtin.html#name-int">int</a></i></span></i></span><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="Include-fold-field-matches"><label for="Include-fold-field-matches"><a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-513">matches</a> <i>[]<a href="../../builtin.html#name-string">string</a></i></label><span id='Include-fold-field-matches-docs' class="fold-docs">
+				1:1 mapping between matches and keys in files array; matches preserves
+				ordering
+</span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-510">mu</a> <i><a href="../../sync.html">sync</a>.<a href="../../sync.html#name-Mutex">Mutex</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-517">position</a> <i><a href="#name-Position">Position</a></i></span></i></span></span>
+		<input type='checkbox' class="fold" id="Include-fold-methods"><label for="Include-fold-methods">Methods (<i>total 3, all are exported</i>)</label><span id='Include-fold-methods-items' class="fold-items"><span>
+			<input type='checkbox' class="fold" id="Include-fold-method-Get"><label for="Include-fold-method-Get">(*T) <a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-597">Get</a>(alias, key <a href="../../builtin.html#name-string">string</a>) <a href="../../builtin.html#name-string">string</a></label><span id='Include-fold-method-Get-docs' class="fold-docs">
+				Get finds the first value in the Include statement matching the alias and the
+				given key.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Include-fold-method-Pos"><label for="Include-fold-method-Pos">(*T) <a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-591">Pos</a>() <a href="#name-Position">Position</a></label><span id='Include-fold-method-Pos-docs' class="fold-docs">
+				Pos returns the position of the Include directive in the larger file.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Include-fold-method-String"><label for="Include-fold-method-String">(*T) <a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-616">String</a>() <a href="../../builtin.html#name-string">string</a></label><span id='Include-fold-method-String-docs' class="fold-docs">
+				String prints out a string representation of this Include directive. Note
+				included Config files are not printed as part of this representation.
+</span></span></span>
+		<input type='checkbox' class="fold" id="Include-fold-impls"><label for="Include-fold-impls">Implements (<i>at least 6, in which 3 are exported</i>)</label><span id='Include-fold-impls-items' class="fold-items"><span>
+			*T : <a href="#name-Node">Node</a></span><span>
+			*T : expvar.<a href="../../expvar.html#name-Var">Var</a></span><span>
+			*T : fmt.<a href="../../fmt.html#name-Stringer">Stringer</a></span>
+			<input type='checkbox' class="showhide" id="Include-showhide-impls"><i><label for="Include-showhide-impls" class="show-inline">/* 3+ unexporteds ... */</label><label for="Include-showhide-impls" class="hide-inline">/* 3+ unexporteds: */</label></i><span class="hidden"><i>
+			*T : github.com/go-git/go-git/v5/plumbing/transport/ssh.<a href="../go-git/go-git/v5/plumbing/transport/ssh.html#name-sshConfig">sshConfig</a></i></span><span class="hidden"><i>
+			*T : context.<a href="../../context.html#name-stringer">stringer</a></i></span><span class="hidden"><i>
+			*T : runtime.<a href="../../runtime.html#name-stringer">stringer</a></i></span></span>
+		<input type='checkbox' class="fold" id="Include-fold-results"><label for="Include-fold-results">As Outputs Of (<i>at least one exported</i>)</label><span id='Include-fold-results-items' class="fold-items"><span>
+			func <a href="#name-NewInclude">NewInclude</a>(directives []<a href="../../builtin.html#name-string">string</a>, hasEquals <a href="../../builtin.html#name-bool">bool</a>, pos <a href="#name-Position">Position</a>, comment <a href="../../builtin.html#name-string">string</a>, system <a href="../../builtin.html#name-bool">bool</a>, depth <a href="../../builtin.html#name-uint8">uint8</a>) (*<b>Include</b>, <a href="../../builtin.html#name-error">error</a>)</span></span>
+
+</span></div><div class="anchor type-res" id="name-KV" data-popularity="350">	<input type='checkbox' class="fold" id="KV-fold-content"><label for="KV-fold-content"> <a href="../../../use/github.com/kevinburke/ssh_config..KV.html">type</a> <a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-446">KV</a> <i>(struct)</i></label><span id='KV-fold-content-docs' class="fold-docs">
+		KV is a line in the config file that contains a key, a value, and possibly
+		a comment.
+
+		<input type='checkbox' class="fold" id="KV-fold-fields"><label for="KV-fold-fields">Fields (<i>total 6, in which 3 are exported</i>)</label><span id='KV-fold-fields-items' class="fold-items"><span>
+			<span class="nodocs"><a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-449">Comment</a> <i><a href="../../builtin.html#name-string">string</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-447">Key</a> <i><a href="../../builtin.html#name-string">string</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-448">Value</a> <i><a href="../../builtin.html#name-string">string</a></i></span></span>
+			<input type='checkbox' class="showhide" id="KV-showhide-fields"><i><label for="KV-showhide-fields" class="show-inline">/* 3 unexporteds ... */</label><label for="KV-showhide-fields" class="hide-inline">/* 3 unexporteds: */</label></i><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-450">hasEquals</a> <i><a href="../../builtin.html#name-bool">bool</a></i></span></i></span><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="KV-fold-field-leadingSpace"><label for="KV-fold-field-leadingSpace"><a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-451">leadingSpace</a> <i><a href="../../builtin.html#name-int">int</a></i></label><span id='KV-fold-field-leadingSpace-docs' class="fold-docs">
+				// Space before the key. TODO handle spaces vs tabs.
+</span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-452">position</a> <i><a href="#name-Position">Position</a></i></span></i></span></span>
+		<input type='checkbox' class="fold" id="KV-fold-methods"><label for="KV-fold-methods">Methods (<i>total 2, both are exported</i>)</label><span id='KV-fold-methods-items' class="fold-items"><span>
+			<input type='checkbox' class="fold" id="KV-fold-method-Pos"><label for="KV-fold-method-Pos">(*T) <a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-456">Pos</a>() <a href="#name-Position">Position</a></label><span id='KV-fold-method-Pos-docs' class="fold-docs">
+				Pos returns k's Position.
+</span></span><span>
+			<input type='checkbox' class="fold" id="KV-fold-method-String"><label for="KV-fold-method-String">(*T) <a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-462">String</a>() <a href="../../builtin.html#name-string">string</a></label><span id='KV-fold-method-String-docs' class="fold-docs">
+				String prints k as it was parsed in the config file. There may be slight
+				changes to the whitespace between values.
+</span></span></span>
+		<input type='checkbox' class="fold" id="KV-fold-impls"><label for="KV-fold-impls">Implements (<i>at least 5, in which 3 are exported</i>)</label><span id='KV-fold-impls-items' class="fold-items"><span>
+			*T : <a href="#name-Node">Node</a></span><span>
+			*T : expvar.<a href="../../expvar.html#name-Var">Var</a></span><span>
+			*T : fmt.<a href="../../fmt.html#name-Stringer">Stringer</a></span>
+			<input type='checkbox' class="showhide" id="KV-showhide-impls"><i><label for="KV-showhide-impls" class="show-inline">/* 2+ unexporteds ... */</label><label for="KV-showhide-impls" class="hide-inline">/* 2+ unexporteds: */</label></i><span class="hidden"><i>
+			*T : context.<a href="../../context.html#name-stringer">stringer</a></i></span><span class="hidden"><i>
+			*T : runtime.<a href="../../runtime.html#name-stringer">stringer</a></i></span></span>
+
+</span></div><div class="anchor type-res" id="name-Node" data-popularity="750">	<input type='checkbox' class="fold" id="Node-fold-content"><label for="Node-fold-content"> <a href="../../../use/github.com/kevinburke/ssh_config..Node.html">type</a> <a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-439">Node</a> <b><i>(interface)</i></b></label><span id='Node-fold-content-docs' class="fold-docs">
+		Node represents a line in a Config.
+
+		<input type='checkbox' class="fold" id="Node-fold-methods"><label for="Node-fold-methods">Methods (<i>total 2, both are exported</i>)</label><span id='Node-fold-methods-items' class="fold-items"><span>
+			<span class="nodocs">( T) <a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-440">Pos</a>() <a href="#name-Position">Position</a></span></span><span>
+			<span class="nodocs">( T) <a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-441">String</a>() <a href="../../builtin.html#name-string">string</a></span></span></span>
+		<input type='checkbox' class="fold" id="Node-fold-impledby"><label for="Node-fold-impledby">Implemented By (<i>at least 3, all are exported</i>)</label><span id='Node-fold-impledby-items' class="fold-items"><span>
+			*<a href="#name-Empty">Empty</a></span><span>
+			*<a href="#name-Include">Include</a></span><span>
+			*<a href="#name-KV">KV</a></span></span>
+		<input type='checkbox' class="fold" id="Node-fold-impls"><label for="Node-fold-impls">Implements (<i>at least 4, in which 2 are exported</i>)</label><span id='Node-fold-impls-items' class="fold-items"><span>
+			 T : expvar.<a href="../../expvar.html#name-Var">Var</a></span><span>
+			 T : fmt.<a href="../../fmt.html#name-Stringer">Stringer</a></span>
+			<input type='checkbox' class="showhide" id="Node-showhide-impls"><i><label for="Node-showhide-impls" class="show-inline">/* 2+ unexporteds ... */</label><label for="Node-showhide-impls" class="hide-inline">/* 2+ unexporteds: */</label></i><span class="hidden"><i>
+			 T : context.<a href="../../context.html#name-stringer">stringer</a></i></span><span class="hidden"><i>
+			 T : runtime.<a href="../../runtime.html#name-stringer">stringer</a></i></span></span>
+
+</span></div><div class="anchor type-res" id="name-Pattern" data-popularity="330">	<input type='checkbox' class="fold" id="Pattern-fold-content"><label for="Pattern-fold-content"> <a href="../../../use/github.com/kevinburke/ssh_config..Pattern.html">type</a> <a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-304">Pattern</a> <i>(struct)</i></label><span id='Pattern-fold-content-docs' class="fold-docs">
+		Pattern is a pattern in a Host declaration. Patterns are read-only values;
+		create a new one with NewPattern().
+
+		<input type='checkbox' class="fold" id="Pattern-fold-fields"><label for="Pattern-fold-fields">Fields (<i>total 3, none are exported</i>)</label><span id='Pattern-fold-fields-items' class="fold-items">
+			<input type='checkbox' class="showhide" id="Pattern-showhide-fields"><i><label for="Pattern-showhide-fields" class="show-inline">/* 3 unexporteds ... */</label><label for="Pattern-showhide-fields" class="hide-inline">/* 3 unexporteds: */</label></i><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="Pattern-fold-field-not"><label for="Pattern-fold-field-not"><a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-307">not</a> <i><a href="../../builtin.html#name-bool">bool</a></i></label><span id='Pattern-fold-field-not-docs' class="fold-docs">
+				// True if this is a negated match
+</span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-306">regex</a> <i>*<a href="../../regexp.html">regexp</a>.<a href="../../regexp.html#name-Regexp">Regexp</a></i></span></i></span><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="Pattern-fold-field-str"><label for="Pattern-fold-field-str"><a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-305">str</a> <i><a href="../../builtin.html#name-string">string</a></i></label><span id='Pattern-fold-field-str-docs' class="fold-docs">
+				// Its appearance in the file, not the value that gets compiled.
+</span></i></span></span>
+		<input type='checkbox' class="fold" id="Pattern-fold-methods"><label for="Pattern-fold-methods">Methods (<i>only one, which is exported</i>)</label><span id='Pattern-fold-methods-items' class="fold-items"><span>
+			<input type='checkbox' class="fold" id="Pattern-fold-method-String"><label for="Pattern-fold-method-String">( T) <a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-311">String</a>() <a href="../../builtin.html#name-string">string</a></label><span id='Pattern-fold-method-String-docs' class="fold-docs">
+				String prints the string representation of the pattern.
+</span></span></span>
+		<input type='checkbox' class="fold" id="Pattern-fold-impls"><label for="Pattern-fold-impls">Implements (<i>at least 4, in which 2 are exported</i>)</label><span id='Pattern-fold-impls-items' class="fold-items"><span>
+			 T : expvar.<a href="../../expvar.html#name-Var">Var</a></span><span>
+			 T : fmt.<a href="../../fmt.html#name-Stringer">Stringer</a></span>
+			<input type='checkbox' class="showhide" id="Pattern-showhide-impls"><i><label for="Pattern-showhide-impls" class="show-inline">/* 2+ unexporteds ... */</label><label for="Pattern-showhide-impls" class="hide-inline">/* 2+ unexporteds: */</label></i><span class="hidden"><i>
+			 T : context.<a href="../../context.html#name-stringer">stringer</a></i></span><span class="hidden"><i>
+			 T : runtime.<a href="../../runtime.html#name-stringer">stringer</a></i></span></span>
+		<input type='checkbox' class="fold" id="Pattern-fold-results"><label for="Pattern-fold-results">As Outputs Of (<i>at least one exported</i>)</label><span id='Pattern-fold-results-items' class="fold-items"><span>
+			func <a href="#name-NewPattern">NewPattern</a>(s <a href="../../builtin.html#name-string">string</a>) (*<b>Pattern</b>, <a href="../../builtin.html#name-error">error</a>)</span></span>
+		<input type='checkbox' class="fold" id="Pattern-fold-values"><label for="Pattern-fold-values">As Types Of (<i>only one, which is unexported</i>)</label><span id='Pattern-fold-values-items' class="fold-items">
+			<input type='checkbox' class="showhide" id="Pattern-showhide-values"><i><label for="Pattern-showhide-values" class="show-inline">/* one unexported ... */</label><label for="Pattern-showhide-values" class="hide-inline">/* one unexported: */</label></i><span class="hidden"><i>
+			  var <a href="#name-matchAll">matchAll</a> *<b>Pattern</b></i></span></span>
+
+</span></div><div class="anchor type-res" id="name-Position" data-popularity="635">	<input type='checkbox' class="fold" id="Position-fold-content"><label for="Position-fold-content"> <a href="../../../use/github.com/kevinburke/ssh_config..Position.html">type</a> <a href="../../../src/github.com/kevinburke/ssh_config/position.go.html#line-10">Position</a> <i>(struct)</i></label><span id='Position-fold-content-docs' class="fold-docs">
+		Position of a document element within a SSH document.
+
+		Line and Col are both 1-indexed positions for the element's line number and
+		column number, respectively.  Values of zero or less will cause Invalid(),
+		to return true.
+
+		<input type='checkbox' class="fold" id="Position-fold-fields"><label for="Position-fold-fields">Fields (<i>total 2, both are exported</i>)</label><span id='Position-fold-fields-items' class="fold-items"><span>
+			<input type='checkbox' class="fold" id="Position-fold-field-Col"><label for="Position-fold-field-Col"><a href="../../../src/github.com/kevinburke/ssh_config/position.go.html#line-12">Col</a> <i><a href="../../builtin.html#name-int">int</a></i></label><span id='Position-fold-field-Col-docs' class="fold-docs">
+				// column within the line
+</span></span><span>
+			<input type='checkbox' class="fold" id="Position-fold-field-Line"><label for="Position-fold-field-Line"><a href="../../../src/github.com/kevinburke/ssh_config/position.go.html#line-11">Line</a> <i><a href="../../builtin.html#name-int">int</a></i></label><span id='Position-fold-field-Line-docs' class="fold-docs">
+				// line within the document
+</span></span></span>
+		<input type='checkbox' class="fold" id="Position-fold-methods"><label for="Position-fold-methods">Methods (<i>total 2, both are exported</i>)</label><span id='Position-fold-methods-items' class="fold-items"><span>
+			<input type='checkbox' class="fold" id="Position-fold-method-Invalid"><label for="Position-fold-method-Invalid">( T) <a href="../../../src/github.com/kevinburke/ssh_config/position.go.html#line-23">Invalid</a>() <a href="../../builtin.html#name-bool">bool</a></label><span id='Position-fold-method-Invalid-docs' class="fold-docs">
+				Invalid returns whether or not the position is valid (i.e. with negative or
+				null values)
+</span></span><span>
+			<input type='checkbox' class="fold" id="Position-fold-method-String"><label for="Position-fold-method-String">( T) <a href="../../../src/github.com/kevinburke/ssh_config/position.go.html#line-17">String</a>() <a href="../../builtin.html#name-string">string</a></label><span id='Position-fold-method-String-docs' class="fold-docs">
+				String representation of the position.
+				Displays 1-indexed line and column numbers.
+</span></span></span>
+		<input type='checkbox' class="fold" id="Position-fold-impls"><label for="Position-fold-impls">Implements (<i>at least 4, in which 2 are exported</i>)</label><span id='Position-fold-impls-items' class="fold-items"><span>
+			 T : expvar.<a href="../../expvar.html#name-Var">Var</a></span><span>
+			 T : fmt.<a href="../../fmt.html#name-Stringer">Stringer</a></span>
+			<input type='checkbox' class="showhide" id="Position-showhide-impls"><i><label for="Position-showhide-impls" class="show-inline">/* 2+ unexporteds ... */</label><label for="Position-showhide-impls" class="hide-inline">/* 2+ unexporteds: */</label></i><span class="hidden"><i>
+			 T : context.<a href="../../context.html#name-stringer">stringer</a></i></span><span class="hidden"><i>
+			 T : runtime.<a href="../../runtime.html#name-stringer">stringer</a></i></span></span>
+		<input type='checkbox' class="fold" id="Position-fold-results"><label for="Position-fold-results">As Outputs Of (<i>at least 4, all are exported</i>)</label><span id='Position-fold-results-items' class="fold-items"><span>
+			func (*<a href="#name-Empty">Empty</a>).<a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-485">Pos</a>() <b>Position</b></span><span>
+			func (*<a href="#name-Include">Include</a>).<a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-591">Pos</a>() <b>Position</b></span><span>
+			func (*<a href="#name-KV">KV</a>).<a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-456">Pos</a>() <b>Position</b></span><span>
+			func <a href="#name-Node">Node</a>.<a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-440">Pos</a>() <b>Position</b></span></span>
+		<input type='checkbox' class="fold" id="Position-fold-params"><label for="Position-fold-params">As Inputs Of (<i>at least one exported</i>)</label><span id='Position-fold-params-items' class="fold-items"><span>
+			func <a href="#name-NewInclude">NewInclude</a>(directives []<a href="../../builtin.html#name-string">string</a>, hasEquals <a href="../../builtin.html#name-bool">bool</a>, pos <b>Position</b>, comment <a href="../../builtin.html#name-string">string</a>, system <a href="../../builtin.html#name-bool">bool</a>, depth <a href="../../builtin.html#name-uint8">uint8</a>) (*<a href="#name-Include">Include</a>, <a href="../../builtin.html#name-error">error</a>)</span></span>
+
+</span></div><div class="anchor type-res" id="name-UserSettings" data-popularity="155">	<input type='checkbox' class="fold" id="UserSettings-fold-content"><label for="UserSettings-fold-content"> <a href="../../../use/github.com/kevinburke/ssh_config..UserSettings.html">type</a> <a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-55">UserSettings</a> <i>(struct)</i></label><span id='UserSettings-fold-content-docs' class="fold-docs">
+		UserSettings checks ~/.ssh and /etc/ssh for configuration files. The config
+		files are parsed and cached the first time Get() or GetStrict() is called.
+
+		<input type='checkbox' class="fold" id="UserSettings-fold-fields"><label for="UserSettings-fold-fields">Fields (<i>total 7, in which 1 are exported</i>)</label><span id='UserSettings-fold-fields-items' class="fold-items"><span>
+			<span class="nodocs"><a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-56">IgnoreErrors</a> <i><a href="../../builtin.html#name-bool">bool</a></i></span></span>
+			<input type='checkbox' class="showhide" id="UserSettings-showhide-fields"><i><label for="UserSettings-showhide-fields" class="show-inline">/* 6 unexporteds ... */</label><label for="UserSettings-showhide-fields" class="hide-inline">/* 6 unexporteds: */</label></i><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-61">loadConfigs</a> <i><a href="../../sync.html">sync</a>.<a href="../../sync.html#name-Once">Once</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-62">onceErr</a> <i><a href="../../builtin.html#name-error">error</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-57">systemConfig</a> <i>*<a href="#name-Config">Config</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-58">systemConfigFinder</a> <i><a href="#name-configFinder">configFinder</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-59">userConfig</a> <i>*<a href="#name-Config">Config</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-60">userConfigFinder</a> <i><a href="#name-configFinder">configFinder</a></i></span></i></span></span>
+		<input type='checkbox' class="fold" id="UserSettings-fold-methods"><label for="UserSettings-fold-methods">Methods (<i>total 2, both are exported</i>)</label><span id='UserSettings-fold-methods-items' class="fold-items"><span>
+			<input type='checkbox' class="fold" id="UserSettings-fold-method-Get"><label for="UserSettings-fold-method-Get">(*T) <a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-136">Get</a>(alias, key <a href="../../builtin.html#name-string">string</a>) <a href="../../builtin.html#name-string">string</a></label><span id='UserSettings-fold-method-Get-docs' class="fold-docs">
+				Get finds the first value for key within a declaration that matches the
+				alias. Get returns the empty string if no value was found, or if IgnoreErrors
+				is false and we could not parse the configuration file. Use GetStrict to
+				disambiguate the latter cases.
+
+				The match for key is case insensitive.
+</span></span><span>
+			<input type='checkbox' class="fold" id="UserSettings-fold-method-GetStrict"><label for="UserSettings-fold-method-GetStrict">(*T) <a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-151">GetStrict</a>(alias, key <a href="../../builtin.html#name-string">string</a>) (<a href="../../builtin.html#name-string">string</a>, <a href="../../builtin.html#name-error">error</a>)</label><span id='UserSettings-fold-method-GetStrict-docs' class="fold-docs">
+				GetStrict finds the first value for key within a declaration that matches the
+				alias. If key has a default value and no matching configuration is found, the
+				default will be returned. For more information on default values and the way
+				patterns are matched, see the manpage for ssh_config.
+
+				error will be non-nil if and only if a user's configuration file or the
+				system configuration file could not be parsed, and u.IgnoreErrors is false.
+</span></span></span>
+		<input type='checkbox' class="fold" id="UserSettings-fold-impls"><label for="UserSettings-fold-impls">Implements (<i>at least one unexported</i>)</label><span id='UserSettings-fold-impls-items' class="fold-items">
+			<input type='checkbox' class="showhide" id="UserSettings-showhide-impls"><i><label for="UserSettings-showhide-impls" class="show-inline">/* at least one unexported ... */</label><label for="UserSettings-showhide-impls" class="hide-inline">/* at least one unexported: */</label></i><span class="hidden"><i>
+			*T : github.com/go-git/go-git/v5/plumbing/transport/ssh.<a href="../go-git/go-git/v5/plumbing/transport/ssh.html#name-sshConfig">sshConfig</a></i></span></span>
+		<input type='checkbox' class="fold" id="UserSettings-fold-values"><label for="UserSettings-fold-values">As Types Of (<i>only one, which is exported</i>)</label><span id='UserSettings-fold-values-items' class="fold-items"><span>
+			  var <a href="#name-DefaultUserSettings">DefaultUserSettings</a> *UserSettings</span></span>
+
+</span></div></div><div>	<input type='checkbox' class="showhide" id="unexported-typenames-showhide"><i><label for="unexported-typenames-showhide" class="show-inline">/* 7 unexporteds ... */</label><label for="unexported-typenames-showhide" class="hide-inline">/* 7 unexporteds: */</label></i><div class="anchor type-res hidden" id="name-configFinder" data-popularity="0">	<span class="nodocs"> <a href="../../../use/github.com/kevinburke/ssh_config..configFinder*602d5.html">type</a> <a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-51">configFinder</a> <i>(func)</i></span></div><div class="anchor type-res hidden" id="name-sshLexer" data-popularity="750">	<input type='checkbox' class="fold" id="sshLexer-fold-content"><label for="sshLexer-fold-content"> <a href="../../../use/github.com/kevinburke/ssh_config..sshLexer*0df52.html">type</a> <a href="../../../src/github.com/kevinburke/ssh_config/lexer.go.html#line-10">sshLexer</a> <i>(struct)</i></label><span id='sshLexer-fold-content-docs' class="fold-docs">
+
+		<input type='checkbox' class="fold" id="sshLexer-fold-fields"><label for="sshLexer-fold-fields">Fields (<i>total 8, none are exported</i>)</label><span id='sshLexer-fold-fields-items' class="fold-items">
+			<input type='checkbox' checked class="showhide" id="sshLexer-showhide-fields"><i><label for="sshLexer-showhide-fields" class="show-inline">/* 8 unexporteds ... */</label><label for="sshLexer-showhide-fields" class="hide-inline">/* 8 unexporteds: */</label></i><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="sshLexer-fold-field-buffer"><label for="sshLexer-fold-field-buffer"><a href="../../../src/github.com/kevinburke/ssh_config/lexer.go.html#line-14">buffer</a> <i>[]<a href="../../builtin.html#name-rune">rune</a></i></label><span id='sshLexer-fold-field-buffer-docs' class="fold-docs">
+				// Runes composing the current token
+</span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/github.com/kevinburke/ssh_config/lexer.go.html#line-17">col</a> <i><a href="../../builtin.html#name-int">int</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/github.com/kevinburke/ssh_config/lexer.go.html#line-19">endbufferCol</a> <i><a href="../../builtin.html#name-int">int</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/github.com/kevinburke/ssh_config/lexer.go.html#line-18">endbufferLine</a> <i><a href="../../builtin.html#name-int">int</a></i></span></i></span><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="sshLexer-fold-field-input"><label for="sshLexer-fold-field-input"><a href="../../../src/github.com/kevinburke/ssh_config/lexer.go.html#line-12">input</a> <i>[]<a href="../../builtin.html#name-rune">rune</a></i></label><span id='sshLexer-fold-field-input-docs' class="fold-docs">
+				// Textual source
+</span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/github.com/kevinburke/ssh_config/lexer.go.html#line-11">inputIdx</a> <i><a href="../../builtin.html#name-int">int</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/github.com/kevinburke/ssh_config/lexer.go.html#line-16">line</a> <i><a href="../../builtin.html#name-int">int</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/github.com/kevinburke/ssh_config/lexer.go.html#line-15">tokens</a> <i>chan <a href="#name-token">token</a></i></span></i></span></span>
+		<input type='checkbox' class="fold" id="sshLexer-fold-methods"><label for="sshLexer-fold-methods">Methods (<i>total 15, none are exported</i>)</label><span id='sshLexer-fold-methods-items' class="fold-items">
+			<input type='checkbox' checked class="showhide" id="sshLexer-showhide-methods"><i><label for="sshLexer-showhide-methods" class="show-inline">/* 15 unexporteds ... */</label><label for="sshLexer-showhide-methods" class="hide-inline">/* 15 unexporteds: */</label></i><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../src/github.com/kevinburke/ssh_config/lexer.go.html#line-183">emit</a>(t <a href="#name-tokenType">tokenType</a>)</span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../src/github.com/kevinburke/ssh_config/lexer.go.html#line-187">emitWithValue</a>(t <a href="#name-tokenType">tokenType</a>, value <a href="../../builtin.html#name-string">string</a>)</span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../src/github.com/kevinburke/ssh_config/lexer.go.html#line-206">follow</a>(next <a href="../../builtin.html#name-string">string</a>) <a href="../../builtin.html#name-bool">bool</a></span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../src/github.com/kevinburke/ssh_config/lexer.go.html#line-172">ignore</a>()</span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../src/github.com/kevinburke/ssh_config/lexer.go.html#line-22">lexComment</a>(previousState <a href="#name-sshLexStateFn">sshLexStateFn</a>) <a href="#name-sshLexStateFn">sshLexStateFn</a></span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../src/github.com/kevinburke/ssh_config/lexer.go.html#line-50">lexEquals</a>() <a href="#name-sshLexStateFn">sshLexStateFn</a></span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../src/github.com/kevinburke/ssh_config/lexer.go.html#line-67">lexKey</a>() <a href="#name-sshLexStateFn">sshLexStateFn</a></span></i></span><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="sshLexer-fold-method-lexRspace"><label for="sshLexer-fold-method-lexRspace">(*T) <a href="../../../src/github.com/kevinburke/ssh_config/lexer.go.html#line-39">lexRspace</a>() <a href="#name-sshLexStateFn">sshLexStateFn</a></label><span id='sshLexer-fold-method-lexRspace-docs' class="fold-docs">
+				lex the space after an equals sign in a function
+</span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../src/github.com/kevinburke/ssh_config/lexer.go.html#line-84">lexRvalue</a>() <a href="#name-sshLexStateFn">sshLexStateFn</a></span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../src/github.com/kevinburke/ssh_config/lexer.go.html#line-137">lexVoid</a>() <a href="#name-sshLexStateFn">sshLexStateFn</a></span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../src/github.com/kevinburke/ssh_config/lexer.go.html#line-128">next</a>() <a href="../../builtin.html#name-rune">rune</a></span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../src/github.com/kevinburke/ssh_config/lexer.go.html#line-197">peek</a>() <a href="../../builtin.html#name-rune">rune</a></span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../src/github.com/kevinburke/ssh_config/lexer.go.html#line-116">read</a>() <a href="../../builtin.html#name-rune">rune</a></span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../src/github.com/kevinburke/ssh_config/lexer.go.html#line-221">run</a>()</span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../src/github.com/kevinburke/ssh_config/lexer.go.html#line-178">skip</a>()</span></i></span></span>
+
+</span></div><div class="anchor type-res hidden" id="name-sshLexStateFn" data-popularity="0">	<input type='checkbox' class="fold" id="sshLexStateFn-fold-content"><label for="sshLexStateFn-fold-content"> <a href="../../../use/github.com/kevinburke/ssh_config..sshLexStateFn*8c248.html">type</a> <a href="../../../src/github.com/kevinburke/ssh_config/lexer.go.html#line-8">sshLexStateFn</a> <i>(func)</i></label><span id='sshLexStateFn-fold-content-docs' class="fold-docs">
+		Define state functions
+
+
+</span></div><div class="anchor type-res hidden" id="name-sshParser" data-popularity="400">	<input type='checkbox' class="fold" id="sshParser-fold-content"><label for="sshParser-fold-content"> <a href="../../../use/github.com/kevinburke/ssh_config..sshParser*79b0f.html">type</a> <a href="../../../src/github.com/kevinburke/ssh_config/parser.go.html#line-8">sshParser</a> <i>(struct)</i></label><span id='sshParser-fold-content-docs' class="fold-docs">
+
+		<input type='checkbox' class="fold" id="sshParser-fold-fields"><label for="sshParser-fold-fields">Fields (<i>total 7, none are exported</i>)</label><span id='sshParser-fold-fields-items' class="fold-items">
+			<input type='checkbox' checked class="showhide" id="sshParser-showhide-fields"><i><label for="sshParser-showhide-fields" class="show-inline">/* 7 unexporteds ... */</label><label for="sshParser-showhide-fields" class="hide-inline">/* 7 unexporteds: */</label></i><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/github.com/kevinburke/ssh_config/parser.go.html#line-10">config</a> <i>*<a href="#name-Config">Config</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/github.com/kevinburke/ssh_config/parser.go.html#line-12">currentTable</a> <i>[]<a href="../../builtin.html#name-string">string</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/github.com/kevinburke/ssh_config/parser.go.html#line-17">depth</a> <i><a href="../../builtin.html#name-uint8">uint8</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/github.com/kevinburke/ssh_config/parser.go.html#line-9">flow</a> <i>chan <a href="#name-token">token</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/github.com/kevinburke/ssh_config/parser.go.html#line-13">seenTableKeys</a> <i>[]<a href="../../builtin.html#name-string">string</a></i></span></i></span><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="sshParser-fold-field-system"><label for="sshParser-fold-field-system"><a href="../../../src/github.com/kevinburke/ssh_config/parser.go.html#line-16">system</a> <i><a href="../../builtin.html#name-bool">bool</a></i></label><span id='sshParser-fold-field-system-docs' class="fold-docs">
+				/etc/ssh parser or local parser - used to find the default for relative
+				filepaths in the Include directive
+</span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/github.com/kevinburke/ssh_config/parser.go.html#line-11">tokensBuffer</a> <i>[]<a href="#name-token">token</a></i></span></i></span></span>
+		<input type='checkbox' class="fold" id="sshParser-fold-methods"><label for="sshParser-fold-methods">Methods (<i>total 8, none are exported</i>)</label><span id='sshParser-fold-methods-items' class="fold-items">
+			<input type='checkbox' checked class="showhide" id="sshParser-showhide-methods"><i><label for="sshParser-showhide-methods" class="show-inline">/* 8 unexporteds ... */</label><label for="sshParser-showhide-methods" class="hide-inline">/* 8 unexporteds: */</label></i><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../src/github.com/kevinburke/ssh_config/parser.go.html#line-55">getToken</a>() *<a href="#name-token">token</a></span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../src/github.com/kevinburke/ssh_config/parser.go.html#line-159">parseComment</a>() <a href="#name-sshParserStateFn">sshParserStateFn</a></span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../src/github.com/kevinburke/ssh_config/parser.go.html#line-89">parseKV</a>() <a href="#name-sshParserStateFn">sshParserStateFn</a></span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../src/github.com/kevinburke/ssh_config/parser.go.html#line-68">parseStart</a>() <a href="#name-sshParserStateFn">sshParserStateFn</a></span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../src/github.com/kevinburke/ssh_config/parser.go.html#line-42">peek</a>() *<a href="#name-token">token</a></span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../src/github.com/kevinburke/ssh_config/parser.go.html#line-28">raiseError</a>(tok *<a href="#name-token">token</a>, err <a href="../../builtin.html#name-error">error</a>)</span></i></span><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="sshParser-fold-method-raiseErrorf"><label for="sshParser-fold-method-raiseErrorf">(*T) <a href="../../../src/github.com/kevinburke/ssh_config/parser.go.html#line-23">raiseErrorf</a>(tok *<a href="#name-token">token</a>, msg <a href="../../builtin.html#name-string">string</a>, args ...interface{})</label><span id='sshParser-fold-method-raiseErrorf-docs' class="fold-docs">
+				Formats and panics an error message based on a token
+</span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../src/github.com/kevinburke/ssh_config/parser.go.html#line-36">run</a>()</span></i></span></span>
+
+</span></div><div class="anchor type-res hidden" id="name-sshParserStateFn" data-popularity="0">	<span class="nodocs"> <a href="../../../use/github.com/kevinburke/ssh_config..sshParserStateFn*e9fde.html">type</a> <a href="../../../src/github.com/kevinburke/ssh_config/parser.go.html#line-20">sshParserStateFn</a> <i>(func)</i></span></div><div class="anchor type-res hidden" id="name-token" data-popularity="410">	<input type='checkbox' class="fold" id="token-fold-content"><label for="token-fold-content"> <a href="../../../use/github.com/kevinburke/ssh_config..token*3c469.html">type</a> <a href="../../../src/github.com/kevinburke/ssh_config/token.go.html#line-5">token</a> <i>(struct)</i></label><span id='token-fold-content-docs' class="fold-docs">
+
+		<input type='checkbox' class="fold" id="token-fold-fields"><label for="token-fold-fields">Fields (<i>total 5, in which 3 are exported</i>)</label><span id='token-fold-fields-items' class="fold-items"><span>
+			<span class="nodocs"><a href="../../../src/github.com/kevinburke/ssh_config/token.go.html#line-6">Position</a> <i><a href="#name-Position">Position</a></i></span></span><span>
+			<input type='checkbox' class="fold" id="token-fold-field-Col"><label for="token-fold-field-Col"><a href="../../../src/github.com/kevinburke/ssh_config/token.go.html#line-6" class="path-duplicate">Position</a>.<a href="../../../src/github.com/kevinburke/ssh_config/position.go.html#line-12">Col</a> <i><a href="../../builtin.html#name-int">int</a></i></label><span id='token-fold-field-Col-docs' class="fold-docs">
+				// column within the line
+</span></span><span>
+			<input type='checkbox' class="fold" id="token-fold-field-Line"><label for="token-fold-field-Line"><a href="../../../src/github.com/kevinburke/ssh_config/token.go.html#line-6" class="path-duplicate">Position</a>.<a href="../../../src/github.com/kevinburke/ssh_config/position.go.html#line-11">Line</a> <i><a href="../../builtin.html#name-int">int</a></i></label><span id='token-fold-field-Line-docs' class="fold-docs">
+				// line within the document
+</span></span>
+			<input type='checkbox' checked class="showhide" id="token-showhide-fields"><i><label for="token-showhide-fields" class="show-inline">/* 2 unexporteds ... */</label><label for="token-showhide-fields" class="hide-inline">/* 2 unexporteds: */</label></i><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/github.com/kevinburke/ssh_config/token.go.html#line-7">typ</a> <i><a href="#name-tokenType">tokenType</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/github.com/kevinburke/ssh_config/token.go.html#line-8">val</a> <i><a href="../../builtin.html#name-string">string</a></i></span></i></span></span>
+		<input type='checkbox' class="fold" id="token-fold-methods"><label for="token-fold-methods">Methods (<i>total 2, both are exported</i>)</label><span id='token-fold-methods-items' class="fold-items"><span>
+			<input type='checkbox' class="fold" id="token-fold-method-Invalid"><label for="token-fold-method-Invalid">( T) <a href="../../../src/github.com/kevinburke/ssh_config/position.go.html#line-23">Invalid</a>() <a href="../../builtin.html#name-bool">bool</a></label><span id='token-fold-method-Invalid-docs' class="fold-docs">
+				Invalid returns whether or not the position is valid (i.e. with negative or
+				null values)
+</span></span><span>
+			<span class="nodocs">( T) <a href="../../../src/github.com/kevinburke/ssh_config/token.go.html#line-11">String</a>() <a href="../../builtin.html#name-string">string</a></span></span></span>
+		<input type='checkbox' class="fold" id="token-fold-impls"><label for="token-fold-impls">Implements (<i>at least 4, in which 2 are exported</i>)</label><span id='token-fold-impls-items' class="fold-items"><span>
+			 T : expvar.<a href="../../expvar.html#name-Var">Var</a></span><span>
+			 T : fmt.<a href="../../fmt.html#name-Stringer">Stringer</a></span>
+			<input type='checkbox' checked class="showhide" id="token-showhide-impls"><i><label for="token-showhide-impls" class="show-inline">/* 2+ unexporteds ... */</label><label for="token-showhide-impls" class="hide-inline">/* 2+ unexporteds: */</label></i><span class="hidden"><i>
+			 T : context.<a href="../../context.html#name-stringer">stringer</a></i></span><span class="hidden"><i>
+			 T : runtime.<a href="../../runtime.html#name-stringer">stringer</a></i></span></span>
+		<input type='checkbox' class="fold" id="token-fold-results"><label for="token-fold-results">As Outputs Of (<i>at least one unexported</i>)</label><span id='token-fold-results-items' class="fold-items">
+			<input type='checkbox' checked class="showhide" id="token-showhide-inputofs"><i><label for="token-showhide-inputofs" class="show-inline">/* at least one unexported ... */</label><label for="token-showhide-inputofs" class="hide-inline">/* at least one unexported: */</label></i><span class="hidden"><i>
+			func <a href="#name-lexSSH">lexSSH</a>(input []<a href="../../builtin.html#name-byte">byte</a>) chan <b>token</b></i></span></span>
+		<input type='checkbox' class="fold" id="token-fold-params"><label for="token-fold-params">As Inputs Of (<i>at least one unexported</i>)</label><span id='token-fold-params-items' class="fold-items">
+			<input type='checkbox' checked class="showhide" id="token-showhide-outputofs"><i><label for="token-showhide-outputofs" class="show-inline">/* at least one unexported ... */</label><label for="token-showhide-outputofs" class="hide-inline">/* at least one unexported: */</label></i><span class="hidden"><i>
+			func <a href="#name-parseSSH">parseSSH</a>(flow chan <b>token</b>, system <a href="../../builtin.html#name-bool">bool</a>, depth <a href="../../builtin.html#name-uint8">uint8</a>) *<a href="#name-Config">Config</a></i></span></span>
+
+</span></div><div class="anchor type-res hidden" id="name-tokenType" data-popularity="15">	<input type='checkbox' class="fold" id="tokenType-fold-content"><label for="tokenType-fold-content"> <a href="../../../use/github.com/kevinburke/ssh_config..tokenType*37f19.html">type</a> <a href="../../../src/github.com/kevinburke/ssh_config/token.go.html#line-19">tokenType</a> <a href="../../builtin.html#name-int">int</a> <i>(basic type)</i></label><span id='tokenType-fold-content-docs' class="fold-docs">
+
+		<input type='checkbox' class="fold" id="tokenType-fold-values"><label for="tokenType-fold-values">As Types Of (<i>total 7, none are exported</i>)</label><span id='tokenType-fold-values-items' class="fold-items">
+			<input type='checkbox' checked class="showhide" id="tokenType-showhide-values"><i><label for="tokenType-showhide-values" class="show-inline">/* 7 unexporteds ... */</label><label for="tokenType-showhide-values" class="hide-inline">/* 7 unexporteds: */</label></i><span class="hidden"><i>
+			const <a href="#name-tokenComment">tokenComment</a></i></span><span class="hidden"><i>
+			const <a href="#name-tokenEmptyLine">tokenEmptyLine</a></i></span><span class="hidden"><i>
+			const <a href="#name-tokenEOF">tokenEOF</a></i></span><span class="hidden"><i>
+			const <a href="#name-tokenEquals">tokenEquals</a></i></span><span class="hidden"><i>
+			const <a href="#name-tokenError">tokenError</a></i></span><span class="hidden"><i>
+			const <a href="#name-tokenKey">tokenKey</a></i></span><span class="hidden"><i>
+			const <a href="#name-tokenString">tokenString</a></i></span></span>
+
+</span></div></div>
+<div id="exported-functions"><span class="title">Package-Level Functions<span class="title-stat"><i> (total 27, in which 6 are exported)</i></span></span>
+
+<div class="anchor value-res" id="name-Decode">	<input type='checkbox' class="fold" id="Decode-fold-content"><label for="Decode-fold-content"> <a href="../../../use/github.com/kevinburke/ssh_config..Decode.html">func</a> <a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-213">Decode</a>(r <a href="../../io.html">io</a>.<a href="../../io.html#name-Reader">Reader</a>) (*<a href="#name-Config">Config</a>, <a href="../../builtin.html#name-error">error</a>)</label><span id='Decode-fold-content-docs' class="fold-docs">
+		Decode reads r into a Config, or returns an error if r could not be parsed as
+		an SSH config file.
+
+</span></div><div class="anchor value-res" id="name-Default">	<input type='checkbox' class="fold" id="Default-fold-content"><label for="Default-fold-content"> <a href="../../../use/github.com/kevinburke/ssh_config..Default.html">func</a> <a href="../../../src/github.com/kevinburke/ssh_config/validators.go.html#line-14">Default</a>(keyword <a href="../../builtin.html#name-string">string</a>) <a href="../../builtin.html#name-string">string</a></label><span id='Default-fold-content-docs' class="fold-docs">
+		Default returns the default value for the given keyword, for example "22" if
+		the keyword is "Port". Default returns the empty string if the keyword has no
+		default, or if the keyword is unknown. Keyword matching is case-insensitive.
+
+		Default values are provided by OpenSSH_7.4p1 on a Mac.
+
+</span></div><div class="anchor value-res" id="name-Get">	<input type='checkbox' class="fold" id="Get-fold-content"><label for="Get-fold-content"> <a href="../../../use/github.com/kevinburke/ssh_config..Get.html">func</a> <a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-113">Get</a>(alias, key <a href="../../builtin.html#name-string">string</a>) <a href="../../builtin.html#name-string">string</a></label><span id='Get-fold-content-docs' class="fold-docs">
+		Get finds the first value for key within a declaration that matches the
+		alias. Get returns the empty string if no value was found, or if IgnoreErrors
+		is false and we could not parse the configuration file. Use GetStrict to
+		disambiguate the latter cases.
+
+		The match for key is case insensitive.
+
+		Get is a wrapper around DefaultUserSettings.Get.
+
+</span></div><div class="anchor value-res" id="name-GetStrict">	<input type='checkbox' class="fold" id="GetStrict-fold-content"><label for="GetStrict-fold-content"> <a href="../../../use/github.com/kevinburke/ssh_config..GetStrict.html">func</a> <a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-126">GetStrict</a>(alias, key <a href="../../builtin.html#name-string">string</a>) (<a href="../../builtin.html#name-string">string</a>, <a href="../../builtin.html#name-error">error</a>)</label><span id='GetStrict-fold-content-docs' class="fold-docs">
+		GetStrict finds the first value for key within a declaration that matches the
+		alias. If key has a default value and no matching configuration is found, the
+		default will be returned. For more information on default values and the way
+		patterns are matched, see the manpage for ssh_config.
+
+		error will be non-nil if and only if a user's configuration file or the
+		system configuration file could not be parsed, and u.IgnoreErrors is false.
+
+		GetStrict is a wrapper around DefaultUserSettings.GetStrict.
+
+</span></div><div class="anchor value-res" id="name-NewInclude">	<input type='checkbox' class="fold" id="NewInclude-fold-content"><label for="NewInclude-fold-content"> <a href="../../../use/github.com/kevinburke/ssh_config..NewInclude.html">func</a> <a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-548">NewInclude</a>(directives []<a href="../../builtin.html#name-string">string</a>, hasEquals <a href="../../builtin.html#name-bool">bool</a>, pos <a href="#name-Position">Position</a>, comment <a href="../../builtin.html#name-string">string</a>, system <a href="../../builtin.html#name-bool">bool</a>, depth <a href="../../builtin.html#name-uint8">uint8</a>) (*<a href="#name-Include">Include</a>, <a href="../../builtin.html#name-error">error</a>)</label><span id='NewInclude-fold-content-docs' class="fold-docs">
+		NewInclude creates a new Include with a list of file globs to include.
+		Configuration files are parsed greedily (e.g. as soon as this function runs).
+		Any error encountered while parsing nested configuration files will be
+		returned.
+
+</span></div><div class="anchor value-res" id="name-NewPattern">	<input type='checkbox' class="fold" id="NewPattern-fold-content"><label for="NewPattern-fold-content"> <a href="../../../use/github.com/kevinburke/ssh_config..NewPattern.html">func</a> <a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-336">NewPattern</a>(s <a href="../../builtin.html#name-string">string</a>) (*<a href="#name-Pattern">Pattern</a>, <a href="../../builtin.html#name-error">error</a>)</label><span id='NewPattern-fold-content-docs' class="fold-docs">
+		NewPattern creates a new Pattern for matching hosts. NewPattern("*") creates
+		a Pattern that matches all hosts.
+
+		From the manpage, a pattern consists of zero or more non-whitespace
+		characters, `*' (a wildcard that matches zero or more characters), or `?' (a
+		wildcard that matches exactly one character). For example, to specify a set
+		of declarations for any host in the ".co.uk" set of domains, the following
+		pattern could be used:
+
+			Host *.co.uk
+
+		The following pattern would match any host in the 192.168.0.[0-9] network range:
+
+			Host 192.168.0.?
+
+</span></div>	<input type='checkbox' class="showhide" id="unexported-functions-showhide"><i><label for="unexported-functions-showhide" class="show-inline">/* 21 unexporteds ... */</label><label for="unexported-functions-showhide" class="hide-inline">/* 21 unexporteds: */</label></i><div class="anchor value-res hidden" id="name-decodeBytes"><i>	<span class="nodocs"> <a href="../../../use/github.com/kevinburke/ssh_config..decodeBytes*355f0.html">func</a> <a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-221">decodeBytes</a>(b []<a href="../../builtin.html#name-byte">byte</a>, system <a href="../../builtin.html#name-bool">bool</a>, depth <a href="../../builtin.html#name-uint8">uint8</a>) (c *<a href="#name-Config">Config</a>, err <a href="../../builtin.html#name-error">error</a>)</span></i></div><div class="anchor value-res hidden" id="name-findVal"><i>	<span class="nodocs"> <a href="../../../use/github.com/kevinburke/ssh_config..findVal*85650.html">func</a> <a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-91">findVal</a>(c *<a href="#name-Config">Config</a>, alias, key <a href="../../builtin.html#name-string">string</a>) (<a href="../../builtin.html#name-string">string</a>, <a href="../../builtin.html#name-error">error</a>)</span></i></div><div class="anchor value-res hidden" id="name-homedir"><i>	<span class="nodocs"> <a href="../../../use/github.com/kevinburke/ssh_config..homedir*efcab.html">func</a> <a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-65">homedir</a>() <a href="../../builtin.html#name-string">string</a></span></i></div><div class="anchor value-res hidden" id="name-init"><i>	<span class="nodocs"> <a href="../../../use/github.com/kevinburke/ssh_config..init*bb540.html">func</a> <a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-630">init</a>()</span></i></div><div class="anchor value-res hidden" id="name-isKeyChar"><i>	<input type='checkbox' class="fold" id="isKeyChar-fold-content"><label for="isKeyChar-fold-content"> <a href="../../../use/github.com/kevinburke/ssh_config..isKeyChar*c6f58.html">func</a> <a href="../../../src/github.com/kevinburke/ssh_config/token.go.html#line-44">isKeyChar</a>(r <a href="../../builtin.html#name-rune">rune</a>) <a href="../../builtin.html#name-bool">bool</a></label><span id='isKeyChar-fold-content-docs' class="fold-docs">
+		I'm not sure that this is correct
+
+</span></i></div><div class="anchor value-res hidden" id="name-isKeyStartChar"><i>	<span class="nodocs"> <a href="../../../use/github.com/kevinburke/ssh_config..isKeyStartChar*bcd8d.html">func</a> <a href="../../../src/github.com/kevinburke/ssh_config/token.go.html#line-39">isKeyStartChar</a>(r <a href="../../builtin.html#name-rune">rune</a>) <a href="../../builtin.html#name-bool">bool</a></span></i></div><div class="anchor value-res hidden" id="name-isSpace"><i>	<span class="nodocs"> <a href="../../../use/github.com/kevinburke/ssh_config..isSpace*7786f.html">func</a> <a href="../../../src/github.com/kevinburke/ssh_config/token.go.html#line-35">isSpace</a>(r <a href="../../builtin.html#name-rune">rune</a>) <a href="../../builtin.html#name-bool">bool</a></span></i></div><div class="anchor value-res hidden" id="name-isSystem"><i>	<span class="nodocs"> <a href="../../../use/github.com/kevinburke/ssh_config..isSystem*bb86d.html">func</a> <a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-206">isSystem</a>(filename <a href="../../builtin.html#name-string">string</a>) <a href="../../builtin.html#name-bool">bool</a></span></i></div><div class="anchor value-res hidden" id="name-lexSSH"><i>	<span class="nodocs"> <a href="../../../use/github.com/kevinburke/ssh_config..lexSSH*668da.html">func</a> <a href="../../../src/github.com/kevinburke/ssh_config/lexer.go.html#line-228">lexSSH</a>(input []<a href="../../builtin.html#name-byte">byte</a>) chan <a href="#name-token">token</a></span></i></div><div class="anchor value-res hidden" id="name-marshal"><i>	<span class="nodocs"> <a href="../../../use/github.com/kevinburke/ssh_config..marshal*279a4.html">func</a> <a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-294">marshal</a>(c <a href="#name-Config">Config</a>) *<a href="../../bytes.html">bytes</a>.<a href="../../bytes.html#name-Buffer">Buffer</a></span></i></div><div class="anchor value-res hidden" id="name-mustBeUint"><i>	<span class="nodocs"> <a href="../../../use/github.com/kevinburke/ssh_config..mustBeUint*bf9cf.html">func</a> <a href="../../../src/github.com/kevinburke/ssh_config/validators.go.html#line-65">mustBeUint</a>(lkey <a href="../../builtin.html#name-string">string</a>) <a href="../../builtin.html#name-bool">bool</a></span></i></div><div class="anchor value-res hidden" id="name-mustBeYesOrNo"><i>	<span class="nodocs"> <a href="../../../use/github.com/kevinburke/ssh_config..mustBeYesOrNo*8cc5a.html">func</a> <a href="../../../src/github.com/kevinburke/ssh_config/validators.go.html#line-61">mustBeYesOrNo</a>(lkey <a href="../../builtin.html#name-string">string</a>) <a href="../../builtin.html#name-bool">bool</a></span></i></div><div class="anchor value-res hidden" id="name-newConfig"><i>	<span class="nodocs"> <a href="../../../use/github.com/kevinburke/ssh_config..newConfig*4b742.html">func</a> <a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-638">newConfig</a>() *<a href="#name-Config">Config</a></span></i></div><div class="anchor value-res hidden" id="name-parseFile"><i>	<span class="nodocs"> <a href="../../../use/github.com/kevinburke/ssh_config..parseFile*ac585.html">func</a> <a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-194">parseFile</a>(filename <a href="../../builtin.html#name-string">string</a>) (*<a href="#name-Config">Config</a>, <a href="../../builtin.html#name-error">error</a>)</span></i></div><div class="anchor value-res hidden" id="name-parseSSH"><i>	<span class="nodocs"> <a href="../../../use/github.com/kevinburke/ssh_config..parseSSH*0ad0d.html">func</a> <a href="../../../src/github.com/kevinburke/ssh_config/parser.go.html#line-171">parseSSH</a>(flow chan <a href="#name-token">token</a>, system <a href="../../builtin.html#name-bool">bool</a>, depth <a href="../../builtin.html#name-uint8">uint8</a>) *<a href="#name-Config">Config</a></span></i></div><div class="anchor value-res hidden" id="name-parseWithDepth"><i>	<span class="nodocs"> <a href="../../../use/github.com/kevinburke/ssh_config..parseWithDepth*0d086.html">func</a> <a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-198">parseWithDepth</a>(filename <a href="../../builtin.html#name-string">string</a>, depth <a href="../../builtin.html#name-uint8">uint8</a>) (*<a href="#name-Config">Config</a>, <a href="../../builtin.html#name-error">error</a>)</span></i></div><div class="anchor value-res hidden" id="name-removeDups"><i>	<span class="nodocs"> <a href="../../../use/github.com/kevinburke/ssh_config..removeDups*a9026.html">func</a> <a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-529">removeDups</a>(arr []<a href="../../builtin.html#name-string">string</a>) []<a href="../../builtin.html#name-string">string</a></span></i></div><div class="anchor value-res hidden" id="name-special"><i>	<span class="nodocs"> <a href="../../../use/github.com/kevinburke/ssh_config..special*7d4c5.html">func</a> <a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-318">special</a>(b <a href="../../builtin.html#name-byte">byte</a>) <a href="../../builtin.html#name-bool">bool</a></span></i></div><div class="anchor value-res hidden" id="name-systemConfigFinder"><i>	<span class="nodocs"> <a href="../../../use/github.com/kevinburke/ssh_config..systemConfigFinder*b5c54.html">func</a> <a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-87">systemConfigFinder</a>() <a href="../../builtin.html#name-string">string</a></span></i></div><div class="anchor value-res hidden" id="name-userConfigFinder"><i>	<span class="nodocs"> <a href="../../../use/github.com/kevinburke/ssh_config..userConfigFinder*e6c69.html">func</a> <a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-74">userConfigFinder</a>() <a href="../../builtin.html#name-string">string</a></span></i></div><div class="anchor value-res hidden" id="name-validate"><i>	<span class="nodocs"> <a href="../../../use/github.com/kevinburke/ssh_config..validate*133c8.html">func</a> <a href="../../../src/github.com/kevinburke/ssh_config/validators.go.html#line-69">validate</a>(key, val <a href="../../builtin.html#name-string">string</a>) <a href="../../builtin.html#name-error">error</a></span></i></div></div>
+<div id="exported-variables"><span class="title">Package-Level Variables<span class="title-stat"><i> (total 7, in which 2 are exported)</i></span></span>
+
+<div class="anchor value-res" id="name-DefaultUserSettings">	<input type='checkbox' class="fold" id="DefaultUserSettings-fold-content"><label for="DefaultUserSettings-fold-content">  <a href="../../../use/github.com/kevinburke/ssh_config..DefaultUserSettings.html">var</a> <a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-81">DefaultUserSettings</a> *<a href="#name-UserSettings">UserSettings</a></label><span id='DefaultUserSettings-fold-content-docs' class="fold-docs">
+		DefaultUserSettings is the default UserSettings and is used by Get and
+		GetStrict. It checks both $HOME/.ssh/config and /etc/ssh/ssh_config for keys,
+		and it will return parse errors (if any) instead of swallowing them.
+
+</span></div><div class="anchor value-res" id="name-ErrDepthExceeded">	<input type='checkbox' class="fold" id="ErrDepthExceeded-fold-content"><label for="ErrDepthExceeded-fold-content">  <a href="../../../use/github.com/kevinburke/ssh_config..ErrDepthExceeded.html">var</a> <a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-527">ErrDepthExceeded</a> <a href="../../builtin.html#name-error">error</a></label><span id='ErrDepthExceeded-fold-content-docs' class="fold-docs">
+		ErrDepthExceeded is returned if too many Include directives are parsed.
+		Usually this indicates a recursive loop (an Include directive pointing to the
+		file it contains).
+
+</span></div>	<input type='checkbox' class="showhide" id="unexported-variables-showhide"><i><label for="unexported-variables-showhide" class="show-inline">/* 5 unexporteds ... */</label><label for="unexported-variables-showhide" class="hide-inline">/* 5 unexporteds: */</label></i><div class="anchor value-res hidden" id="name-defaults"><i>	<span class="nodocs">  <a href="../../../use/github.com/kevinburke/ssh_config..defaults*0f37e.html">var</a> <a href="../../../src/github.com/kevinburke/ssh_config/validators.go.html#line-83">defaults</a> map[<a href="../../builtin.html#name-string">string</a>]<a href="../../builtin.html#name-string">string</a></span></i></div><div class="anchor value-res hidden" id="name-matchAll"><i>	<span class="nodocs">  <a href="../../../use/github.com/kevinburke/ssh_config..matchAll*82d30.html">var</a> <a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-628">matchAll</a> *<a href="#name-Pattern">Pattern</a></span></i></div><div class="anchor value-res hidden" id="name-specialBytes"><i>	<input type='checkbox' class="fold" id="specialBytes-fold-content"><label for="specialBytes-fold-content">  <a href="../../../use/github.com/kevinburke/ssh_config..specialBytes*4a4f7.html">var</a> <a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-316">specialBytes</a> []<a href="../../builtin.html#name-byte">byte</a></label><span id='specialBytes-fold-content-docs' class="fold-docs">
+		Copied from regexp.go with * and ? removed.
+
+</span></i></div><div class="anchor value-res hidden" id="name-uints"><i>	<span class="nodocs">  <a href="../../../use/github.com/kevinburke/ssh_config..uints*37093.html">var</a> <a href="../../../src/github.com/kevinburke/ssh_config/validators.go.html#line-50">uints</a> map[<a href="../../builtin.html#name-string">string</a>]<a href="../../builtin.html#name-bool">bool</a></span></i></div><div class="anchor value-res hidden" id="name-yesnos"><i>	<input type='checkbox' class="fold" id="yesnos-fold-content"><label for="yesnos-fold-content">  <a href="../../../use/github.com/kevinburke/ssh_config..yesnos*57be4.html">var</a> <a href="../../../src/github.com/kevinburke/ssh_config/validators.go.html#line-19">yesnos</a> map[<a href="../../builtin.html#name-string">string</a>]<a href="../../builtin.html#name-bool">bool</a></label><span id='yesnos-fold-content-docs' class="fold-docs">
+		Arguments where the value must be "yes" or "no" and *only* yes or no.
+
+</span></i></div></div>
+<div id="exported-constants"><span class="title">Package-Level Constants<span class="title-stat"><i> (total 10, none are exported)</i></span></span>
+
+	<input type='checkbox' class="showhide" id="unexported-constants-showhide"><i><label for="unexported-constants-showhide" class="show-inline">/* 10 unexporteds ... */</label><label for="unexported-constants-showhide" class="hide-inline">/* 10 unexporteds: */</label></i><div class="anchor value-res hidden" id="name-eof"><i>	<span class="nodocs"><a href="../../../use/github.com/kevinburke/ssh_config..eof*22988.html">const</a> <a href="../../../src/github.com/kevinburke/ssh_config/token.go.html#line-22">eof</a> = -1</span></i></div><div class="anchor value-res hidden" id="name-maxRecurseDepth"><i>	<span class="nodocs"><a href="../../../use/github.com/kevinburke/ssh_config..maxRecurseDepth*0c3f2.html">const</a> <a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-522">maxRecurseDepth</a> = 5</span></i></div><div class="anchor value-res hidden" id="name-tokenComment"><i>	<span class="nodocs"><a href="../../../use/github.com/kevinburke/ssh_config..tokenComment*959eb.html">const</a> <a href="../../../src/github.com/kevinburke/ssh_config/token.go.html#line-29">tokenComment</a> <a href="#name-tokenType">tokenType</a> = 3</span></i></div><div class="anchor value-res hidden" id="name-tokenEmptyLine"><i>	<span class="nodocs"><a href="../../../use/github.com/kevinburke/ssh_config..tokenEmptyLine*06e07.html">const</a> <a href="../../../src/github.com/kevinburke/ssh_config/token.go.html#line-28">tokenEmptyLine</a> <a href="#name-tokenType">tokenType</a> = 2</span></i></div><div class="anchor value-res hidden" id="name-tokenEOF"><i>	<span class="nodocs"><a href="../../../use/github.com/kevinburke/ssh_config..tokenEOF*aff1e.html">const</a> <a href="../../../src/github.com/kevinburke/ssh_config/token.go.html#line-27">tokenEOF</a> <a href="#name-tokenType">tokenType</a> = 1</span></i></div><div class="anchor value-res hidden" id="name-tokenEquals"><i>	<span class="nodocs"><a href="../../../use/github.com/kevinburke/ssh_config..tokenEquals*04c8e.html">const</a> <a href="../../../src/github.com/kevinburke/ssh_config/token.go.html#line-31">tokenEquals</a> <a href="#name-tokenType">tokenType</a> = 5</span></i></div><div class="anchor value-res hidden" id="name-tokenError"><i>	<span class="nodocs"><a href="../../../use/github.com/kevinburke/ssh_config..tokenError*e40ce.html">const</a> <a href="../../../src/github.com/kevinburke/ssh_config/token.go.html#line-26">tokenError</a> <a href="#name-tokenType">tokenType</a> = 0</span></i></div><div class="anchor value-res hidden" id="name-tokenKey"><i>	<span class="nodocs"><a href="../../../use/github.com/kevinburke/ssh_config..tokenKey*fe38f.html">const</a> <a href="../../../src/github.com/kevinburke/ssh_config/token.go.html#line-30">tokenKey</a> <a href="#name-tokenType">tokenType</a> = 4</span></i></div><div class="anchor value-res hidden" id="name-tokenString"><i>	<span class="nodocs"><a href="../../../use/github.com/kevinburke/ssh_config..tokenString*efa45.html">const</a> <a href="../../../src/github.com/kevinburke/ssh_config/token.go.html#line-32">tokenString</a> <a href="#name-tokenType">tokenType</a> = 6</span></i></div><div class="anchor value-res hidden" id="name-version"><i>	<span class="nodocs"><a href="../../../use/github.com/kevinburke/ssh_config..version*5ca4f.html">const</a> <a href="../../../src/github.com/kevinburke/ssh_config/config.go.html#line-47">version</a> = "1.0"</span></i></div></div></code></pre><pre id="footer">
+<table><tr><td><img src="../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

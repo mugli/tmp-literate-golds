@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: hypot_amd64.s in package math</title>
+<link href="../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	hypot_amd64.s
+
+<span class="title">Belonging Package</span>
+	<a href="../../pkg/math.html">math</a>
+</code></pre>
+<div id="container"><div class="section">
+<div class="doc">
+</div>
+<div class="code"><pre><code>// Copyright 2010 The Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+#include "textflag.h"
+
+#define PosInf 0x7FF0000000000000
+#define NaN 0x7FF8000000000001
+
+// func Hypot(p, q float64) float64
+TEXT ·Hypot(SB),NOSPLIT,$0
+	// test bits for special cases
+	MOVQ    p+0(FP), BX
+	MOVQ    $~(1&lt;&lt;63), AX
+	ANDQ    AX, BX // p = |p|
+	MOVQ    q+8(FP), CX
+	ANDQ    AX, CX // q = |q|
+	MOVQ    $PosInf, AX
+	CMPQ    AX, BX
+	JLE     isInfOrNaN
+	CMPQ    AX, CX
+	JLE     isInfOrNaN
+	// hypot = max * sqrt(1 + (min/max)**2)
+	MOVQ    BX, X0
+	MOVQ    CX, X1
+	ORQ     CX, BX
+	JEQ     isZero
+	MOVAPD  X0, X2
+	MAXSD   X1, X0
+	MINSD   X2, X1
+	DIVSD   X0, X1
+	MULSD   X1, X1
+	ADDSD   $1.0, X1
+	SQRTSD  X1, X1
+	MULSD   X1, X0
+	MOVSD   X0, ret+16(FP)
+	RET
+isInfOrNaN:
+	CMPQ    AX, BX
+	JEQ     isInf
+	CMPQ    AX, CX
+	JEQ     isInf
+	MOVQ    $NaN, AX
+	MOVQ    AX, ret+16(FP) // return NaN
+	RET
+isInf:
+	MOVQ    AX, ret+16(FP) // return +Inf
+	RET
+isZero:
+	MOVQ    $0, AX
+	MOVQ    AX, ret+16(FP) // return 0
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

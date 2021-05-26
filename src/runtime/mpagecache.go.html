@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: mpagecache.go in package runtime</title>
+<link href="../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	mpagecache.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../pkg/runtime.html">runtime</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16],
+input[id=r17]:checked ~pre label[for=r17],
+input[id=r18]:checked ~pre label[for=r18],
+input[id=r19]:checked ~pre label[for=r19],
+input[id=r20]:checked ~pre label[for=r20],
+input[id=r21]:checked ~pre label[for=r21],
+input[id=r22]:checked ~pre label[for=r22],
+input[id=r23]:checked ~pre label[for=r23],
+input[id=r24]:checked ~pre label[for=r24],
+input[id=r25]:checked ~pre label[for=r25],
+input[id=r26]:checked ~pre label[for=r26],
+input[id=r27]:checked ~pre label[for=r27],
+input[id=r28]:checked ~pre label[for=r28],
+input[id=r29]:checked ~pre label[for=r29],
+input[id=r30]:checked ~pre label[for=r30]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="r17" type="radio" name="g"/>
+<input id="r18" type="radio" name="g"/>
+<input id="r19" type="radio" name="g"/>
+<input id="r20" type="radio" name="g"/>
+<input id="r21" type="radio" name="g"/>
+<input id="r22" type="radio" name="g"/>
+<input id="r23" type="radio" name="g"/>
+<input id="r24" type="radio" name="g"/>
+<input id="r25" type="radio" name="g"/>
+<input id="r26" type="radio" name="g"/>
+<input id="r27" type="radio" name="g"/>
+<input id="r28" type="radio" name="g"/>
+<input id="r29" type="radio" name="g"/>
+<input id="r30" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2019 The Go Authors. All rights reserved.</span><span class="comment"> Use of this source code is governed by a BSD-style</span><span class="comment"> license that can be found in the LICENSE file.</span></div>
+<div class="code"><pre><code>
+<span class="keyword">package</span> runtime
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"runtime/internal/sys"</span></label>
+	<label for="i1"><span class="lit-string i1">"unsafe"</span></label>
+)
+
+<span class="keyword">const</span> <a href="../../pkg/runtime.html#name-pageCachePages" class="ident">pageCachePages</a> = <span class="lit-number">8</span> * <a href="../../pkg/unsafe.html" class="ident i1">unsafe</a>.<a href="../../pkg/unsafe.html#name-Sizeof" class="ident">Sizeof</a>(<a href="#line-18" class="ident">pageCache</a>{}.<a href="#line-20" class="ident">cache</a>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> pageCache represents a per-p cache of pages the allocator can</span><span class="comment"> allocate from without a lock. More specifically, it represents</span><span class="comment"> a pageCachePages*pageSize chunk of memory with 0 or more free</span><span class="comment"> pages in it.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../pkg/runtime.html#name-pageCache" class="ident">pageCache</a> <span class="keyword">struct</span> {
+	<a href="../../use/runtime..pageCache*03b4c.base*cae66.html" class="ident">base</a>  <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a> <span class="comment">// base address of the chunk</span>
+	<a href="../../use/runtime..pageCache*03b4c.cache*5e1ec.html" class="ident">cache</a> <a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a>  <span class="comment">// 64-bit bitmap representing free pages (1 means free)</span>
+	<a href="../../use/runtime..pageCache*03b4c.scav*f7900.html" class="ident">scav</a>  <a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a>  <span class="comment">// 64-bit bitmap representing scavenged pages (1 means scavenged)</span>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> empty returns true if the pageCache has any free pages, and false</span><span class="comment"> otherwise.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r0" class="ident">c</label> *<a href="#line-18" class="ident">pageCache</a>) <label for="r1" class="ident"><a href="../../use/runtime..pageCache*03b4c.empty*2e1cf.html" class="ident">empty</a></label>() <a href="../../pkg/builtin.html#name-bool" class="ident">bool</a> {
+	<span class="keyword">return</span> <label for="r0" class="ident">c</label>.<a href="#line-20" class="ident">cache</a> == <span class="lit-number">0</span>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> alloc allocates npages from the page cache and is the main entry</span><span class="comment"> point for allocation.</span><span class="comment"></span><span class="comment"> Returns a base address and the amount of scavenged memory in the</span><span class="comment"> allocated region in bytes.</span><span class="comment"></span><span class="comment"> Returns a base address of zero on failure, in which case the</span><span class="comment"> amount of scavenged memory should be ignored.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r2" class="ident">c</label> *<a href="#line-18" class="ident">pageCache</a>) <label for="r3" class="ident"><a href="../../use/runtime..pageCache*03b4c.alloc*bcd3b.html" class="ident">alloc</a></label>(<label for="r4" class="ident">npages</label> <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>) (<a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>, <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>) {
+	<span class="keyword">if</span> <label for="r2" class="ident">c</label>.<a href="#line-20" class="ident">cache</a> == <span class="lit-number">0</span> {
+		<span class="keyword">return</span> <span class="lit-number">0</span>, <span class="lit-number">0</span>
+	}
+	<span class="keyword">if</span> <label for="r4" class="ident">npages</label> == <span class="lit-number">1</span> {
+		<label for="r5" class="ident">i</label> := <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<a href="../../pkg/runtime/internal/sys.html" class="ident i0">sys</a>.<a href="internal/sys/intrinsics_common.go.html#line-111" class="ident">TrailingZeros64</a>(<label for="r2" class="ident">c</label>.<a href="#line-20" class="ident">cache</a>))
+		<label for="r6" class="ident">scav</label> := (<label for="r2" class="ident">c</label>.<a href="#line-21" class="ident">scav</a> &gt;&gt; <label for="r5" class="ident">i</label>) &amp; <span class="lit-number">1</span>
+		<label for="r2" class="ident">c</label>.<a href="#line-20" class="ident">cache</a> &amp;^= <span class="lit-number">1</span> &lt;&lt; <label for="r5" class="ident">i</label> <span class="comment">// set bit to mark in-use</span>
+		<label for="r2" class="ident">c</label>.<a href="#line-21" class="ident">scav</a> &amp;^= <span class="lit-number">1</span> &lt;&lt; <label for="r5" class="ident">i</label>  <span class="comment">// clear bit to mark unscavenged</span>
+		<span class="keyword">return</span> <label for="r2" class="ident">c</label>.<a href="#line-19" class="ident">base</a> + <label for="r5" class="ident">i</label>*<a href="malloc.go.html#line-118" class="ident">pageSize</a>, <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<label for="r6" class="ident">scav</label>) * <a href="malloc.go.html#line-118" class="ident">pageSize</a>
+	}
+	<span class="keyword">return</span> <label for="r2" class="ident">c</label>.<a href="#line-58" class="ident">allocN</a>(<label for="r4" class="ident">npages</label>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> allocN is a helper which attempts to allocate npages worth of pages</span><span class="comment"> from the cache. It represents the general case for allocating from</span><span class="comment"> the page cache.</span><span class="comment"></span><span class="comment"> Returns a base address and the amount of scavenged memory in the</span><span class="comment"> allocated region in bytes.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r7" class="ident">c</label> *<a href="#line-18" class="ident">pageCache</a>) <label for="r8" class="ident"><a href="../../use/runtime..pageCache*03b4c.allocN*fc3d3.html" class="ident">allocN</a></label>(<label for="r9" class="ident">npages</label> <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>) (<a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>, <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>) {
+	<label for="r10" class="ident">i</label> := <a href="mpallocbits.go.html#line-374" class="ident">findBitRange64</a>(<label for="r7" class="ident">c</label>.<a href="#line-20" class="ident">cache</a>, <a href="../../pkg/builtin.html#name-uint" class="ident">uint</a>(<label for="r9" class="ident">npages</label>))
+	<span class="keyword">if</span> <label for="r10" class="ident">i</label> &gt;= <span class="lit-number">64</span> {
+		<span class="keyword">return</span> <span class="lit-number">0</span>, <span class="lit-number">0</span>
+	}
+	<label for="r11" class="ident">mask</label> := ((<a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a>(<span class="lit-number">1</span>) &lt;&lt; <label for="r9" class="ident">npages</label>) - <span class="lit-number">1</span>) &lt;&lt; <label for="r10" class="ident">i</label>
+	<label for="r12" class="ident">scav</label> := <a href="../../pkg/runtime/internal/sys.html" class="ident i0">sys</a>.<a href="internal/sys/intrinsics_common.go.html#line-71" class="ident">OnesCount64</a>(<label for="r7" class="ident">c</label>.<a href="#line-21" class="ident">scav</a> &amp; <label for="r11" class="ident">mask</label>)
+	<label for="r7" class="ident">c</label>.<a href="#line-20" class="ident">cache</a> &amp;^= <label for="r11" class="ident">mask</label> <span class="comment">// mark in-use bits</span>
+	<label for="r7" class="ident">c</label>.<a href="#line-21" class="ident">scav</a> &amp;^= <label for="r11" class="ident">mask</label>  <span class="comment">// clear scavenged bits</span>
+	<span class="keyword">return</span> <label for="r7" class="ident">c</label>.<a href="#line-19" class="ident">base</a> + <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<label for="r10" class="ident">i</label>*<a href="malloc.go.html#line-118" class="ident">pageSize</a>), <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<label for="r12" class="ident">scav</label>) * <a href="malloc.go.html#line-118" class="ident">pageSize</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> flush empties out unallocated free pages in the given cache</span><span class="comment"> into s. Then, it clears the cache, such that empty returns</span><span class="comment"> true.</span><span class="comment"></span><span class="comment"> p.mheapLock must be held.</span><span class="comment"></span><span class="comment"> Must run on the system stack because p.mheapLock must be held.</span><span class="comment"></span><span class="comment">go:systemstack</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r13" class="ident">c</label> *<a href="#line-18" class="ident">pageCache</a>) <label for="r14" class="ident"><a href="../../use/runtime..pageCache*03b4c.flush*f5617.html" class="ident">flush</a></label>(<label for="r15" class="ident">p</label> *<a href="mpagealloc.go.html#line-175" class="ident">pageAlloc</a>) {
+	<a href="lockrank_off.go.html#line-43" class="ident">assertLockHeld</a>(<label for="r15" class="ident">p</label>.<a href="mpagealloc.go.html#line-292" class="ident">mheapLock</a>)
+
+	<span class="keyword">if</span> <label for="r13" class="ident">c</label>.<a href="#line-26" class="ident">empty</a>() {
+		<span class="keyword">return</span>
+	}
+	<label for="r16" class="ident">ci</label> := <a href="mpagealloc.go.html#line-101" class="ident">chunkIndex</a>(<label for="r13" class="ident">c</label>.<a href="#line-19" class="ident">base</a>)
+	<label for="r17" class="ident">pi</label> := <a href="mpagealloc.go.html#line-112" class="ident">chunkPageIndex</a>(<label for="r13" class="ident">c</label>.<a href="#line-19" class="ident">base</a>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> This method is called very infrequently, so just do the</span><span class="comment">	 slower, safer thing by iterating over each bit individually.</span></div>
+<div class="code"><pre><code>	<span class="keyword">for</span> <label for="r18" class="ident">i</label> := <a href="../../pkg/builtin.html#name-uint" class="ident">uint</a>(<span class="lit-number">0</span>); <label for="r18" class="ident">i</label> &lt; <span class="lit-number">64</span>; <label for="r18" class="ident">i</label>++ {
+		<span class="keyword">if</span> <label for="r13" class="ident">c</label>.<a href="#line-20" class="ident">cache</a>&amp;(<span class="lit-number">1</span>&lt;&lt;<label for="r18" class="ident">i</label>) != <span class="lit-number">0</span> {
+			<label for="r15" class="ident">p</label>.<a href="mpagealloc.go.html#line-343" class="ident">chunkOf</a>(<label for="r16" class="ident">ci</label>).<a href="mpallocbits.go.html#line-349" class="ident">free1</a>(<label for="r17" class="ident">pi</label> + <label for="r18" class="ident">i</label>)
+		}
+		<span class="keyword">if</span> <label for="r13" class="ident">c</label>.<a href="#line-21" class="ident">scav</a>&amp;(<span class="lit-number">1</span>&lt;&lt;<label for="r18" class="ident">i</label>) != <span class="lit-number">0</span> {
+			<label for="r15" class="ident">p</label>.<a href="mpagealloc.go.html#line-343" class="ident">chunkOf</a>(<label for="r16" class="ident">ci</label>).<a href="mpallocbits.go.html#line-411" class="ident">scavenged</a>.<a href="mpallocbits.go.html#line-30" class="ident">setRange</a>(<label for="r17" class="ident">pi</label>+<label for="r18" class="ident">i</label>, <span class="lit-number">1</span>)
+		}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Since this is a lot like a free, we need to make sure</span><span class="comment">	 we update the searchAddr just like free does.</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> <label for="r19" class="ident">b</label> := (<a href="mranges.go.html#line-98" class="ident">offAddr</a>{<label for="r13" class="ident">c</label>.<a href="#line-19" class="ident">base</a>}); <label for="r19" class="ident">b</label>.<a href="mranges.go.html#line-122" class="ident">lessThan</a>(<label for="r15" class="ident">p</label>.<a href="mpagealloc.go.html#line-242" class="ident">searchAddr</a>) {
+		<label for="r15" class="ident">p</label>.<a href="mpagealloc.go.html#line-242" class="ident">searchAddr</a> = <label for="r19" class="ident">b</label>
+	}
+	<label for="r15" class="ident">p</label>.<a href="mpagealloc.go.html#line-417" class="ident">update</a>(<label for="r13" class="ident">c</label>.<a href="#line-19" class="ident">base</a>, <a href="#line-12" class="ident">pageCachePages</a>, <a href="../../pkg/builtin.html#name-false" class="ident">false</a>, <a href="../../pkg/builtin.html#name-false" class="ident">false</a>)
+	*<label for="r13" class="ident">c</label> = <a href="#line-18" class="ident">pageCache</a>{}
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> allocToCache acquires a pageCachePages-aligned chunk of free pages which</span><span class="comment"> may not be contiguous, and returns a pageCache structure which owns the</span><span class="comment"> chunk.</span><span class="comment"></span><span class="comment"> p.mheapLock must be held.</span><span class="comment"></span><span class="comment"> Must run on the system stack because p.mheapLock must be held.</span><span class="comment"></span><span class="comment">go:systemstack</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r20" class="ident">p</label> *<a href="mpagealloc.go.html#line-175" class="ident">pageAlloc</a>) <label for="r21" class="ident"><a href="../../use/runtime..pageAlloc*9ee3f.allocToCache*15951.html" class="ident">allocToCache</a></label>() <a href="#line-18" class="ident">pageCache</a> {
+	<a href="lockrank_off.go.html#line-43" class="ident">assertLockHeld</a>(<label for="r20" class="ident">p</label>.<a href="mpagealloc.go.html#line-292" class="ident">mheapLock</a>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> If the searchAddr refers to a region which has a higher address than</span><span class="comment">	 any known chunk, then we know we're out of memory.</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> <a href="mpagealloc.go.html#line-101" class="ident">chunkIndex</a>(<label for="r20" class="ident">p</label>.<a href="mpagealloc.go.html#line-242" class="ident">searchAddr</a>.<a href="mranges.go.html#line-140" class="ident">addr</a>()) &gt;= <label for="r20" class="ident">p</label>.<a href="mpagealloc.go.html#line-248" class="ident">end</a> {
+		<span class="keyword">return</span> <a href="#line-18" class="ident">pageCache</a>{}
+	}
+	<label for="r22" class="ident">c</label> := <a href="#line-18" class="ident">pageCache</a>{}
+	<label for="r23" class="ident">ci</label> := <a href="mpagealloc.go.html#line-101" class="ident">chunkIndex</a>(<label for="r20" class="ident">p</label>.<a href="mpagealloc.go.html#line-242" class="ident">searchAddr</a>.<a href="mranges.go.html#line-140" class="ident">addr</a>()) <span class="comment">// chunk index</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Fast path: there's free pages at or near the searchAddr address.</span></div>
+<div class="code"><pre><code>		<label for="r24" class="ident">chunk</label> := <label for="r20" class="ident">p</label>.<a href="mpagealloc.go.html#line-343" class="ident">chunkOf</a>(<label for="r23" class="ident">ci</label>)
+		<label for="r25" class="ident">j</label>, <label for="r26" class="ident">_</label> := <label for="r24" class="ident">chunk</label>.<a href="mpallocbits.go.html#line-227" class="ident">find</a>(<span class="lit-number">1</span>, <a href="mpagealloc.go.html#line-112" class="ident">chunkPageIndex</a>(<label for="r20" class="ident">p</label>.<a href="mpagealloc.go.html#line-242" class="ident">searchAddr</a>.<a href="mranges.go.html#line-140" class="ident">addr</a>()))
+		<span class="keyword">if</span> <label for="r25" class="ident">j</label> == ^<a href="../../pkg/builtin.html#name-uint" class="ident">uint</a>(<span class="lit-number">0</span>) {
+			<a href="panic.go.html#line-1107" class="ident">throw</a>(<span class="lit-string">"bad summary data"</span>)
+		}
+		<label for="r22" class="ident">c</label> = <a href="#line-18" class="ident">pageCache</a>{
+			<a href="#line-19" class="ident">base</a>:  <a href="mpagealloc.go.html#line-106" class="ident">chunkBase</a>(<label for="r23" class="ident">ci</label>) + <a href="stubs.go.html#line-323" class="ident">alignDown</a>(<a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<label for="r25" class="ident">j</label>), <span class="lit-number">64</span>)*<a href="malloc.go.html#line-118" class="ident">pageSize</a>,
+			<a href="#line-20" class="ident">cache</a>: ^<label for="r24" class="ident">chunk</label>.<a href="mpallocbits.go.html#line-366" class="ident">pages64</a>(<label for="r25" class="ident">j</label>),
+			<a href="#line-21" class="ident">scav</a>:  <label for="r24" class="ident">chunk</label>.<a href="mpallocbits.go.html#line-411" class="ident">scavenged</a>.<a href="mpallocbits.go.html#line-20" class="ident">block64</a>(<label for="r25" class="ident">j</label>),
+		}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Slow path: the searchAddr address had nothing there, so go find</span><span class="comment">		 the first free page the slow way.</span></div>
+<div class="code"><pre><code>		<label for="r27" class="ident">addr</label>, <label for="r28" class="ident">_</label> := <label for="r20" class="ident">p</label>.<a href="mpagealloc.go.html#line-578" class="ident">find</a>(<span class="lit-number">1</span>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> We failed to find adequate free space, so mark the searchAddr as OoM</span><span class="comment">			 and return an empty pageCache.</span></div>
+<div class="code"><pre><code>			<label for="r20" class="ident">p</label>.<a href="mpagealloc.go.html#line-242" class="ident">searchAddr</a> = <a href="mpagealloc.go.html#line-90" class="ident">maxSearchAddr</a>
+			<span class="keyword">return</span> <a href="#line-18" class="ident">pageCache</a>{}
+		}
+		<label for="r29" class="ident">ci</label> := <a href="mpagealloc.go.html#line-101" class="ident">chunkIndex</a>(<label for="r27" class="ident">addr</label>)
+		<label for="r30" class="ident">chunk</label> := <label for="r20" class="ident">p</label>.<a href="mpagealloc.go.html#line-343" class="ident">chunkOf</a>(<label for="r29" class="ident">ci</label>)
+		<label for="r22" class="ident">c</label> = <a href="#line-18" class="ident">pageCache</a>{
+			<a href="#line-19" class="ident">base</a>:  <a href="stubs.go.html#line-323" class="ident">alignDown</a>(<label for="r27" class="ident">addr</label>, <span class="lit-number">64</span>*<a href="malloc.go.html#line-118" class="ident">pageSize</a>),
+			<a href="#line-20" class="ident">cache</a>: ^<label for="r30" class="ident">chunk</label>.<a href="mpallocbits.go.html#line-366" class="ident">pages64</a>(<a href="mpagealloc.go.html#line-112" class="ident">chunkPageIndex</a>(<label for="r27" class="ident">addr</label>)),
+			<a href="#line-21" class="ident">scav</a>:  <label for="r30" class="ident">chunk</label>.<a href="mpallocbits.go.html#line-411" class="ident">scavenged</a>.<a href="mpallocbits.go.html#line-20" class="ident">block64</a>(<a href="mpagealloc.go.html#line-112" class="ident">chunkPageIndex</a>(<label for="r27" class="ident">addr</label>)),
+		}
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Set the bits as allocated and clear the scavenged bits.</span></div>
+<div class="code"><pre><code>	<label for="r20" class="ident">p</label>.<a href="mpagealloc.go.html#line-505" class="ident">allocRange</a>(<label for="r22" class="ident">c</label>.<a href="#line-19" class="ident">base</a>, <a href="#line-12" class="ident">pageCachePages</a>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Update as an allocation, but note that it's not contiguous.</span></div>
+<div class="code"><pre><code>	<label for="r20" class="ident">p</label>.<a href="mpagealloc.go.html#line-417" class="ident">update</a>(<label for="r22" class="ident">c</label>.<a href="#line-19" class="ident">base</a>, <a href="#line-12" class="ident">pageCachePages</a>, <a href="../../pkg/builtin.html#name-false" class="ident">false</a>, <a href="../../pkg/builtin.html#name-true" class="ident">true</a>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Set the search address to the last page represented by the cache.</span><span class="comment">	 Since all of the pages in this block are going to the cache, and we</span><span class="comment">	 searched for the first free page, we can confidently start at the</span><span class="comment">	 next page.</span><span class="comment">	</span><span class="comment">	 However, p.searchAddr is not allowed to point into unmapped heap memory</span><span class="comment">	 unless it is maxSearchAddr, so make it the last page as opposed to</span><span class="comment">	 the page after.</span></div>
+<div class="code"><pre><code>	<label for="r20" class="ident">p</label>.<a href="mpagealloc.go.html#line-242" class="ident">searchAddr</a> = <a href="mranges.go.html#line-98" class="ident">offAddr</a>{<label for="r22" class="ident">c</label>.<a href="#line-19" class="ident">base</a> + <a href="malloc.go.html#line-118" class="ident">pageSize</a>*(<a href="#line-12" class="ident">pageCachePages</a>-<span class="lit-number">1</span>)}
+	<span class="keyword">return</span> <label for="r22" class="ident">c</label>
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

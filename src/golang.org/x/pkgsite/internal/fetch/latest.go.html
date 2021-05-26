@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: latest.go in package golang.org/x/pkgsite/internal/fetch</title>
+<link href="../../../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	latest.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../../../pkg/golang.org/x/pkgsite/internal/fetch.html">golang.org/x/pkgsite/internal/fetch</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16],
+input[id=r17]:checked ~pre label[for=r17],
+input[id=r18]:checked ~pre label[for=r18],
+input[id=r19]:checked ~pre label[for=r19],
+input[id=r20]:checked ~pre label[for=r20],
+input[id=r21]:checked ~pre label[for=r21],
+input[id=r22]:checked ~pre label[for=r22],
+input[id=r23]:checked ~pre label[for=r23],
+input[id=r24]:checked ~pre label[for=r24]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1,
+input[id=i2]:checked ~pre .i2,
+input[id=i3]:checked ~pre .i3,
+input[id=i4]:checked ~pre .i4,
+input[id=i5]:checked ~pre .i5,
+input[id=i6]:checked ~pre .i6,
+input[id=i7]:checked ~pre .i7,
+input[id=i8]:checked ~pre .i8
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="r17" type="radio" name="g"/>
+<input id="r18" type="radio" name="g"/>
+<input id="r19" type="radio" name="g"/>
+<input id="r20" type="radio" name="g"/>
+<input id="r21" type="radio" name="g"/>
+<input id="r22" type="radio" name="g"/>
+<input id="r23" type="radio" name="g"/>
+<input id="r24" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<input id="i2" type="radio" name="i"/>
+<input id="i3" type="radio" name="i"/>
+<input id="i4" type="radio" name="i"/>
+<input id="i5" type="radio" name="i"/>
+<input id="i6" type="radio" name="i"/>
+<input id="i7" type="radio" name="i"/>
+<input id="i8" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2021 The Go Authors. All rights reserved.</span><span class="comment"> Use of this source code is governed by a BSD-style</span><span class="comment"> license that can be found in the LICENSE file.</span></div>
+<div class="code"><pre><code>
+<span class="keyword">package</span> fetch
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"context"</span></label>
+	<label for="i1"><span class="lit-string i1">"errors"</span></label>
+	<label for="i2"><span class="lit-string i2">"fmt"</span></label>
+
+	<label for="i3"><span class="lit-string i3">"golang.org/x/pkgsite/internal"</span></label>
+	<label for="i4"><span class="lit-string i4">"golang.org/x/pkgsite/internal/derrors"</span></label>
+	<label for="i5"><span class="lit-string i5">"golang.org/x/pkgsite/internal/log"</span></label>
+	<label for="i6"><span class="lit-string i6">"golang.org/x/pkgsite/internal/proxy"</span></label>
+	<label for="i7"><span class="lit-string i7">"golang.org/x/pkgsite/internal/stdlib"</span></label>
+	<label for="i8"><span class="lit-string i8">"golang.org/x/pkgsite/internal/version"</span></label>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> LatestModuleVersions uses the proxy to get information about the latest</span><span class="comment"> versions of modulePath. It returns a LatestModuleVersions whose RawVersion</span><span class="comment"> and CookedVersion is obtained from the proxy @v/list and @latest endpoints.</span><span class="comment"> The cooked version is computed by choosing the latest version after removing</span><span class="comment"> versions that are retracted in the go.mod file of the raw version.</span><span class="comment"></span><span class="comment"> The GoodVersion of LatestModuleVersions is not set. It should be determined</span><span class="comment"> when inserting into a data source, since it depends on the contents of the</span><span class="comment"> data source.</span><span class="comment"></span><span class="comment"> The hasGoMod function that is passed in should check if version v of the</span><span class="comment"> module has a go.mod file, using a source other than the proxy (e.g. a</span><span class="comment"> database). If it doesn't have enough information to decide, it should return</span><span class="comment"> an error that wraps derrors.NotFound.</span><span class="comment"></span><span class="comment"> If a module has no tagged versions and hasn't been accessed at a</span><span class="comment"> pseudo-version in a while, then the proxy's list endpoint will serve nothing</span><span class="comment"> and its @latest endpoint will return a 404/410. (Example:</span><span class="comment"> cloud.google.com/go/compute/metadata, which has a</span><span class="comment"> v0.0.0-20181107005212-dafb9c8d8707 that @latest does not return.) That is not</span><span class="comment"> a failure, but a valid state in which there is no version information for a</span><span class="comment"> module, even though particular pseudo-versions of the module might exist. In</span><span class="comment"> this case, LatestModuleVersions returns (nil, nil).</span><span class="comment"></span><span class="comment"> As a special case, the "std" module's versions are fetched from the repo (by</span><span class="comment"> calling stdlib.Versions). We assume stdlib versions are never retracted, and</span><span class="comment"> that there are no incompatible versions.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r0" class="ident"><a href="../../../../../../pkg/golang.org/x/pkgsite/internal/fetch.html#name-LatestModuleVersions" class="ident">LatestModuleVersions</a></label>(<label for="r1" class="ident">ctx</label> <a href="../../../../../../pkg/context.html" class="ident i0">context</a>.<a href="../../../../../context/context.go.html#line-62" class="ident">Context</a>, <label for="r2" class="ident">modulePath</label> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>, <label for="r3" class="ident">prox</label> *<a href="../../../../../../pkg/golang.org/x/pkgsite/internal/proxy.html" class="ident i6">proxy</a>.<a href="../proxy/client.go.html#line-31" class="ident">Client</a>, <label for="r4" class="ident">hasGoMod</label> <span class="keyword">func</span>(<label for="r5" class="ident">v</label> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>) (<a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>, <a href="../../../../../../pkg/builtin.html#name-error" class="ident">error</a>)) (<label for="r6" class="ident">info</label> *<a href="../../../../../../pkg/golang.org/x/pkgsite/internal.html" class="ident i3">internal</a>.<a href="../latest.go.html#line-18" class="ident">LatestModuleVersions</a>, <label for="r7" class="ident">err</label> <a href="../../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<span class="keyword">defer</span> <a href="../../../../../../pkg/golang.org/x/pkgsite/internal/derrors.html" class="ident i4">derrors</a>.<a href="../derrors/derrors.go.html#line-240" class="ident">WrapStack</a>(&amp;<label for="r7" class="ident">err</label>, <span class="lit-string">"LatestModuleVersions(%q)"</span>, <label for="r2" class="ident">modulePath</label>)
+
+	<span class="keyword">defer</span> <span class="keyword">func</span>() {
+		<span class="keyword">if</span> <label for="r6" class="ident">info</label> != <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<a href="../../../../../../pkg/golang.org/x/pkgsite/internal/log.html" class="ident i5">log</a>.<a href="../log/log.go.html#line-189" class="ident">Debugf</a>(<label for="r1" class="ident">ctx</label>, <span class="lit-string">"LatestModuleVersions(%q) =&gt; (raw=%q cooked=%q, %v)"</span>, <label for="r2" class="ident">modulePath</label>, <label for="r6" class="ident">info</label>.<a href="../latest.go.html#line-20" class="ident">RawVersion</a>, <label for="r6" class="ident">info</label>.<a href="../latest.go.html#line-21" class="ident">CookedVersion</a>, <label for="r7" class="ident">err</label>)
+		}
+	}()
+
+	<span class="keyword">if</span> <label for="r2" class="ident">modulePath</label> == <a href="../../../../../../pkg/golang.org/x/pkgsite/internal/stdlib.html" class="ident i7">stdlib</a>.<a href="../stdlib/stdlib.go.html#line-38" class="ident">ModulePath</a> {
+		<label for="r8" class="ident">vs</label>, <label for="r9" class="ident">err</label> := <a href="../../../../../../pkg/golang.org/x/pkgsite/internal/stdlib.html" class="ident i7">stdlib</a>.<a href="../stdlib/stdlib.go.html#line-238" class="ident">Versions</a>()
+		<span class="keyword">if</span> <label for="r9" class="ident">err</label> != <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <label for="r9" class="ident">err</label>
+		}
+		<label for="r10" class="ident">latest</label> := <a href="../../../../../../pkg/golang.org/x/pkgsite/internal/version.html" class="ident i8">version</a>.<a href="../version/version.go.html#line-233" class="ident">LatestOf</a>(<label for="r8" class="ident">vs</label>)
+		<span class="keyword">if</span> <label for="r10" class="ident">latest</label> == <span class="lit-string">""</span> {
+			<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="../../../../../../pkg/errors.html" class="ident i1">errors</a>.<a href="../../../../../errors/errors.go.html#line-58" class="ident">New</a>(<span class="lit-string">"no versions for stdlib"</span>)
+		}
+		<span class="keyword">return</span> <a href="../../../../../../pkg/golang.org/x/pkgsite/internal.html" class="ident i3">internal</a>.<a href="../latest.go.html#line-28" class="ident">NewLatestModuleVersions</a>(<label for="r2" class="ident">modulePath</label>, <label for="r10" class="ident">latest</label>, <label for="r10" class="ident">latest</label>, <span class="lit-string">""</span>, []<a href="../../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>(<span class="lit-string">"module std"</span>))
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Remember calls to hasGoMod because they can be expensive.</span></div>
+<div class="code"><pre><code>	<label for="r11" class="ident">hasGoModResults</label> := <span class="keyword">map</span>[<a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>]<a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>{}
+	<label for="r12" class="ident">hasGoModFunc</label> := <span class="keyword">func</span>(<label for="r13" class="ident">v</label> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>) (<a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>, <a href="../../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+		<label for="r14" class="ident">result</label>, <label for="r15" class="ident">ok</label> := <label for="r11" class="ident">hasGoModResults</label>[<label for="r13" class="ident">v</label>]
+		<span class="keyword">if</span> <label for="r15" class="ident">ok</label> {
+			<span class="keyword">return</span> <label for="r14" class="ident">result</label>, <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+		}
+		<label for="r16" class="ident">err</label> := <a href="../../../../../../pkg/golang.org/x/pkgsite/internal/derrors.html" class="ident i4">derrors</a>.<a href="../derrors/derrors.go.html#line-26" class="ident">NotFound</a>
+		<span class="keyword">if</span> <label for="r4" class="ident">hasGoMod</label> != <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<label for="r14" class="ident">result</label>, <label for="r16" class="ident">err</label> = <label for="r4" class="ident">hasGoMod</label>(<label for="r13" class="ident">v</label>)
+		}
+		<span class="keyword">if</span> <label for="r16" class="ident">err</label> != <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> &amp;&amp; !<a href="../../../../../../pkg/errors.html" class="ident i1">errors</a>.<a href="../../../../../errors/wrap.go.html#line-39" class="ident">Is</a>(<label for="r16" class="ident">err</label>, <a href="../../../../../../pkg/golang.org/x/pkgsite/internal/derrors.html" class="ident i4">derrors</a>.<a href="../derrors/derrors.go.html#line-26" class="ident">NotFound</a>) {
+			<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-false" class="ident">false</a>, <label for="r16" class="ident">err</label>
+		}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> hasGoMod doesn't know; download the zip.</span></div>
+<div class="code"><pre><code>			<label for="r17" class="ident">zr</label>, <label for="r18" class="ident">err</label> := <label for="r3" class="ident">prox</label>.<a href="../proxy/client.go.html#line-132" class="ident">Zip</a>(<label for="r1" class="ident">ctx</label>, <label for="r2" class="ident">modulePath</label>, <label for="r13" class="ident">v</label>)
+			<span class="keyword">if</span> <label for="r18" class="ident">err</label> != <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+				<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-false" class="ident">false</a>, <label for="r18" class="ident">err</label>
+			}
+			<label for="r14" class="ident">result</label> = <a href="fetch.go.html#line-332" class="ident">hasGoModFile</a>(<label for="r17" class="ident">zr</label>, <label for="r2" class="ident">modulePath</label>, <label for="r13" class="ident">v</label>)
+		}
+		<label for="r11" class="ident">hasGoModResults</label>[<label for="r13" class="ident">v</label>] = <label for="r14" class="ident">result</label>
+		<span class="keyword">return</span> <label for="r14" class="ident">result</label>, <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Get the raw latest version.</span></div>
+<div class="code"><pre><code>	<label for="r19" class="ident">versions</label>, <label for="r7" class="ident">err</label> := <label for="r3" class="ident">prox</label>.<a href="../proxy/client.go.html#line-221" class="ident">Versions</a>(<label for="r1" class="ident">ctx</label>, <label for="r2" class="ident">modulePath</label>)
+	<span class="keyword">if</span> <label for="r7" class="ident">err</label> != <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <label for="r7" class="ident">err</label>
+	}
+	<label for="r20" class="ident">latestInfo</label>, <label for="r7" class="ident">err</label> := <label for="r3" class="ident">prox</label>.<a href="../proxy/client.go.html#line-99" class="ident">Info</a>(<label for="r1" class="ident">ctx</label>, <label for="r2" class="ident">modulePath</label>, <a href="../../../../../../pkg/golang.org/x/pkgsite/internal.html" class="ident i3">internal</a>.<a href="../discovery.go.html#line-22" class="ident">LatestVersion</a>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> No information from the proxy, but not a showstopper either; we can</span><span class="comment">		 proceed with the result of the list endpoint.</span></div>
+<div class="code"><pre><code>	} <span class="keyword">else</span> <span class="keyword">if</span> <label for="r7" class="ident">err</label> != <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <label for="r7" class="ident">err</label>
+	} <span class="keyword">else</span> {
+		<label for="r19" class="ident">versions</label> = <a href="../../../../../../pkg/builtin.html#name-append" class="ident">append</a>(<label for="r19" class="ident">versions</label>, <label for="r20" class="ident">latestInfo</label>.<a href="../proxy/client.go.html#line-51" class="ident">Version</a>)
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> No tagged versions, and nothing from @latest: no version information.</span></div>
+<div class="code"><pre><code>		<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+	}
+	<label for="r21" class="ident">rawLatest</label>, <label for="r7" class="ident">err</label> := <a href="../../../../../../pkg/golang.org/x/pkgsite/internal/version.html" class="ident i8">version</a>.<a href="../version/version.go.html#line-200" class="ident">Latest</a>(<label for="r19" class="ident">versions</label>, <label for="r12" class="ident">hasGoModFunc</label>)
+	<span class="keyword">if</span> <label for="r7" class="ident">err</label> != <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <label for="r7" class="ident">err</label>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Get the go.mod file at the raw latest version.</span></div>
+<div class="code"><pre><code>	<label for="r22" class="ident">modBytes</label>, <label for="r7" class="ident">err</label> := <label for="r3" class="ident">prox</label>.<a href="../proxy/client.go.html#line-122" class="ident">Mod</a>(<label for="r1" class="ident">ctx</label>, <label for="r2" class="ident">modulePath</label>, <label for="r21" class="ident">rawLatest</label>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Something's wrong with the go.mod file, so assume a minimal one instead of failing.</span></div>
+<div class="code"><pre><code>		<a href="../../../../../../pkg/golang.org/x/pkgsite/internal/log.html" class="ident i5">log</a>.<a href="../log/log.go.html#line-179" class="ident">Warningf</a>(<label for="r1" class="ident">ctx</label>, <span class="lit-string">"proxy.Mod(%q, %q): %v; using minimal go.mod for latest version info"</span>,
+			<label for="r2" class="ident">modulePath</label>, <label for="r21" class="ident">rawLatest</label>)
+		<label for="r22" class="ident">modBytes</label> = []<a href="../../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>(<a href="../../../../../../pkg/fmt.html" class="ident i2">fmt</a>.<a href="../../../../../fmt/print.go.html#line-217" class="ident">Sprintf</a>(<span class="lit-string">"module %s"</span>, <label for="r2" class="ident">modulePath</label>))
+	}
+	<label for="r23" class="ident">lmv</label>, <label for="r7" class="ident">err</label> := <a href="../../../../../../pkg/golang.org/x/pkgsite/internal.html" class="ident i3">internal</a>.<a href="../latest.go.html#line-28" class="ident">NewLatestModuleVersions</a>(<label for="r2" class="ident">modulePath</label>, <label for="r21" class="ident">rawLatest</label>, <span class="lit-string">""</span>, <span class="lit-string">""</span>, <label for="r22" class="ident">modBytes</label>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> An error here means a bad go.mod file.</span></div>
+<div class="code"><pre><code>		<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="../../../../../../pkg/fmt.html" class="ident i2">fmt</a>.<a href="../../../../../fmt/errors.go.html#line-17" class="ident">Errorf</a>(<span class="lit-string">"%v: %w"</span>, <label for="r7" class="ident">err</label>, <a href="../../../../../../pkg/golang.org/x/pkgsite/internal/derrors.html" class="ident i4">derrors</a>.<a href="../derrors/derrors.go.html#line-37" class="ident">BadModule</a>)
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Get the cooked latest version by disallowing retracted versions.</span></div>
+<div class="code"><pre><code>	<label for="r24" class="ident">unretractedVersions</label> := <a href="../../../../../../pkg/golang.org/x/pkgsite/internal/version.html" class="ident i8">version</a>.<a href="../version/version.go.html#line-247" class="ident">RemoveIf</a>(<label for="r19" class="ident">versions</label>, <label for="r23" class="ident">lmv</label>.<a href="../latest.go.html#line-74" class="ident">IsRetracted</a>)
+	<span class="keyword">if</span> <a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r19" class="ident">versions</label>) == <a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r24" class="ident">unretractedVersions</label>) {
+		<label for="r23" class="ident">lmv</label>.<a href="../latest.go.html#line-21" class="ident">CookedVersion</a> = <label for="r23" class="ident">lmv</label>.<a href="../latest.go.html#line-20" class="ident">RawVersion</a>
+	} <span class="keyword">else</span> {
+		<label for="r23" class="ident">lmv</label>.<a href="../latest.go.html#line-21" class="ident">CookedVersion</a>, <label for="r7" class="ident">err</label> = <a href="../../../../../../pkg/golang.org/x/pkgsite/internal/version.html" class="ident i8">version</a>.<a href="../version/version.go.html#line-200" class="ident">Latest</a>(<label for="r24" class="ident">unretractedVersions</label>, <label for="r12" class="ident">hasGoModFunc</label>)
+		<span class="keyword">if</span> <label for="r7" class="ident">err</label> != <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <label for="r7" class="ident">err</label>
+		}
+	}
+	<span class="keyword">return</span> <label for="r23" class="ident">lmv</label>, <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

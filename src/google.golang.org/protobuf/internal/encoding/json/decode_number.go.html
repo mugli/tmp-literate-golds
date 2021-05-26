@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: decode_number.go in package google.golang.org/protobuf/internal/encoding/json</title>
+<link href="../../../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	decode_number.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../../../pkg/google.golang.org/protobuf/internal/encoding/json.html">google.golang.org/protobuf/internal/encoding/json</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16],
+input[id=r17]:checked ~pre label[for=r17],
+input[id=r18]:checked ~pre label[for=r18],
+input[id=r19]:checked ~pre label[for=r19],
+input[id=r20]:checked ~pre label[for=r20],
+input[id=r21]:checked ~pre label[for=r21],
+input[id=r22]:checked ~pre label[for=r22],
+input[id=r23]:checked ~pre label[for=r23],
+input[id=r24]:checked ~pre label[for=r24],
+input[id=r25]:checked ~pre label[for=r25]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="r17" type="radio" name="g"/>
+<input id="r18" type="radio" name="g"/>
+<input id="r19" type="radio" name="g"/>
+<input id="r20" type="radio" name="g"/>
+<input id="r21" type="radio" name="g"/>
+<input id="r22" type="radio" name="g"/>
+<input id="r23" type="radio" name="g"/>
+<input id="r24" type="radio" name="g"/>
+<input id="r25" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2018 The Go Authors. All rights reserved.</span><span class="comment"> Use of this source code is governed by a BSD-style</span><span class="comment"> license that can be found in the LICENSE file.</span></div>
+<div class="code"><pre><code>
+<span class="keyword">package</span> json
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"bytes"</span></label>
+	<label for="i1"><span class="lit-string i1">"strconv"</span></label>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> parseNumber reads the given []byte for a valid JSON number. If it is valid,</span><span class="comment"> it returns the number of bytes.  Parsing logic follows the definition in</span><span class="comment"> https://tools.ietf.org/html/rfc7159#section-6, and is based off</span><span class="comment"> encoding/json.isValidNumber function.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r0" class="ident"><a href="../../../../../../pkg/google.golang.org/protobuf/internal/encoding/json.html#name-parseNumber" class="ident">parseNumber</a></label>(<label for="r1" class="ident">input</label> []<a href="../../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>) (<a href="../../../../../../pkg/builtin.html#name-int" class="ident">int</a>, <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>) {
+	<span class="keyword">var</span> <label for="r2" class="ident">n</label> <a href="../../../../../../pkg/builtin.html#name-int" class="ident">int</a>
+
+	<label for="r3" class="ident">s</label> := <label for="r1" class="ident">input</label>
+	<span class="keyword">if</span> <a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r3" class="ident">s</label>) == <span class="lit-number">0</span> {
+		<span class="keyword">return</span> <span class="lit-number">0</span>, <a href="../../../../../../pkg/builtin.html#name-false" class="ident">false</a>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Optional -</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> <label for="r3" class="ident">s</label>[<span class="lit-number">0</span>] == <span class="lit-number">'-'</span> {
+		<label for="r3" class="ident">s</label> = <label for="r3" class="ident">s</label>[<span class="lit-number">1</span>:]
+		<label for="r2" class="ident">n</label>++
+		<span class="keyword">if</span> <a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r3" class="ident">s</label>) == <span class="lit-number">0</span> {
+			<span class="keyword">return</span> <span class="lit-number">0</span>, <a href="../../../../../../pkg/builtin.html#name-false" class="ident">false</a>
+		}
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Digits</span></div>
+<div class="code"><pre><code>	<span class="keyword">switch</span> {
+	<span class="keyword">case</span> <label for="r3" class="ident">s</label>[<span class="lit-number">0</span>] == <span class="lit-number">'0'</span>:
+		<label for="r3" class="ident">s</label> = <label for="r3" class="ident">s</label>[<span class="lit-number">1</span>:]
+		<label for="r2" class="ident">n</label>++
+
+	<span class="keyword">case</span> <span class="lit-number">'1'</span> &lt;= <label for="r3" class="ident">s</label>[<span class="lit-number">0</span>] &amp;&amp; <label for="r3" class="ident">s</label>[<span class="lit-number">0</span>] &lt;= <span class="lit-number">'9'</span>:
+		<label for="r3" class="ident">s</label> = <label for="r3" class="ident">s</label>[<span class="lit-number">1</span>:]
+		<label for="r2" class="ident">n</label>++
+		<span class="keyword">for</span> <a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r3" class="ident">s</label>) &gt; <span class="lit-number">0</span> &amp;&amp; <span class="lit-number">'0'</span> &lt;= <label for="r3" class="ident">s</label>[<span class="lit-number">0</span>] &amp;&amp; <label for="r3" class="ident">s</label>[<span class="lit-number">0</span>] &lt;= <span class="lit-number">'9'</span> {
+			<label for="r3" class="ident">s</label> = <label for="r3" class="ident">s</label>[<span class="lit-number">1</span>:]
+			<label for="r2" class="ident">n</label>++
+		}
+
+	<span class="keyword">default</span>:
+		<span class="keyword">return</span> <span class="lit-number">0</span>, <a href="../../../../../../pkg/builtin.html#name-false" class="ident">false</a>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> . followed by 1 or more digits.</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> <a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r3" class="ident">s</label>) &gt;= <span class="lit-number">2</span> &amp;&amp; <label for="r3" class="ident">s</label>[<span class="lit-number">0</span>] == <span class="lit-number">'.'</span> &amp;&amp; <span class="lit-number">'0'</span> &lt;= <label for="r3" class="ident">s</label>[<span class="lit-number">1</span>] &amp;&amp; <label for="r3" class="ident">s</label>[<span class="lit-number">1</span>] &lt;= <span class="lit-number">'9'</span> {
+		<label for="r3" class="ident">s</label> = <label for="r3" class="ident">s</label>[<span class="lit-number">2</span>:]
+		<label for="r2" class="ident">n</label> += <span class="lit-number">2</span>
+		<span class="keyword">for</span> <a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r3" class="ident">s</label>) &gt; <span class="lit-number">0</span> &amp;&amp; <span class="lit-number">'0'</span> &lt;= <label for="r3" class="ident">s</label>[<span class="lit-number">0</span>] &amp;&amp; <label for="r3" class="ident">s</label>[<span class="lit-number">0</span>] &lt;= <span class="lit-number">'9'</span> {
+			<label for="r3" class="ident">s</label> = <label for="r3" class="ident">s</label>[<span class="lit-number">1</span>:]
+			<label for="r2" class="ident">n</label>++
+		}
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> e or E followed by an optional - or + and</span><span class="comment">	 1 or more digits.</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> <a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r3" class="ident">s</label>) &gt;= <span class="lit-number">2</span> &amp;&amp; (<label for="r3" class="ident">s</label>[<span class="lit-number">0</span>] == <span class="lit-number">'e'</span> || <label for="r3" class="ident">s</label>[<span class="lit-number">0</span>] == <span class="lit-number">'E'</span>) {
+		<label for="r3" class="ident">s</label> = <label for="r3" class="ident">s</label>[<span class="lit-number">1</span>:]
+		<label for="r2" class="ident">n</label>++
+		<span class="keyword">if</span> <label for="r3" class="ident">s</label>[<span class="lit-number">0</span>] == <span class="lit-number">'+'</span> || <label for="r3" class="ident">s</label>[<span class="lit-number">0</span>] == <span class="lit-number">'-'</span> {
+			<label for="r3" class="ident">s</label> = <label for="r3" class="ident">s</label>[<span class="lit-number">1</span>:]
+			<label for="r2" class="ident">n</label>++
+			<span class="keyword">if</span> <a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r3" class="ident">s</label>) == <span class="lit-number">0</span> {
+				<span class="keyword">return</span> <span class="lit-number">0</span>, <a href="../../../../../../pkg/builtin.html#name-false" class="ident">false</a>
+			}
+		}
+		<span class="keyword">for</span> <a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r3" class="ident">s</label>) &gt; <span class="lit-number">0</span> &amp;&amp; <span class="lit-number">'0'</span> &lt;= <label for="r3" class="ident">s</label>[<span class="lit-number">0</span>] &amp;&amp; <label for="r3" class="ident">s</label>[<span class="lit-number">0</span>] &lt;= <span class="lit-number">'9'</span> {
+			<label for="r3" class="ident">s</label> = <label for="r3" class="ident">s</label>[<span class="lit-number">1</span>:]
+			<label for="r2" class="ident">n</label>++
+		}
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Check that next byte is a delimiter or it is at the end.</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> <label for="r2" class="ident">n</label> &lt; <a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r1" class="ident">input</label>) &amp;&amp; <a href="decode.go.html#line-257" class="ident">isNotDelim</a>(<label for="r1" class="ident">input</label>[<label for="r2" class="ident">n</label>]) {
+		<span class="keyword">return</span> <span class="lit-number">0</span>, <a href="../../../../../../pkg/builtin.html#name-false" class="ident">false</a>
+	}
+
+	<span class="keyword">return</span> <label for="r2" class="ident">n</label>, <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> numberParts is the result of parsing out a valid JSON number. It contains</span><span class="comment"> the parts of a number. The parts are used for integer conversion.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../../pkg/google.golang.org/protobuf/internal/encoding/json.html#name-numberParts" class="ident">numberParts</a> <span class="keyword">struct</span> {
+	<a href="../../../../../../use/google.golang.org/protobuf/internal/encoding/json..numberParts*bd6c8.neg*fa34f.html" class="ident">neg</a>  <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>
+	<a href="../../../../../../use/google.golang.org/protobuf/internal/encoding/json..numberParts*bd6c8.intp*66a6a.html" class="ident">intp</a> []<a href="../../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>
+	<a href="../../../../../../use/google.golang.org/protobuf/internal/encoding/json..numberParts*bd6c8.frac*2fd26.html" class="ident">frac</a> []<a href="../../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>
+	<a href="../../../../../../use/google.golang.org/protobuf/internal/encoding/json..numberParts*bd6c8.exp*dd7a9.html" class="ident">exp</a>  []<a href="../../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> parseNumber constructs numberParts from given []byte. The logic here is</span><span class="comment"> similar to consumeNumber above with the difference of having to construct</span><span class="comment"> numberParts. The slice fields in numberParts are subslices of the input.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r4" class="ident"><a href="../../../../../../pkg/google.golang.org/protobuf/internal/encoding/json.html#name-parseNumberParts" class="ident">parseNumberParts</a></label>(<label for="r5" class="ident">input</label> []<a href="../../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>) (<a href="#line-89" class="ident">numberParts</a>, <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>) {
+	<span class="keyword">var</span> <label for="r6" class="ident">neg</label> <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>
+	<span class="keyword">var</span> <label for="r7" class="ident">intp</label> []<a href="../../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>
+	<span class="keyword">var</span> <label for="r8" class="ident">frac</label> []<a href="../../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>
+	<span class="keyword">var</span> <label for="r9" class="ident">exp</label> []<a href="../../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>
+
+	<label for="r10" class="ident">s</label> := <label for="r5" class="ident">input</label>
+	<span class="keyword">if</span> <a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r10" class="ident">s</label>) == <span class="lit-number">0</span> {
+		<span class="keyword">return</span> <a href="#line-89" class="ident">numberParts</a>{}, <a href="../../../../../../pkg/builtin.html#name-false" class="ident">false</a>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Optional -</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> <label for="r10" class="ident">s</label>[<span class="lit-number">0</span>] == <span class="lit-number">'-'</span> {
+		<label for="r6" class="ident">neg</label> = <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>
+		<label for="r10" class="ident">s</label> = <label for="r10" class="ident">s</label>[<span class="lit-number">1</span>:]
+		<span class="keyword">if</span> <a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r10" class="ident">s</label>) == <span class="lit-number">0</span> {
+			<span class="keyword">return</span> <a href="#line-89" class="ident">numberParts</a>{}, <a href="../../../../../../pkg/builtin.html#name-false" class="ident">false</a>
+		}
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Digits</span></div>
+<div class="code"><pre><code>	<span class="keyword">switch</span> {
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Skip first 0 and no need to store.</span></div>
+<div class="code"><pre><code>		<label for="r10" class="ident">s</label> = <label for="r10" class="ident">s</label>[<span class="lit-number">1</span>:]
+
+	<span class="keyword">case</span> <span class="lit-number">'1'</span> &lt;= <label for="r10" class="ident">s</label>[<span class="lit-number">0</span>] &amp;&amp; <label for="r10" class="ident">s</label>[<span class="lit-number">0</span>] &lt;= <span class="lit-number">'9'</span>:
+		<label for="r7" class="ident">intp</label> = <label for="r10" class="ident">s</label>
+		<label for="r11" class="ident">n</label> := <span class="lit-number">1</span>
+		<label for="r10" class="ident">s</label> = <label for="r10" class="ident">s</label>[<span class="lit-number">1</span>:]
+		<span class="keyword">for</span> <a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r10" class="ident">s</label>) &gt; <span class="lit-number">0</span> &amp;&amp; <span class="lit-number">'0'</span> &lt;= <label for="r10" class="ident">s</label>[<span class="lit-number">0</span>] &amp;&amp; <label for="r10" class="ident">s</label>[<span class="lit-number">0</span>] &lt;= <span class="lit-number">'9'</span> {
+			<label for="r10" class="ident">s</label> = <label for="r10" class="ident">s</label>[<span class="lit-number">1</span>:]
+			<label for="r11" class="ident">n</label>++
+		}
+		<label for="r7" class="ident">intp</label> = <label for="r7" class="ident">intp</label>[:<label for="r11" class="ident">n</label>]
+
+	<span class="keyword">default</span>:
+		<span class="keyword">return</span> <a href="#line-89" class="ident">numberParts</a>{}, <a href="../../../../../../pkg/builtin.html#name-false" class="ident">false</a>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> . followed by 1 or more digits.</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> <a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r10" class="ident">s</label>) &gt;= <span class="lit-number">2</span> &amp;&amp; <label for="r10" class="ident">s</label>[<span class="lit-number">0</span>] == <span class="lit-number">'.'</span> &amp;&amp; <span class="lit-number">'0'</span> &lt;= <label for="r10" class="ident">s</label>[<span class="lit-number">1</span>] &amp;&amp; <label for="r10" class="ident">s</label>[<span class="lit-number">1</span>] &lt;= <span class="lit-number">'9'</span> {
+		<label for="r8" class="ident">frac</label> = <label for="r10" class="ident">s</label>[<span class="lit-number">1</span>:]
+		<label for="r12" class="ident">n</label> := <span class="lit-number">1</span>
+		<label for="r10" class="ident">s</label> = <label for="r10" class="ident">s</label>[<span class="lit-number">2</span>:]
+		<span class="keyword">for</span> <a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r10" class="ident">s</label>) &gt; <span class="lit-number">0</span> &amp;&amp; <span class="lit-number">'0'</span> &lt;= <label for="r10" class="ident">s</label>[<span class="lit-number">0</span>] &amp;&amp; <label for="r10" class="ident">s</label>[<span class="lit-number">0</span>] &lt;= <span class="lit-number">'9'</span> {
+			<label for="r10" class="ident">s</label> = <label for="r10" class="ident">s</label>[<span class="lit-number">1</span>:]
+			<label for="r12" class="ident">n</label>++
+		}
+		<label for="r8" class="ident">frac</label> = <label for="r8" class="ident">frac</label>[:<label for="r12" class="ident">n</label>]
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> e or E followed by an optional - or + and</span><span class="comment">	 1 or more digits.</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> <a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r10" class="ident">s</label>) &gt;= <span class="lit-number">2</span> &amp;&amp; (<label for="r10" class="ident">s</label>[<span class="lit-number">0</span>] == <span class="lit-number">'e'</span> || <label for="r10" class="ident">s</label>[<span class="lit-number">0</span>] == <span class="lit-number">'E'</span>) {
+		<label for="r10" class="ident">s</label> = <label for="r10" class="ident">s</label>[<span class="lit-number">1</span>:]
+		<label for="r9" class="ident">exp</label> = <label for="r10" class="ident">s</label>
+		<label for="r13" class="ident">n</label> := <span class="lit-number">0</span>
+		<span class="keyword">if</span> <label for="r10" class="ident">s</label>[<span class="lit-number">0</span>] == <span class="lit-number">'+'</span> || <label for="r10" class="ident">s</label>[<span class="lit-number">0</span>] == <span class="lit-number">'-'</span> {
+			<label for="r10" class="ident">s</label> = <label for="r10" class="ident">s</label>[<span class="lit-number">1</span>:]
+			<label for="r13" class="ident">n</label>++
+			<span class="keyword">if</span> <a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r10" class="ident">s</label>) == <span class="lit-number">0</span> {
+				<span class="keyword">return</span> <a href="#line-89" class="ident">numberParts</a>{}, <a href="../../../../../../pkg/builtin.html#name-false" class="ident">false</a>
+			}
+		}
+		<span class="keyword">for</span> <a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r10" class="ident">s</label>) &gt; <span class="lit-number">0</span> &amp;&amp; <span class="lit-number">'0'</span> &lt;= <label for="r10" class="ident">s</label>[<span class="lit-number">0</span>] &amp;&amp; <label for="r10" class="ident">s</label>[<span class="lit-number">0</span>] &lt;= <span class="lit-number">'9'</span> {
+			<label for="r10" class="ident">s</label> = <label for="r10" class="ident">s</label>[<span class="lit-number">1</span>:]
+			<label for="r13" class="ident">n</label>++
+		}
+		<label for="r9" class="ident">exp</label> = <label for="r9" class="ident">exp</label>[:<label for="r13" class="ident">n</label>]
+	}
+
+	<span class="keyword">return</span> <a href="#line-89" class="ident">numberParts</a>{
+		<a href="#line-90" class="ident">neg</a>:  <label for="r6" class="ident">neg</label>,
+		<a href="#line-91" class="ident">intp</a>: <label for="r7" class="ident">intp</label>,
+		<a href="#line-92" class="ident">frac</a>: <a href="../../../../../../pkg/bytes.html" class="ident i0">bytes</a>.<a href="../../../../../bytes/bytes.go.html#line-925" class="ident">TrimRight</a>(<label for="r8" class="ident">frac</label>, <span class="lit-string">"0"</span>), <span class="comment">// Remove unnecessary 0s to the right.</span>
+		<a href="#line-93" class="ident">exp</a>:  <label for="r9" class="ident">exp</label>,
+	}, <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> normalizeToIntString returns an integer string in normal form without the</span><span class="comment"> E-notation for given numberParts. It will return false if it is not an</span><span class="comment"> integer or if the exponent exceeds than max/min int value.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r14" class="ident"><a href="../../../../../../pkg/google.golang.org/protobuf/internal/encoding/json.html#name-normalizeToIntString" class="ident">normalizeToIntString</a></label>(<label for="r15" class="ident">n</label> <a href="#line-89" class="ident">numberParts</a>) (<a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>, <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>) {
+	<label for="r16" class="ident">intpSize</label> := <a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r15" class="ident">n</label>.<a href="#line-91" class="ident">intp</a>)
+	<label for="r17" class="ident">fracSize</label> := <a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r15" class="ident">n</label>.<a href="#line-92" class="ident">frac</a>)
+
+	<span class="keyword">if</span> <label for="r16" class="ident">intpSize</label> == <span class="lit-number">0</span> &amp;&amp; <label for="r17" class="ident">fracSize</label> == <span class="lit-number">0</span> {
+		<span class="keyword">return</span> <span class="lit-string">"0"</span>, <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>
+	}
+
+	<span class="keyword">var</span> <label for="r18" class="ident">exp</label> <a href="../../../../../../pkg/builtin.html#name-int" class="ident">int</a>
+	<span class="keyword">if</span> <a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r15" class="ident">n</label>.<a href="#line-93" class="ident">exp</a>) &gt; <span class="lit-number">0</span> {
+		<label for="r19" class="ident">i</label>, <label for="r20" class="ident">err</label> := <a href="../../../../../../pkg/strconv.html" class="ident i1">strconv</a>.<a href="../../../../../strconv/atoi.go.html#line-179" class="ident">ParseInt</a>(<a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>(<label for="r15" class="ident">n</label>.<a href="#line-93" class="ident">exp</a>), <span class="lit-number">10</span>, <span class="lit-number">32</span>)
+		<span class="keyword">if</span> <label for="r20" class="ident">err</label> != <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<span class="keyword">return</span> <span class="lit-string">""</span>, <a href="../../../../../../pkg/builtin.html#name-false" class="ident">false</a>
+		}
+		<label for="r18" class="ident">exp</label> = <a href="../../../../../../pkg/builtin.html#name-int" class="ident">int</a>(<label for="r19" class="ident">i</label>)
+	}
+
+	<span class="keyword">var</span> <label for="r21" class="ident">num</label> []<a href="../../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> For positive E, shift fraction digits into integer part and also pad</span><span class="comment">		 with zeroes as needed.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> If there are more digits in fraction than the E value, then the</span><span class="comment">		 number is not an integer.</span></div>
+<div class="code"><pre><code>		<span class="keyword">if</span> <label for="r17" class="ident">fracSize</label> &gt; <label for="r18" class="ident">exp</label> {
+			<span class="keyword">return</span> <span class="lit-string">""</span>, <a href="../../../../../../pkg/builtin.html#name-false" class="ident">false</a>
+		}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Make sure resulting digits are within max value limit to avoid</span><span class="comment">		 unnecessarily constructing a large byte slice that may simply fail</span><span class="comment">		 later on.</span></div>
+<div class="code"><pre><code>		<span class="keyword">const</span> <label for="r22" class="ident">maxDigits</label> = <span class="lit-number">20</span> <span class="comment">// Max uint64 value has 20 decimal digits.</span>
+		<span class="keyword">if</span> <label for="r16" class="ident">intpSize</label>+<label for="r18" class="ident">exp</label> &gt; <label for="r22" class="ident">maxDigits</label> {
+			<span class="keyword">return</span> <span class="lit-string">""</span>, <a href="../../../../../../pkg/builtin.html#name-false" class="ident">false</a>
+		}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Set cap to make a copy of integer part when appended.</span></div>
+<div class="code"><pre><code>		<label for="r21" class="ident">num</label> = <label for="r15" class="ident">n</label>.<a href="#line-91" class="ident">intp</a>[:<a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r15" class="ident">n</label>.<a href="#line-91" class="ident">intp</a>):<a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r15" class="ident">n</label>.<a href="#line-91" class="ident">intp</a>)]
+		<label for="r21" class="ident">num</label> = <a href="../../../../../../pkg/builtin.html#name-append" class="ident">append</a>(<label for="r21" class="ident">num</label>, <label for="r15" class="ident">n</label>.<a href="#line-92" class="ident">frac</a>...)
+		<span class="keyword">for</span> <label for="r23" class="ident">i</label> := <span class="lit-number">0</span>; <label for="r23" class="ident">i</label> &lt; <label for="r18" class="ident">exp</label>-<label for="r17" class="ident">fracSize</label>; <label for="r23" class="ident">i</label>++ {
+			<label for="r21" class="ident">num</label> = <a href="../../../../../../pkg/builtin.html#name-append" class="ident">append</a>(<label for="r21" class="ident">num</label>, <span class="lit-number">'0'</span>)
+		}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> For negative E, shift digits in integer part out.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> If there are fractions, then the number is not an integer.</span></div>
+<div class="code"><pre><code>		<span class="keyword">if</span> <label for="r17" class="ident">fracSize</label> &gt; <span class="lit-number">0</span> {
+			<span class="keyword">return</span> <span class="lit-string">""</span>, <a href="../../../../../../pkg/builtin.html#name-false" class="ident">false</a>
+		}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> index is where the decimal point will be after adjusting for negative</span><span class="comment">		 exponent.</span></div>
+<div class="code"><pre><code>		<label for="r24" class="ident">index</label> := <label for="r16" class="ident">intpSize</label> + <label for="r18" class="ident">exp</label>
+		<span class="keyword">if</span> <label for="r24" class="ident">index</label> &lt; <span class="lit-number">0</span> {
+			<span class="keyword">return</span> <span class="lit-string">""</span>, <a href="../../../../../../pkg/builtin.html#name-false" class="ident">false</a>
+		}
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> If any of the digits being shifted to the right of the decimal point</span><span class="comment">		 is non-zero, then the number is not an integer.</span></div>
+<div class="code"><pre><code>		<span class="keyword">for</span> <label for="r25" class="ident">i</label> := <label for="r24" class="ident">index</label>; <label for="r25" class="ident">i</label> &lt; <label for="r16" class="ident">intpSize</label>; <label for="r25" class="ident">i</label>++ {
+			<span class="keyword">if</span> <label for="r21" class="ident">num</label>[<label for="r25" class="ident">i</label>] != <span class="lit-number">'0'</span> {
+				<span class="keyword">return</span> <span class="lit-string">""</span>, <a href="../../../../../../pkg/builtin.html#name-false" class="ident">false</a>
+			}
+		}
+		<label for="r21" class="ident">num</label> = <label for="r21" class="ident">num</label>[:<label for="r24" class="ident">index</label>]
+	}
+
+	<span class="keyword">if</span> <label for="r15" class="ident">n</label>.<a href="#line-90" class="ident">neg</a> {
+		<span class="keyword">return</span> <span class="lit-string">"-"</span> + <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>(<label for="r21" class="ident">num</label>), <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>
+	}
+	<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>(<label for="r21" class="ident">num</label>), <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

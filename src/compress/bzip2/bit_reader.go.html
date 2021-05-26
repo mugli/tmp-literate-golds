@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: bit_reader.go in package compress/bzip2</title>
+<link href="../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	bit_reader.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../pkg/compress/bzip2.html">compress/bzip2</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16],
+input[id=r17]:checked ~pre label[for=r17],
+input[id=r18]:checked ~pre label[for=r18],
+input[id=r19]:checked ~pre label[for=r19]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="r17" type="radio" name="g"/>
+<input id="r18" type="radio" name="g"/>
+<input id="r19" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2011 The Go Authors. All rights reserved.</span><span class="comment"> Use of this source code is governed by a BSD-style</span><span class="comment"> license that can be found in the LICENSE file.</span></div>
+<div class="code"><pre><code>
+<span class="keyword">package</span> bzip2
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"bufio"</span></label>
+	<label for="i1"><span class="lit-string i1">"io"</span></label>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> bitReader wraps an io.Reader and provides the ability to read values,</span><span class="comment"> bit-by-bit, from it. Its Read* methods don't return the usual error</span><span class="comment"> because the error handling was verbose. Instead, any error is kept and can</span><span class="comment"> be checked afterwards.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../pkg/compress/bzip2.html#name-bitReader" class="ident">bitReader</a> <span class="keyword">struct</span> {
+	<a href="../../../use/compress/bzip2..bitReader*75867.r*45434.html" class="ident">r</a>    <a href="../../../pkg/io.html" class="ident i1">io</a>.<a href="../../io/io.go.html#line-257" class="ident">ByteReader</a>
+	<a href="../../../use/compress/bzip2..bitReader*75867.n*1b16b.html" class="ident">n</a>    <a href="../../../pkg/builtin.html#name-uint64" class="ident">uint64</a>
+	<a href="../../../use/compress/bzip2..bitReader*75867.bits*e5e59.html" class="ident">bits</a> <a href="../../../pkg/builtin.html#name-uint" class="ident">uint</a>
+	<a href="../../../use/compress/bzip2..bitReader*75867.err*d9eb2.html" class="ident">err</a>  <a href="../../../pkg/builtin.html#name-error" class="ident">error</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> newBitReader returns a new bitReader reading from r. If r is not</span><span class="comment"> already an io.ByteReader, it will be converted via a bufio.Reader.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r0" class="ident"><a href="../../../pkg/compress/bzip2.html#name-newBitReader" class="ident">newBitReader</a></label>(<label for="r1" class="ident">r</label> <a href="../../../pkg/io.html" class="ident i1">io</a>.<a href="../../io/io.go.html#line-83" class="ident">Reader</a>) <a href="#line-16" class="ident">bitReader</a> {
+	<label for="r2" class="ident">byter</label>, <label for="r3" class="ident">ok</label> := <label for="r1" class="ident">r</label>.(<a href="../../../pkg/io.html" class="ident i1">io</a>.<a href="../../io/io.go.html#line-257" class="ident">ByteReader</a>)
+	<span class="keyword">if</span> !<label for="r3" class="ident">ok</label> {
+		<label for="r2" class="ident">byter</label> = <a href="../../../pkg/bufio.html" class="ident i0">bufio</a>.<a href="../../bufio/bufio.go.html#line-62" class="ident">NewReader</a>(<label for="r1" class="ident">r</label>)
+	}
+	<span class="keyword">return</span> <a href="#line-16" class="ident">bitReader</a>{<a href="#line-17" class="ident">r</a>: <label for="r2" class="ident">byter</label>}
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ReadBits64 reads the given number of bits and returns them in the</span><span class="comment"> least-significant part of a uint64. In the event of an error, it returns 0</span><span class="comment"> and the error can be obtained by calling Err().</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r4" class="ident">br</label> *<a href="#line-16" class="ident">bitReader</a>) <label for="r5" class="ident"><a href="../../../use/compress/bzip2..bitReader*75867.ReadBits64.html" class="ident">ReadBits64</a></label>(<label for="r6" class="ident">bits</label> <a href="../../../pkg/builtin.html#name-uint" class="ident">uint</a>) (<label for="r7" class="ident">n</label> <a href="../../../pkg/builtin.html#name-uint64" class="ident">uint64</a>) {
+	<span class="keyword">for</span> <label for="r6" class="ident">bits</label> &gt; <label for="r4" class="ident">br</label>.<a href="#line-19" class="ident">bits</a> {
+		<label for="r8" class="ident">b</label>, <label for="r9" class="ident">err</label> := <label for="r4" class="ident">br</label>.<a href="#line-17" class="ident">r</a>.<a href="../../io/io.go.html#line-258" class="ident">ReadByte</a>()
+		<span class="keyword">if</span> <label for="r9" class="ident">err</label> == <a href="../../../pkg/io.html" class="ident i1">io</a>.<a href="../../io/io.go.html#line-44" class="ident">EOF</a> {
+			<label for="r9" class="ident">err</label> = <a href="../../../pkg/io.html" class="ident i1">io</a>.<a href="../../io/io.go.html#line-48" class="ident">ErrUnexpectedEOF</a>
+		}
+		<span class="keyword">if</span> <label for="r9" class="ident">err</label> != <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<label for="r4" class="ident">br</label>.<a href="#line-20" class="ident">err</a> = <label for="r9" class="ident">err</label>
+			<span class="keyword">return</span> <span class="lit-number">0</span>
+		}
+		<label for="r4" class="ident">br</label>.<a href="#line-18" class="ident">n</a> &lt;&lt;= <span class="lit-number">8</span>
+		<label for="r4" class="ident">br</label>.<a href="#line-18" class="ident">n</a> |= <a href="../../../pkg/builtin.html#name-uint64" class="ident">uint64</a>(<label for="r8" class="ident">b</label>)
+		<label for="r4" class="ident">br</label>.<a href="#line-19" class="ident">bits</a> += <span class="lit-number">8</span>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> br.n looks like this (assuming that br.bits = 14 and bits = 6):</span><span class="comment">	 Bit: 111111</span><span class="comment">	      5432109876543210</span><span class="comment">	</span><span class="comment">	         (6 bits, the desired output)</span><span class="comment">	        |-----|</span><span class="comment">	        V     V</span><span class="comment">	      0101101101001110</span><span class="comment">	        ^            ^</span><span class="comment">	        |------------|</span><span class="comment">	           br.bits (num valid bits)</span><span class="comment">	</span><span class="comment">	 This the next line right shifts the desired bits into the</span><span class="comment">	 least-significant places and masks off anything above.</span></div>
+<div class="code"><pre><code>	<label for="r7" class="ident">n</label> = (<label for="r4" class="ident">br</label>.<a href="#line-18" class="ident">n</a> &gt;&gt; (<label for="r4" class="ident">br</label>.<a href="#line-19" class="ident">bits</a> - <label for="r6" class="ident">bits</label>)) &amp; ((<span class="lit-number">1</span> &lt;&lt; <label for="r6" class="ident">bits</label>) - <span class="lit-number">1</span>)
+	<label for="r4" class="ident">br</label>.<a href="#line-19" class="ident">bits</a> -= <label for="r6" class="ident">bits</label>
+	<span class="keyword">return</span>
+}
+
+<span class="keyword">func</span> (<label for="r10" class="ident">br</label> *<a href="#line-16" class="ident">bitReader</a>) <label for="r11" class="ident"><a href="../../../use/compress/bzip2..bitReader*75867.ReadBits.html" class="ident">ReadBits</a></label>(<label for="r12" class="ident">bits</label> <a href="../../../pkg/builtin.html#name-uint" class="ident">uint</a>) (<label for="r13" class="ident">n</label> <a href="../../../pkg/builtin.html#name-int" class="ident">int</a>) {
+	<label for="r14" class="ident">n64</label> := <label for="r10" class="ident">br</label>.<a href="#line-36" class="ident">ReadBits64</a>(<label for="r12" class="ident">bits</label>)
+	<span class="keyword">return</span> <a href="../../../pkg/builtin.html#name-int" class="ident">int</a>(<label for="r14" class="ident">n64</label>)
+}
+
+<span class="keyword">func</span> (<label for="r15" class="ident">br</label> *<a href="#line-16" class="ident">bitReader</a>) <label for="r16" class="ident"><a href="../../../use/compress/bzip2..bitReader*75867.ReadBit.html" class="ident">ReadBit</a></label>() <a href="../../../pkg/builtin.html#name-bool" class="ident">bool</a> {
+	<label for="r17" class="ident">n</label> := <label for="r15" class="ident">br</label>.<a href="#line-70" class="ident">ReadBits</a>(<span class="lit-number">1</span>)
+	<span class="keyword">return</span> <label for="r17" class="ident">n</label> != <span class="lit-number">0</span>
+}
+
+<span class="keyword">func</span> (<label for="r18" class="ident">br</label> *<a href="#line-16" class="ident">bitReader</a>) <label for="r19" class="ident"><a href="../../../use/compress/bzip2..bitReader*75867.Err.html" class="ident">Err</a></label>() <a href="../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<span class="keyword">return</span> <label for="r18" class="ident">br</label>.<a href="#line-20" class="ident">err</a>
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

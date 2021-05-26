@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: security.go in package crypto/x509/internal/macos</title>
+<link href="../../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	security.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../../pkg/crypto/x509/internal/macos.html">crypto/x509/internal/macos</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16],
+input[id=r17]:checked ~pre label[for=r17],
+input[id=r18]:checked ~pre label[for=r18],
+input[id=r19]:checked ~pre label[for=r19],
+input[id=r20]:checked ~pre label[for=r20],
+input[id=r21]:checked ~pre label[for=r21],
+input[id=r22]:checked ~pre label[for=r22],
+input[id=r23]:checked ~pre label[for=r23],
+input[id=r24]:checked ~pre label[for=r24]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1,
+input[id=i2]:checked ~pre .i2
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="r17" type="radio" name="g"/>
+<input id="r18" type="radio" name="g"/>
+<input id="r19" type="radio" name="g"/>
+<input id="r20" type="radio" name="g"/>
+<input id="r21" type="radio" name="g"/>
+<input id="r22" type="radio" name="g"/>
+<input id="r23" type="radio" name="g"/>
+<input id="r24" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<input id="i2" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2020 The Go Authors. All rights reserved.</span><span class="comment"> Use of this source code is governed by a BSD-style</span><span class="comment"> license that can be found in the LICENSE file.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> +build darwin,!ios</span></div>
+<div class="code"><pre><code>
+<span class="keyword">package</span> macOS
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"errors"</span></label>
+	<label for="i1"><span class="lit-string i1">"strconv"</span></label>
+	<label for="i2"><span class="lit-string i2">"unsafe"</span></label>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Security.framework linker flags for the external linker. See Issue 42459.</span><span class="comment">go:cgo_ldflag "-framework"</span><span class="comment">go:cgo_ldflag "Security"</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Based on https://opensource.apple.com/source/Security/Security-59306.41.2/base/Security.h</span></div>
+<div class="code"><pre><code>
+<span class="keyword">type</span> <a href="../../../../../pkg/crypto/x509/internal/macos.html#name-SecTrustSettingsResult" class="ident">SecTrustSettingsResult</a> <a href="../../../../../pkg/builtin.html#name-int32" class="ident">int32</a>
+
+<span class="keyword">const</span> (
+	<a href="../../../../../pkg/crypto/x509/internal/macos.html#name-SecTrustSettingsResultInvalid" class="ident">SecTrustSettingsResultInvalid</a> <a href="#line-21" class="ident">SecTrustSettingsResult</a> = <a href="../../../../../pkg/builtin.html#name-iota" class="ident">iota</a>
+	<a href="../../../../../pkg/crypto/x509/internal/macos.html#name-SecTrustSettingsResultTrustRoot" class="ident">SecTrustSettingsResultTrustRoot</a>
+	<a href="../../../../../pkg/crypto/x509/internal/macos.html#name-SecTrustSettingsResultTrustAsRoot" class="ident">SecTrustSettingsResultTrustAsRoot</a>
+	<a href="../../../../../pkg/crypto/x509/internal/macos.html#name-SecTrustSettingsResultDeny" class="ident">SecTrustSettingsResultDeny</a>
+	<a href="../../../../../pkg/crypto/x509/internal/macos.html#name-SecTrustSettingsResultUnspecified" class="ident">SecTrustSettingsResultUnspecified</a>
+)
+
+<span class="keyword">type</span> <a href="../../../../../pkg/crypto/x509/internal/macos.html#name-SecTrustSettingsDomain" class="ident">SecTrustSettingsDomain</a> <a href="../../../../../pkg/builtin.html#name-int32" class="ident">int32</a>
+
+<span class="keyword">const</span> (
+	<a href="../../../../../pkg/crypto/x509/internal/macos.html#name-SecTrustSettingsDomainUser" class="ident">SecTrustSettingsDomainUser</a> <a href="#line-31" class="ident">SecTrustSettingsDomain</a> = <a href="../../../../../pkg/builtin.html#name-iota" class="ident">iota</a>
+	<a href="../../../../../pkg/crypto/x509/internal/macos.html#name-SecTrustSettingsDomainAdmin" class="ident">SecTrustSettingsDomainAdmin</a>
+	<a href="../../../../../pkg/crypto/x509/internal/macos.html#name-SecTrustSettingsDomainSystem" class="ident">SecTrustSettingsDomainSystem</a>
+)
+
+<span class="keyword">type</span> <a href="../../../../../pkg/crypto/x509/internal/macos.html#name-OSStatus" class="ident">OSStatus</a> <span class="keyword">struct</span> {
+	<a href="../../../../../use/crypto/x509/internal/macos..OSStatus.call*7edb3.html" class="ident">call</a>   <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../use/crypto/x509/internal/macos..OSStatus.status*073c1.html" class="ident">status</a> <a href="../../../../../pkg/builtin.html#name-int32" class="ident">int32</a>
+}
+
+<span class="keyword">func</span> (<label for="r0" class="ident">s</label> <a href="#line-39" class="ident">OSStatus</a>) <label for="r1" class="ident"><a href="../../../../../use/crypto/x509/internal/macos..OSStatus.Error.html" class="ident">Error</a></label>() <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a> {
+	<span class="keyword">return</span> <label for="r0" class="ident">s</label>.<a href="#line-40" class="ident">call</a> + <span class="lit-string">" error: "</span> + <a href="../../../../../pkg/strconv.html" class="ident i1">strconv</a>.<a href="../../../../strconv/itoa.go.html#line-34" class="ident">Itoa</a>(<a href="../../../../../pkg/builtin.html#name-int" class="ident">int</a>(<label for="r0" class="ident">s</label>.<a href="#line-41" class="ident">status</a>))
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Dictionary keys are defined as build-time strings with CFSTR, but the Go</span><span class="comment"> linker's internal linking mode can't handle CFSTR relocations. Create our</span><span class="comment"> own dynamic strings instead and just never release them.</span><span class="comment"></span><span class="comment"> Note that this might be the only thing that can break over time if</span><span class="comment"> these values change, as the ABI arguably requires using the strings</span><span class="comment"> pointed to by the symbols, not values that happen to be equal to them.</span></div>
+<div class="code"><pre><code>
+<span class="keyword">var</span> <a href="../../../../../pkg/crypto/x509/internal/macos.html#name-SecTrustSettingsResultKey" class="ident">SecTrustSettingsResultKey</a> = <a href="corefoundation.go.html#line-46" class="ident">StringToCFString</a>(<span class="lit-string">"kSecTrustSettingsResult"</span>)
+<span class="keyword">var</span> <a href="../../../../../pkg/crypto/x509/internal/macos.html#name-SecTrustSettingsPolicy" class="ident">SecTrustSettingsPolicy</a> = <a href="corefoundation.go.html#line-46" class="ident">StringToCFString</a>(<span class="lit-string">"kSecTrustSettingsPolicy"</span>)
+<span class="keyword">var</span> <a href="../../../../../pkg/crypto/x509/internal/macos.html#name-SecTrustSettingsPolicyString" class="ident">SecTrustSettingsPolicyString</a> = <a href="corefoundation.go.html#line-46" class="ident">StringToCFString</a>(<span class="lit-string">"kSecTrustSettingsPolicyString"</span>)
+<span class="keyword">var</span> <a href="../../../../../pkg/crypto/x509/internal/macos.html#name-SecPolicyOid" class="ident">SecPolicyOid</a> = <a href="corefoundation.go.html#line-46" class="ident">StringToCFString</a>(<span class="lit-string">"SecPolicyOid"</span>)
+<span class="keyword">var</span> <a href="../../../../../pkg/crypto/x509/internal/macos.html#name-SecPolicyAppleSSL" class="ident">SecPolicyAppleSSL</a> = <a href="corefoundation.go.html#line-46" class="ident">StringToCFString</a>(<span class="lit-string">"1.2.840.113635.100.1.3"</span>) <span class="comment">// defined by POLICYMACRO</span>
+
+<span class="keyword">var</span> <a href="../../../../../pkg/crypto/x509/internal/macos.html#name-ErrNoTrustSettings" class="ident">ErrNoTrustSettings</a> = <a href="../../../../../pkg/errors.html" class="ident i0">errors</a>.<a href="../../../../errors/errors.go.html#line-58" class="ident">New</a>(<span class="lit-string">"no trust settings found"</span>)
+
+<span class="keyword">const</span> <a href="../../../../../pkg/crypto/x509/internal/macos.html#name-errSecNoTrustSettings" class="ident">errSecNoTrustSettings</a> = -<span class="lit-number">25263</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">go:linkname x509_SecTrustSettingsCopyCertificates x509_SecTrustSettingsCopyCertificates</span><span class="comment">go:cgo_import_dynamic x509_SecTrustSettingsCopyCertificates SecTrustSettingsCopyCertificates "/System/Library/Frameworks/Security.framework/Versions/A/Security"</span></div>
+<div class="code"><pre><code>
+<span class="keyword">func</span> <label for="r2" class="ident"><a href="../../../../../pkg/crypto/x509/internal/macos.html#name-SecTrustSettingsCopyCertificates" class="ident">SecTrustSettingsCopyCertificates</a></label>(<label for="r3" class="ident">domain</label> <a href="#line-31" class="ident">SecTrustSettingsDomain</a>) (<label for="r4" class="ident">certArray</label> <a href="corefoundation.go.html#line-25" class="ident">CFRef</a>, <label for="r5" class="ident">err</label> <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<label for="r6" class="ident">ret</label> := <a href="corefoundation.go.html#line-138" class="ident">syscall</a>(<a href="corefoundation.go.html#line-143" class="ident">funcPC</a>(<a href="#line-79" class="ident">x509_SecTrustSettingsCopyCertificates_trampoline</a>), <a href="../../../../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<label for="r3" class="ident">domain</label>),
+		<a href="../../../../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<a href="../../../../../pkg/unsafe.html" class="ident i2">unsafe</a>.<a href="../../../../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(&amp;<label for="r4" class="ident">certArray</label>)), <span class="lit-number">0</span>, <span class="lit-number">0</span>, <span class="lit-number">0</span>, <span class="lit-number">0</span>)
+	<span class="keyword">if</span> <a href="../../../../../pkg/builtin.html#name-int32" class="ident">int32</a>(<label for="r6" class="ident">ret</label>) == <a href="#line-64" class="ident">errSecNoTrustSettings</a> {
+		<span class="keyword">return</span> <span class="lit-number">0</span>, <a href="#line-62" class="ident">ErrNoTrustSettings</a>
+	} <span class="keyword">else</span> <span class="keyword">if</span> <label for="r6" class="ident">ret</label> != <span class="lit-number">0</span> {
+		<span class="keyword">return</span> <span class="lit-number">0</span>, <a href="#line-39" class="ident">OSStatus</a>{<span class="lit-string">"SecTrustSettingsCopyCertificates"</span>, <a href="../../../../../pkg/builtin.html#name-int32" class="ident">int32</a>(<label for="r6" class="ident">ret</label>)}
+	}
+	<span class="keyword">return</span> <label for="r4" class="ident">certArray</label>, <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+}
+<span class="keyword">func</span> <label for="r7" class="ident"><a href="../../../../../pkg/crypto/x509/internal/macos.html#name-x509_SecTrustSettingsCopyCertificates_trampoline" class="ident">x509_SecTrustSettingsCopyCertificates_trampoline</a></label>()
+
+<span class="keyword">const</span> <a href="../../../../../pkg/crypto/x509/internal/macos.html#name-kSecFormatX509Cert" class="ident">kSecFormatX509Cert</a> <a href="../../../../../pkg/builtin.html#name-int32" class="ident">int32</a> = <span class="lit-number">9</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">go:linkname x509_SecItemExport x509_SecItemExport</span><span class="comment">go:cgo_import_dynamic x509_SecItemExport SecItemExport "/System/Library/Frameworks/Security.framework/Versions/A/Security"</span></div>
+<div class="code"><pre><code>
+<span class="keyword">func</span> <label for="r8" class="ident"><a href="../../../../../pkg/crypto/x509/internal/macos.html#name-SecItemExport" class="ident">SecItemExport</a></label>(<label for="r9" class="ident">cert</label> <a href="corefoundation.go.html#line-25" class="ident">CFRef</a>) (<label for="r10" class="ident">data</label> <a href="corefoundation.go.html#line-25" class="ident">CFRef</a>, <label for="r11" class="ident">err</label> <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<label for="r12" class="ident">ret</label> := <a href="corefoundation.go.html#line-138" class="ident">syscall</a>(<a href="corefoundation.go.html#line-143" class="ident">funcPC</a>(<a href="#line-94" class="ident">x509_SecItemExport_trampoline</a>), <a href="../../../../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<label for="r9" class="ident">cert</label>), <a href="../../../../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<a href="#line-81" class="ident">kSecFormatX509Cert</a>),
+		<span class="lit-number">0</span> <span class="comment">/* flags */</span>, <span class="lit-number">0</span> <span class="comment">/* keyParams */</span>, <a href="../../../../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<a href="../../../../../pkg/unsafe.html" class="ident i2">unsafe</a>.<a href="../../../../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(&amp;<label for="r10" class="ident">data</label>)), <span class="lit-number">0</span>)
+	<span class="keyword">if</span> <label for="r12" class="ident">ret</label> != <span class="lit-number">0</span> {
+		<span class="keyword">return</span> <span class="lit-number">0</span>, <a href="#line-39" class="ident">OSStatus</a>{<span class="lit-string">"SecItemExport"</span>, <a href="../../../../../pkg/builtin.html#name-int32" class="ident">int32</a>(<label for="r12" class="ident">ret</label>)}
+	}
+	<span class="keyword">return</span> <label for="r10" class="ident">data</label>, <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+}
+<span class="keyword">func</span> <label for="r13" class="ident"><a href="../../../../../pkg/crypto/x509/internal/macos.html#name-x509_SecItemExport_trampoline" class="ident">x509_SecItemExport_trampoline</a></label>()
+
+<span class="keyword">const</span> <a href="../../../../../pkg/crypto/x509/internal/macos.html#name-errSecItemNotFound" class="ident">errSecItemNotFound</a> = -<span class="lit-number">25300</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">go:linkname x509_SecTrustSettingsCopyTrustSettings x509_SecTrustSettingsCopyTrustSettings</span><span class="comment">go:cgo_import_dynamic x509_SecTrustSettingsCopyTrustSettings SecTrustSettingsCopyTrustSettings "/System/Library/Frameworks/Security.framework/Versions/A/Security"</span></div>
+<div class="code"><pre><code>
+<span class="keyword">func</span> <label for="r14" class="ident"><a href="../../../../../pkg/crypto/x509/internal/macos.html#name-SecTrustSettingsCopyTrustSettings" class="ident">SecTrustSettingsCopyTrustSettings</a></label>(<label for="r15" class="ident">cert</label> <a href="corefoundation.go.html#line-25" class="ident">CFRef</a>, <label for="r16" class="ident">domain</label> <a href="#line-31" class="ident">SecTrustSettingsDomain</a>) (<label for="r17" class="ident">trustSettings</label> <a href="corefoundation.go.html#line-25" class="ident">CFRef</a>, <label for="r18" class="ident">err</label> <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<label for="r19" class="ident">ret</label> := <a href="corefoundation.go.html#line-138" class="ident">syscall</a>(<a href="corefoundation.go.html#line-143" class="ident">funcPC</a>(<a href="#line-111" class="ident">x509_SecTrustSettingsCopyTrustSettings_trampoline</a>), <a href="../../../../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<label for="r15" class="ident">cert</label>), <a href="../../../../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<label for="r16" class="ident">domain</label>),
+		<a href="../../../../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<a href="../../../../../pkg/unsafe.html" class="ident i2">unsafe</a>.<a href="../../../../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(&amp;<label for="r17" class="ident">trustSettings</label>)), <span class="lit-number">0</span>, <span class="lit-number">0</span>, <span class="lit-number">0</span>)
+	<span class="keyword">if</span> <a href="../../../../../pkg/builtin.html#name-int32" class="ident">int32</a>(<label for="r19" class="ident">ret</label>) == <a href="#line-96" class="ident">errSecItemNotFound</a> {
+		<span class="keyword">return</span> <span class="lit-number">0</span>, <a href="#line-62" class="ident">ErrNoTrustSettings</a>
+	} <span class="keyword">else</span> <span class="keyword">if</span> <label for="r19" class="ident">ret</label> != <span class="lit-number">0</span> {
+		<span class="keyword">return</span> <span class="lit-number">0</span>, <a href="#line-39" class="ident">OSStatus</a>{<span class="lit-string">"SecTrustSettingsCopyTrustSettings"</span>, <a href="../../../../../pkg/builtin.html#name-int32" class="ident">int32</a>(<label for="r19" class="ident">ret</label>)}
+	}
+	<span class="keyword">return</span> <label for="r17" class="ident">trustSettings</label>, <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+}
+<span class="keyword">func</span> <label for="r20" class="ident"><a href="../../../../../pkg/crypto/x509/internal/macos.html#name-x509_SecTrustSettingsCopyTrustSettings_trampoline" class="ident">x509_SecTrustSettingsCopyTrustSettings_trampoline</a></label>()
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">go:linkname x509_SecPolicyCopyProperties x509_SecPolicyCopyProperties</span><span class="comment">go:cgo_import_dynamic x509_SecPolicyCopyProperties SecPolicyCopyProperties "/System/Library/Frameworks/Security.framework/Versions/A/Security"</span></div>
+<div class="code"><pre><code>
+<span class="keyword">func</span> <label for="r21" class="ident"><a href="../../../../../pkg/crypto/x509/internal/macos.html#name-SecPolicyCopyProperties" class="ident">SecPolicyCopyProperties</a></label>(<label for="r22" class="ident">policy</label> <a href="corefoundation.go.html#line-25" class="ident">CFRef</a>) <a href="corefoundation.go.html#line-25" class="ident">CFRef</a> {
+	<label for="r23" class="ident">ret</label> := <a href="corefoundation.go.html#line-138" class="ident">syscall</a>(<a href="corefoundation.go.html#line-143" class="ident">funcPC</a>(<a href="#line-120" class="ident">x509_SecPolicyCopyProperties_trampoline</a>), <a href="../../../../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<label for="r22" class="ident">policy</label>), <span class="lit-number">0</span>, <span class="lit-number">0</span>, <span class="lit-number">0</span>, <span class="lit-number">0</span>, <span class="lit-number">0</span>)
+	<span class="keyword">return</span> <a href="corefoundation.go.html#line-25" class="ident">CFRef</a>(<label for="r23" class="ident">ret</label>)
+}
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: roundrobin.go in package google.golang.org/grpc/balancer/roundrobin</title>
+<link href="../../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	roundrobin.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../../pkg/google.golang.org/grpc/balancer/roundrobin.html">google.golang.org/grpc/balancer/roundrobin</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1,
+input[id=i2]:checked ~pre .i2,
+input[id=i3]:checked ~pre .i3,
+input[id=i4]:checked ~pre .i4
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<input id="i2" type="radio" name="i"/>
+<input id="i3" type="radio" name="i"/>
+<input id="i4" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"></span><span class="comment"> *</span><span class="comment"> * Copyright 2017 gRPC authors.</span><span class="comment"> *</span><span class="comment"> * Licensed under the Apache License, Version 2.0 (the "License");</span><span class="comment"> * you may not use this file except in compliance with the License.</span><span class="comment"> * You may obtain a copy of the License at</span><span class="comment"> *</span><span class="comment"> *     http:www.apache.org/licenses/LICENSE-2.0</span><span class="comment"> *</span><span class="comment"> * Unless required by applicable law or agreed to in writing, software</span><span class="comment"> * distributed under the License is distributed on an "AS IS" BASIS,</span><span class="comment"> * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span><span class="comment"> * See the License for the specific language governing permissions and</span><span class="comment"> * limitations under the License.</span><span class="comment"> *</span><span class="comment"> </span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Package roundrobin defines a roundrobin balancer. Roundrobin balancer is</span><span class="comment"> installed as one of the default balancers in gRPC, users don't need to</span><span class="comment"> explicitly install this balancer.</span></div>
+<div class="code"><pre><code><span class="keyword">package</span> roundrobin
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"sync"</span></label>
+
+	<label for="i1"><span class="lit-string i1">"google.golang.org/grpc/balancer"</span></label>
+	<label for="i2"><span class="lit-string i2">"google.golang.org/grpc/balancer/base"</span></label>
+	<label for="i3"><span class="lit-string i3">"google.golang.org/grpc/grpclog"</span></label>
+	<label for="i4"><span class="lit-string i4">"google.golang.org/grpc/internal/grpcrand"</span></label>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Name is the name of round_robin balancer.</span></div>
+<div class="code"><pre><code><span class="keyword">const</span> <a href="../../../../../pkg/google.golang.org/grpc/balancer/roundrobin.html#name-Name" class="ident">Name</a> = <span class="lit-string">"round_robin"</span>
+
+<span class="keyword">var</span> <a href="../../../../../pkg/google.golang.org/grpc/balancer/roundrobin.html#name-logger" class="ident">logger</a> = <a href="../../../../../pkg/google.golang.org/grpc/grpclog.html" class="ident i3">grpclog</a>.<a href="../../grpclog/component.go.html#line-110" class="ident">Component</a>(<span class="lit-string">"roundrobin"</span>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> newBuilder creates a new roundrobin balancer builder.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r0" class="ident"><a href="../../../../../pkg/google.golang.org/grpc/balancer/roundrobin.html#name-newBuilder" class="ident">newBuilder</a></label>() <a href="../../../../../pkg/google.golang.org/grpc/balancer.html" class="ident i1">balancer</a>.<a href="../balancer.go.html#line-184" class="ident">Builder</a> {
+	<span class="keyword">return</span> <a href="../../../../../pkg/google.golang.org/grpc/balancer/base.html" class="ident i2">base</a>.<a href="../base/base.go.html#line-65" class="ident">NewBalancerBuilder</a>(<a href="#line-34" class="ident">Name</a>, &amp;<a href="#line-47" class="ident">rrPickerBuilder</a>{}, <a href="../../../../../pkg/google.golang.org/grpc/balancer/base.html" class="ident i2">base</a>.<a href="../base/base.go.html#line-59" class="ident">Config</a>{<a href="../base/base.go.html#line-61" class="ident">HealthCheck</a>: <a href="../../../../../pkg/builtin.html#name-true" class="ident">true</a>})
+}
+
+<span class="keyword">func</span> <label for="r1" class="ident"><a href="../../../../../pkg/google.golang.org/grpc/balancer/roundrobin.html#name-init" class="ident">init</a></label>() {
+	<a href="../../../../../pkg/google.golang.org/grpc/balancer.html" class="ident i1">balancer</a>.<a href="../balancer.go.html#line-52" class="ident">Register</a>(<a href="#line-39" class="ident">newBuilder</a>())
+}
+
+<span class="keyword">type</span> <a href="../../../../../pkg/google.golang.org/grpc/balancer/roundrobin.html#name-rrPickerBuilder" class="ident">rrPickerBuilder</a> <span class="keyword">struct</span>{}
+
+<span class="keyword">func</span> (*<a href="#line-47" class="ident">rrPickerBuilder</a>) <label for="r2" class="ident"><a href="../../../../../use/google.golang.org/grpc/balancer/roundrobin..rrPickerBuilder*0517f.Build.html" class="ident">Build</a></label>(<label for="r3" class="ident">info</label> <a href="../../../../../pkg/google.golang.org/grpc/balancer/base.html" class="ident i2">base</a>.<a href="../base/base.go.html#line-46" class="ident">PickerBuildInfo</a>) <a href="../../../../../pkg/google.golang.org/grpc/balancer.html" class="ident i1">balancer</a>.<a href="../balancer.go.html#line-267" class="ident">Picker</a> {
+	<a href="#line-36" class="ident">logger</a>.<a href="../../grpclog/loggerv2.go.html#line-38" class="ident">Infof</a>(<span class="lit-string">"roundrobinPicker: newPicker called with info: %v"</span>, <label for="r3" class="ident">info</label>)
+	<span class="keyword">if</span> <a href="../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r3" class="ident">info</label>.<a href="../base/base.go.html#line-49" class="ident">ReadySCs</a>) == <span class="lit-number">0</span> {
+		<span class="keyword">return</span> <a href="../../../../../pkg/google.golang.org/grpc/balancer/base.html" class="ident i2">base</a>.<a href="../base/balancer.go.html#line-222" class="ident">NewErrPicker</a>(<a href="../../../../../pkg/google.golang.org/grpc/balancer.html" class="ident i1">balancer</a>.<a href="../balancer.go.html#line-230" class="ident">ErrNoSubConnAvailable</a>)
+	}
+	<span class="keyword">var</span> <label for="r4" class="ident">scs</label> []<a href="../../../../../pkg/google.golang.org/grpc/balancer.html" class="ident i1">balancer</a>.<a href="../balancer.go.html#line-96" class="ident">SubConn</a>
+	<span class="keyword">for</span> <label for="r5" class="ident">sc</label> := <span class="keyword">range</span> <label for="r3" class="ident">info</label>.<a href="../base/base.go.html#line-49" class="ident">ReadySCs</a> {
+		<label for="r4" class="ident">scs</label> = <a href="../../../../../pkg/builtin.html#name-append" class="ident">append</a>(<label for="r4" class="ident">scs</label>, <label for="r5" class="ident">sc</label>)
+	}
+	<span class="keyword">return</span> &amp;<a href="#line-67" class="ident">rrPicker</a>{
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Start at a random index, as the same RR balancer rebuilds a new</span><span class="comment">		 picker when SubConn states change, and we don't want to apply excess</span><span class="comment">		 load to the first server in the list.</span></div>
+<div class="code"><pre><code>		<a href="#line-74" class="ident">next</a>: <a href="../../../../../pkg/google.golang.org/grpc/internal/grpcrand.html" class="ident i4">grpcrand</a>.<a href="../../internal/grpcrand/grpcrand.go.html#line-43" class="ident">Intn</a>(<a href="../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r4" class="ident">scs</label>)),
+	}
+}
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> subConns is the snapshot of the roundrobin balancer when this picker was</span><span class="comment">	 created. The slice is immutable. Each Get() will do a round robin</span><span class="comment">	 selection from it and return the selected SubConn.</span></div>
+<div class="code"><pre><code>	<a href="../../../../../use/google.golang.org/grpc/balancer/roundrobin..rrPicker*5c566.subConns*6d4d8.html" class="ident">subConns</a> []<a href="../../../../../pkg/google.golang.org/grpc/balancer.html" class="ident i1">balancer</a>.<a href="../balancer.go.html#line-96" class="ident">SubConn</a>
+
+	<a href="../../../../../use/google.golang.org/grpc/balancer/roundrobin..rrPicker*5c566.mu*19503.html" class="ident">mu</a>   <a href="../../../../../pkg/sync.html" class="ident i0">sync</a>.<a href="../../../../sync/mutex.go.html#line-25" class="ident">Mutex</a>
+	<a href="../../../../../use/google.golang.org/grpc/balancer/roundrobin..rrPicker*5c566.next*c6c1c.html" class="ident">next</a> <a href="../../../../../pkg/builtin.html#name-int" class="ident">int</a>
+}
+
+<span class="keyword">func</span> (<label for="r6" class="ident">p</label> *<a href="#line-67" class="ident">rrPicker</a>) <label for="r7" class="ident"><a href="../../../../../use/google.golang.org/grpc/balancer/roundrobin..rrPicker*5c566.Pick.html" class="ident">Pick</a></label>(<a href="../../../../../pkg/google.golang.org/grpc/balancer.html" class="ident i1">balancer</a>.<a href="../balancer.go.html#line-201" class="ident">PickInfo</a>) (<a href="../../../../../pkg/google.golang.org/grpc/balancer.html" class="ident i1">balancer</a>.<a href="../balancer.go.html#line-241" class="ident">PickResult</a>, <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<label for="r6" class="ident">p</label>.<a href="#line-73" class="ident">mu</a>.<a href="../../../../sync/mutex.go.html#line-72" class="ident">Lock</a>()
+	<label for="r8" class="ident">sc</label> := <label for="r6" class="ident">p</label>.<a href="#line-71" class="ident">subConns</a>[<label for="r6" class="ident">p</label>.<a href="#line-74" class="ident">next</a>]
+	<label for="r6" class="ident">p</label>.<a href="#line-74" class="ident">next</a> = (<label for="r6" class="ident">p</label>.<a href="#line-74" class="ident">next</a> + <span class="lit-number">1</span>) % <a href="../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r6" class="ident">p</label>.<a href="#line-71" class="ident">subConns</a>)
+	<label for="r6" class="ident">p</label>.<a href="#line-73" class="ident">mu</a>.<a href="../../../../sync/mutex.go.html#line-179" class="ident">Unlock</a>()
+	<span class="keyword">return</span> <a href="../../../../../pkg/google.golang.org/grpc/balancer.html" class="ident i1">balancer</a>.<a href="../balancer.go.html#line-241" class="ident">PickResult</a>{<a href="../balancer.go.html#line-246" class="ident">SubConn</a>: <label for="r8" class="ident">sc</label>}, <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

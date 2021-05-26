@@ -1,0 +1,1280 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: mpagealloc.go in package runtime</title>
+<link href="../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	mpagealloc.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../pkg/runtime.html">runtime</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16],
+input[id=r17]:checked ~pre label[for=r17],
+input[id=r18]:checked ~pre label[for=r18],
+input[id=r19]:checked ~pre label[for=r19],
+input[id=r20]:checked ~pre label[for=r20],
+input[id=r21]:checked ~pre label[for=r21],
+input[id=r22]:checked ~pre label[for=r22],
+input[id=r23]:checked ~pre label[for=r23],
+input[id=r24]:checked ~pre label[for=r24],
+input[id=r25]:checked ~pre label[for=r25],
+input[id=r26]:checked ~pre label[for=r26],
+input[id=r27]:checked ~pre label[for=r27],
+input[id=r28]:checked ~pre label[for=r28],
+input[id=r29]:checked ~pre label[for=r29],
+input[id=r30]:checked ~pre label[for=r30],
+input[id=r31]:checked ~pre label[for=r31],
+input[id=r32]:checked ~pre label[for=r32],
+input[id=r33]:checked ~pre label[for=r33],
+input[id=r34]:checked ~pre label[for=r34],
+input[id=r35]:checked ~pre label[for=r35],
+input[id=r36]:checked ~pre label[for=r36],
+input[id=r37]:checked ~pre label[for=r37],
+input[id=r38]:checked ~pre label[for=r38],
+input[id=r39]:checked ~pre label[for=r39],
+input[id=r40]:checked ~pre label[for=r40],
+input[id=r41]:checked ~pre label[for=r41],
+input[id=r42]:checked ~pre label[for=r42],
+input[id=r43]:checked ~pre label[for=r43],
+input[id=r44]:checked ~pre label[for=r44],
+input[id=r45]:checked ~pre label[for=r45],
+input[id=r46]:checked ~pre label[for=r46],
+input[id=r47]:checked ~pre label[for=r47],
+input[id=r48]:checked ~pre label[for=r48],
+input[id=r49]:checked ~pre label[for=r49],
+input[id=r50]:checked ~pre label[for=r50],
+input[id=r51]:checked ~pre label[for=r51],
+input[id=r52]:checked ~pre label[for=r52],
+input[id=r53]:checked ~pre label[for=r53],
+input[id=r54]:checked ~pre label[for=r54],
+input[id=r55]:checked ~pre label[for=r55],
+input[id=r56]:checked ~pre label[for=r56],
+input[id=r57]:checked ~pre label[for=r57],
+input[id=r58]:checked ~pre label[for=r58],
+input[id=r59]:checked ~pre label[for=r59],
+input[id=r60]:checked ~pre label[for=r60],
+input[id=r61]:checked ~pre label[for=r61],
+input[id=r62]:checked ~pre label[for=r62],
+input[id=r63]:checked ~pre label[for=r63],
+input[id=r64]:checked ~pre label[for=r64],
+input[id=r65]:checked ~pre label[for=r65],
+input[id=r66]:checked ~pre label[for=r66],
+input[id=r67]:checked ~pre label[for=r67],
+input[id=r68]:checked ~pre label[for=r68],
+input[id=r69]:checked ~pre label[for=r69],
+input[id=r70]:checked ~pre label[for=r70],
+input[id=r71]:checked ~pre label[for=r71],
+input[id=r72]:checked ~pre label[for=r72],
+input[id=r73]:checked ~pre label[for=r73],
+input[id=r74]:checked ~pre label[for=r74],
+input[id=r75]:checked ~pre label[for=r75],
+input[id=r76]:checked ~pre label[for=r76],
+input[id=r77]:checked ~pre label[for=r77],
+input[id=r78]:checked ~pre label[for=r78],
+input[id=r79]:checked ~pre label[for=r79],
+input[id=r80]:checked ~pre label[for=r80],
+input[id=r81]:checked ~pre label[for=r81],
+input[id=r82]:checked ~pre label[for=r82],
+input[id=r83]:checked ~pre label[for=r83],
+input[id=r84]:checked ~pre label[for=r84],
+input[id=r85]:checked ~pre label[for=r85],
+input[id=r86]:checked ~pre label[for=r86],
+input[id=r87]:checked ~pre label[for=r87],
+input[id=r88]:checked ~pre label[for=r88],
+input[id=r89]:checked ~pre label[for=r89],
+input[id=r90]:checked ~pre label[for=r90],
+input[id=r91]:checked ~pre label[for=r91],
+input[id=r92]:checked ~pre label[for=r92],
+input[id=r93]:checked ~pre label[for=r93],
+input[id=r94]:checked ~pre label[for=r94],
+input[id=r95]:checked ~pre label[for=r95],
+input[id=r96]:checked ~pre label[for=r96],
+input[id=r97]:checked ~pre label[for=r97],
+input[id=r98]:checked ~pre label[for=r98],
+input[id=r99]:checked ~pre label[for=r99],
+input[id=r100]:checked ~pre label[for=r100],
+input[id=r101]:checked ~pre label[for=r101],
+input[id=r102]:checked ~pre label[for=r102],
+input[id=r103]:checked ~pre label[for=r103],
+input[id=r104]:checked ~pre label[for=r104],
+input[id=r105]:checked ~pre label[for=r105],
+input[id=r106]:checked ~pre label[for=r106],
+input[id=r107]:checked ~pre label[for=r107],
+input[id=r108]:checked ~pre label[for=r108],
+input[id=r109]:checked ~pre label[for=r109],
+input[id=r110]:checked ~pre label[for=r110],
+input[id=r111]:checked ~pre label[for=r111],
+input[id=r112]:checked ~pre label[for=r112],
+input[id=r113]:checked ~pre label[for=r113],
+input[id=r114]:checked ~pre label[for=r114],
+input[id=r115]:checked ~pre label[for=r115],
+input[id=r116]:checked ~pre label[for=r116],
+input[id=r117]:checked ~pre label[for=r117],
+input[id=r118]:checked ~pre label[for=r118],
+input[id=r119]:checked ~pre label[for=r119],
+input[id=r120]:checked ~pre label[for=r120],
+input[id=r121]:checked ~pre label[for=r121],
+input[id=r122]:checked ~pre label[for=r122],
+input[id=r123]:checked ~pre label[for=r123],
+input[id=r124]:checked ~pre label[for=r124],
+input[id=r125]:checked ~pre label[for=r125],
+input[id=r126]:checked ~pre label[for=r126],
+input[id=r127]:checked ~pre label[for=r127],
+input[id=r128]:checked ~pre label[for=r128],
+input[id=r129]:checked ~pre label[for=r129],
+input[id=r130]:checked ~pre label[for=r130],
+input[id=r131]:checked ~pre label[for=r131],
+input[id=r132]:checked ~pre label[for=r132],
+input[id=r133]:checked ~pre label[for=r133],
+input[id=r134]:checked ~pre label[for=r134],
+input[id=r135]:checked ~pre label[for=r135],
+input[id=r136]:checked ~pre label[for=r136],
+input[id=r137]:checked ~pre label[for=r137],
+input[id=r138]:checked ~pre label[for=r138],
+input[id=r139]:checked ~pre label[for=r139],
+input[id=r140]:checked ~pre label[for=r140],
+input[id=r141]:checked ~pre label[for=r141],
+input[id=r142]:checked ~pre label[for=r142],
+input[id=r143]:checked ~pre label[for=r143],
+input[id=r144]:checked ~pre label[for=r144],
+input[id=r145]:checked ~pre label[for=r145],
+input[id=r146]:checked ~pre label[for=r146],
+input[id=r147]:checked ~pre label[for=r147],
+input[id=r148]:checked ~pre label[for=r148],
+input[id=r149]:checked ~pre label[for=r149],
+input[id=r150]:checked ~pre label[for=r150],
+input[id=r151]:checked ~pre label[for=r151],
+input[id=r152]:checked ~pre label[for=r152],
+input[id=r153]:checked ~pre label[for=r153],
+input[id=r154]:checked ~pre label[for=r154],
+input[id=r155]:checked ~pre label[for=r155],
+input[id=r156]:checked ~pre label[for=r156],
+input[id=r157]:checked ~pre label[for=r157],
+input[id=r158]:checked ~pre label[for=r158],
+input[id=r159]:checked ~pre label[for=r159],
+input[id=r160]:checked ~pre label[for=r160],
+input[id=r161]:checked ~pre label[for=r161],
+input[id=r162]:checked ~pre label[for=r162],
+input[id=r163]:checked ~pre label[for=r163],
+input[id=r164]:checked ~pre label[for=r164],
+input[id=r165]:checked ~pre label[for=r165],
+input[id=r166]:checked ~pre label[for=r166],
+input[id=r167]:checked ~pre label[for=r167],
+input[id=r168]:checked ~pre label[for=r168],
+input[id=r169]:checked ~pre label[for=r169],
+input[id=r170]:checked ~pre label[for=r170],
+input[id=r171]:checked ~pre label[for=r171],
+input[id=r172]:checked ~pre label[for=r172],
+input[id=r173]:checked ~pre label[for=r173],
+input[id=r174]:checked ~pre label[for=r174]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="r17" type="radio" name="g"/>
+<input id="r18" type="radio" name="g"/>
+<input id="r19" type="radio" name="g"/>
+<input id="r20" type="radio" name="g"/>
+<input id="r21" type="radio" name="g"/>
+<input id="r22" type="radio" name="g"/>
+<input id="r23" type="radio" name="g"/>
+<input id="r24" type="radio" name="g"/>
+<input id="r25" type="radio" name="g"/>
+<input id="r26" type="radio" name="g"/>
+<input id="r27" type="radio" name="g"/>
+<input id="r28" type="radio" name="g"/>
+<input id="r29" type="radio" name="g"/>
+<input id="r30" type="radio" name="g"/>
+<input id="r31" type="radio" name="g"/>
+<input id="r32" type="radio" name="g"/>
+<input id="r33" type="radio" name="g"/>
+<input id="r34" type="radio" name="g"/>
+<input id="r35" type="radio" name="g"/>
+<input id="r36" type="radio" name="g"/>
+<input id="r37" type="radio" name="g"/>
+<input id="r38" type="radio" name="g"/>
+<input id="r39" type="radio" name="g"/>
+<input id="r40" type="radio" name="g"/>
+<input id="r41" type="radio" name="g"/>
+<input id="r42" type="radio" name="g"/>
+<input id="r43" type="radio" name="g"/>
+<input id="r44" type="radio" name="g"/>
+<input id="r45" type="radio" name="g"/>
+<input id="r46" type="radio" name="g"/>
+<input id="r47" type="radio" name="g"/>
+<input id="r48" type="radio" name="g"/>
+<input id="r49" type="radio" name="g"/>
+<input id="r50" type="radio" name="g"/>
+<input id="r51" type="radio" name="g"/>
+<input id="r52" type="radio" name="g"/>
+<input id="r53" type="radio" name="g"/>
+<input id="r54" type="radio" name="g"/>
+<input id="r55" type="radio" name="g"/>
+<input id="r56" type="radio" name="g"/>
+<input id="r57" type="radio" name="g"/>
+<input id="r58" type="radio" name="g"/>
+<input id="r59" type="radio" name="g"/>
+<input id="r60" type="radio" name="g"/>
+<input id="r61" type="radio" name="g"/>
+<input id="r62" type="radio" name="g"/>
+<input id="r63" type="radio" name="g"/>
+<input id="r64" type="radio" name="g"/>
+<input id="r65" type="radio" name="g"/>
+<input id="r66" type="radio" name="g"/>
+<input id="r67" type="radio" name="g"/>
+<input id="r68" type="radio" name="g"/>
+<input id="r69" type="radio" name="g"/>
+<input id="r70" type="radio" name="g"/>
+<input id="r71" type="radio" name="g"/>
+<input id="r72" type="radio" name="g"/>
+<input id="r73" type="radio" name="g"/>
+<input id="r74" type="radio" name="g"/>
+<input id="r75" type="radio" name="g"/>
+<input id="r76" type="radio" name="g"/>
+<input id="r77" type="radio" name="g"/>
+<input id="r78" type="radio" name="g"/>
+<input id="r79" type="radio" name="g"/>
+<input id="r80" type="radio" name="g"/>
+<input id="r81" type="radio" name="g"/>
+<input id="r82" type="radio" name="g"/>
+<input id="r83" type="radio" name="g"/>
+<input id="r84" type="radio" name="g"/>
+<input id="r85" type="radio" name="g"/>
+<input id="r86" type="radio" name="g"/>
+<input id="r87" type="radio" name="g"/>
+<input id="r88" type="radio" name="g"/>
+<input id="r89" type="radio" name="g"/>
+<input id="r90" type="radio" name="g"/>
+<input id="r91" type="radio" name="g"/>
+<input id="r92" type="radio" name="g"/>
+<input id="r93" type="radio" name="g"/>
+<input id="r94" type="radio" name="g"/>
+<input id="r95" type="radio" name="g"/>
+<input id="r96" type="radio" name="g"/>
+<input id="r97" type="radio" name="g"/>
+<input id="r98" type="radio" name="g"/>
+<input id="r99" type="radio" name="g"/>
+<input id="r100" type="radio" name="g"/>
+<input id="r101" type="radio" name="g"/>
+<input id="r102" type="radio" name="g"/>
+<input id="r103" type="radio" name="g"/>
+<input id="r104" type="radio" name="g"/>
+<input id="r105" type="radio" name="g"/>
+<input id="r106" type="radio" name="g"/>
+<input id="r107" type="radio" name="g"/>
+<input id="r108" type="radio" name="g"/>
+<input id="r109" type="radio" name="g"/>
+<input id="r110" type="radio" name="g"/>
+<input id="r111" type="radio" name="g"/>
+<input id="r112" type="radio" name="g"/>
+<input id="r113" type="radio" name="g"/>
+<input id="r114" type="radio" name="g"/>
+<input id="r115" type="radio" name="g"/>
+<input id="r116" type="radio" name="g"/>
+<input id="r117" type="radio" name="g"/>
+<input id="r118" type="radio" name="g"/>
+<input id="r119" type="radio" name="g"/>
+<input id="r120" type="radio" name="g"/>
+<input id="r121" type="radio" name="g"/>
+<input id="r122" type="radio" name="g"/>
+<input id="r123" type="radio" name="g"/>
+<input id="r124" type="radio" name="g"/>
+<input id="r125" type="radio" name="g"/>
+<input id="r126" type="radio" name="g"/>
+<input id="r127" type="radio" name="g"/>
+<input id="r128" type="radio" name="g"/>
+<input id="r129" type="radio" name="g"/>
+<input id="r130" type="radio" name="g"/>
+<input id="r131" type="radio" name="g"/>
+<input id="r132" type="radio" name="g"/>
+<input id="r133" type="radio" name="g"/>
+<input id="r134" type="radio" name="g"/>
+<input id="r135" type="radio" name="g"/>
+<input id="r136" type="radio" name="g"/>
+<input id="r137" type="radio" name="g"/>
+<input id="r138" type="radio" name="g"/>
+<input id="r139" type="radio" name="g"/>
+<input id="r140" type="radio" name="g"/>
+<input id="r141" type="radio" name="g"/>
+<input id="r142" type="radio" name="g"/>
+<input id="r143" type="radio" name="g"/>
+<input id="r144" type="radio" name="g"/>
+<input id="r145" type="radio" name="g"/>
+<input id="r146" type="radio" name="g"/>
+<input id="r147" type="radio" name="g"/>
+<input id="r148" type="radio" name="g"/>
+<input id="r149" type="radio" name="g"/>
+<input id="r150" type="radio" name="g"/>
+<input id="r151" type="radio" name="g"/>
+<input id="r152" type="radio" name="g"/>
+<input id="r153" type="radio" name="g"/>
+<input id="r154" type="radio" name="g"/>
+<input id="r155" type="radio" name="g"/>
+<input id="r156" type="radio" name="g"/>
+<input id="r157" type="radio" name="g"/>
+<input id="r158" type="radio" name="g"/>
+<input id="r159" type="radio" name="g"/>
+<input id="r160" type="radio" name="g"/>
+<input id="r161" type="radio" name="g"/>
+<input id="r162" type="radio" name="g"/>
+<input id="r163" type="radio" name="g"/>
+<input id="r164" type="radio" name="g"/>
+<input id="r165" type="radio" name="g"/>
+<input id="r166" type="radio" name="g"/>
+<input id="r167" type="radio" name="g"/>
+<input id="r168" type="radio" name="g"/>
+<input id="r169" type="radio" name="g"/>
+<input id="r170" type="radio" name="g"/>
+<input id="r171" type="radio" name="g"/>
+<input id="r172" type="radio" name="g"/>
+<input id="r173" type="radio" name="g"/>
+<input id="r174" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2019 The Go Authors. All rights reserved.</span><span class="comment"> Use of this source code is governed by a BSD-style</span><span class="comment"> license that can be found in the LICENSE file.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Page allocator.</span><span class="comment"></span><span class="comment"> The page allocator manages mapped pages (defined by pageSize, NOT</span><span class="comment"> physPageSize) for allocation and re-use. It is embedded into mheap.</span><span class="comment"></span><span class="comment"> Pages are managed using a bitmap that is sharded into chunks.</span><span class="comment"> In the bitmap, 1 means in-use, and 0 means free. The bitmap spans the</span><span class="comment"> process's address space. Chunks are managed in a sparse-array-style structure</span><span class="comment"> similar to mheap.arenas, since the bitmap may be large on some systems.</span><span class="comment"></span><span class="comment"> The bitmap is efficiently searched by using a radix tree in combination</span><span class="comment"> with fast bit-wise intrinsics. Allocation is performed using an address-ordered</span><span class="comment"> first-fit approach.</span><span class="comment"></span><span class="comment"> Each entry in the radix tree is a summary that describes three properties of</span><span class="comment"> a particular region of the address space: the number of contiguous free pages</span><span class="comment"> at the start and end of the region it represents, and the maximum number of</span><span class="comment"> contiguous free pages found anywhere in that region.</span><span class="comment"></span><span class="comment"> Each level of the radix tree is stored as one contiguous array, which represents</span><span class="comment"> a different granularity of subdivision of the processes' address space. Thus, this</span><span class="comment"> radix tree is actually implicit in these large arrays, as opposed to having explicit</span><span class="comment"> dynamically-allocated pointer-based node structures. Naturally, these arrays may be</span><span class="comment"> quite large for system with large address spaces, so in these cases they are mapped</span><span class="comment"> into memory as needed. The leaf summaries of the tree correspond to a bitmap chunk.</span><span class="comment"></span><span class="comment"> The root level (referred to as L0 and index 0 in pageAlloc.summary) has each</span><span class="comment"> summary represent the largest section of address space (16 GiB on 64-bit systems),</span><span class="comment"> with each subsequent level representing successively smaller subsections until we</span><span class="comment"> reach the finest granularity at the leaves, a chunk.</span><span class="comment"></span><span class="comment"> More specifically, each summary in each level (except for leaf summaries)</span><span class="comment"> represents some number of entries in the following level. For example, each</span><span class="comment"> summary in the root level may represent a 16 GiB region of address space,</span><span class="comment"> and in the next level there could be 8 corresponding entries which represent 2</span><span class="comment"> GiB subsections of that 16 GiB region, each of which could correspond to 8</span><span class="comment"> entries in the next level which each represent 256 MiB regions, and so on.</span><span class="comment"></span><span class="comment"> Thus, this design only scales to heaps so large, but can always be extended to</span><span class="comment"> larger heaps by simply adding levels to the radix tree, which mostly costs</span><span class="comment"> additional virtual address space. The choice of managing large arrays also means</span><span class="comment"> that a large amount of virtual address space may be reserved by the runtime.</span></div>
+<div class="code"><pre><code>
+<span class="keyword">package</span> runtime
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"runtime/internal/atomic"</span></label>
+	<label for="i1"><span class="lit-string i1">"unsafe"</span></label>
+)
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> The size of a bitmap chunk, i.e. the amount of bits (that is, pages) to consider</span><span class="comment">	 in the bitmap at once.</span></div>
+<div class="code"><pre><code>	<a href="../../pkg/runtime.html#name-pallocChunkPages" class="ident">pallocChunkPages</a>    = <span class="lit-number">1</span> &lt;&lt; <a href="#line-60" class="ident">logPallocChunkPages</a>
+	<a href="../../pkg/runtime.html#name-pallocChunkBytes" class="ident">pallocChunkBytes</a>    = <a href="#line-58" class="ident">pallocChunkPages</a> * <a href="malloc.go.html#line-118" class="ident">pageSize</a>
+	<a href="../../pkg/runtime.html#name-logPallocChunkPages" class="ident">logPallocChunkPages</a> = <span class="lit-number">9</span>
+	<a href="../../pkg/runtime.html#name-logPallocChunkBytes" class="ident">logPallocChunkBytes</a> = <a href="#line-60" class="ident">logPallocChunkPages</a> + <a href="malloc.go.html#line-117" class="ident">pageShift</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> The number of radix bits for each level.</span><span class="comment">	</span><span class="comment">	 The value of 3 is chosen such that the block of summaries we need to scan at</span><span class="comment">	 each level fits in 64 bytes (2^3 summaries * 8 bytes per summary), which is</span><span class="comment">	 close to the L1 cache line width on many systems. Also, a value of 3 fits 4 tree</span><span class="comment">	 levels perfectly into the 21-bit pallocBits summary field at the root level.</span><span class="comment">	</span><span class="comment">	 The following equation explains how each of the constants relate:</span><span class="comment">	 summaryL0Bits + (summaryLevels-1)*summaryLevelBits + logPallocChunkBytes = heapAddrBits</span><span class="comment">	</span><span class="comment">	 summaryLevels is an architecture-dependent value defined in mpagealloc_*.go.</span></div>
+<div class="code"><pre><code>	<a href="../../pkg/runtime.html#name-summaryLevelBits" class="ident">summaryLevelBits</a> = <span class="lit-number">3</span>
+	<a href="../../pkg/runtime.html#name-summaryL0Bits" class="ident">summaryL0Bits</a>    = <a href="malloc.go.html#line-210" class="ident">heapAddrBits</a> - <a href="#line-61" class="ident">logPallocChunkBytes</a> - (<a href="mpagealloc_64bit.go.html#line-15" class="ident">summaryLevels</a>-<span class="lit-number">1</span>)*<a href="#line-74" class="ident">summaryLevelBits</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> pallocChunksL2Bits is the number of bits of the chunk index number</span><span class="comment">	 covered by the second level of the chunks map.</span><span class="comment">	</span><span class="comment">	 See (*pageAlloc).chunks for more details. Update the documentation</span><span class="comment">	 there should this change.</span></div>
+<div class="code"><pre><code>	<a href="../../pkg/runtime.html#name-pallocChunksL2Bits" class="ident">pallocChunksL2Bits</a>  = <a href="malloc.go.html#line-210" class="ident">heapAddrBits</a> - <a href="#line-61" class="ident">logPallocChunkBytes</a> - <a href="mpagealloc_64bit.go.html#line-26" class="ident">pallocChunksL1Bits</a>
+	<a href="../../pkg/runtime.html#name-pallocChunksL1Shift" class="ident">pallocChunksL1Shift</a> = <a href="#line-82" class="ident">pallocChunksL2Bits</a>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Maximum searchAddr value, which indicates that the heap has no free space.</span><span class="comment"></span><span class="comment"> We alias maxOffAddr just to make it clear that this is the maximum address</span><span class="comment"> for the page allocator's search space. See maxOffAddr for details.</span></div>
+<div class="code"><pre><code><span class="keyword">var</span> <a href="../../pkg/runtime.html#name-maxSearchAddr" class="ident">maxSearchAddr</a> = <a href="mranges.go.html#line-92" class="ident">maxOffAddr</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Global chunk index.</span><span class="comment"></span><span class="comment"> Represents an index into the leaf level of the radix tree.</span><span class="comment"> Similar to arenaIndex, except instead of arenas, it divides the address</span><span class="comment"> space into chunks.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../pkg/runtime.html#name-chunkIdx" class="ident">chunkIdx</a> <a href="../../pkg/builtin.html#name-uint" class="ident">uint</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> chunkIndex returns the global index of the palloc chunk containing the</span><span class="comment"> pointer p.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r0" class="ident"><a href="../../pkg/runtime.html#name-chunkIndex" class="ident">chunkIndex</a></label>(<label for="r1" class="ident">p</label> <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>) <a href="#line-97" class="ident">chunkIdx</a> {
+	<span class="keyword">return</span> <a href="#line-97" class="ident">chunkIdx</a>((<label for="r1" class="ident">p</label> - <a href="malloc.go.html#line-305" class="ident">arenaBaseOffset</a>) / <a href="#line-59" class="ident">pallocChunkBytes</a>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> chunkIndex returns the base address of the palloc chunk at index ci.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r2" class="ident"><a href="../../pkg/runtime.html#name-chunkBase" class="ident">chunkBase</a></label>(<label for="r3" class="ident">ci</label> <a href="#line-97" class="ident">chunkIdx</a>) <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a> {
+	<span class="keyword">return</span> <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<label for="r3" class="ident">ci</label>)*<a href="#line-59" class="ident">pallocChunkBytes</a> + <a href="malloc.go.html#line-305" class="ident">arenaBaseOffset</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> chunkPageIndex computes the index of the page that contains p,</span><span class="comment"> relative to the chunk which contains p.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r4" class="ident"><a href="../../pkg/runtime.html#name-chunkPageIndex" class="ident">chunkPageIndex</a></label>(<label for="r5" class="ident">p</label> <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>) <a href="../../pkg/builtin.html#name-uint" class="ident">uint</a> {
+	<span class="keyword">return</span> <a href="../../pkg/builtin.html#name-uint" class="ident">uint</a>(<label for="r5" class="ident">p</label> % <a href="#line-59" class="ident">pallocChunkBytes</a> / <a href="malloc.go.html#line-118" class="ident">pageSize</a>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> l1 returns the index into the first level of (*pageAlloc).chunks.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r6" class="ident">i</label> <a href="#line-97" class="ident">chunkIdx</a>) <label for="r7" class="ident"><a href="../../use/runtime..chunkIdx*6885c.l1*2804b.html" class="ident">l1</a></label>() <a href="../../pkg/builtin.html#name-uint" class="ident">uint</a> {
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Let the compiler optimize this away if there's no</span><span class="comment">		 L1 map.</span></div>
+<div class="code"><pre><code>		<span class="keyword">return</span> <span class="lit-number">0</span>
+	} <span class="keyword">else</span> {
+		<span class="keyword">return</span> <a href="../../pkg/builtin.html#name-uint" class="ident">uint</a>(<label for="r6" class="ident">i</label>) &gt;&gt; <a href="#line-83" class="ident">pallocChunksL1Shift</a>
+	}
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> l2 returns the index into the second level of (*pageAlloc).chunks.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r8" class="ident">i</label> <a href="#line-97" class="ident">chunkIdx</a>) <label for="r9" class="ident"><a href="../../use/runtime..chunkIdx*6885c.l2*8a1ce.html" class="ident">l2</a></label>() <a href="../../pkg/builtin.html#name-uint" class="ident">uint</a> {
+	<span class="keyword">if</span> <a href="mpagealloc_64bit.go.html#line-26" class="ident">pallocChunksL1Bits</a> == <span class="lit-number">0</span> {
+		<span class="keyword">return</span> <a href="../../pkg/builtin.html#name-uint" class="ident">uint</a>(<label for="r8" class="ident">i</label>)
+	} <span class="keyword">else</span> {
+		<span class="keyword">return</span> <a href="../../pkg/builtin.html#name-uint" class="ident">uint</a>(<label for="r8" class="ident">i</label>) &amp; (<span class="lit-number">1</span>&lt;&lt;<a href="#line-82" class="ident">pallocChunksL2Bits</a> - <span class="lit-number">1</span>)
+	}
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> offAddrToLevelIndex converts an address in the offset address space</span><span class="comment"> to the index into summary[level] containing addr.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r10" class="ident"><a href="../../pkg/runtime.html#name-offAddrToLevelIndex" class="ident">offAddrToLevelIndex</a></label>(<label for="r11" class="ident">level</label> <a href="../../pkg/builtin.html#name-int" class="ident">int</a>, <label for="r12" class="ident">addr</label> <a href="mranges.go.html#line-98" class="ident">offAddr</a>) <a href="../../pkg/builtin.html#name-int" class="ident">int</a> {
+	<span class="keyword">return</span> <a href="../../pkg/builtin.html#name-int" class="ident">int</a>((<label for="r12" class="ident">addr</label>.<a href="mranges.go.html#line-101" class="ident">a</a> - <a href="malloc.go.html#line-305" class="ident">arenaBaseOffset</a>) &gt;&gt; <a href="mpagealloc_64bit.go.html#line-47" class="ident">levelShift</a>[<label for="r11" class="ident">level</label>])
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> levelIndexToOffAddr converts an index into summary[level] into</span><span class="comment"> the corresponding address in the offset address space.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r13" class="ident"><a href="../../pkg/runtime.html#name-levelIndexToOffAddr" class="ident">levelIndexToOffAddr</a></label>(<label for="r14" class="ident">level</label>, <label for="r15" class="ident">idx</label> <a href="../../pkg/builtin.html#name-int" class="ident">int</a>) <a href="mranges.go.html#line-98" class="ident">offAddr</a> {
+	<span class="keyword">return</span> <a href="mranges.go.html#line-98" class="ident">offAddr</a>{(<a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<label for="r15" class="ident">idx</label>) &lt;&lt; <a href="mpagealloc_64bit.go.html#line-47" class="ident">levelShift</a>[<label for="r14" class="ident">level</label>]) + <a href="malloc.go.html#line-305" class="ident">arenaBaseOffset</a>}
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> addrsToSummaryRange converts base and limit pointers into a range</span><span class="comment"> of entries for the given summary level.</span><span class="comment"></span><span class="comment"> The returned range is inclusive on the lower bound and exclusive on</span><span class="comment"> the upper bound.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> This is slightly more nuanced than just a shift for the exclusive</span><span class="comment">	 upper-bound. Note that the exclusive upper bound may be within a</span><span class="comment">	 summary at this level, meaning if we just do the obvious computation</span><span class="comment">	 hi will end up being an inclusive upper bound. Unfortunately, just</span><span class="comment">	 adding 1 to that is too broad since we might be on the very edge of</span><span class="comment">	 of a summary's max page count boundary for this level</span><span class="comment">	 (1 &lt;&lt; levelLogPages[level]). So, make limit an inclusive upper bound</span><span class="comment">	 then shift, then add 1, so we get an exclusive upper bound at the end.</span></div>
+<div class="code"><pre><code>	<label for="r20" class="ident">lo</label> = <a href="../../pkg/builtin.html#name-int" class="ident">int</a>((<label for="r18" class="ident">base</label> - <a href="malloc.go.html#line-305" class="ident">arenaBaseOffset</a>) &gt;&gt; <a href="mpagealloc_64bit.go.html#line-47" class="ident">levelShift</a>[<label for="r17" class="ident">level</label>])
+	<label for="r21" class="ident">hi</label> = <a href="../../pkg/builtin.html#name-int" class="ident">int</a>(((<label for="r19" class="ident">limit</label>-<span class="lit-number">1</span>)-<a href="malloc.go.html#line-305" class="ident">arenaBaseOffset</a>)&gt;&gt;<a href="mpagealloc_64bit.go.html#line-47" class="ident">levelShift</a>[<label for="r17" class="ident">level</label>]) + <span class="lit-number">1</span>
+	<span class="keyword">return</span>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> blockAlignSummaryRange aligns indices into the given level to that</span><span class="comment"> level's block width (1 &lt;&lt; levelBits[level]). It assumes lo is inclusive</span><span class="comment"> and hi is exclusive, and so aligns them down and up respectively.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r22" class="ident"><a href="../../pkg/runtime.html#name-blockAlignSummaryRange" class="ident">blockAlignSummaryRange</a></label>(<label for="r23" class="ident">level</label> <a href="../../pkg/builtin.html#name-int" class="ident">int</a>, <label for="r24" class="ident">lo</label>, <label for="r25" class="ident">hi</label> <a href="../../pkg/builtin.html#name-int" class="ident">int</a>) (<a href="../../pkg/builtin.html#name-int" class="ident">int</a>, <a href="../../pkg/builtin.html#name-int" class="ident">int</a>) {
+	<label for="r26" class="ident">e</label> := <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<span class="lit-number">1</span>) &lt;&lt; <a href="mpagealloc_64bit.go.html#line-33" class="ident">levelBits</a>[<label for="r23" class="ident">level</label>]
+	<span class="keyword">return</span> <a href="../../pkg/builtin.html#name-int" class="ident">int</a>(<a href="stubs.go.html#line-323" class="ident">alignDown</a>(<a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<label for="r24" class="ident">lo</label>), <label for="r26" class="ident">e</label>)), <a href="../../pkg/builtin.html#name-int" class="ident">int</a>(<a href="stubs.go.html#line-318" class="ident">alignUp</a>(<a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<label for="r25" class="ident">hi</label>), <label for="r26" class="ident">e</label>))
+}
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Radix tree of summaries.</span><span class="comment">	</span><span class="comment">	 Each slice's cap represents the whole memory reservation.</span><span class="comment">	 Each slice's len reflects the allocator's maximum known</span><span class="comment">	 mapped heap address for that level.</span><span class="comment">	</span><span class="comment">	 The backing store of each summary level is reserved in init</span><span class="comment">	 and may or may not be committed in grow (small address spaces</span><span class="comment">	 may commit all the memory in init).</span><span class="comment">	</span><span class="comment">	 The purpose of keeping len &lt;= cap is to enforce bounds checks</span><span class="comment">	 on the top end of the slice so that instead of an unknown</span><span class="comment">	 runtime segmentation fault, we get a much friendlier out-of-bounds</span><span class="comment">	 error.</span><span class="comment">	</span><span class="comment">	 To iterate over a summary level, use inUse to determine which ranges</span><span class="comment">	 are currently available. Otherwise one might try to access</span><span class="comment">	 memory which is only Reserved which may result in a hard fault.</span><span class="comment">	</span><span class="comment">	 We may still get segmentation faults &lt; len since some of that</span><span class="comment">	 memory may not be committed yet.</span></div>
+<div class="code"><pre><code>	<a href="../../use/runtime..pageAlloc*9ee3f.summary*761b7.html" class="ident">summary</a> [<a href="mpagealloc_64bit.go.html#line-15" class="ident">summaryLevels</a>][]<a href="#line-919" class="ident">pallocSum</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> chunks is a slice of bitmap chunks.</span><span class="comment">	</span><span class="comment">	 The total size of chunks is quite large on most 64-bit platforms</span><span class="comment">	 (O(GiB) or more) if flattened, so rather than making one large mapping</span><span class="comment">	 (which has problems on some platforms, even when PROT_NONE) we use a</span><span class="comment">	 two-level sparse array approach similar to the arena index in mheap.</span><span class="comment">	</span><span class="comment">	 To find the chunk containing a memory address `a`, do:</span><span class="comment">	   chunkOf(chunkIndex(a))</span><span class="comment">	</span><span class="comment">	 Below is a table describing the configuration for chunks for various</span><span class="comment">	 heapAddrBits supported by the runtime.</span><span class="comment">	</span><span class="comment">	 heapAddrBits | L1 Bits | L2 Bits | L2 Entry Size</span><span class="comment">	 ------------------------------------------------</span><span class="comment">	 32           | 0       | 10      | 128 KiB</span><span class="comment">	 33 (iOS)     | 0       | 11      | 256 KiB</span><span class="comment">	 48           | 13      | 13      | 1 MiB</span><span class="comment">	</span><span class="comment">	 There's no reason to use the L1 part of chunks on 32-bit, the</span><span class="comment">	 address space is small so the L2 is small. For platforms with a</span><span class="comment">	 48-bit address space, we pick the L1 such that the L2 is 1 MiB</span><span class="comment">	 in size, which is a good balance between low granularity without</span><span class="comment">	 making the impact on BSS too high (note the L1 is stored directly</span><span class="comment">	 in pageAlloc).</span><span class="comment">	</span><span class="comment">	 To iterate over the bitmap, use inUse to determine which ranges</span><span class="comment">	 are currently available. Otherwise one might iterate over unused</span><span class="comment">	 ranges.</span><span class="comment">	</span><span class="comment">	 TODO(mknyszek): Consider changing the definition of the bitmap</span><span class="comment">	 such that 1 means free and 0 means in-use so that summaries and</span><span class="comment">	 the bitmaps align better on zero-values.</span></div>
+<div class="code"><pre><code>	<a href="../../use/runtime..pageAlloc*9ee3f.chunks*90399.html" class="ident">chunks</a> [<span class="lit-number">1</span> &lt;&lt; <a href="mpagealloc_64bit.go.html#line-26" class="ident">pallocChunksL1Bits</a>]*[<span class="lit-number">1</span> &lt;&lt; <a href="#line-82" class="ident">pallocChunksL2Bits</a>]<a href="mpallocbits.go.html#line-409" class="ident">pallocData</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> The address to start an allocation search with. It must never</span><span class="comment">	 point to any memory that is not contained in inUse, i.e.</span><span class="comment">	 inUse.contains(searchAddr.addr()) must always be true. The one</span><span class="comment">	 exception to this rule is that it may take on the value of</span><span class="comment">	 maxOffAddr to indicate that the heap is exhausted.</span><span class="comment">	</span><span class="comment">	 We guarantee that all valid heap addresses below this value</span><span class="comment">	 are allocated and not worth searching.</span></div>
+<div class="code"><pre><code>	<a href="../../use/runtime..pageAlloc*9ee3f.searchAddr*d8d88.html" class="ident">searchAddr</a> <a href="mranges.go.html#line-98" class="ident">offAddr</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> start and end represent the chunk indices</span><span class="comment">	 which pageAlloc knows about. It assumes</span><span class="comment">	 chunks in the range [start, end) are</span><span class="comment">	 currently ready to use.</span></div>
+<div class="code"><pre><code>	<a href="../../use/runtime..pageAlloc*9ee3f.start*cced2.html" class="ident">start</a>, <a href="../../use/runtime..pageAlloc*9ee3f.end*361e4.html" class="ident">end</a> <a href="#line-97" class="ident">chunkIdx</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> inUse is a slice of ranges of address space which are</span><span class="comment">	 known by the page allocator to be currently in-use (passed</span><span class="comment">	 to grow).</span><span class="comment">	</span><span class="comment">	 This field is currently unused on 32-bit architectures but</span><span class="comment">	 is harmless to track. We care much more about having a</span><span class="comment">	 contiguous heap in these cases and take additional measures</span><span class="comment">	 to ensure that, so in nearly all cases this should have just</span><span class="comment">	 1 element.</span><span class="comment">	</span><span class="comment">	 All access is protected by the mheapLock.</span></div>
+<div class="code"><pre><code>	<a href="../../use/runtime..pageAlloc*9ee3f.inUse*6d9d3.html" class="ident">inUse</a> <a href="mranges.go.html#line-154" class="ident">addrRanges</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> scav stores the scavenger state.</span><span class="comment">	</span><span class="comment">	 All fields are protected by mheapLock.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> inUse is a slice of ranges of address space which have not</span><span class="comment">		 yet been looked at by the scavenger.</span></div>
+<div class="code"><pre><code>		inUse <a href="mranges.go.html#line-154" class="ident">addrRanges</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> gen is the scavenge generation number.</span></div>
+<div class="code"><pre><code>		gen <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> reservationBytes is how large of a reservation should be made</span><span class="comment">		 in bytes of address space for each scavenge iteration.</span></div>
+<div class="code"><pre><code>		reservationBytes <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> released is the amount of memory released this generation.</span></div>
+<div class="code"><pre><code>		released <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> scavLWM is the lowest (offset) address that the scavenger reached this</span><span class="comment">		 scavenge generation.</span></div>
+<div class="code"><pre><code>		scavLWM <a href="mranges.go.html#line-98" class="ident">offAddr</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> freeHWM is the highest (offset) address of a page that was freed to</span><span class="comment">		 the page allocator this scavenge generation.</span></div>
+<div class="code"><pre><code>		freeHWM <a href="mranges.go.html#line-98" class="ident">offAddr</a>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> mheap_.lock. This level of indirection makes it possible</span><span class="comment">	 to test pageAlloc indepedently of the runtime allocator.</span></div>
+<div class="code"><pre><code>	<a href="../../use/runtime..pageAlloc*9ee3f.mheapLock*ca3f1.html" class="ident">mheapLock</a> *<a href="runtime2.go.html#line-162" class="ident">mutex</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> sysStat is the runtime memstat to update when new system</span><span class="comment">	 memory is committed by the pageAlloc for allocation metadata.</span></div>
+<div class="code"><pre><code>	<a href="../../use/runtime..pageAlloc*9ee3f.sysStat*9af39.html" class="ident">sysStat</a> *<a href="mstats.go.html#line-738" class="ident">sysMemStat</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Whether or not this struct is being used in tests.</span></div>
+<div class="code"><pre><code>	<a href="../../use/runtime..pageAlloc*9ee3f.test*9f86d.html" class="ident">test</a> <a href="../../pkg/builtin.html#name-bool" class="ident">bool</a>
+}
+
+<span class="keyword">func</span> (<label for="r27" class="ident">p</label> *<a href="#line-175" class="ident">pageAlloc</a>) <label for="r28" class="ident"><a href="../../use/runtime..pageAlloc*9ee3f.init*bb540.html" class="ident">init</a></label>(<label for="r29" class="ident">mheapLock</label> *<a href="runtime2.go.html#line-162" class="ident">mutex</a>, <label for="r30" class="ident">sysStat</label> *<a href="mstats.go.html#line-738" class="ident">sysMemStat</a>) {
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> We can't represent 1&lt;&lt;levelLogPages[0] pages, the maximum number</span><span class="comment">		 of pages we need to represent at the root level, in a summary, which</span><span class="comment">		 is a big problem. Throw.</span></div>
+<div class="code"><pre><code>		<a href="../../pkg/builtin.html#name-print" class="ident">print</a>(<span class="lit-string">"runtime: root level max pages = "</span>, <span class="lit-number">1</span>&lt;&lt;<a href="mpagealloc_64bit.go.html#line-59" class="ident">levelLogPages</a>[<span class="lit-number">0</span>], <span class="lit-string">"\n"</span>)
+		<a href="../../pkg/builtin.html#name-print" class="ident">print</a>(<span class="lit-string">"runtime: summary max pages = "</span>, <a href="#line-906" class="ident">maxPackedValue</a>, <span class="lit-string">"\n"</span>)
+		<a href="panic.go.html#line-1107" class="ident">throw</a>(<span class="lit-string">"root level max pages doesn't fit in summary"</span>)
+	}
+	<label for="r27" class="ident">p</label>.<a href="#line-296" class="ident">sysStat</a> = <label for="r30" class="ident">sysStat</label>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Initialize p.inUse.</span></div>
+<div class="code"><pre><code>	<label for="r27" class="ident">p</label>.<a href="#line-261" class="ident">inUse</a>.<a href="mranges.go.html#line-166" class="ident">init</a>(<label for="r30" class="ident">sysStat</label>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> System-dependent initialization.</span></div>
+<div class="code"><pre><code>	<label for="r27" class="ident">p</label>.<a href="mpagealloc_64bit.go.html#line-70" class="ident">sysInit</a>()
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Start with the searchAddr in a state indicating there's no free memory.</span></div>
+<div class="code"><pre><code>	<label for="r27" class="ident">p</label>.<a href="#line-242" class="ident">searchAddr</a> = <a href="#line-90" class="ident">maxSearchAddr</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Set the mheapLock.</span></div>
+<div class="code"><pre><code>	<label for="r27" class="ident">p</label>.<a href="#line-292" class="ident">mheapLock</a> = <label for="r29" class="ident">mheapLock</label>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Initialize scavenge tracking state.</span></div>
+<div class="code"><pre><code>	<label for="r27" class="ident">p</label>.<a href="#line-266" class="ident">scav</a>.<a href="#line-283" class="ident">scavLWM</a> = <a href="#line-90" class="ident">maxSearchAddr</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> tryChunkOf returns the bitmap data for the given chunk.</span><span class="comment"></span><span class="comment"> Returns nil if the chunk data has not been mapped.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r31" class="ident">p</label> *<a href="#line-175" class="ident">pageAlloc</a>) <label for="r32" class="ident"><a href="../../use/runtime..pageAlloc*9ee3f.tryChunkOf*3bfc2.html" class="ident">tryChunkOf</a></label>(<label for="r33" class="ident">ci</label> <a href="#line-97" class="ident">chunkIdx</a>) *<a href="mpallocbits.go.html#line-409" class="ident">pallocData</a> {
+	<label for="r34" class="ident">l2</label> := <label for="r31" class="ident">p</label>.<a href="#line-232" class="ident">chunks</a>[<label for="r33" class="ident">ci</label>.<a href="#line-117" class="ident">l1</a>()]
+	<span class="keyword">if</span> <label for="r34" class="ident">l2</label> == <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a>
+	}
+	<span class="keyword">return</span> &amp;<label for="r34" class="ident">l2</label>[<label for="r33" class="ident">ci</label>.<a href="#line-128" class="ident">l2</a>()]
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> chunkOf returns the chunk at the given chunk index.</span><span class="comment"></span><span class="comment"> The chunk index must be valid or this method may throw.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r35" class="ident">p</label> *<a href="#line-175" class="ident">pageAlloc</a>) <label for="r36" class="ident"><a href="../../use/runtime..pageAlloc*9ee3f.chunkOf*d9c39.html" class="ident">chunkOf</a></label>(<label for="r37" class="ident">ci</label> <a href="#line-97" class="ident">chunkIdx</a>) *<a href="mpallocbits.go.html#line-409" class="ident">pallocData</a> {
+	<span class="keyword">return</span> &amp;<label for="r35" class="ident">p</label>.<a href="#line-232" class="ident">chunks</a>[<label for="r37" class="ident">ci</label>.<a href="#line-117" class="ident">l1</a>()][<label for="r37" class="ident">ci</label>.<a href="#line-128" class="ident">l2</a>()]
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> grow sets up the metadata for the address range [base, base+size).</span><span class="comment"> It may allocate metadata, in which case *p.sysStat will be updated.</span><span class="comment"></span><span class="comment"> p.mheapLock must be held.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r38" class="ident">p</label> *<a href="#line-175" class="ident">pageAlloc</a>) <label for="r39" class="ident"><a href="../../use/runtime..pageAlloc*9ee3f.grow*adca5.html" class="ident">grow</a></label>(<label for="r40" class="ident">base</label>, <label for="r41" class="ident">size</label> <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>) {
+	<a href="lockrank_off.go.html#line-43" class="ident">assertLockHeld</a>(<label for="r38" class="ident">p</label>.<a href="#line-292" class="ident">mheapLock</a>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Round up to chunks, since we can't deal with increments smaller</span><span class="comment">	 than chunks. Also, sysGrow expects aligned values.</span></div>
+<div class="code"><pre><code>	<label for="r42" class="ident">limit</label> := <a href="stubs.go.html#line-318" class="ident">alignUp</a>(<label for="r40" class="ident">base</label>+<label for="r41" class="ident">size</label>, <a href="#line-59" class="ident">pallocChunkBytes</a>)
+	<label for="r40" class="ident">base</label> = <a href="stubs.go.html#line-323" class="ident">alignDown</a>(<label for="r40" class="ident">base</label>, <a href="#line-59" class="ident">pallocChunkBytes</a>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Grow the summary levels in a system-dependent manner.</span><span class="comment">	 We just update a bunch of additional metadata here.</span></div>
+<div class="code"><pre><code>	<label for="r38" class="ident">p</label>.<a href="mpagealloc_64bit.go.html#line-99" class="ident">sysGrow</a>(<label for="r40" class="ident">base</label>, <label for="r42" class="ident">limit</label>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Update p.start and p.end.</span><span class="comment">	 If no growth happened yet, start == 0. This is generally</span><span class="comment">	 safe since the zero page is unmapped.</span></div>
+<div class="code"><pre><code>	<label for="r43" class="ident">firstGrowth</label> := <label for="r38" class="ident">p</label>.<a href="#line-248" class="ident">start</a> == <span class="lit-number">0</span>
+	<label for="r44" class="ident">start</label>, <label for="r45" class="ident">end</label> := <a href="#line-101" class="ident">chunkIndex</a>(<label for="r40" class="ident">base</label>), <a href="#line-101" class="ident">chunkIndex</a>(<label for="r42" class="ident">limit</label>)
+	<span class="keyword">if</span> <label for="r43" class="ident">firstGrowth</label> || <label for="r44" class="ident">start</label> &lt; <label for="r38" class="ident">p</label>.<a href="#line-248" class="ident">start</a> {
+		<label for="r38" class="ident">p</label>.<a href="#line-248" class="ident">start</a> = <label for="r44" class="ident">start</label>
+	}
+	<span class="keyword">if</span> <label for="r45" class="ident">end</label> &gt; <label for="r38" class="ident">p</label>.<a href="#line-248" class="ident">end</a> {
+		<label for="r38" class="ident">p</label>.<a href="#line-248" class="ident">end</a> = <label for="r45" class="ident">end</label>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Note that [base, limit) will never overlap with any existing</span><span class="comment">	 range inUse because grow only ever adds never-used memory</span><span class="comment">	 regions to the page allocator.</span></div>
+<div class="code"><pre><code>	<label for="r38" class="ident">p</label>.<a href="#line-261" class="ident">inUse</a>.<a href="mranges.go.html#line-248" class="ident">add</a>(<a href="mranges.go.html#line-32" class="ident">makeAddrRange</a>(<label for="r40" class="ident">base</label>, <label for="r42" class="ident">limit</label>))
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> A grow operation is a lot like a free operation, so if our</span><span class="comment">	 chunk ends up below p.searchAddr, update p.searchAddr to the</span><span class="comment">	 new address, just like in free.</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> <label for="r46" class="ident">b</label> := (<a href="mranges.go.html#line-98" class="ident">offAddr</a>{<label for="r40" class="ident">base</label>}); <label for="r46" class="ident">b</label>.<a href="mranges.go.html#line-122" class="ident">lessThan</a>(<label for="r38" class="ident">p</label>.<a href="#line-242" class="ident">searchAddr</a>) {
+		<label for="r38" class="ident">p</label>.<a href="#line-242" class="ident">searchAddr</a> = <label for="r46" class="ident">b</label>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Add entries into chunks, which is sparse, if needed. Then,</span><span class="comment">	 initialize the bitmap.</span><span class="comment">	</span><span class="comment">	 Newly-grown memory is always considered scavenged.</span><span class="comment">	 Set all the bits in the scavenged bitmaps high.</span></div>
+<div class="code"><pre><code>	<span class="keyword">for</span> <label for="r47" class="ident">c</label> := <a href="#line-101" class="ident">chunkIndex</a>(<label for="r40" class="ident">base</label>); <label for="r47" class="ident">c</label> &lt; <a href="#line-101" class="ident">chunkIndex</a>(<label for="r42" class="ident">limit</label>); <label for="r47" class="ident">c</label>++ {
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Create the necessary l2 entry.</span><span class="comment">			</span><span class="comment">			 Store it atomically to avoid races with readers which</span><span class="comment">			 don't acquire the heap lock.</span></div>
+<div class="code"><pre><code>			<label for="r48" class="ident">r</label> := <a href="mem_darwin.go.html#line-14" class="ident">sysAlloc</a>(<a href="../../pkg/unsafe.html" class="ident i1">unsafe</a>.<a href="../../pkg/unsafe.html#name-Sizeof" class="ident">Sizeof</a>(*<label for="r38" class="ident">p</label>.<a href="#line-232" class="ident">chunks</a>[<span class="lit-number">0</span>]), <label for="r38" class="ident">p</label>.<a href="#line-296" class="ident">sysStat</a>)
+			<a href="../../pkg/runtime/internal/atomic.html" class="ident i0">atomic</a>.<a href="internal/atomic/atomic_amd64.go.html#line-116" class="ident">StorepNoWB</a>(<a href="../../pkg/unsafe.html" class="ident i1">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(&amp;<label for="r38" class="ident">p</label>.<a href="#line-232" class="ident">chunks</a>[<label for="r47" class="ident">c</label>.<a href="#line-117" class="ident">l1</a>()]), <label for="r48" class="ident">r</label>)
+		}
+		<label for="r38" class="ident">p</label>.<a href="#line-343" class="ident">chunkOf</a>(<label for="r47" class="ident">c</label>).<a href="mpallocbits.go.html#line-411" class="ident">scavenged</a>.<a href="mpallocbits.go.html#line-30" class="ident">setRange</a>(<span class="lit-number">0</span>, <a href="#line-58" class="ident">pallocChunkPages</a>)
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Update summaries accordingly. The grow acts like a free, so</span><span class="comment">	 we need to ensure this newly-free memory is visible in the</span><span class="comment">	 summaries.</span></div>
+<div class="code"><pre><code>	<label for="r38" class="ident">p</label>.<a href="#line-417" class="ident">update</a>(<label for="r40" class="ident">base</label>, <label for="r41" class="ident">size</label>/<a href="malloc.go.html#line-118" class="ident">pageSize</a>, <a href="../../pkg/builtin.html#name-true" class="ident">true</a>, <a href="../../pkg/builtin.html#name-false" class="ident">false</a>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> update updates heap metadata. It must be called each time the bitmap</span><span class="comment"> is updated.</span><span class="comment"></span><span class="comment"> If contig is true, update does some optimizations assuming that there was</span><span class="comment"> a contiguous allocation or free between addr and addr+npages. alloc indicates</span><span class="comment"> whether the operation performed was an allocation or a free.</span><span class="comment"></span><span class="comment"> p.mheapLock must be held.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r49" class="ident">p</label> *<a href="#line-175" class="ident">pageAlloc</a>) <label for="r50" class="ident"><a href="../../use/runtime..pageAlloc*9ee3f.update*29370.html" class="ident">update</a></label>(<label for="r51" class="ident">base</label>, <label for="r52" class="ident">npages</label> <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>, <label for="r53" class="ident">contig</label>, <label for="r54" class="ident">alloc</label> <a href="../../pkg/builtin.html#name-bool" class="ident">bool</a>) {
+	<a href="lockrank_off.go.html#line-43" class="ident">assertLockHeld</a>(<label for="r49" class="ident">p</label>.<a href="#line-292" class="ident">mheapLock</a>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> base, limit, start, and end are inclusive.</span></div>
+<div class="code"><pre><code>	<label for="r55" class="ident">limit</label> := <label for="r51" class="ident">base</label> + <label for="r52" class="ident">npages</label>*<a href="malloc.go.html#line-118" class="ident">pageSize</a> - <span class="lit-number">1</span>
+	<label for="r56" class="ident">sc</label>, <label for="r57" class="ident">ec</label> := <a href="#line-101" class="ident">chunkIndex</a>(<label for="r51" class="ident">base</label>), <a href="#line-101" class="ident">chunkIndex</a>(<label for="r55" class="ident">limit</label>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Handle updating the lowest level first.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Fast path: the allocation doesn't span more than one chunk,</span><span class="comment">		 so update this one and if the summary didn't change, return.</span></div>
+<div class="code"><pre><code>		<label for="r58" class="ident">x</label> := <label for="r49" class="ident">p</label>.<a href="#line-197" class="ident">summary</a>[<a href="../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r49" class="ident">p</label>.<a href="#line-197" class="ident">summary</a>)-<span class="lit-number">1</span>][<label for="r56" class="ident">sc</label>]
+		<label for="r59" class="ident">y</label> := <label for="r49" class="ident">p</label>.<a href="#line-343" class="ident">chunkOf</a>(<label for="r56" class="ident">sc</label>).<a href="mpallocbits.go.html#line-124" class="ident">summarize</a>()
+		<span class="keyword">if</span> <label for="r58" class="ident">x</label> == <label for="r59" class="ident">y</label> {
+			<span class="keyword">return</span>
+		}
+		<label for="r49" class="ident">p</label>.<a href="#line-197" class="ident">summary</a>[<a href="../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r49" class="ident">p</label>.<a href="#line-197" class="ident">summary</a>)-<span class="lit-number">1</span>][<label for="r56" class="ident">sc</label>] = <label for="r59" class="ident">y</label>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Slow contiguous path: the allocation spans more than one chunk</span><span class="comment">		 and at least one summary is guaranteed to change.</span></div>
+<div class="code"><pre><code>		<label for="r60" class="ident">summary</label> := <label for="r49" class="ident">p</label>.<a href="#line-197" class="ident">summary</a>[<a href="../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r49" class="ident">p</label>.<a href="#line-197" class="ident">summary</a>)-<span class="lit-number">1</span>]
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Update the summary for chunk sc.</span></div>
+<div class="code"><pre><code>		<label for="r60" class="ident">summary</label>[<label for="r56" class="ident">sc</label>] = <label for="r49" class="ident">p</label>.<a href="#line-343" class="ident">chunkOf</a>(<label for="r56" class="ident">sc</label>).<a href="mpallocbits.go.html#line-124" class="ident">summarize</a>()
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Update the summaries for chunks in between, which are</span><span class="comment">		 either totally allocated or freed.</span></div>
+<div class="code"><pre><code>		<label for="r61" class="ident">whole</label> := <label for="r49" class="ident">p</label>.<a href="#line-197" class="ident">summary</a>[<a href="../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r49" class="ident">p</label>.<a href="#line-197" class="ident">summary</a>)-<span class="lit-number">1</span>][<label for="r56" class="ident">sc</label>+<span class="lit-number">1</span> : <label for="r57" class="ident">ec</label>]
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Should optimize into a memclr.</span></div>
+<div class="code"><pre><code>			<span class="keyword">for</span> <label for="r62" class="ident">i</label> := <span class="keyword">range</span> <label for="r61" class="ident">whole</label> {
+				<label for="r61" class="ident">whole</label>[<label for="r62" class="ident">i</label>] = <span class="lit-number">0</span>
+			}
+		} <span class="keyword">else</span> {
+			<span class="keyword">for</span> <label for="r63" class="ident">i</label> := <span class="keyword">range</span> <label for="r61" class="ident">whole</label> {
+				<label for="r61" class="ident">whole</label>[<label for="r63" class="ident">i</label>] = <a href="#line-909" class="ident">freeChunkSum</a>
+			}
+		}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Update the summary for chunk ec.</span></div>
+<div class="code"><pre><code>		<label for="r60" class="ident">summary</label>[<label for="r57" class="ident">ec</label>] = <label for="r49" class="ident">p</label>.<a href="#line-343" class="ident">chunkOf</a>(<label for="r57" class="ident">ec</label>).<a href="mpallocbits.go.html#line-124" class="ident">summarize</a>()
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Slow general path: the allocation spans more than one chunk</span><span class="comment">		 and at least one summary is guaranteed to change.</span><span class="comment">		</span><span class="comment">		 We can't assume a contiguous allocation happened, so walk over</span><span class="comment">		 every chunk in the range and manually recompute the summary.</span></div>
+<div class="code"><pre><code>		<label for="r64" class="ident">summary</label> := <label for="r49" class="ident">p</label>.<a href="#line-197" class="ident">summary</a>[<a href="../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r49" class="ident">p</label>.<a href="#line-197" class="ident">summary</a>)-<span class="lit-number">1</span>]
+		<span class="keyword">for</span> <label for="r65" class="ident">c</label> := <label for="r56" class="ident">sc</label>; <label for="r65" class="ident">c</label> &lt;= <label for="r57" class="ident">ec</label>; <label for="r65" class="ident">c</label>++ {
+			<label for="r64" class="ident">summary</label>[<label for="r65" class="ident">c</label>] = <label for="r49" class="ident">p</label>.<a href="#line-343" class="ident">chunkOf</a>(<label for="r65" class="ident">c</label>).<a href="mpallocbits.go.html#line-124" class="ident">summarize</a>()
+		}
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Walk up the radix tree and update the summaries appropriately.</span></div>
+<div class="code"><pre><code>	<label for="r66" class="ident">changed</label> := <a href="../../pkg/builtin.html#name-true" class="ident">true</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Update summaries at level l from summaries at level l+1.</span></div>
+<div class="code"><pre><code>		<label for="r66" class="ident">changed</label> = <a href="../../pkg/builtin.html#name-false" class="ident">false</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> "Constants" for the previous level which we</span><span class="comment">		 need to compute the summary from that level.</span></div>
+<div class="code"><pre><code>		<label for="r68" class="ident">logEntriesPerBlock</label> := <a href="mpagealloc_64bit.go.html#line-33" class="ident">levelBits</a>[<label for="r67" class="ident">l</label>+<span class="lit-number">1</span>]
+		<label for="r69" class="ident">logMaxPages</label> := <a href="mpagealloc_64bit.go.html#line-59" class="ident">levelLogPages</a>[<label for="r67" class="ident">l</label>+<span class="lit-number">1</span>]
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> lo and hi describe all the parts of the level we need to look at.</span></div>
+<div class="code"><pre><code>		<label for="r70" class="ident">lo</label>, <label for="r71" class="ident">hi</label> := <a href="#line-153" class="ident">addrsToSummaryRange</a>(<label for="r67" class="ident">l</label>, <label for="r51" class="ident">base</label>, <label for="r55" class="ident">limit</label>+<span class="lit-number">1</span>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Iterate over each block, updating the corresponding summary in the less-granular level.</span></div>
+<div class="code"><pre><code>		<span class="keyword">for</span> <label for="r72" class="ident">i</label> := <label for="r70" class="ident">lo</label>; <label for="r72" class="ident">i</label> &lt; <label for="r71" class="ident">hi</label>; <label for="r72" class="ident">i</label>++ {
+			<label for="r73" class="ident">children</label> := <label for="r49" class="ident">p</label>.<a href="#line-197" class="ident">summary</a>[<label for="r67" class="ident">l</label>+<span class="lit-number">1</span>][<label for="r72" class="ident">i</label>&lt;&lt;<label for="r68" class="ident">logEntriesPerBlock</label> : (<label for="r72" class="ident">i</label>+<span class="lit-number">1</span>)&lt;&lt;<label for="r68" class="ident">logEntriesPerBlock</label>]
+			<label for="r74" class="ident">sum</label> := <a href="#line-967" class="ident">mergeSummaries</a>(<label for="r73" class="ident">children</label>, <label for="r69" class="ident">logMaxPages</label>)
+			<label for="r75" class="ident">old</label> := <label for="r49" class="ident">p</label>.<a href="#line-197" class="ident">summary</a>[<label for="r67" class="ident">l</label>][<label for="r72" class="ident">i</label>]
+			<span class="keyword">if</span> <label for="r75" class="ident">old</label> != <label for="r74" class="ident">sum</label> {
+				<label for="r66" class="ident">changed</label> = <a href="../../pkg/builtin.html#name-true" class="ident">true</a>
+				<label for="r49" class="ident">p</label>.<a href="#line-197" class="ident">summary</a>[<label for="r67" class="ident">l</label>][<label for="r72" class="ident">i</label>] = <label for="r74" class="ident">sum</label>
+			}
+		}
+	}
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> allocRange marks the range of memory [base, base+npages*pageSize) as</span><span class="comment"> allocated. It also updates the summaries to reflect the newly-updated</span><span class="comment"> bitmap.</span><span class="comment"></span><span class="comment"> Returns the amount of scavenged memory in bytes present in the</span><span class="comment"> allocated range.</span><span class="comment"></span><span class="comment"> p.mheapLock must be held.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r76" class="ident">p</label> *<a href="#line-175" class="ident">pageAlloc</a>) <label for="r77" class="ident"><a href="../../use/runtime..pageAlloc*9ee3f.allocRange*663ab.html" class="ident">allocRange</a></label>(<label for="r78" class="ident">base</label>, <label for="r79" class="ident">npages</label> <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>) <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a> {
+	<a href="lockrank_off.go.html#line-43" class="ident">assertLockHeld</a>(<label for="r76" class="ident">p</label>.<a href="#line-292" class="ident">mheapLock</a>)
+
+	<label for="r80" class="ident">limit</label> := <label for="r78" class="ident">base</label> + <label for="r79" class="ident">npages</label>*<a href="malloc.go.html#line-118" class="ident">pageSize</a> - <span class="lit-number">1</span>
+	<label for="r81" class="ident">sc</label>, <label for="r82" class="ident">ec</label> := <a href="#line-101" class="ident">chunkIndex</a>(<label for="r78" class="ident">base</label>), <a href="#line-101" class="ident">chunkIndex</a>(<label for="r80" class="ident">limit</label>)
+	<label for="r83" class="ident">si</label>, <label for="r84" class="ident">ei</label> := <a href="#line-112" class="ident">chunkPageIndex</a>(<label for="r78" class="ident">base</label>), <a href="#line-112" class="ident">chunkPageIndex</a>(<label for="r80" class="ident">limit</label>)
+
+	<label for="r85" class="ident">scav</label> := <a href="../../pkg/builtin.html#name-uint" class="ident">uint</a>(<span class="lit-number">0</span>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> The range doesn't cross any chunk boundaries.</span></div>
+<div class="code"><pre><code>		<label for="r86" class="ident">chunk</label> := <label for="r76" class="ident">p</label>.<a href="#line-343" class="ident">chunkOf</a>(<label for="r81" class="ident">sc</label>)
+		<label for="r85" class="ident">scav</label> += <label for="r86" class="ident">chunk</label>.<a href="mpallocbits.go.html#line-411" class="ident">scavenged</a>.<a href="mpallocbits.go.html#line-98" class="ident">popcntRange</a>(<label for="r83" class="ident">si</label>, <label for="r84" class="ident">ei</label>+<span class="lit-number">1</span>-<label for="r83" class="ident">si</label>)
+		<label for="r86" class="ident">chunk</label>.<a href="mpallocbits.go.html#line-416" class="ident">allocRange</a>(<label for="r83" class="ident">si</label>, <label for="r84" class="ident">ei</label>+<span class="lit-number">1</span>-<label for="r83" class="ident">si</label>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> The range crosses at least one chunk boundary.</span></div>
+<div class="code"><pre><code>		<label for="r87" class="ident">chunk</label> := <label for="r76" class="ident">p</label>.<a href="#line-343" class="ident">chunkOf</a>(<label for="r81" class="ident">sc</label>)
+		<label for="r85" class="ident">scav</label> += <label for="r87" class="ident">chunk</label>.<a href="mpallocbits.go.html#line-411" class="ident">scavenged</a>.<a href="mpallocbits.go.html#line-98" class="ident">popcntRange</a>(<label for="r83" class="ident">si</label>, <a href="#line-58" class="ident">pallocChunkPages</a>-<label for="r83" class="ident">si</label>)
+		<label for="r87" class="ident">chunk</label>.<a href="mpallocbits.go.html#line-416" class="ident">allocRange</a>(<label for="r83" class="ident">si</label>, <a href="#line-58" class="ident">pallocChunkPages</a>-<label for="r83" class="ident">si</label>)
+		<span class="keyword">for</span> <label for="r88" class="ident">c</label> := <label for="r81" class="ident">sc</label> + <span class="lit-number">1</span>; <label for="r88" class="ident">c</label> &lt; <label for="r82" class="ident">ec</label>; <label for="r88" class="ident">c</label>++ {
+			<label for="r89" class="ident">chunk</label> := <label for="r76" class="ident">p</label>.<a href="#line-343" class="ident">chunkOf</a>(<label for="r88" class="ident">c</label>)
+			<label for="r85" class="ident">scav</label> += <label for="r89" class="ident">chunk</label>.<a href="mpallocbits.go.html#line-411" class="ident">scavenged</a>.<a href="mpallocbits.go.html#line-98" class="ident">popcntRange</a>(<span class="lit-number">0</span>, <a href="#line-58" class="ident">pallocChunkPages</a>)
+			<label for="r89" class="ident">chunk</label>.<a href="mpallocbits.go.html#line-424" class="ident">allocAll</a>()
+		}
+		<label for="r87" class="ident">chunk</label> = <label for="r76" class="ident">p</label>.<a href="#line-343" class="ident">chunkOf</a>(<label for="r82" class="ident">ec</label>)
+		<label for="r85" class="ident">scav</label> += <label for="r87" class="ident">chunk</label>.<a href="mpallocbits.go.html#line-411" class="ident">scavenged</a>.<a href="mpallocbits.go.html#line-98" class="ident">popcntRange</a>(<span class="lit-number">0</span>, <label for="r84" class="ident">ei</label>+<span class="lit-number">1</span>)
+		<label for="r87" class="ident">chunk</label>.<a href="mpallocbits.go.html#line-416" class="ident">allocRange</a>(<span class="lit-number">0</span>, <label for="r84" class="ident">ei</label>+<span class="lit-number">1</span>)
+	}
+	<label for="r76" class="ident">p</label>.<a href="#line-417" class="ident">update</a>(<label for="r78" class="ident">base</label>, <label for="r79" class="ident">npages</label>, <a href="../../pkg/builtin.html#name-true" class="ident">true</a>, <a href="../../pkg/builtin.html#name-true" class="ident">true</a>)
+	<span class="keyword">return</span> <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<label for="r85" class="ident">scav</label>) * <a href="malloc.go.html#line-118" class="ident">pageSize</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> findMappedAddr returns the smallest mapped offAddr that is</span><span class="comment"> &gt;= addr. That is, if addr refers to mapped memory, then it is</span><span class="comment"> returned. If addr is higher than any mapped region, then</span><span class="comment"> it returns maxOffAddr.</span><span class="comment"></span><span class="comment"> p.mheapLock must be held.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r90" class="ident">p</label> *<a href="#line-175" class="ident">pageAlloc</a>) <label for="r91" class="ident"><a href="../../use/runtime..pageAlloc*9ee3f.findMappedAddr*71f42.html" class="ident">findMappedAddr</a></label>(<label for="r92" class="ident">addr</label> <a href="mranges.go.html#line-98" class="ident">offAddr</a>) <a href="mranges.go.html#line-98" class="ident">offAddr</a> {
+	<a href="lockrank_off.go.html#line-43" class="ident">assertLockHeld</a>(<label for="r90" class="ident">p</label>.<a href="#line-292" class="ident">mheapLock</a>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> If we're not in a test, validate first by checking mheap_.arenas.</span><span class="comment">	 This is a fast path which is only safe to use outside of testing.</span></div>
+<div class="code"><pre><code>	<label for="r93" class="ident">ai</label> := <a href="mheap.go.html#line-563" class="ident">arenaIndex</a>(<label for="r92" class="ident">addr</label>.<a href="mranges.go.html#line-140" class="ident">addr</a>())
+	<span class="keyword">if</span> <label for="r90" class="ident">p</label>.<a href="#line-299" class="ident">test</a> || <a href="mheap.go.html#line-221" class="ident">mheap_</a>.<a href="mheap.go.html#line-156" class="ident">arenas</a>[<label for="r93" class="ident">ai</label>.<a href="mheap.go.html#line-575" class="ident">l1</a>()] == <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a> || <a href="mheap.go.html#line-221" class="ident">mheap_</a>.<a href="mheap.go.html#line-156" class="ident">arenas</a>[<label for="r93" class="ident">ai</label>.<a href="mheap.go.html#line-575" class="ident">l1</a>()][<label for="r93" class="ident">ai</label>.<a href="mheap.go.html#line-585" class="ident">l2</a>()] == <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<label for="r94" class="ident">vAddr</label>, <label for="r95" class="ident">ok</label> := <label for="r90" class="ident">p</label>.<a href="#line-261" class="ident">inUse</a>.<a href="mranges.go.html#line-222" class="ident">findAddrGreaterEqual</a>(<label for="r92" class="ident">addr</label>.<a href="mranges.go.html#line-140" class="ident">addr</a>())
+		<span class="keyword">if</span> <label for="r95" class="ident">ok</label> {
+			<span class="keyword">return</span> <a href="mranges.go.html#line-98" class="ident">offAddr</a>{<label for="r94" class="ident">vAddr</label>}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> The candidate search address is greater than any</span><span class="comment">			 known address, which means we definitely have no</span><span class="comment">			 free memory left.</span></div>
+<div class="code"><pre><code>			<span class="keyword">return</span> <a href="mranges.go.html#line-92" class="ident">maxOffAddr</a>
+		}
+	}
+	<span class="keyword">return</span> <label for="r92" class="ident">addr</label>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> find searches for the first (address-ordered) contiguous free region of</span><span class="comment"> npages in size and returns a base address for that region.</span><span class="comment"></span><span class="comment"> It uses p.searchAddr to prune its search and assumes that no palloc chunks</span><span class="comment"> below chunkIndex(p.searchAddr) contain any free memory at all.</span><span class="comment"></span><span class="comment"> find also computes and returns a candidate p.searchAddr, which may or</span><span class="comment"> may not prune more of the address space than p.searchAddr already does.</span><span class="comment"> This candidate is always a valid p.searchAddr.</span><span class="comment"></span><span class="comment"> find represents the slow path and the full radix tree search.</span><span class="comment"></span><span class="comment"> Returns a base address of 0 on failure, in which case the candidate</span><span class="comment"> searchAddr returned is invalid and must be ignored.</span><span class="comment"></span><span class="comment"> p.mheapLock must be held.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r96" class="ident">p</label> *<a href="#line-175" class="ident">pageAlloc</a>) <label for="r97" class="ident"><a href="../../use/runtime..pageAlloc*9ee3f.find*e6640.html" class="ident">find</a></label>(<label for="r98" class="ident">npages</label> <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>) (<a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>, <a href="mranges.go.html#line-98" class="ident">offAddr</a>) {
+	<a href="lockrank_off.go.html#line-43" class="ident">assertLockHeld</a>(<label for="r96" class="ident">p</label>.<a href="#line-292" class="ident">mheapLock</a>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Search algorithm.</span><span class="comment">	</span><span class="comment">	 This algorithm walks each level l of the radix tree from the root level</span><span class="comment">	 to the leaf level. It iterates over at most 1 &lt;&lt; levelBits[l] of entries</span><span class="comment">	 in a given level in the radix tree, and uses the summary information to</span><span class="comment">	 find either:</span><span class="comment">	  1) That a given subtree contains a large enough contiguous region, at</span><span class="comment">	     which point it continues iterating on the next level, or</span><span class="comment">	  2) That there are enough contiguous boundary-crossing bits to satisfy</span><span class="comment">	     the allocation, at which point it knows exactly where to start</span><span class="comment">	     allocating from.</span><span class="comment">	</span><span class="comment">	 i tracks the index into the current level l's structure for the</span><span class="comment">	 contiguous 1 &lt;&lt; levelBits[l] entries we're actually interested in.</span><span class="comment">	</span><span class="comment">	 NOTE: Technically this search could allocate a region which crosses</span><span class="comment">	 the arenaBaseOffset boundary, which when arenaBaseOffset != 0, is</span><span class="comment">	 a discontinuity. However, the only way this could happen is if the</span><span class="comment">	 page at the zero address is mapped, and this is impossible on</span><span class="comment">	 every system we support where arenaBaseOffset != 0. So, the</span><span class="comment">	 discontinuity is already encoded in the fact that the OS will never</span><span class="comment">	 map the zero page for us, and this function doesn't try to handle</span><span class="comment">	 this case in any way.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> i is the beginning of the block of entries we're searching at the</span><span class="comment">	 current level.</span></div>
+<div class="code"><pre><code>	<label for="r99" class="ident">i</label> := <span class="lit-number">0</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> firstFree is the region of address space that we are certain to</span><span class="comment">	 find the first free page in the heap. base and bound are the inclusive</span><span class="comment">	 bounds of this window, and both are addresses in the linearized, contiguous</span><span class="comment">	 view of the address space (with arenaBaseOffset pre-added). At each level,</span><span class="comment">	 this window is narrowed as we find the memory region containing the</span><span class="comment">	 first free page of memory. To begin with, the range reflects the</span><span class="comment">	 full process address space.</span><span class="comment">	</span><span class="comment">	 firstFree is updated by calling foundFree each time free space in the</span><span class="comment">	 heap is discovered.</span><span class="comment">	</span><span class="comment">	 At the end of the search, base.addr() is the best new</span><span class="comment">	 searchAddr we could deduce in this search.</span></div>
+<div class="code"><pre><code>	<label for="r100" class="ident">firstFree</label> := <span class="keyword">struct</span> {
+		<label for="r101" class="ident">base</label>, <label for="r102" class="ident">bound</label> <a href="mranges.go.html#line-98" class="ident">offAddr</a>
+	}{
+		<label for="r101" class="ident">base</label>:  <a href="mranges.go.html#line-87" class="ident">minOffAddr</a>,
+		<label for="r102" class="ident">bound</label>: <a href="mranges.go.html#line-92" class="ident">maxOffAddr</a>,
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> foundFree takes the given address range [addr, addr+size) and</span><span class="comment">	 updates firstFree if it is a narrower range. The input range must</span><span class="comment">	 either be fully contained within firstFree or not overlap with it</span><span class="comment">	 at all.</span><span class="comment">	</span><span class="comment">	 This way, we'll record the first summary we find with any free</span><span class="comment">	 pages on the root level and narrow that down if we descend into</span><span class="comment">	 that summary. But as soon as we need to iterate beyond that summary</span><span class="comment">	 in a level to find a large enough range, we'll stop narrowing.</span></div>
+<div class="code"><pre><code>	<label for="r103" class="ident">foundFree</label> := <span class="keyword">func</span>(<label for="r104" class="ident">addr</label> <a href="mranges.go.html#line-98" class="ident">offAddr</a>, <label for="r105" class="ident">size</label> <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>) {
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> This range fits within the current firstFree window, so narrow</span><span class="comment">			 down the firstFree window to the base and bound of this range.</span></div>
+<div class="code"><pre><code>			<label for="r100" class="ident">firstFree</label>.<label for="r101" class="ident">base</label> = <label for="r104" class="ident">addr</label>
+			<label for="r100" class="ident">firstFree</label>.<label for="r102" class="ident">bound</label> = <label for="r104" class="ident">addr</label>.<a href="mranges.go.html#line-105" class="ident">add</a>(<label for="r105" class="ident">size</label> - <span class="lit-number">1</span>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> This range only partially overlaps with the firstFree range,</span><span class="comment">			 so throw.</span></div>
+<div class="code"><pre><code>			<a href="../../pkg/builtin.html#name-print" class="ident">print</a>(<span class="lit-string">"runtime: addr = "</span>, <a href="print.go.html#line-15" class="ident">hex</a>(<label for="r104" class="ident">addr</label>.<a href="mranges.go.html#line-140" class="ident">addr</a>()), <span class="lit-string">", size = "</span>, <label for="r105" class="ident">size</label>, <span class="lit-string">"\n"</span>)
+			<a href="../../pkg/builtin.html#name-print" class="ident">print</a>(<span class="lit-string">"runtime: base = "</span>, <a href="print.go.html#line-15" class="ident">hex</a>(<label for="r100" class="ident">firstFree</label>.<label for="r101" class="ident">base</label>.<a href="mranges.go.html#line-140" class="ident">addr</a>()), <span class="lit-string">", bound = "</span>, <a href="print.go.html#line-15" class="ident">hex</a>(<label for="r100" class="ident">firstFree</label>.<label for="r102" class="ident">bound</label>.<a href="mranges.go.html#line-140" class="ident">addr</a>()), <span class="lit-string">"\n"</span>)
+			<a href="panic.go.html#line-1107" class="ident">throw</a>(<span class="lit-string">"range partially overlaps"</span>)
+		}
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> lastSum is the summary which we saw on the previous level that made us</span><span class="comment">	 move on to the next level. Used to print additional information in the</span><span class="comment">	 case of a catastrophic failure.</span><span class="comment">	 lastSumIdx is that summary's index in the previous level.</span></div>
+<div class="code"><pre><code>	<label for="r106" class="ident">lastSum</label> := <a href="#line-922" class="ident">packPallocSum</a>(<span class="lit-number">0</span>, <span class="lit-number">0</span>, <span class="lit-number">0</span>)
+	<label for="r107" class="ident">lastSumIdx</label> := -<span class="lit-number">1</span>
+
+<label for="r108" class="ident">nextLevel</label>:
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> For the root level, entriesPerBlock is the whole level.</span></div>
+<div class="code"><pre><code>		<label for="r110" class="ident">entriesPerBlock</label> := <span class="lit-number">1</span> &lt;&lt; <a href="mpagealloc_64bit.go.html#line-33" class="ident">levelBits</a>[<label for="r109" class="ident">l</label>]
+		<label for="r111" class="ident">logMaxPages</label> := <a href="mpagealloc_64bit.go.html#line-59" class="ident">levelLogPages</a>[<label for="r109" class="ident">l</label>]
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> We've moved into a new level, so let's update i to our new</span><span class="comment">		 starting index. This is a no-op for level 0.</span></div>
+<div class="code"><pre><code>		<label for="r99" class="ident">i</label> &lt;&lt;= <a href="mpagealloc_64bit.go.html#line-33" class="ident">levelBits</a>[<label for="r109" class="ident">l</label>]
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Slice out the block of entries we care about.</span></div>
+<div class="code"><pre><code>		<label for="r112" class="ident">entries</label> := <label for="r96" class="ident">p</label>.<a href="#line-197" class="ident">summary</a>[<label for="r109" class="ident">l</label>][<label for="r99" class="ident">i</label> : <label for="r99" class="ident">i</label>+<label for="r110" class="ident">entriesPerBlock</label>]
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Determine j0, the first index we should start iterating from.</span><span class="comment">		 The searchAddr may help us eliminate iterations if we followed the</span><span class="comment">		 searchAddr on the previous level or we're on the root leve, in which</span><span class="comment">		 case the searchAddr should be the same as i after levelShift.</span></div>
+<div class="code"><pre><code>		<label for="r113" class="ident">j0</label> := <span class="lit-number">0</span>
+		<span class="keyword">if</span> <label for="r114" class="ident">searchIdx</label> := <a href="#line-138" class="ident">offAddrToLevelIndex</a>(<label for="r109" class="ident">l</label>, <label for="r96" class="ident">p</label>.<a href="#line-242" class="ident">searchAddr</a>); <label for="r114" class="ident">searchIdx</label>&amp;^(<label for="r110" class="ident">entriesPerBlock</label>-<span class="lit-number">1</span>) == <label for="r99" class="ident">i</label> {
+			<label for="r113" class="ident">j0</label> = <label for="r114" class="ident">searchIdx</label> &amp; (<label for="r110" class="ident">entriesPerBlock</label> - <span class="lit-number">1</span>)
+		}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Run over the level entries looking for</span><span class="comment">		 a contiguous run of at least npages either</span><span class="comment">		 within an entry or across entries.</span><span class="comment">		</span><span class="comment">		 base contains the page index (relative to</span><span class="comment">		 the first entry's first page) of the currently</span><span class="comment">		 considered run of consecutive pages.</span><span class="comment">		</span><span class="comment">		 size contains the size of the currently considered</span><span class="comment">		 run of consecutive pages.</span></div>
+<div class="code"><pre><code>		<span class="keyword">var</span> <label for="r115" class="ident">base</label>, <label for="r116" class="ident">size</label> <a href="../../pkg/builtin.html#name-uint" class="ident">uint</a>
+		<span class="keyword">for</span> <label for="r117" class="ident">j</label> := <label for="r113" class="ident">j0</label>; <label for="r117" class="ident">j</label> &lt; <a href="../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r112" class="ident">entries</label>); <label for="r117" class="ident">j</label>++ {
+			<label for="r118" class="ident">sum</label> := <label for="r112" class="ident">entries</label>[<label for="r117" class="ident">j</label>]
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> A full entry means we broke any streak and</span><span class="comment">				 that we should skip it altogether.</span></div>
+<div class="code"><pre><code>				<label for="r116" class="ident">size</label> = <span class="lit-number">0</span>
+				<span class="keyword">continue</span>
+			}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> We've encountered a non-zero summary which means</span><span class="comment">			 free memory, so update firstFree.</span></div>
+<div class="code"><pre><code>			<label for="r103" class="ident">foundFree</label>(<a href="#line-144" class="ident">levelIndexToOffAddr</a>(<label for="r109" class="ident">l</label>, <label for="r99" class="ident">i</label>+<label for="r117" class="ident">j</label>), (<a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<span class="lit-number">1</span>)&lt;&lt;<label for="r111" class="ident">logMaxPages</label>)*<a href="malloc.go.html#line-118" class="ident">pageSize</a>)
+
+			<label for="r119" class="ident">s</label> := <label for="r118" class="ident">sum</label>.<a href="#line-932" class="ident">start</a>()
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> If size == 0 we don't have a run yet,</span><span class="comment">				 which means base isn't valid. So, set</span><span class="comment">				 base to the first page in this block.</span></div>
+<div class="code"><pre><code>				<span class="keyword">if</span> <label for="r116" class="ident">size</label> == <span class="lit-number">0</span> {
+					<label for="r115" class="ident">base</label> = <a href="../../pkg/builtin.html#name-uint" class="ident">uint</a>(<label for="r117" class="ident">j</label>) &lt;&lt; <label for="r111" class="ident">logMaxPages</label>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> We hit npages; we're done!</span></div>
+<div class="code"><pre><code>				<label for="r116" class="ident">size</label> += <label for="r119" class="ident">s</label>
+				<span class="keyword">break</span>
+			}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> The entry itself contains npages contiguous</span><span class="comment">				 free pages, so continue on the next level</span><span class="comment">				 to find that run.</span></div>
+<div class="code"><pre><code>				<label for="r99" class="ident">i</label> += <label for="r117" class="ident">j</label>
+				<label for="r107" class="ident">lastSumIdx</label> = <label for="r99" class="ident">i</label>
+				<label for="r106" class="ident">lastSum</label> = <label for="r118" class="ident">sum</label>
+				<span class="keyword">continue</span> <label for="r108" class="ident">nextLevel</label>
+			}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> We either don't have a current run started, or this entry</span><span class="comment">				 isn't totally free (meaning we can't continue the current</span><span class="comment">				 one), so try to begin a new run by setting size and base</span><span class="comment">				 based on sum.end.</span></div>
+<div class="code"><pre><code>				<label for="r116" class="ident">size</label> = <label for="r118" class="ident">sum</label>.<a href="#line-948" class="ident">end</a>()
+				<label for="r115" class="ident">base</label> = <a href="../../pkg/builtin.html#name-uint" class="ident">uint</a>(<label for="r117" class="ident">j</label>+<span class="lit-number">1</span>)&lt;&lt;<label for="r111" class="ident">logMaxPages</label> - <label for="r116" class="ident">size</label>
+				<span class="keyword">continue</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> The entry is completely free, so continue the run.</span></div>
+<div class="code"><pre><code>			<label for="r116" class="ident">size</label> += <span class="lit-number">1</span> &lt;&lt; <label for="r111" class="ident">logMaxPages</label>
+		}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> We found a sufficiently large run of free pages straddling</span><span class="comment">			 some boundary, so compute the address and return it.</span></div>
+<div class="code"><pre><code>			<label for="r120" class="ident">addr</label> := <a href="#line-144" class="ident">levelIndexToOffAddr</a>(<label for="r109" class="ident">l</label>, <label for="r99" class="ident">i</label>).<a href="mranges.go.html#line-105" class="ident">add</a>(<a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<label for="r115" class="ident">base</label>) * <a href="malloc.go.html#line-118" class="ident">pageSize</a>).<a href="mranges.go.html#line-140" class="ident">addr</a>()
+			<span class="keyword">return</span> <label for="r120" class="ident">addr</label>, <label for="r96" class="ident">p</label>.<a href="#line-542" class="ident">findMappedAddr</a>(<label for="r100" class="ident">firstFree</label>.<label for="r101" class="ident">base</label>)
+		}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> We're at level zero, so that means we've exhausted our search.</span></div>
+<div class="code"><pre><code>			<span class="keyword">return</span> <span class="lit-number">0</span>, <a href="#line-90" class="ident">maxSearchAddr</a>
+		}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> We're not at level zero, and we exhausted the level we were looking in.</span><span class="comment">		 This means that either our calculations were wrong or the level above</span><span class="comment">		 lied to us. In either case, dump some useful state and throw.</span></div>
+<div class="code"><pre><code>		<a href="../../pkg/builtin.html#name-print" class="ident">print</a>(<span class="lit-string">"runtime: summary["</span>, <label for="r109" class="ident">l</label>-<span class="lit-number">1</span>, <span class="lit-string">"]["</span>, <label for="r107" class="ident">lastSumIdx</label>, <span class="lit-string">"] = "</span>, <label for="r106" class="ident">lastSum</label>.<a href="#line-932" class="ident">start</a>(), <span class="lit-string">", "</span>, <label for="r106" class="ident">lastSum</label>.<a href="#line-940" class="ident">max</a>(), <span class="lit-string">", "</span>, <label for="r106" class="ident">lastSum</label>.<a href="#line-948" class="ident">end</a>(), <span class="lit-string">"\n"</span>)
+		<a href="../../pkg/builtin.html#name-print" class="ident">print</a>(<span class="lit-string">"runtime: level = "</span>, <label for="r109" class="ident">l</label>, <span class="lit-string">", npages = "</span>, <label for="r98" class="ident">npages</label>, <span class="lit-string">", j0 = "</span>, <label for="r113" class="ident">j0</label>, <span class="lit-string">"\n"</span>)
+		<a href="../../pkg/builtin.html#name-print" class="ident">print</a>(<span class="lit-string">"runtime: p.searchAddr = "</span>, <a href="print.go.html#line-15" class="ident">hex</a>(<label for="r96" class="ident">p</label>.<a href="#line-242" class="ident">searchAddr</a>.<a href="mranges.go.html#line-140" class="ident">addr</a>()), <span class="lit-string">", i = "</span>, <label for="r99" class="ident">i</label>, <span class="lit-string">"\n"</span>)
+		<a href="../../pkg/builtin.html#name-print" class="ident">print</a>(<span class="lit-string">"runtime: levelShift[level] = "</span>, <a href="mpagealloc_64bit.go.html#line-47" class="ident">levelShift</a>[<label for="r109" class="ident">l</label>], <span class="lit-string">", levelBits[level] = "</span>, <a href="mpagealloc_64bit.go.html#line-33" class="ident">levelBits</a>[<label for="r109" class="ident">l</label>], <span class="lit-string">"\n"</span>)
+		<span class="keyword">for</span> <label for="r121" class="ident">j</label> := <span class="lit-number">0</span>; <label for="r121" class="ident">j</label> &lt; <a href="../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r112" class="ident">entries</label>); <label for="r121" class="ident">j</label>++ {
+			<label for="r122" class="ident">sum</label> := <label for="r112" class="ident">entries</label>[<label for="r121" class="ident">j</label>]
+			<a href="../../pkg/builtin.html#name-print" class="ident">print</a>(<span class="lit-string">"runtime: summary["</span>, <label for="r109" class="ident">l</label>, <span class="lit-string">"]["</span>, <label for="r99" class="ident">i</label>+<label for="r121" class="ident">j</label>, <span class="lit-string">"] = ("</span>, <label for="r122" class="ident">sum</label>.<a href="#line-932" class="ident">start</a>(), <span class="lit-string">", "</span>, <label for="r122" class="ident">sum</label>.<a href="#line-940" class="ident">max</a>(), <span class="lit-string">", "</span>, <label for="r122" class="ident">sum</label>.<a href="#line-948" class="ident">end</a>(), <span class="lit-string">")\n"</span>)
+		}
+		<a href="panic.go.html#line-1107" class="ident">throw</a>(<span class="lit-string">"bad summary data"</span>)
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Since we've gotten to this point, that means we haven't found a</span><span class="comment">	 sufficiently-sized free region straddling some boundary (chunk or larger).</span><span class="comment">	 This means the last summary we inspected must have had a large enough "max"</span><span class="comment">	 value, so look inside the chunk to find a suitable run.</span><span class="comment">	</span><span class="comment">	 After iterating over all levels, i must contain a chunk index which</span><span class="comment">	 is what the final level represents.</span></div>
+<div class="code"><pre><code>	<label for="r123" class="ident">ci</label> := <a href="#line-97" class="ident">chunkIdx</a>(<label for="r99" class="ident">i</label>)
+	<label for="r124" class="ident">j</label>, <label for="r125" class="ident">searchIdx</label> := <label for="r96" class="ident">p</label>.<a href="#line-343" class="ident">chunkOf</a>(<label for="r123" class="ident">ci</label>).<a href="mpallocbits.go.html#line-227" class="ident">find</a>(<label for="r98" class="ident">npages</label>, <span class="lit-number">0</span>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> We couldn't find any space in this chunk despite the summaries telling</span><span class="comment">		 us it should be there. There's likely a bug, so dump some state and throw.</span></div>
+<div class="code"><pre><code>		<label for="r126" class="ident">sum</label> := <label for="r96" class="ident">p</label>.<a href="#line-197" class="ident">summary</a>[<a href="../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r96" class="ident">p</label>.<a href="#line-197" class="ident">summary</a>)-<span class="lit-number">1</span>][<label for="r99" class="ident">i</label>]
+		<a href="../../pkg/builtin.html#name-print" class="ident">print</a>(<span class="lit-string">"runtime: summary["</span>, <a href="../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r96" class="ident">p</label>.<a href="#line-197" class="ident">summary</a>)-<span class="lit-number">1</span>, <span class="lit-string">"]["</span>, <label for="r99" class="ident">i</label>, <span class="lit-string">"] = ("</span>, <label for="r126" class="ident">sum</label>.<a href="#line-932" class="ident">start</a>(), <span class="lit-string">", "</span>, <label for="r126" class="ident">sum</label>.<a href="#line-940" class="ident">max</a>(), <span class="lit-string">", "</span>, <label for="r126" class="ident">sum</label>.<a href="#line-948" class="ident">end</a>(), <span class="lit-string">")\n"</span>)
+		<a href="../../pkg/builtin.html#name-print" class="ident">print</a>(<span class="lit-string">"runtime: npages = "</span>, <label for="r98" class="ident">npages</label>, <span class="lit-string">"\n"</span>)
+		<a href="panic.go.html#line-1107" class="ident">throw</a>(<span class="lit-string">"bad summary data"</span>)
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Compute the address at which the free space starts.</span></div>
+<div class="code"><pre><code>	<label for="r127" class="ident">addr</label> := <a href="#line-106" class="ident">chunkBase</a>(<label for="r123" class="ident">ci</label>) + <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<label for="r124" class="ident">j</label>)*<a href="malloc.go.html#line-118" class="ident">pageSize</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Since we actually searched the chunk, we may have</span><span class="comment">	 found an even narrower free window.</span></div>
+<div class="code"><pre><code>	<label for="r128" class="ident">searchAddr</label> := <a href="#line-106" class="ident">chunkBase</a>(<label for="r123" class="ident">ci</label>) + <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<label for="r125" class="ident">searchIdx</label>)*<a href="malloc.go.html#line-118" class="ident">pageSize</a>
+	<label for="r103" class="ident">foundFree</label>(<a href="mranges.go.html#line-98" class="ident">offAddr</a>{<label for="r128" class="ident">searchAddr</label>}, <a href="#line-106" class="ident">chunkBase</a>(<label for="r123" class="ident">ci</label>+<span class="lit-number">1</span>)-<label for="r128" class="ident">searchAddr</label>)
+	<span class="keyword">return</span> <label for="r127" class="ident">addr</label>, <label for="r96" class="ident">p</label>.<a href="#line-542" class="ident">findMappedAddr</a>(<label for="r100" class="ident">firstFree</label>.<label for="r101" class="ident">base</label>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> alloc allocates npages worth of memory from the page heap, returning the base</span><span class="comment"> address for the allocation and the amount of scavenged memory in bytes</span><span class="comment"> contained in the region [base address, base address + npages*pageSize).</span><span class="comment"></span><span class="comment"> Returns a 0 base address on failure, in which case other returned values</span><span class="comment"> should be ignored.</span><span class="comment"></span><span class="comment"> p.mheapLock must be held.</span><span class="comment"></span><span class="comment"> Must run on the system stack because p.mheapLock must be held.</span><span class="comment"></span><span class="comment">go:systemstack</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r129" class="ident">p</label> *<a href="#line-175" class="ident">pageAlloc</a>) <label for="r130" class="ident"><a href="../../use/runtime..pageAlloc*9ee3f.alloc*bcd3b.html" class="ident">alloc</a></label>(<label for="r131" class="ident">npages</label> <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>) (<label for="r132" class="ident">addr</label> <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>, <label for="r133" class="ident">scav</label> <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>) {
+	<a href="lockrank_off.go.html#line-43" class="ident">assertLockHeld</a>(<label for="r129" class="ident">p</label>.<a href="#line-292" class="ident">mheapLock</a>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> If the searchAddr refers to a region which has a higher address than</span><span class="comment">	 any known chunk, then we know we're out of memory.</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> <a href="#line-101" class="ident">chunkIndex</a>(<label for="r129" class="ident">p</label>.<a href="#line-242" class="ident">searchAddr</a>.<a href="mranges.go.html#line-140" class="ident">addr</a>()) &gt;= <label for="r129" class="ident">p</label>.<a href="#line-248" class="ident">end</a> {
+		<span class="keyword">return</span> <span class="lit-number">0</span>, <span class="lit-number">0</span>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> If npages has a chance of fitting in the chunk where the searchAddr is,</span><span class="comment">	 search it directly.</span></div>
+<div class="code"><pre><code>	<label for="r134" class="ident">searchAddr</label> := <a href="mranges.go.html#line-87" class="ident">minOffAddr</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> npages is guaranteed to be no greater than pallocChunkPages here.</span></div>
+<div class="code"><pre><code>		<label for="r135" class="ident">i</label> := <a href="#line-101" class="ident">chunkIndex</a>(<label for="r129" class="ident">p</label>.<a href="#line-242" class="ident">searchAddr</a>.<a href="mranges.go.html#line-140" class="ident">addr</a>())
+		<span class="keyword">if</span> <label for="r136" class="ident">max</label> := <label for="r129" class="ident">p</label>.<a href="#line-197" class="ident">summary</a>[<a href="../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r129" class="ident">p</label>.<a href="#line-197" class="ident">summary</a>)-<span class="lit-number">1</span>][<label for="r135" class="ident">i</label>].<a href="#line-940" class="ident">max</a>(); <label for="r136" class="ident">max</label> &gt;= <a href="../../pkg/builtin.html#name-uint" class="ident">uint</a>(<label for="r131" class="ident">npages</label>) {
+			<label for="r137" class="ident">j</label>, <label for="r138" class="ident">searchIdx</label> := <label for="r129" class="ident">p</label>.<a href="#line-343" class="ident">chunkOf</a>(<label for="r135" class="ident">i</label>).<a href="mpallocbits.go.html#line-227" class="ident">find</a>(<label for="r131" class="ident">npages</label>, <a href="#line-112" class="ident">chunkPageIndex</a>(<label for="r129" class="ident">p</label>.<a href="#line-242" class="ident">searchAddr</a>.<a href="mranges.go.html#line-140" class="ident">addr</a>()))
+			<span class="keyword">if</span> <label for="r137" class="ident">j</label> == ^<a href="../../pkg/builtin.html#name-uint" class="ident">uint</a>(<span class="lit-number">0</span>) {
+				<a href="../../pkg/builtin.html#name-print" class="ident">print</a>(<span class="lit-string">"runtime: max = "</span>, <label for="r136" class="ident">max</label>, <span class="lit-string">", npages = "</span>, <label for="r131" class="ident">npages</label>, <span class="lit-string">"\n"</span>)
+				<a href="../../pkg/builtin.html#name-print" class="ident">print</a>(<span class="lit-string">"runtime: searchIdx = "</span>, <a href="#line-112" class="ident">chunkPageIndex</a>(<label for="r129" class="ident">p</label>.<a href="#line-242" class="ident">searchAddr</a>.<a href="mranges.go.html#line-140" class="ident">addr</a>()), <span class="lit-string">", p.searchAddr = "</span>, <a href="print.go.html#line-15" class="ident">hex</a>(<label for="r129" class="ident">p</label>.<a href="#line-242" class="ident">searchAddr</a>.<a href="mranges.go.html#line-140" class="ident">addr</a>()), <span class="lit-string">"\n"</span>)
+				<a href="panic.go.html#line-1107" class="ident">throw</a>(<span class="lit-string">"bad summary data"</span>)
+			}
+			<label for="r132" class="ident">addr</label> = <a href="#line-106" class="ident">chunkBase</a>(<label for="r135" class="ident">i</label>) + <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<label for="r137" class="ident">j</label>)*<a href="malloc.go.html#line-118" class="ident">pageSize</a>
+			<label for="r134" class="ident">searchAddr</label> = <a href="mranges.go.html#line-98" class="ident">offAddr</a>{<a href="#line-106" class="ident">chunkBase</a>(<label for="r135" class="ident">i</label>) + <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<label for="r138" class="ident">searchIdx</label>)*<a href="malloc.go.html#line-118" class="ident">pageSize</a>}
+			<span class="keyword">goto</span> <label for="r139" class="ident">Found</label>
+		}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> We failed to use a searchAddr for one reason or another, so try</span><span class="comment">	 the slow path.</span></div>
+<div class="code"><pre><code>	<label for="r132" class="ident">addr</label>, <label for="r134" class="ident">searchAddr</label> = <label for="r129" class="ident">p</label>.<a href="#line-578" class="ident">find</a>(<label for="r131" class="ident">npages</label>)
+	<span class="keyword">if</span> <label for="r132" class="ident">addr</label> == <span class="lit-number">0</span> {
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> We failed to find a single free page, the smallest unit</span><span class="comment">			 of allocation. This means we know the heap is completely</span><span class="comment">			 exhausted. Otherwise, the heap still might have free</span><span class="comment">			 space in it, just not enough contiguous space to</span><span class="comment">			 accommodate npages.</span></div>
+<div class="code"><pre><code>			<label for="r129" class="ident">p</label>.<a href="#line-242" class="ident">searchAddr</a> = <a href="#line-90" class="ident">maxSearchAddr</a>
+		}
+		<span class="keyword">return</span> <span class="lit-number">0</span>, <span class="lit-number">0</span>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Go ahead and actually mark the bits now that we have an address.</span></div>
+<div class="code"><pre><code>	<label for="r133" class="ident">scav</label> = <label for="r129" class="ident">p</label>.<a href="#line-505" class="ident">allocRange</a>(<label for="r132" class="ident">addr</label>, <label for="r131" class="ident">npages</label>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> If we found a higher searchAddr, we know that all the</span><span class="comment">	 heap memory before that searchAddr in an offset address space is</span><span class="comment">	 allocated, so bump p.searchAddr up to the new one.</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> <label for="r129" class="ident">p</label>.<a href="#line-242" class="ident">searchAddr</a>.<a href="mranges.go.html#line-122" class="ident">lessThan</a>(<label for="r134" class="ident">searchAddr</label>) {
+		<label for="r129" class="ident">p</label>.<a href="#line-242" class="ident">searchAddr</a> = <label for="r134" class="ident">searchAddr</label>
+	}
+	<span class="keyword">return</span> <label for="r132" class="ident">addr</label>, <label for="r133" class="ident">scav</label>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> free returns npages worth of memory starting at base back to the page heap.</span><span class="comment"></span><span class="comment"> p.mheapLock must be held.</span><span class="comment"></span><span class="comment"> Must run on the system stack because p.mheapLock must be held.</span><span class="comment"></span><span class="comment">go:systemstack</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r140" class="ident">p</label> *<a href="#line-175" class="ident">pageAlloc</a>) <label for="r141" class="ident"><a href="../../use/runtime..pageAlloc*9ee3f.free*ad95d.html" class="ident">free</a></label>(<label for="r142" class="ident">base</label>, <label for="r143" class="ident">npages</label> <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>) {
+	<a href="lockrank_off.go.html#line-43" class="ident">assertLockHeld</a>(<label for="r140" class="ident">p</label>.<a href="#line-292" class="ident">mheapLock</a>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> If we're freeing pages below the p.searchAddr, update searchAddr.</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> <label for="r144" class="ident">b</label> := (<a href="mranges.go.html#line-98" class="ident">offAddr</a>{<label for="r142" class="ident">base</label>}); <label for="r144" class="ident">b</label>.<a href="mranges.go.html#line-122" class="ident">lessThan</a>(<label for="r140" class="ident">p</label>.<a href="#line-242" class="ident">searchAddr</a>) {
+		<label for="r140" class="ident">p</label>.<a href="#line-242" class="ident">searchAddr</a> = <label for="r144" class="ident">b</label>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Update the free high watermark for the scavenger.</span></div>
+<div class="code"><pre><code>	<label for="r145" class="ident">limit</label> := <label for="r142" class="ident">base</label> + <label for="r143" class="ident">npages</label>*<a href="malloc.go.html#line-118" class="ident">pageSize</a> - <span class="lit-number">1</span>
+	<span class="keyword">if</span> <label for="r146" class="ident">offLimit</label> := (<a href="mranges.go.html#line-98" class="ident">offAddr</a>{<label for="r145" class="ident">limit</label>}); <label for="r140" class="ident">p</label>.<a href="#line-266" class="ident">scav</a>.<a href="#line-287" class="ident">freeHWM</a>.<a href="mranges.go.html#line-122" class="ident">lessThan</a>(<label for="r146" class="ident">offLimit</label>) {
+		<label for="r140" class="ident">p</label>.<a href="#line-266" class="ident">scav</a>.<a href="#line-287" class="ident">freeHWM</a> = <label for="r146" class="ident">offLimit</label>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Fast path: we're clearing a single bit, and we know exactly</span><span class="comment">		 where it is, so mark it directly.</span></div>
+<div class="code"><pre><code>		<label for="r147" class="ident">i</label> := <a href="#line-101" class="ident">chunkIndex</a>(<label for="r142" class="ident">base</label>)
+		<label for="r140" class="ident">p</label>.<a href="#line-343" class="ident">chunkOf</a>(<label for="r147" class="ident">i</label>).<a href="mpallocbits.go.html#line-349" class="ident">free1</a>(<a href="#line-112" class="ident">chunkPageIndex</a>(<label for="r142" class="ident">base</label>))
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Slow path: we're clearing more bits so we may need to iterate.</span></div>
+<div class="code"><pre><code>		<label for="r148" class="ident">sc</label>, <label for="r149" class="ident">ec</label> := <a href="#line-101" class="ident">chunkIndex</a>(<label for="r142" class="ident">base</label>), <a href="#line-101" class="ident">chunkIndex</a>(<label for="r145" class="ident">limit</label>)
+		<label for="r150" class="ident">si</label>, <label for="r151" class="ident">ei</label> := <a href="#line-112" class="ident">chunkPageIndex</a>(<label for="r142" class="ident">base</label>), <a href="#line-112" class="ident">chunkPageIndex</a>(<label for="r145" class="ident">limit</label>)
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> The range doesn't cross any chunk boundaries.</span></div>
+<div class="code"><pre><code>			<label for="r140" class="ident">p</label>.<a href="#line-343" class="ident">chunkOf</a>(<label for="r148" class="ident">sc</label>).<a href="mpallocbits.go.html#line-354" class="ident">free</a>(<label for="r150" class="ident">si</label>, <label for="r151" class="ident">ei</label>+<span class="lit-number">1</span>-<label for="r150" class="ident">si</label>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> The range crosses at least one chunk boundary.</span></div>
+<div class="code"><pre><code>			<label for="r140" class="ident">p</label>.<a href="#line-343" class="ident">chunkOf</a>(<label for="r148" class="ident">sc</label>).<a href="mpallocbits.go.html#line-354" class="ident">free</a>(<label for="r150" class="ident">si</label>, <a href="#line-58" class="ident">pallocChunkPages</a>-<label for="r150" class="ident">si</label>)
+			<span class="keyword">for</span> <label for="r152" class="ident">c</label> := <label for="r148" class="ident">sc</label> + <span class="lit-number">1</span>; <label for="r152" class="ident">c</label> &lt; <label for="r149" class="ident">ec</label>; <label for="r152" class="ident">c</label>++ {
+				<label for="r140" class="ident">p</label>.<a href="#line-343" class="ident">chunkOf</a>(<label for="r152" class="ident">c</label>).<a href="mpallocbits.go.html#line-359" class="ident">freeAll</a>()
+			}
+			<label for="r140" class="ident">p</label>.<a href="#line-343" class="ident">chunkOf</a>(<label for="r149" class="ident">ec</label>).<a href="mpallocbits.go.html#line-354" class="ident">free</a>(<span class="lit-number">0</span>, <label for="r151" class="ident">ei</label>+<span class="lit-number">1</span>)
+		}
+	}
+	<label for="r140" class="ident">p</label>.<a href="#line-417" class="ident">update</a>(<label for="r142" class="ident">base</label>, <label for="r143" class="ident">npages</label>, <a href="../../pkg/builtin.html#name-true" class="ident">true</a>, <a href="../../pkg/builtin.html#name-false" class="ident">false</a>)
+}
+
+<span class="keyword">const</span> (
+	<a href="../../pkg/runtime.html#name-pallocSumBytes" class="ident">pallocSumBytes</a> = <a href="../../pkg/unsafe.html" class="ident i1">unsafe</a>.<a href="../../pkg/unsafe.html#name-Sizeof" class="ident">Sizeof</a>(<a href="#line-919" class="ident">pallocSum</a>(<span class="lit-number">0</span>))
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> maxPackedValue is the maximum value that any of the three fields in</span><span class="comment">	 the pallocSum may take on.</span></div>
+<div class="code"><pre><code>	<a href="../../pkg/runtime.html#name-maxPackedValue" class="ident">maxPackedValue</a>    = <span class="lit-number">1</span> &lt;&lt; <a href="#line-907" class="ident">logMaxPackedValue</a>
+	<a href="../../pkg/runtime.html#name-logMaxPackedValue" class="ident">logMaxPackedValue</a> = <a href="#line-60" class="ident">logPallocChunkPages</a> + (<a href="mpagealloc_64bit.go.html#line-15" class="ident">summaryLevels</a>-<span class="lit-number">1</span>)*<a href="#line-74" class="ident">summaryLevelBits</a>
+
+	<a href="../../pkg/runtime.html#name-freeChunkSum" class="ident">freeChunkSum</a> = <a href="#line-919" class="ident">pallocSum</a>(<a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a>(<a href="#line-58" class="ident">pallocChunkPages</a>) |
+		<a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a>(<a href="#line-58" class="ident">pallocChunkPages</a>&lt;&lt;<a href="#line-907" class="ident">logMaxPackedValue</a>) |
+		<a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a>(<a href="#line-58" class="ident">pallocChunkPages</a>&lt;&lt;(<span class="lit-number">2</span>*<a href="#line-907" class="ident">logMaxPackedValue</a>)))
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> pallocSum is a packed summary type which packs three numbers: start, max,</span><span class="comment"> and end into a single 8-byte value. Each of these values are a summary of</span><span class="comment"> a bitmap and are thus counts, each of which may have a maximum value of</span><span class="comment"> 2^21 - 1, or all three may be equal to 2^21. The latter case is represented</span><span class="comment"> by just setting the 64th bit.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../pkg/runtime.html#name-pallocSum" class="ident">pallocSum</a> <a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> packPallocSum takes a start, max, and end value and produces a pallocSum.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r153" class="ident"><a href="../../pkg/runtime.html#name-packPallocSum" class="ident">packPallocSum</a></label>(<label for="r154" class="ident">start</label>, <label for="r155" class="ident">max</label>, <label for="r156" class="ident">end</label> <a href="../../pkg/builtin.html#name-uint" class="ident">uint</a>) <a href="#line-919" class="ident">pallocSum</a> {
+	<span class="keyword">if</span> <label for="r155" class="ident">max</label> == <a href="#line-906" class="ident">maxPackedValue</a> {
+		<span class="keyword">return</span> <a href="#line-919" class="ident">pallocSum</a>(<a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a>(<span class="lit-number">1</span> &lt;&lt; <span class="lit-number">63</span>))
+	}
+	<span class="keyword">return</span> <a href="#line-919" class="ident">pallocSum</a>((<a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a>(<label for="r154" class="ident">start</label>) &amp; (<a href="#line-906" class="ident">maxPackedValue</a> - <span class="lit-number">1</span>)) |
+		((<a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a>(<label for="r155" class="ident">max</label>) &amp; (<a href="#line-906" class="ident">maxPackedValue</a> - <span class="lit-number">1</span>)) &lt;&lt; <a href="#line-907" class="ident">logMaxPackedValue</a>) |
+		((<a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a>(<label for="r156" class="ident">end</label>) &amp; (<a href="#line-906" class="ident">maxPackedValue</a> - <span class="lit-number">1</span>)) &lt;&lt; (<span class="lit-number">2</span> * <a href="#line-907" class="ident">logMaxPackedValue</a>)))
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> start extracts the start value from a packed sum.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r157" class="ident">p</label> <a href="#line-919" class="ident">pallocSum</a>) <label for="r158" class="ident"><a href="../../use/runtime..pallocSum*fe4b9.start*cced2.html" class="ident">start</a></label>() <a href="../../pkg/builtin.html#name-uint" class="ident">uint</a> {
+	<span class="keyword">if</span> <a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a>(<label for="r157" class="ident">p</label>)&amp;<a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a>(<span class="lit-number">1</span>&lt;&lt;<span class="lit-number">63</span>) != <span class="lit-number">0</span> {
+		<span class="keyword">return</span> <a href="#line-906" class="ident">maxPackedValue</a>
+	}
+	<span class="keyword">return</span> <a href="../../pkg/builtin.html#name-uint" class="ident">uint</a>(<a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a>(<label for="r157" class="ident">p</label>) &amp; (<a href="#line-906" class="ident">maxPackedValue</a> - <span class="lit-number">1</span>))
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> max extracts the max value from a packed sum.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r159" class="ident">p</label> <a href="#line-919" class="ident">pallocSum</a>) <label for="r160" class="ident"><a href="../../use/runtime..pallocSum*fe4b9.max*9baf3.html" class="ident">max</a></label>() <a href="../../pkg/builtin.html#name-uint" class="ident">uint</a> {
+	<span class="keyword">if</span> <a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a>(<label for="r159" class="ident">p</label>)&amp;<a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a>(<span class="lit-number">1</span>&lt;&lt;<span class="lit-number">63</span>) != <span class="lit-number">0</span> {
+		<span class="keyword">return</span> <a href="#line-906" class="ident">maxPackedValue</a>
+	}
+	<span class="keyword">return</span> <a href="../../pkg/builtin.html#name-uint" class="ident">uint</a>((<a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a>(<label for="r159" class="ident">p</label>) &gt;&gt; <a href="#line-907" class="ident">logMaxPackedValue</a>) &amp; (<a href="#line-906" class="ident">maxPackedValue</a> - <span class="lit-number">1</span>))
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> end extracts the end value from a packed sum.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r161" class="ident">p</label> <a href="#line-919" class="ident">pallocSum</a>) <label for="r162" class="ident"><a href="../../use/runtime..pallocSum*fe4b9.end*361e4.html" class="ident">end</a></label>() <a href="../../pkg/builtin.html#name-uint" class="ident">uint</a> {
+	<span class="keyword">if</span> <a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a>(<label for="r161" class="ident">p</label>)&amp;<a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a>(<span class="lit-number">1</span>&lt;&lt;<span class="lit-number">63</span>) != <span class="lit-number">0</span> {
+		<span class="keyword">return</span> <a href="#line-906" class="ident">maxPackedValue</a>
+	}
+	<span class="keyword">return</span> <a href="../../pkg/builtin.html#name-uint" class="ident">uint</a>((<a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a>(<label for="r161" class="ident">p</label>) &gt;&gt; (<span class="lit-number">2</span> * <a href="#line-907" class="ident">logMaxPackedValue</a>)) &amp; (<a href="#line-906" class="ident">maxPackedValue</a> - <span class="lit-number">1</span>))
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> unpack unpacks all three values from the summary.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r163" class="ident">p</label> <a href="#line-919" class="ident">pallocSum</a>) <label for="r164" class="ident"><a href="../../use/runtime..pallocSum*fe4b9.unpack*79a43.html" class="ident">unpack</a></label>() (<a href="../../pkg/builtin.html#name-uint" class="ident">uint</a>, <a href="../../pkg/builtin.html#name-uint" class="ident">uint</a>, <a href="../../pkg/builtin.html#name-uint" class="ident">uint</a>) {
+	<span class="keyword">if</span> <a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a>(<label for="r163" class="ident">p</label>)&amp;<a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a>(<span class="lit-number">1</span>&lt;&lt;<span class="lit-number">63</span>) != <span class="lit-number">0</span> {
+		<span class="keyword">return</span> <a href="#line-906" class="ident">maxPackedValue</a>, <a href="#line-906" class="ident">maxPackedValue</a>, <a href="#line-906" class="ident">maxPackedValue</a>
+	}
+	<span class="keyword">return</span> <a href="../../pkg/builtin.html#name-uint" class="ident">uint</a>(<a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a>(<label for="r163" class="ident">p</label>) &amp; (<a href="#line-906" class="ident">maxPackedValue</a> - <span class="lit-number">1</span>)),
+		<a href="../../pkg/builtin.html#name-uint" class="ident">uint</a>((<a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a>(<label for="r163" class="ident">p</label>) &gt;&gt; <a href="#line-907" class="ident">logMaxPackedValue</a>) &amp; (<a href="#line-906" class="ident">maxPackedValue</a> - <span class="lit-number">1</span>)),
+		<a href="../../pkg/builtin.html#name-uint" class="ident">uint</a>((<a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a>(<label for="r163" class="ident">p</label>) &gt;&gt; (<span class="lit-number">2</span> * <a href="#line-907" class="ident">logMaxPackedValue</a>)) &amp; (<a href="#line-906" class="ident">maxPackedValue</a> - <span class="lit-number">1</span>))
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> mergeSummaries merges consecutive summaries which may each represent at</span><span class="comment"> most 1 &lt;&lt; logMaxPagesPerSum pages each together into one.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Merge the summaries in sums into one.</span><span class="comment">	</span><span class="comment">	 We do this by keeping a running summary representing the merged</span><span class="comment">	 summaries of sums[:i] in start, max, and end.</span></div>
+<div class="code"><pre><code>	<label for="r168" class="ident">start</label>, <label for="r169" class="ident">max</label>, <label for="r170" class="ident">end</label> := <label for="r166" class="ident">sums</label>[<span class="lit-number">0</span>].<a href="#line-956" class="ident">unpack</a>()
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Merge in sums[i].</span></div>
+<div class="code"><pre><code>		<label for="r172" class="ident">si</label>, <label for="r173" class="ident">mi</label>, <label for="r174" class="ident">ei</label> := <label for="r166" class="ident">sums</label>[<label for="r171" class="ident">i</label>].<a href="#line-956" class="ident">unpack</a>()
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Merge in sums[i].start only if the running summary is</span><span class="comment">		 completely free, otherwise this summary's start</span><span class="comment">		 plays no role in the combined sum.</span></div>
+<div class="code"><pre><code>		<span class="keyword">if</span> <label for="r168" class="ident">start</label> == <a href="../../pkg/builtin.html#name-uint" class="ident">uint</a>(<label for="r171" class="ident">i</label>)&lt;&lt;<label for="r167" class="ident">logMaxPagesPerSum</label> {
+			<label for="r168" class="ident">start</label> += <label for="r172" class="ident">si</label>
+		}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Recompute the max value of the running sum by looking</span><span class="comment">		 across the boundary between the running sum and sums[i]</span><span class="comment">		 and at the max sums[i], taking the greatest of those two</span><span class="comment">		 and the max of the running sum.</span></div>
+<div class="code"><pre><code>		<span class="keyword">if</span> <label for="r170" class="ident">end</label>+<label for="r172" class="ident">si</label> &gt; <label for="r169" class="ident">max</label> {
+			<label for="r169" class="ident">max</label> = <label for="r170" class="ident">end</label> + <label for="r172" class="ident">si</label>
+		}
+		<span class="keyword">if</span> <label for="r173" class="ident">mi</label> &gt; <label for="r169" class="ident">max</label> {
+			<label for="r169" class="ident">max</label> = <label for="r173" class="ident">mi</label>
+		}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Merge in end by checking if this new summary is totally</span><span class="comment">		 free. If it is, then we want to extend the running sum's</span><span class="comment">		 end by the new summary. If not, then we have some alloc'd</span><span class="comment">		 pages in there and we just want to take the end value in</span><span class="comment">		 sums[i].</span></div>
+<div class="code"><pre><code>		<span class="keyword">if</span> <label for="r174" class="ident">ei</label> == <span class="lit-number">1</span>&lt;&lt;<label for="r167" class="ident">logMaxPagesPerSum</label> {
+			<label for="r170" class="ident">end</label> += <span class="lit-number">1</span> &lt;&lt; <label for="r167" class="ident">logMaxPagesPerSum</label>
+		} <span class="keyword">else</span> {
+			<label for="r170" class="ident">end</label> = <label for="r174" class="ident">ei</label>
+		}
+	}
+	<span class="keyword">return</span> <a href="#line-922" class="ident">packPallocSum</a>(<label for="r168" class="ident">start</label>, <label for="r169" class="ident">max</label>, <label for="r170" class="ident">end</label>)
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: metrics.go in package golang.org/x/pkgsite/internal/worker</title>
+<link href="../../../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	metrics.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../../../pkg/golang.org/x/pkgsite/internal/worker.html">golang.org/x/pkgsite/internal/worker</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1,
+input[id=i2]:checked ~pre .i2,
+input[id=i3]:checked ~pre .i3,
+input[id=i4]:checked ~pre .i4,
+input[id=i5]:checked ~pre .i5
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<input id="i2" type="radio" name="i"/>
+<input id="i3" type="radio" name="i"/>
+<input id="i4" type="radio" name="i"/>
+<input id="i5" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2020 The Go Authors. All rights reserved.</span><span class="comment"> Use of this source code is governed by a BSD-style</span><span class="comment"> license that can be found in the LICENSE file.</span></div>
+<div class="code"><pre><code>
+<span class="keyword">package</span> worker
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"context"</span></label>
+	<label for="i1"><span class="lit-string i1">"strconv"</span></label>
+	<label for="i2"><span class="lit-string i2">"time"</span></label>
+
+	<label for="i3"><span class="lit-string i3">"go.opencensus.io/stats"</span></label>
+	<label for="i4"><span class="lit-string i4">"go.opencensus.io/stats/view"</span></label>
+	<label for="i5"><span class="lit-string i5">"go.opencensus.io/tag"</span></label>
+)
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> keyEnqueueStatus is a census tag used to keep track of the status</span><span class="comment">	 of the modules being enqueued.</span></div>
+<div class="code"><pre><code>	<a href="../../../../../../pkg/golang.org/x/pkgsite/internal/worker.html#name-keyEnqueueStatus" class="ident">keyEnqueueStatus</a> = <a href="../../../../../../pkg/go.opencensus.io/tag.html" class="ident i5">tag</a>.<a href="../../../../../go.opencensus.io/tag/key.go.html#line-33" class="ident">MustNewKey</a>(<span class="lit-string">"enqueue.status"</span>)
+	<a href="../../../../../../pkg/golang.org/x/pkgsite/internal/worker.html#name-enqueueStatus" class="ident">enqueueStatus</a>    = <a href="../../../../../../pkg/go.opencensus.io/stats.html" class="ident i3">stats</a>.<a href="../../../../../go.opencensus.io/stats/measure_int64.go.html#line-37" class="ident">Int64</a>(
+		<span class="lit-string">"go-discovery/worker_enqueue_count"</span>,
+		<span class="lit-string">"The status of a module version enqueued to Cloud Tasks."</span>,
+		<a href="../../../../../../pkg/go.opencensus.io/stats.html" class="ident i3">stats</a>.<a href="../../../../../go.opencensus.io/stats/units.go.html#line-22" class="ident">UnitDimensionless</a>,
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> EnqueueResponseCount counts worker enqueue responses by response type.</span></div>
+<div class="code"><pre><code>	<a href="../../../../../../pkg/golang.org/x/pkgsite/internal/worker.html#name-EnqueueResponseCount" class="ident">EnqueueResponseCount</a> = &amp;<a href="../../../../../../pkg/go.opencensus.io/stats/view.html" class="ident i4">view</a>.<a href="../../../../../go.opencensus.io/stats/view/view.go.html#line-35" class="ident">View</a>{
+		<a href="../../../../../go.opencensus.io/stats/view/view.go.html#line-36" class="ident">Name</a>:        <span class="lit-string">"go-discovery/worker-enqueue/count"</span>,
+		<a href="../../../../../go.opencensus.io/stats/view/view.go.html#line-44" class="ident">Measure</a>:     <a href="#line-21" class="ident">enqueueStatus</a>,
+		<a href="../../../../../go.opencensus.io/stats/view/view.go.html#line-47" class="ident">Aggregation</a>: <a href="../../../../../../pkg/go.opencensus.io/stats/view.html" class="ident i4">view</a>.<a href="../../../../../go.opencensus.io/stats/view/aggregation.go.html#line-70" class="ident">Count</a>(),
+		<a href="../../../../../go.opencensus.io/stats/view/view.go.html#line-37" class="ident">Description</a>: <span class="lit-string">"Worker enqueue request count"</span>,
+		<a href="../../../../../go.opencensus.io/stats/view/view.go.html#line-41" class="ident">TagKeys</a>:     []<a href="../../../../../../pkg/go.opencensus.io/tag.html" class="ident i5">tag</a>.<a href="../../../../../go.opencensus.io/tag/key.go.html#line-19" class="ident">Key</a>{<a href="#line-20" class="ident">keyEnqueueStatus</a>},
+	}
+
+	<a href="../../../../../../pkg/golang.org/x/pkgsite/internal/worker.html#name-processingLag" class="ident">processingLag</a> = <a href="../../../../../../pkg/go.opencensus.io/stats.html" class="ident i3">stats</a>.<a href="../../../../../go.opencensus.io/stats/measure_int64.go.html#line-37" class="ident">Int64</a>(
+		<span class="lit-string">"go-discovery/worker_processing_lag"</span>,
+		<span class="lit-string">"Time from appearing in the index to being processed."</span>,
+		<a href="../../../../../../pkg/go.opencensus.io/stats.html" class="ident i3">stats</a>.<a href="../../../../../go.opencensus.io/stats/units.go.html#line-25" class="ident">UnitSeconds</a>,
+	)
+	<a href="../../../../../../pkg/golang.org/x/pkgsite/internal/worker.html#name-ProcessingLag" class="ident">ProcessingLag</a> = &amp;<a href="../../../../../../pkg/go.opencensus.io/stats/view.html" class="ident i4">view</a>.<a href="../../../../../go.opencensus.io/stats/view/view.go.html#line-35" class="ident">View</a>{
+		<a href="../../../../../go.opencensus.io/stats/view/view.go.html#line-36" class="ident">Name</a>:        <span class="lit-string">"go-discovery/worker_processing_lag"</span>,
+		<a href="../../../../../go.opencensus.io/stats/view/view.go.html#line-44" class="ident">Measure</a>:     <a href="#line-35" class="ident">processingLag</a>,
+		<a href="../../../../../go.opencensus.io/stats/view/view.go.html#line-47" class="ident">Aggregation</a>: <a href="../../../../../../pkg/go.opencensus.io/stats/view.html" class="ident i4">view</a>.<a href="../../../../../go.opencensus.io/stats/view/aggregation.go.html#line-114" class="ident">LastValue</a>(),
+		<a href="../../../../../go.opencensus.io/stats/view/view.go.html#line-37" class="ident">Description</a>: <span class="lit-string">"worker processing lag"</span>,
+	}
+)
+
+<span class="keyword">func</span> <label for="r0" class="ident"><a href="../../../../../../pkg/golang.org/x/pkgsite/internal/worker.html#name-recordEnqueue" class="ident">recordEnqueue</a></label>(<label for="r1" class="ident">ctx</label> <a href="../../../../../../pkg/context.html" class="ident i0">context</a>.<a href="../../../../../context/context.go.html#line-62" class="ident">Context</a>, <label for="r2" class="ident">status</label> <a href="../../../../../../pkg/builtin.html#name-int" class="ident">int</a>) {
+	<a href="../../../../../../pkg/go.opencensus.io/stats.html" class="ident i3">stats</a>.<a href="../../../../../go.opencensus.io/stats/record.go.html#line-100" class="ident">RecordWithTags</a>(<label for="r1" class="ident">ctx</label>,
+		[]<a href="../../../../../../pkg/go.opencensus.io/tag.html" class="ident i5">tag</a>.<a href="../../../../../go.opencensus.io/tag/map.go.html#line-96" class="ident">Mutator</a>{<a href="../../../../../../pkg/go.opencensus.io/tag.html" class="ident i5">tag</a>.<a href="../../../../../go.opencensus.io/tag/map.go.html#line-146" class="ident">Upsert</a>(<a href="#line-20" class="ident">keyEnqueueStatus</a>, <a href="../../../../../../pkg/strconv.html" class="ident i1">strconv</a>.<a href="../../../../../strconv/itoa.go.html#line-34" class="ident">Itoa</a>(<label for="r2" class="ident">status</label>))},
+		<a href="#line-21" class="ident">enqueueStatus</a>.<a href="../../../../../go.opencensus.io/stats/measure_int64.go.html#line-25" class="ident">M</a>(<a href="../../../../../../pkg/builtin.html#name-int64" class="ident">int64</a>(<label for="r2" class="ident">status</label>)))
+}
+
+<span class="keyword">func</span> <label for="r3" class="ident"><a href="../../../../../../pkg/golang.org/x/pkgsite/internal/worker.html#name-recordProcessingLag" class="ident">recordProcessingLag</a></label>(<label for="r4" class="ident">ctx</label> <a href="../../../../../../pkg/context.html" class="ident i0">context</a>.<a href="../../../../../context/context.go.html#line-62" class="ident">Context</a>, <label for="r5" class="ident">d</label> <a href="../../../../../../pkg/time.html" class="ident i2">time</a>.<a href="../../../../../time/time.go.html#line-583" class="ident">Duration</a>) {
+	<a href="../../../../../../pkg/go.opencensus.io/stats.html" class="ident i3">stats</a>.<a href="../../../../../go.opencensus.io/stats/record.go.html#line-91" class="ident">Record</a>(<label for="r4" class="ident">ctx</label>, <a href="#line-35" class="ident">processingLag</a>.<a href="../../../../../go.opencensus.io/stats/measure_int64.go.html#line-25" class="ident">M</a>(<label for="r5" class="ident">d</label>.<a href="../../../../../time/time.go.html#line-735" class="ident">Milliseconds</a>()/<span class="lit-number">1000</span>))
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

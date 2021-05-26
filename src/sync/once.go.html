@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: once.go in package sync</title>
+<link href="../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	once.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../pkg/sync.html">sync</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2009 The Go Authors. All rights reserved.</span><span class="comment"> Use of this source code is governed by a BSD-style</span><span class="comment"> license that can be found in the LICENSE file.</span></div>
+<div class="code"><pre><code>
+<span class="keyword">package</span> sync
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"sync/atomic"</span></label>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Once is an object that will perform exactly one action.</span><span class="comment"></span><span class="comment"> A Once must not be copied after first use.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> done indicates whether the action has been performed.</span><span class="comment">	 It is first in the struct because it is used in the hot path.</span><span class="comment">	 The hot path is inlined at every call site.</span><span class="comment">	 Placing done first allows more compact instructions on some architectures (amd64/386),</span><span class="comment">	 and fewer instructions (to calculate offset) on other architectures.</span></div>
+<div class="code"><pre><code>	<a href="../../use/sync..Once.done*a4c3e.html" class="ident">done</a> <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>
+	<a href="../../use/sync..Once.m*62c66.html" class="ident">m</a>    <a href="mutex.go.html#line-25" class="ident">Mutex</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Do calls the function f if and only if Do is being called for the</span><span class="comment"> first time for this instance of Once. In other words, given</span><span class="comment"> 	var once Once</span><span class="comment"> if once.Do(f) is called multiple times, only the first call will invoke f,</span><span class="comment"> even if f has a different value in each invocation. A new instance of</span><span class="comment"> Once is required for each function to execute.</span><span class="comment"></span><span class="comment"> Do is intended for initialization that must be run exactly once. Since f</span><span class="comment"> is niladic, it may be necessary to use a function literal to capture the</span><span class="comment"> arguments to a function to be invoked by Do:</span><span class="comment"> 	config.once.Do(func() { config.init(filename) })</span><span class="comment"></span><span class="comment"> Because no call to Do returns until the one call to f returns, if f causes</span><span class="comment"> Do to be called, it will deadlock.</span><span class="comment"></span><span class="comment"> If f panics, Do considers it to have returned; future calls of Do return</span><span class="comment"> without calling f.</span><span class="comment"></span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Note: Here is an incorrect implementation of Do:</span><span class="comment">	</span><span class="comment">		if atomic.CompareAndSwapUint32(&amp;o.done, 0, 1) {</span><span class="comment">			f()</span><span class="comment">		}</span><span class="comment">	</span><span class="comment">	 Do guarantees that when it returns, f has finished.</span><span class="comment">	 This implementation would not implement that guarantee:</span><span class="comment">	 given two simultaneous calls, the winner of the cas would</span><span class="comment">	 call f, and the second would return immediately, without</span><span class="comment">	 waiting for the first's call to f to complete.</span><span class="comment">	 This is why the slow path falls back to a mutex, and why</span><span class="comment">	 the atomic.StoreUint32 must be delayed until after f returns.</span></div>
+<div class="code"><pre><code>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Outlined slow-path to allow inlining of the fast-path.</span></div>
+<div class="code"><pre><code>		<label for="r0" class="ident">o</label>.<a href="#line-63" class="ident">doSlow</a>(<label for="r2" class="ident">f</label>)
+	}
+}
+
+<span class="keyword">func</span> (<label for="r3" class="ident">o</label> *<a href="#line-14" class="ident">Once</a>) <label for="r4" class="ident"><a href="../../use/sync..Once.doSlow*2efbe.html" class="ident">doSlow</a></label>(<label for="r5" class="ident">f</label> <span class="keyword">func</span>()) {
+	<label for="r3" class="ident">o</label>.<a href="#line-21" class="ident">m</a>.<a href="mutex.go.html#line-72" class="ident">Lock</a>()
+	<span class="keyword">defer</span> <label for="r3" class="ident">o</label>.<a href="#line-21" class="ident">m</a>.<a href="mutex.go.html#line-179" class="ident">Unlock</a>()
+	<span class="keyword">if</span> <label for="r3" class="ident">o</label>.<a href="#line-20" class="ident">done</a> == <span class="lit-number">0</span> {
+		<span class="keyword">defer</span> <a href="../../pkg/sync/atomic.html" class="ident i0">atomic</a>.<a href="atomic/doc.go.html#line-135" class="ident">StoreUint32</a>(&amp;<label for="r3" class="ident">o</label>.<a href="#line-20" class="ident">done</a>, <span class="lit-number">1</span>)
+		<label for="r5" class="ident">f</label>()
+	}
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

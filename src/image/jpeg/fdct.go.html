@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: fdct.go in package image/jpeg</title>
+<link href="../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	fdct.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../pkg/image/jpeg.html">image/jpeg</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16],
+input[id=r17]:checked ~pre label[for=r17],
+input[id=r18]:checked ~pre label[for=r18],
+input[id=r19]:checked ~pre label[for=r19],
+input[id=r20]:checked ~pre label[for=r20],
+input[id=r21]:checked ~pre label[for=r21],
+input[id=r22]:checked ~pre label[for=r22],
+input[id=r23]:checked ~pre label[for=r23],
+input[id=r24]:checked ~pre label[for=r24],
+input[id=r25]:checked ~pre label[for=r25],
+input[id=r26]:checked ~pre label[for=r26],
+input[id=r27]:checked ~pre label[for=r27],
+input[id=r28]:checked ~pre label[for=r28],
+input[id=r29]:checked ~pre label[for=r29],
+input[id=r30]:checked ~pre label[for=r30],
+input[id=r31]:checked ~pre label[for=r31]
+{background: #226; color: #ff8;}
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="r17" type="radio" name="g"/>
+<input id="r18" type="radio" name="g"/>
+<input id="r19" type="radio" name="g"/>
+<input id="r20" type="radio" name="g"/>
+<input id="r21" type="radio" name="g"/>
+<input id="r22" type="radio" name="g"/>
+<input id="r23" type="radio" name="g"/>
+<input id="r24" type="radio" name="g"/>
+<input id="r25" type="radio" name="g"/>
+<input id="r26" type="radio" name="g"/>
+<input id="r27" type="radio" name="g"/>
+<input id="r28" type="radio" name="g"/>
+<input id="r29" type="radio" name="g"/>
+<input id="r30" type="radio" name="g"/>
+<input id="r31" type="radio" name="g"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2011 The Go Authors. All rights reserved.</span><span class="comment"> Use of this source code is governed by a BSD-style</span><span class="comment"> license that can be found in the LICENSE file.</span></div>
+<div class="code"><pre><code>
+<span class="keyword">package</span> jpeg
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> This file implements a Forward Discrete Cosine Transformation.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"></span><span class="comment">It is based on the code in jfdctint.c from the Independent JPEG Group,</span><span class="comment">found at http:www.ijg.org/files/jpegsrc.v8c.tar.gz.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">The "LEGAL ISSUES" section of the README in that archive says:</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">In plain English:</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">1. We don't promise that this software works.  (But if you find any bugs,</span><span class="comment">   please let us know!)</span><span class="comment">2. You can use this software for whatever you want.  You don't have to pay us.</span><span class="comment">3. You may not pretend that you wrote this software.  If you use it in a</span><span class="comment">   program, you must acknowledge somewhere in your documentation that</span><span class="comment">   you've used the IJG code.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">In legalese:</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">The authors make NO WARRANTY or representation, either express or implied,</span><span class="comment">with respect to this software, its quality, accuracy, merchantability, or</span><span class="comment">fitness for a particular purpose.  This software is provided "AS IS", and you,</span><span class="comment">its user, assume the entire risk as to its quality and accuracy.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">This software is copyright (C) 1991-2011, Thomas G. Lane, Guido Vollbeding.</span><span class="comment">All Rights Reserved except as specified below.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Permission is hereby granted to use, copy, modify, and distribute this</span><span class="comment">software (or portions thereof) for any purpose, without fee, subject to these</span><span class="comment">conditions:</span><span class="comment">(1) If any part of the source code for this software is distributed, then this</span><span class="comment">README file must be included, with this copyright and no-warranty notice</span><span class="comment">unaltered; and any additions, deletions, or changes to the original files</span><span class="comment">must be clearly indicated in accompanying documentation.</span><span class="comment">(2) If only executable code is distributed, then the accompanying</span><span class="comment">documentation must state that "this software is based in part on the work of</span><span class="comment">the Independent JPEG Group".</span><span class="comment">(3) Permission for use of this software is granted only if the user accepts</span><span class="comment">full responsibility for any undesirable consequences; the authors accept</span><span class="comment">NO LIABILITY for damages of any kind.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">These conditions apply to any software derived from or based on the IJG code,</span><span class="comment">not just to the unmodified library.  If you use our work, you ought to</span><span class="comment">acknowledge us.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Permission is NOT granted for the use of any IJG author's name or company name</span><span class="comment">in advertising or publicity relating to this software or products derived from</span><span class="comment">it.  This software may be referred to only as "the Independent JPEG Group's</span><span class="comment">software".</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">We specifically permit and encourage the use of this software as the basis of</span><span class="comment">commercial products, provided that all warranty or liability claims are</span><span class="comment">assumed by the product vendor.</span><span class="comment"></span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Trigonometric constants in 13-bit fixed point format.</span></div>
+<div class="code"><pre><code><span class="keyword">const</span> (
+	<a href="../../../pkg/image/jpeg.html#name-fix_0_298631336" class="ident">fix_0_298631336</a> = <span class="lit-number">2446</span>
+	<a href="../../../pkg/image/jpeg.html#name-fix_0_390180644" class="ident">fix_0_390180644</a> = <span class="lit-number">3196</span>
+	<a href="../../../pkg/image/jpeg.html#name-fix_0_541196100" class="ident">fix_0_541196100</a> = <span class="lit-number">4433</span>
+	<a href="../../../pkg/image/jpeg.html#name-fix_0_765366865" class="ident">fix_0_765366865</a> = <span class="lit-number">6270</span>
+	<a href="../../../pkg/image/jpeg.html#name-fix_0_899976223" class="ident">fix_0_899976223</a> = <span class="lit-number">7373</span>
+	<a href="../../../pkg/image/jpeg.html#name-fix_1_175875602" class="ident">fix_1_175875602</a> = <span class="lit-number">9633</span>
+	<a href="../../../pkg/image/jpeg.html#name-fix_1_501321110" class="ident">fix_1_501321110</a> = <span class="lit-number">12299</span>
+	<a href="../../../pkg/image/jpeg.html#name-fix_1_847759065" class="ident">fix_1_847759065</a> = <span class="lit-number">15137</span>
+	<a href="../../../pkg/image/jpeg.html#name-fix_1_961570560" class="ident">fix_1_961570560</a> = <span class="lit-number">16069</span>
+	<a href="../../../pkg/image/jpeg.html#name-fix_2_053119869" class="ident">fix_2_053119869</a> = <span class="lit-number">16819</span>
+	<a href="../../../pkg/image/jpeg.html#name-fix_2_562915447" class="ident">fix_2_562915447</a> = <span class="lit-number">20995</span>
+	<a href="../../../pkg/image/jpeg.html#name-fix_3_072711026" class="ident">fix_3_072711026</a> = <span class="lit-number">25172</span>
+)
+
+<span class="keyword">const</span> (
+	<a href="../../../pkg/image/jpeg.html#name-constBits" class="ident">constBits</a>     = <span class="lit-number">13</span>
+	<a href="../../../pkg/image/jpeg.html#name-pass1Bits" class="ident">pass1Bits</a>     = <span class="lit-number">2</span>
+	<a href="../../../pkg/image/jpeg.html#name-centerJSample" class="ident">centerJSample</a> = <span class="lit-number">128</span>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> fdct performs a forward DCT on an 8x8 block of coefficients, including a</span><span class="comment"> level shift.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Pass 1: process rows.</span></div>
+<div class="code"><pre><code>	<span class="keyword">for</span> <label for="r2" class="ident">y</label> := <span class="lit-number">0</span>; <label for="r2" class="ident">y</label> &lt; <span class="lit-number">8</span>; <label for="r2" class="ident">y</label>++ {
+		<label for="r3" class="ident">y8</label> := <label for="r2" class="ident">y</label> * <span class="lit-number">8</span>
+		<label for="r4" class="ident">s</label> := <label for="r1" class="ident">b</label>[<label for="r3" class="ident">y8</label> : <label for="r3" class="ident">y8</label>+<span class="lit-number">8</span> : <label for="r3" class="ident">y8</label>+<span class="lit-number">8</span>] <span class="comment">// Small cap improves performance, see https://golang.org/issue/27857</span>
+		<label for="r5" class="ident">x0</label> := <label for="r4" class="ident">s</label>[<span class="lit-number">0</span>]
+		<label for="r6" class="ident">x1</label> := <label for="r4" class="ident">s</label>[<span class="lit-number">1</span>]
+		<label for="r7" class="ident">x2</label> := <label for="r4" class="ident">s</label>[<span class="lit-number">2</span>]
+		<label for="r8" class="ident">x3</label> := <label for="r4" class="ident">s</label>[<span class="lit-number">3</span>]
+		<label for="r9" class="ident">x4</label> := <label for="r4" class="ident">s</label>[<span class="lit-number">4</span>]
+		<label for="r10" class="ident">x5</label> := <label for="r4" class="ident">s</label>[<span class="lit-number">5</span>]
+		<label for="r11" class="ident">x6</label> := <label for="r4" class="ident">s</label>[<span class="lit-number">6</span>]
+		<label for="r12" class="ident">x7</label> := <label for="r4" class="ident">s</label>[<span class="lit-number">7</span>]
+
+		<label for="r13" class="ident">tmp0</label> := <label for="r5" class="ident">x0</label> + <label for="r12" class="ident">x7</label>
+		<label for="r14" class="ident">tmp1</label> := <label for="r6" class="ident">x1</label> + <label for="r11" class="ident">x6</label>
+		<label for="r15" class="ident">tmp2</label> := <label for="r7" class="ident">x2</label> + <label for="r10" class="ident">x5</label>
+		<label for="r16" class="ident">tmp3</label> := <label for="r8" class="ident">x3</label> + <label for="r9" class="ident">x4</label>
+
+		<label for="r17" class="ident">tmp10</label> := <label for="r13" class="ident">tmp0</label> + <label for="r16" class="ident">tmp3</label>
+		<label for="r18" class="ident">tmp12</label> := <label for="r13" class="ident">tmp0</label> - <label for="r16" class="ident">tmp3</label>
+		<label for="r19" class="ident">tmp11</label> := <label for="r14" class="ident">tmp1</label> + <label for="r15" class="ident">tmp2</label>
+		<label for="r20" class="ident">tmp13</label> := <label for="r14" class="ident">tmp1</label> - <label for="r15" class="ident">tmp2</label>
+
+		<label for="r13" class="ident">tmp0</label> = <label for="r5" class="ident">x0</label> - <label for="r12" class="ident">x7</label>
+		<label for="r14" class="ident">tmp1</label> = <label for="r6" class="ident">x1</label> - <label for="r11" class="ident">x6</label>
+		<label for="r15" class="ident">tmp2</label> = <label for="r7" class="ident">x2</label> - <label for="r10" class="ident">x5</label>
+		<label for="r16" class="ident">tmp3</label> = <label for="r8" class="ident">x3</label> - <label for="r9" class="ident">x4</label>
+
+		<label for="r4" class="ident">s</label>[<span class="lit-number">0</span>] = (<label for="r17" class="ident">tmp10</label> + <label for="r19" class="ident">tmp11</label> - <span class="lit-number">8</span>*<a href="#line-81" class="ident">centerJSample</a>) &lt;&lt; <a href="#line-80" class="ident">pass1Bits</a>
+		<label for="r4" class="ident">s</label>[<span class="lit-number">4</span>] = (<label for="r17" class="ident">tmp10</label> - <label for="r19" class="ident">tmp11</label>) &lt;&lt; <a href="#line-80" class="ident">pass1Bits</a>
+		<label for="r21" class="ident">z1</label> := (<label for="r18" class="ident">tmp12</label> + <label for="r20" class="ident">tmp13</label>) * <a href="#line-66" class="ident">fix_0_541196100</a>
+		<label for="r21" class="ident">z1</label> += <span class="lit-number">1</span> &lt;&lt; (<a href="#line-79" class="ident">constBits</a> - <a href="#line-80" class="ident">pass1Bits</a> - <span class="lit-number">1</span>)
+		<label for="r4" class="ident">s</label>[<span class="lit-number">2</span>] = (<label for="r21" class="ident">z1</label> + <label for="r18" class="ident">tmp12</label>*<a href="#line-67" class="ident">fix_0_765366865</a>) &gt;&gt; (<a href="#line-79" class="ident">constBits</a> - <a href="#line-80" class="ident">pass1Bits</a>)
+		<label for="r4" class="ident">s</label>[<span class="lit-number">6</span>] = (<label for="r21" class="ident">z1</label> - <label for="r20" class="ident">tmp13</label>*<a href="#line-71" class="ident">fix_1_847759065</a>) &gt;&gt; (<a href="#line-79" class="ident">constBits</a> - <a href="#line-80" class="ident">pass1Bits</a>)
+
+		<label for="r17" class="ident">tmp10</label> = <label for="r13" class="ident">tmp0</label> + <label for="r16" class="ident">tmp3</label>
+		<label for="r19" class="ident">tmp11</label> = <label for="r14" class="ident">tmp1</label> + <label for="r15" class="ident">tmp2</label>
+		<label for="r18" class="ident">tmp12</label> = <label for="r13" class="ident">tmp0</label> + <label for="r15" class="ident">tmp2</label>
+		<label for="r20" class="ident">tmp13</label> = <label for="r14" class="ident">tmp1</label> + <label for="r16" class="ident">tmp3</label>
+		<label for="r21" class="ident">z1</label> = (<label for="r18" class="ident">tmp12</label> + <label for="r20" class="ident">tmp13</label>) * <a href="#line-69" class="ident">fix_1_175875602</a>
+		<label for="r21" class="ident">z1</label> += <span class="lit-number">1</span> &lt;&lt; (<a href="#line-79" class="ident">constBits</a> - <a href="#line-80" class="ident">pass1Bits</a> - <span class="lit-number">1</span>)
+		<label for="r13" class="ident">tmp0</label> *= <a href="#line-70" class="ident">fix_1_501321110</a>
+		<label for="r14" class="ident">tmp1</label> *= <a href="#line-75" class="ident">fix_3_072711026</a>
+		<label for="r15" class="ident">tmp2</label> *= <a href="#line-73" class="ident">fix_2_053119869</a>
+		<label for="r16" class="ident">tmp3</label> *= <a href="#line-64" class="ident">fix_0_298631336</a>
+		<label for="r17" class="ident">tmp10</label> *= -<a href="#line-68" class="ident">fix_0_899976223</a>
+		<label for="r19" class="ident">tmp11</label> *= -<a href="#line-74" class="ident">fix_2_562915447</a>
+		<label for="r18" class="ident">tmp12</label> *= -<a href="#line-65" class="ident">fix_0_390180644</a>
+		<label for="r20" class="ident">tmp13</label> *= -<a href="#line-72" class="ident">fix_1_961570560</a>
+
+		<label for="r18" class="ident">tmp12</label> += <label for="r21" class="ident">z1</label>
+		<label for="r20" class="ident">tmp13</label> += <label for="r21" class="ident">z1</label>
+		<label for="r4" class="ident">s</label>[<span class="lit-number">1</span>] = (<label for="r13" class="ident">tmp0</label> + <label for="r17" class="ident">tmp10</label> + <label for="r18" class="ident">tmp12</label>) &gt;&gt; (<a href="#line-79" class="ident">constBits</a> - <a href="#line-80" class="ident">pass1Bits</a>)
+		<label for="r4" class="ident">s</label>[<span class="lit-number">3</span>] = (<label for="r14" class="ident">tmp1</label> + <label for="r19" class="ident">tmp11</label> + <label for="r20" class="ident">tmp13</label>) &gt;&gt; (<a href="#line-79" class="ident">constBits</a> - <a href="#line-80" class="ident">pass1Bits</a>)
+		<label for="r4" class="ident">s</label>[<span class="lit-number">5</span>] = (<label for="r15" class="ident">tmp2</label> + <label for="r19" class="ident">tmp11</label> + <label for="r18" class="ident">tmp12</label>) &gt;&gt; (<a href="#line-79" class="ident">constBits</a> - <a href="#line-80" class="ident">pass1Bits</a>)
+		<label for="r4" class="ident">s</label>[<span class="lit-number">7</span>] = (<label for="r16" class="ident">tmp3</label> + <label for="r17" class="ident">tmp10</label> + <label for="r20" class="ident">tmp13</label>) &gt;&gt; (<a href="#line-79" class="ident">constBits</a> - <a href="#line-80" class="ident">pass1Bits</a>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Pass 2: process columns.</span><span class="comment">	 We remove pass1Bits scaling, but leave results scaled up by an overall factor of 8.</span></div>
+<div class="code"><pre><code>	<span class="keyword">for</span> <label for="r22" class="ident">x</label> := <span class="lit-number">0</span>; <label for="r22" class="ident">x</label> &lt; <span class="lit-number">8</span>; <label for="r22" class="ident">x</label>++ {
+		<label for="r23" class="ident">tmp0</label> := <label for="r1" class="ident">b</label>[<span class="lit-number">0</span>*<span class="lit-number">8</span>+<label for="r22" class="ident">x</label>] + <label for="r1" class="ident">b</label>[<span class="lit-number">7</span>*<span class="lit-number">8</span>+<label for="r22" class="ident">x</label>]
+		<label for="r24" class="ident">tmp1</label> := <label for="r1" class="ident">b</label>[<span class="lit-number">1</span>*<span class="lit-number">8</span>+<label for="r22" class="ident">x</label>] + <label for="r1" class="ident">b</label>[<span class="lit-number">6</span>*<span class="lit-number">8</span>+<label for="r22" class="ident">x</label>]
+		<label for="r25" class="ident">tmp2</label> := <label for="r1" class="ident">b</label>[<span class="lit-number">2</span>*<span class="lit-number">8</span>+<label for="r22" class="ident">x</label>] + <label for="r1" class="ident">b</label>[<span class="lit-number">5</span>*<span class="lit-number">8</span>+<label for="r22" class="ident">x</label>]
+		<label for="r26" class="ident">tmp3</label> := <label for="r1" class="ident">b</label>[<span class="lit-number">3</span>*<span class="lit-number">8</span>+<label for="r22" class="ident">x</label>] + <label for="r1" class="ident">b</label>[<span class="lit-number">4</span>*<span class="lit-number">8</span>+<label for="r22" class="ident">x</label>]
+
+		<label for="r27" class="ident">tmp10</label> := <label for="r23" class="ident">tmp0</label> + <label for="r26" class="ident">tmp3</label> + <span class="lit-number">1</span>&lt;&lt;(<a href="#line-80" class="ident">pass1Bits</a>-<span class="lit-number">1</span>)
+		<label for="r28" class="ident">tmp12</label> := <label for="r23" class="ident">tmp0</label> - <label for="r26" class="ident">tmp3</label>
+		<label for="r29" class="ident">tmp11</label> := <label for="r24" class="ident">tmp1</label> + <label for="r25" class="ident">tmp2</label>
+		<label for="r30" class="ident">tmp13</label> := <label for="r24" class="ident">tmp1</label> - <label for="r25" class="ident">tmp2</label>
+
+		<label for="r23" class="ident">tmp0</label> = <label for="r1" class="ident">b</label>[<span class="lit-number">0</span>*<span class="lit-number">8</span>+<label for="r22" class="ident">x</label>] - <label for="r1" class="ident">b</label>[<span class="lit-number">7</span>*<span class="lit-number">8</span>+<label for="r22" class="ident">x</label>]
+		<label for="r24" class="ident">tmp1</label> = <label for="r1" class="ident">b</label>[<span class="lit-number">1</span>*<span class="lit-number">8</span>+<label for="r22" class="ident">x</label>] - <label for="r1" class="ident">b</label>[<span class="lit-number">6</span>*<span class="lit-number">8</span>+<label for="r22" class="ident">x</label>]
+		<label for="r25" class="ident">tmp2</label> = <label for="r1" class="ident">b</label>[<span class="lit-number">2</span>*<span class="lit-number">8</span>+<label for="r22" class="ident">x</label>] - <label for="r1" class="ident">b</label>[<span class="lit-number">5</span>*<span class="lit-number">8</span>+<label for="r22" class="ident">x</label>]
+		<label for="r26" class="ident">tmp3</label> = <label for="r1" class="ident">b</label>[<span class="lit-number">3</span>*<span class="lit-number">8</span>+<label for="r22" class="ident">x</label>] - <label for="r1" class="ident">b</label>[<span class="lit-number">4</span>*<span class="lit-number">8</span>+<label for="r22" class="ident">x</label>]
+
+		<label for="r1" class="ident">b</label>[<span class="lit-number">0</span>*<span class="lit-number">8</span>+<label for="r22" class="ident">x</label>] = (<label for="r27" class="ident">tmp10</label> + <label for="r29" class="ident">tmp11</label>) &gt;&gt; <a href="#line-80" class="ident">pass1Bits</a>
+		<label for="r1" class="ident">b</label>[<span class="lit-number">4</span>*<span class="lit-number">8</span>+<label for="r22" class="ident">x</label>] = (<label for="r27" class="ident">tmp10</label> - <label for="r29" class="ident">tmp11</label>) &gt;&gt; <a href="#line-80" class="ident">pass1Bits</a>
+
+		<label for="r31" class="ident">z1</label> := (<label for="r28" class="ident">tmp12</label> + <label for="r30" class="ident">tmp13</label>) * <a href="#line-66" class="ident">fix_0_541196100</a>
+		<label for="r31" class="ident">z1</label> += <span class="lit-number">1</span> &lt;&lt; (<a href="#line-79" class="ident">constBits</a> + <a href="#line-80" class="ident">pass1Bits</a> - <span class="lit-number">1</span>)
+		<label for="r1" class="ident">b</label>[<span class="lit-number">2</span>*<span class="lit-number">8</span>+<label for="r22" class="ident">x</label>] = (<label for="r31" class="ident">z1</label> + <label for="r28" class="ident">tmp12</label>*<a href="#line-67" class="ident">fix_0_765366865</a>) &gt;&gt; (<a href="#line-79" class="ident">constBits</a> + <a href="#line-80" class="ident">pass1Bits</a>)
+		<label for="r1" class="ident">b</label>[<span class="lit-number">6</span>*<span class="lit-number">8</span>+<label for="r22" class="ident">x</label>] = (<label for="r31" class="ident">z1</label> - <label for="r30" class="ident">tmp13</label>*<a href="#line-71" class="ident">fix_1_847759065</a>) &gt;&gt; (<a href="#line-79" class="ident">constBits</a> + <a href="#line-80" class="ident">pass1Bits</a>)
+
+		<label for="r27" class="ident">tmp10</label> = <label for="r23" class="ident">tmp0</label> + <label for="r26" class="ident">tmp3</label>
+		<label for="r29" class="ident">tmp11</label> = <label for="r24" class="ident">tmp1</label> + <label for="r25" class="ident">tmp2</label>
+		<label for="r28" class="ident">tmp12</label> = <label for="r23" class="ident">tmp0</label> + <label for="r25" class="ident">tmp2</label>
+		<label for="r30" class="ident">tmp13</label> = <label for="r24" class="ident">tmp1</label> + <label for="r26" class="ident">tmp3</label>
+		<label for="r31" class="ident">z1</label> = (<label for="r28" class="ident">tmp12</label> + <label for="r30" class="ident">tmp13</label>) * <a href="#line-69" class="ident">fix_1_175875602</a>
+		<label for="r31" class="ident">z1</label> += <span class="lit-number">1</span> &lt;&lt; (<a href="#line-79" class="ident">constBits</a> + <a href="#line-80" class="ident">pass1Bits</a> - <span class="lit-number">1</span>)
+		<label for="r23" class="ident">tmp0</label> *= <a href="#line-70" class="ident">fix_1_501321110</a>
+		<label for="r24" class="ident">tmp1</label> *= <a href="#line-75" class="ident">fix_3_072711026</a>
+		<label for="r25" class="ident">tmp2</label> *= <a href="#line-73" class="ident">fix_2_053119869</a>
+		<label for="r26" class="ident">tmp3</label> *= <a href="#line-64" class="ident">fix_0_298631336</a>
+		<label for="r27" class="ident">tmp10</label> *= -<a href="#line-68" class="ident">fix_0_899976223</a>
+		<label for="r29" class="ident">tmp11</label> *= -<a href="#line-74" class="ident">fix_2_562915447</a>
+		<label for="r28" class="ident">tmp12</label> *= -<a href="#line-65" class="ident">fix_0_390180644</a>
+		<label for="r30" class="ident">tmp13</label> *= -<a href="#line-72" class="ident">fix_1_961570560</a>
+
+		<label for="r28" class="ident">tmp12</label> += <label for="r31" class="ident">z1</label>
+		<label for="r30" class="ident">tmp13</label> += <label for="r31" class="ident">z1</label>
+		<label for="r1" class="ident">b</label>[<span class="lit-number">1</span>*<span class="lit-number">8</span>+<label for="r22" class="ident">x</label>] = (<label for="r23" class="ident">tmp0</label> + <label for="r27" class="ident">tmp10</label> + <label for="r28" class="ident">tmp12</label>) &gt;&gt; (<a href="#line-79" class="ident">constBits</a> + <a href="#line-80" class="ident">pass1Bits</a>)
+		<label for="r1" class="ident">b</label>[<span class="lit-number">3</span>*<span class="lit-number">8</span>+<label for="r22" class="ident">x</label>] = (<label for="r24" class="ident">tmp1</label> + <label for="r29" class="ident">tmp11</label> + <label for="r30" class="ident">tmp13</label>) &gt;&gt; (<a href="#line-79" class="ident">constBits</a> + <a href="#line-80" class="ident">pass1Bits</a>)
+		<label for="r1" class="ident">b</label>[<span class="lit-number">5</span>*<span class="lit-number">8</span>+<label for="r22" class="ident">x</label>] = (<label for="r25" class="ident">tmp2</label> + <label for="r29" class="ident">tmp11</label> + <label for="r28" class="ident">tmp12</label>) &gt;&gt; (<a href="#line-79" class="ident">constBits</a> + <a href="#line-80" class="ident">pass1Bits</a>)
+		<label for="r1" class="ident">b</label>[<span class="lit-number">7</span>*<span class="lit-number">8</span>+<label for="r22" class="ident">x</label>] = (<label for="r26" class="ident">tmp3</label> + <label for="r27" class="ident">tmp10</label> + <label for="r30" class="ident">tmp13</label>) &gt;&gt; (<a href="#line-79" class="ident">constBits</a> + <a href="#line-80" class="ident">pass1Bits</a>)
+	}
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

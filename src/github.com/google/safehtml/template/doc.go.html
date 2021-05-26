@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: doc.go in package github.com/google/safehtml/template</title>
+<link href="../../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	doc.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../../pkg/github.com/google/safehtml/template.html">github.com/google/safehtml/template</a>
+</code></pre>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright (c) 2017 The Go Authors. All rights reserved.</span><span class="comment"></span><span class="comment"> Use of this source code is governed by a BSD-style</span><span class="comment"> license that can be found in the LICENSE file or at</span><span class="comment"> https://developers.google.com/open-source/licenses/bsd</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"></span><span class="comment">Package template (safehtml/template) implements data-driven templates for</span><span class="comment">generating HTML output safe against code injection. It provides an interface</span><span class="comment">similar to that of package html/template, but produces HTML output that is more</span><span class="comment">secure. Therefore, it should be used instead of html/template to render HTML.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">The documentation here focuses on the security features of the package. For</span><span class="comment">information about how to program the templates themselves, see the</span><span class="comment">documentation for text/template.</span></div>
+<div class="code"><pre><code>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Basic usage</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">This package provides an API almost identical to that of text/template and</span><span class="comment">html/template to parse and execute HTML templates safely.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">  tmpl := template.Must(template.New("name").Parse(`&lt;div&gt;Hello {{.}}&lt;/div&gt;`))</span><span class="comment">  err := tmpl.Execute(out, data)</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">If successful, out will contain code-injection-safe HTML. Otherwise, err's</span><span class="comment">string representation will describe the error that occurred.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Elements of data might be modified at run time before being included in out, or</span><span class="comment">rejected completely if such a conversion is not possible. Pass values of</span><span class="comment">appropriate types from package safehtml to ensure that they are included in the</span><span class="comment">template's HTML output in their expected form. More details are provided below</span><span class="comment">in "Contextual autosanitization" and "Sanitization contexts".</span></div>
+<div class="code"><pre><code>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Security improvements</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">safehtml/template produces HTML more resistant to code injection than</span><span class="comment">html/template because it:</span><span class="comment">  * Allows values of types only from package safehtml to bypass run-time</span><span class="comment">    sanitization. These types represent values that are known---by construction</span><span class="comment">    or by run-time sanitization---to be safe for use in various HTML contexts</span><span class="comment">    without being processed by certain sanitization functions.</span><span class="comment">  * Does not attempt to escape CSS or JavaScript. Instead of attempting to</span><span class="comment">    parse and escape these complex languages, safehtml/template allows values</span><span class="comment">    of only the appropriate types from package safehtml (e.g. safehtml.Style,</span><span class="comment">    safehtml.Script) to be used in these contexts, since they are already</span><span class="comment">    guaranteed to be safe.</span><span class="comment">  * Emits an error if user data is interpolated in unsafe contexts, such as</span><span class="comment">    within non-whitelisted elements or unquoted attribute values.</span><span class="comment">  * Only loads templates from trusted sources. This ensures that the contents</span><span class="comment">    of the template are always under programmer control. More details are</span><span class="comment">    provided below in "Trusted template sources".</span><span class="comment">  * Differentiates between URLs that load code and those that do not. URLs in</span><span class="comment">    the former category must be supplied to the template as values of type</span><span class="comment">    safehtml.TrustedResourceURL, whose type contract promises that the URL</span><span class="comment">    identifies a trustworthy resource. URLs in the latter category can be</span><span class="comment">    sanitized at run time.</span></div>
+<div class="code"><pre><code>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Threat model</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">safehtml/template assumes that programmers are trustworthy. Therefore, data</span><span class="comment">fully under programmer control, such as string literals, are considered safe.</span><span class="comment">The types from package safehtml are designed around this same assumption, so</span><span class="comment">their type contracts are trusted by this package.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">safehtml/template considers all other data values untrustworthy and</span><span class="comment">conservatively assumes that such values could result in a code-injection</span><span class="comment">vulnerability if included verbatim in HTML.</span></div>
+<div class="code"><pre><code>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Trusted template sources</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">safehtml/template loads templates only from trusted sources. Therefore, template</span><span class="comment">text, file paths, and file patterns passed to Parse* functions and methods must</span><span class="comment">be entirely under programmer control.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">This constraint is enforced by using unexported string types for the parameters</span><span class="comment">of Parse* functions and methods, such as trustedFilePattern for ParseGlob.</span><span class="comment">The only values that may be assigned to these types (and thus provided as</span><span class="comment">arguments) are untyped string constants such as string literals, which are</span><span class="comment">always under programmer control.</span></div>
+<div class="code"><pre><code>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Contextual autosanitization</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Code injection vulnerabilities, such as cross-site scripting (XSS), occur when</span><span class="comment">untrusted data values are embedded in a HTML document. For example,</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">  import "text/template"</span><span class="comment">  ...</span><span class="comment">  var t = template.Must(template.New("foo").Parse(`&lt;a href="{{ .X }}"&gt;{{ .Y }}&lt;/a&gt;`))</span><span class="comment">  func renderHTML(x, y string) string {</span><span class="comment">    var out bytes.Buffer</span><span class="comment">    err := t.Execute(&amp;out, struct{ X, Y string }{x, y})</span><span class="comment">     Error checking elided</span><span class="comment">    return out.String()</span><span class="comment">  }</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">If x and y originate from user-provided data, an attacker who controls these</span><span class="comment">strings could arrange for them to contain the following values:</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">  x = "javascript:evil()"</span><span class="comment">  y = "&lt;/a&gt;&lt;script&gt;alert('pwned')&lt;/script&gt;&lt;a&gt;"</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">which will cause renderHTML to return the following unsafe HTML:</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">  &lt;a href="javascript:evil()"&gt;&lt;/a&gt;&lt;script&gt;alert('pwned')&lt;/script&gt;&lt;a&gt;&lt;/a&gt;</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">To prevent such vulnerabilities, untrusted data must be sanitized before being</span><span class="comment">included in HTML. A sanitization function takes untrusted data and returns a</span><span class="comment">string that will not create a code-injection vulnerability in the destination</span><span class="comment">context. The function might return the input unchanged if it deems it safe,</span><span class="comment">escape special runes in the input's string representation to prevent them from</span><span class="comment">triggering undesired state changes in the HTML parser, or entirely replace the</span><span class="comment">input by an innocuous string (also known as "filtering"). If none of these</span><span class="comment">conversions are possible, the sanitization function aborts template processing.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">safehtml/template contextually autosanitizes untrusted data by adding</span><span class="comment">appropriate sanitization functions to template actions to ensure that the</span><span class="comment">action output is safe to include in the HTML context in which the action</span><span class="comment">appears. For example, in</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">  import "safehtml/template"</span><span class="comment">  ...</span><span class="comment">  var t = template.Must(template.New("foo").Parse(`&lt;a href="{{ .X }}"&gt;{{ .Y }}&lt;/a&gt;`))</span><span class="comment">  func renderHTML(x, y string) string {</span><span class="comment">    var out bytes.Buffer</span><span class="comment">    err := t.Execute(&amp;out, struct{ X, Y string }{x, y})</span><span class="comment">     Error checking elided</span><span class="comment">    return out.String()</span><span class="comment">  }</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">the contextual autosanitizer rewrites the template to</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">  &lt;a href="{{ .X | _sanitizeTrustedResourceURLOrURL | _sanitizeHTML }}"&gt;{{ .Y | _sanitizeHTML }}&lt;/a&gt;</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">so that the template produces the following safe, sanitized HTML output (split</span><span class="comment">across multiple lines for clarity):</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">  &lt;a href="about:invalid#zGoSafez"&gt;</span><span class="comment">  &amp;lt;/a&amp;gt;&amp;lt;script&amp;gt;alert(&amp;#39;pwned&amp;#39;)&amp;lt;/script&amp;gt;&amp;lt;a&amp;gt;</span><span class="comment">  &lt;/a&gt;</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Similar template systems such as html/template, Soy, and Angular, refer to this</span><span class="comment">functionality as "contextual autoescaping". safehtml/template uses the term</span><span class="comment">"autosanitization" instead of "autoescaping" since "sanitization" broadly</span><span class="comment">captures the operations of escaping and filtering.</span></div>
+<div class="code"><pre><code>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Sanitization contexts</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">The types of sanitization functions inserted into an action depend on the</span><span class="comment">action's sanitization context, which is determined by its surrounding text.</span><span class="comment">The following table describes these sanitization contexts.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">  +--------------------+----------------------------------+------------------------------+-----------------------+</span><span class="comment">  | Context            | Examples                         | Safe types                   | Run-time sanitizer    |</span><span class="comment">  |--------------------+----------------------------------+------------------------------+-----------------------+</span><span class="comment">  | HTMLContent        | Hello {{.}}                      | safehtml.HTML                | safehtml.HTMLEscaped  |</span><span class="comment">  |                    | &lt;title&gt;{{.}}&lt;/title&gt;             |                              |                       |</span><span class="comment">  +--------------------------------------------------------------------------------------------------------------+</span><span class="comment">  | HTMLValOnly        | &lt;iframe srcdoc="{{.}}"&gt;&lt;/iframe&gt; | safehtml.HTML*               | N/A                   |</span><span class="comment">  +--------------------------------------------------------------------------------------------------------------+</span><span class="comment">  | URL                | &lt;q cite="{{.}}"&gt;Cite&lt;/q&gt;         | safehtml.URL                 | safehtml.URLSanitized |</span><span class="comment">  +--------------------------------------------------------------------------------------------------------------+</span><span class="comment">  | URL or             | &lt;a href="{{.}}"&gt;Link&lt;/a&gt;         | safehtml.URL                 | safehtml.URLSanitized |</span><span class="comment">  | TrustedResourceURL |                                  | safehtml.TrustedResourceURL  |                       |</span><span class="comment">  +--------------------------------------------------------------------------------------------------------------+</span><span class="comment">  | TrustedResourceURL | &lt;script src="{{.}}"&gt;&lt;/script&gt;    | safehtml.TrustedResourceURL† | N/A                   |</span><span class="comment">  +--------------------------------------------------------------------------------------------------------------+</span><span class="comment">  | Script             | &lt;script&gt;{{.}}&lt;/script&gt;           | safehtml.Script*             | N/A                   |</span><span class="comment">  +--------------------------------------------------------------------------------------------------------------+</span><span class="comment">  | Style              | &lt;p style="{{.}}"&gt;Paragraph&lt;/p&gt;   | safehtml.Style*              | N/A                   |</span><span class="comment">  +--------------------------------------------------------------------------------------------------------------+</span><span class="comment">  | Stylesheet         | &lt;style&gt;{{.}}&lt;/style&gt;             | safehtml.StyleSheet*         | N/A                   |</span><span class="comment">  +--------------------------------------------------------------------------------------------------------------+</span><span class="comment">  | Identifier         | &lt;h1 id="{{.}}"&gt;Hello&lt;/h1&gt;        | safehtml.Identifier*         | N/A                   |</span><span class="comment">  +--------------------------------------------------------------------------------------------------------------+</span><span class="comment">  | Enumerated value   | &lt;a target="{{.}}"&gt;Link&lt;/a&gt;       | Whitelisted string values    | N/A                   |</span><span class="comment">  |                    |                                  | ("_self" or "_blank" for     |                       |</span><span class="comment">  |                    |                                  | the given example)           |                       |</span><span class="comment">  +--------------------------------------------------------------------------------------------------------------+</span><span class="comment">  | None               | &lt;h1 class="{{.}}"&gt;Hello&lt;/h1&gt;     | N/A (any type allowed)       | N/A (any type         |</span><span class="comment">  |                    |                                  |                              |      allowed)         |</span><span class="comment">  +--------------------+----------------------------------+------------------------------+-----------------------+</span><span class="comment">   *: Values only of this type are allowed in this context. Other values will trigger a run-time error.</span><span class="comment">   †: If the action is a prefix of the attribute value, values only of this type are allowed.</span><span class="comment">      Otherwise, values of any type are allowed. See "Substitutions in URLs" for more details.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">For each context, the function named in "Run-time sanitizer" is called to</span><span class="comment">sanitize the output of the action. However, if the action outputs a value of</span><span class="comment">any of the types listed in "Safe types", the run-time sanitizer is not called.</span><span class="comment">For example, in</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">  &lt;title&gt;{{ .X }}&lt;/title&gt;</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">if X is a string value, a HTML sanitizer that calls safehtml.HTMLEscaped will be</span><span class="comment">added to the action to sanitize X.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">   _sanitizeHTML calls safehtml.HTMLEscaped.</span><span class="comment">  &lt;title&gt;{{ .X | _sanitizeHTML }}&lt;/title&gt;</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">However, if X is a safehtml.HTML value, _sanitizeHTML will not change its</span><span class="comment">value, since safehtml.HTML values are already safe to use in HTML contexts.</span><span class="comment">Therefore, the string contents of X will bypass context-specific</span><span class="comment">sanitization (in this case, HTML escaping) and appear unchanged in the</span><span class="comment">template's HTML output. Note that in attribute value contexts, HTML escaping</span><span class="comment">will always take place, whether or not context-specific sanitization is</span><span class="comment">performed. More details can be found at the end of this section.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">In certain contexts, the autosanitizer allows values only of that context's</span><span class="comment">"Safe types". Any other values will trigger an error and abort template</span><span class="comment">processing. For example, the template</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">  &lt;style&gt;{{ .X }}&lt;/style&gt;</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">triggers a run-time error if X is not a safehtml.StyleSheet. Otherwise, the</span><span class="comment">string form of X will appear unchanged in the output. The only exception to</span><span class="comment">this behavior is in TrustedResourceURL sanitization contexts, where actions may</span><span class="comment">output data of any type if the action occurs after a safe attribute value prefix.</span><span class="comment">More details can be found below in "Substitutions in URLs".</span></div>
+<div class="code"><pre><code>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Unconditional sanitization</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">In attribute value contexts, action outputs are always HTML-escaped after</span><span class="comment">context-specific sanitization to ensure that the attribute values cannot change</span><span class="comment">change the structure of the surrounding HTML tag. In URL or TrustedResourceURL</span><span class="comment">sanitization contexts, action outputs are additionally URL-normalized to reduce</span><span class="comment">the likelihood of downstream URL-parsing bugs. For example, the template</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">  &lt;a href="{{ .X }}"&gt;Link&lt;/a&gt;</span><span class="comment">  &lt;p id="{{ .Y }}"&gt;Text&lt;/p&gt;</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">is rewritten by the autosanitizer into</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">   _sanitizeHTML calls safehtml.HTMLEscaped.</span><span class="comment">  &lt;a href="{{ .X | _sanitizeTrustedResourceURLOrURL | _normalizeURL | _sanitizeHTML }}"&gt;Link&lt;/a&gt;</span><span class="comment">  &lt;p id="{{ .Y | _sanitizeIdentifier | _sanitizeHTML }}"&gt;Text&lt;/p&gt;</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Even if X is a safehtml.URL or safehtml.TrustedResourceURL value, which</span><span class="comment">remains unchanged after _sanitizeTrustedResourceURLOrURL, X will still be</span><span class="comment">URL-normalized and HTML-escaped. Likewise, Y will still be HTML-escaped even if</span><span class="comment">its string form is left unchanged by _sanitizeIdentifier.</span></div>
+<div class="code"><pre><code>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Substitutions in URLs</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Values of any type may be substituted into attribute values in URL and</span><span class="comment">TrustedResourceURL sanitization contexts only if the action is preceded by a</span><span class="comment">safe URL prefix. For example, in</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">  &lt;q cite="http:www.foo.com/{{ .PathComponent }}"&gt;foo&lt;/q&gt;</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Since "http:www.foo.com/" is a safe URL prefix, PathComponent can safely be</span><span class="comment">interpolated into this URL sanitization context after URL normalization.</span><span class="comment">Similarly, in</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">  &lt;script src="https:www.bar.com/{{ .PathComponent }}"&gt;&lt;/script&gt;</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Since "https:www.bar.com/" is a safe TrustedResourceURL prefix, PathComponent</span><span class="comment">can safely be interpolated into this TrustedResourceURL sanitization context</span><span class="comment">after URL escaping. Substitutions after a safe TrustedResourceURL prefix are</span><span class="comment">escaped instead of normalized to prevent the injection of any new URL</span><span class="comment">components, including additional path components. URL escaping also takes place</span><span class="comment">in URL sanitization contexts where the substitutions occur in the query or</span><span class="comment">fragment part of the URL, such as in:</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">  &lt;a href="/foo?q={{ .Query }}&amp;hl={{ .LangCode }}"&gt;Link&lt;/a&gt;</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">A URL prefix is considered safe in a URL sanitization context if it does</span><span class="comment">not end in an incomplete HTML character reference (e.g. https&amp;#1) or incomplete</span><span class="comment">percent-encoding character triplet (e.g. /fo%6), does not contain whitespace or control</span><span class="comment">characters, and one of the following is true:</span><span class="comment">  * The prefix has a safe scheme (i.e. http, https, mailto, or ftp).</span><span class="comment">  * The prefix has the data scheme with base64 encoding and a whitelisted audio, image,</span><span class="comment">    or video MIME type (e.g. data:img/jpeg;base64, data:video/mp4;base64).</span><span class="comment">  * The prefix has no scheme at all, and cannot be interpreted as a scheme prefix (e.g. /path).</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">A URL prefix is considered safe in a TrustedResourceURL sanitization context if it does</span><span class="comment">not end in an incomplete HTML character reference (e.g. https&amp;#1) or incomplete</span><span class="comment">percent-encoding character triplet (e.g. /fo%6), does not contain white space or control</span><span class="comment">characters, and one of the following is true:</span><span class="comment">  * The prefix has the https scheme and contains a domain name (e.g. https:www.foo.com).</span><span class="comment">  * The prefix is scheme-relative and contains a domain name (e.g. www.foo.com/).</span><span class="comment">  * The prefix is path-absolute and contains a path (e.g. /path).</span><span class="comment">  * The prefix is "about:blank".</span><span class="comment"></span></div>
+<div class="code"><pre><code></code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Package: gopkg.in/warnings.v0</title>
+<link href="../../css/light-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="package-details"><code><span style="font-size:xx-large;">package <b>warnings</b></span>
+
+<span class="title">Import Path</span>
+	<a href="../../index.html#pkg-gopkg.in/warnings.v0">gopkg.in/warnings.v0</a><i> (on <a href="https://pkg.go.dev/gopkg.in/warnings.v0" target="_blank">go.dev</a>)</i>
+
+<span class="title">Dependency Relation</span>
+	imports <a href="../../dep/gopkg.in/warnings.v0.html">2 packages</a>, and imported by <a href="../../dep/gopkg.in/warnings.v0.html#imported-by">one package</a>
+
+<div id="files"><span class="title">Involved Source Files</span>
+
+	<input type='checkbox' checked class="fold" id="file-0-fold-content"><label for="file-0-fold-content">   <a href="../../src/gopkg.in/warnings.v0/warnings.go.html#doc">d➜</a> <a href="../../src/gopkg.in/warnings.v0/warnings.go.html">warnings.go</a></label><span id='file-0-fold-content-items' class="fold-items">
+		Package warnings implements error handling with non-fatal errors (warnings).
+
+		A recurring pattern in Go programming is the following:
+
+		 func myfunc(params) error {
+		     if err := doSomething(...); err != nil {
+		         return err
+		     }
+		     if err := doSomethingElse(...); err != nil {
+		         return err
+		     }
+		     if ok := doAnotherThing(...); !ok {
+		         return errors.New("my error")
+		     }
+		     ...
+		     return nil
+		 }
+
+		This pattern allows interrupting the flow on any received error. But what if
+		there are errors that should be noted but still not fatal, for which the flow
+		should not be interrupted? Implementing such logic at each if statement would
+		make the code complex and the flow much harder to follow.
+
+		Package warnings provides the Collector type and a clean and simple pattern
+		for achieving such logic. The Collector takes care of deciding when to break
+		the flow and when to continue, collecting any non-fatal errors (warnings)
+		along the way. The only requirement is that fatal and non-fatal errors can be
+		distinguished programmatically; that is a function such as
+
+		 IsFatal(error) bool
+
+		must be implemented. The following is an example of what the above snippet
+		could look like using the warnings package:
+
+		 import "gopkg.in/warnings.v0"
+
+		 func isFatal(err error) bool {
+		     _, ok := err.(WarningType)
+		     return !ok
+		 }
+
+		 func myfunc(params) error {
+		     c := warnings.NewCollector(isFatal)
+		     c.FatalWithWarnings = true
+		     if err := c.Collect(doSomething()); err != nil {
+		         return err
+		     }
+		     if err := c.Collect(doSomethingElse(...)); err != nil {
+		         return err
+		     }
+		     if ok := doAnotherThing(...); !ok {
+		         if err := c.Collect(errors.New("my error")); err != nil {
+		             return err
+		         }
+		     }
+		     ...
+		     return c.Done()
+		 }
+
+		For an example of a non-trivial code base using this library, see
+		gopkg.in/gcfg.v1
+
+		Rules for using warnings
+
+		 - ensure that warnings are programmatically distinguishable from fatal
+		   errors (i.e. implement an isFatal function and any necessary error types)
+		 - ensure that there is a single Collector instance for a call of each
+		   exported function
+		 - ensure that all errors (fatal or warning) are fed through Collect
+		 - ensure that every time an error is returned, it is one returned by a
+		   Collector (from Collect or Done)
+		 - ensure that Collect is never called after Done
+
+		TODO
+
+		 - optionally limit the number of warnings (e.g. stop after 20 warnings) (?)
+		 - consider interaction with contexts
+		 - go vet-style invocations verifier
+		 - semi-automatic code converter</span></div>
+<div id="exported-types"><span class="title">Package-Level Type Names<span class="title-stat"><i> (total 2, both are exported)</i></span></span>
+
+<div id="exported-types-buttons" class="js-on">	/* sort exporteds by: <label id="sort-types-by-alphabet" class="button">alphabet</label> | <label id="sort-types-by-popularity" class="button">popularity</label> */</div><div class="anchor type-res" id="name-Collector" data-popularity="330">	<input type='checkbox' class="fold" id="Collector-fold-content"><label for="Collector-fold-content"> <a href="../../use/gopkg.in/warnings.v0..Collector.html">type</a> <a href="../../src/gopkg.in/warnings.v0/warnings.go.html#line-116">Collector</a> <i>(struct)</i></label><span id='Collector-fold-content-docs' class="fold-docs">
+		A Collector collects errors up to the first fatal error.
+
+		<input type='checkbox' class="fold" id="Collector-fold-fields"><label for="Collector-fold-fields">Fields (<i>total 4, in which 2 are exported</i>)</label><span id='Collector-fold-fields-items' class="fold-items"><span>
+			<input type='checkbox' class="fold" id="Collector-fold-field-FatalWithWarnings"><label for="Collector-fold-field-FatalWithWarnings"><a href="../../src/gopkg.in/warnings.v0/warnings.go.html#line-123">FatalWithWarnings</a> <i><a href="../builtin.html#name-bool">bool</a></i></label><span id='Collector-fold-field-FatalWithWarnings-docs' class="fold-docs">
+				FatalWithWarnings set to true means that a fatal error is returned as
+				a List together with all warnings so far. The default behavior is to
+				only return the fatal error and discard any warnings that have been
+				collected.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Collector-fold-field-IsFatal"><label for="Collector-fold-field-IsFatal"><a href="../../src/gopkg.in/warnings.v0/warnings.go.html#line-118">IsFatal</a> <i>func(<a href="../builtin.html#name-error">error</a>) <a href="../builtin.html#name-bool">bool</a></i></label><span id='Collector-fold-field-IsFatal-docs' class="fold-docs">
+				IsFatal distinguishes between warnings and fatal errors.
+</span></span>
+			<input type='checkbox' class="showhide" id="Collector-showhide-fields"><i><label for="Collector-showhide-fields" class="show-inline">/* 2 unexporteds ... */</label><label for="Collector-showhide-fields" class="hide-inline">/* 2 unexporteds: */</label></i><span class="hidden"><i>
+			<span class="nodocs"><a href="../../src/gopkg.in/warnings.v0/warnings.go.html#line-126">done</a> <i><a href="../builtin.html#name-bool">bool</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../src/gopkg.in/warnings.v0/warnings.go.html#line-125">l</a> <i><a href="#name-List">List</a></i></span></i></span></span>
+		<input type='checkbox' class="fold" id="Collector-fold-methods"><label for="Collector-fold-methods">Methods (<i>total 3, in which 2 are exported</i>)</label><span id='Collector-fold-methods-items' class="fold-items"><span>
+			<input type='checkbox' class="fold" id="Collector-fold-method-Collect"><label for="Collector-fold-method-Collect">(*T) <a href="../../src/gopkg.in/warnings.v0/warnings.go.html#line-139">Collect</a>(err <a href="../builtin.html#name-error">error</a>) <a href="../builtin.html#name-error">error</a></label><span id='Collector-fold-method-Collect-docs' class="fold-docs">
+				Collect collects a single error (warning or fatal). It returns nil if
+				collection can continue (only warnings so far), or otherwise the errors
+				collected. Collect mustn't be called after the first fatal error or after
+				Done has been called.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Collector-fold-method-Done"><label for="Collector-fold-method-Done">(*T) <a href="../../src/gopkg.in/warnings.v0/warnings.go.html#line-159">Done</a>() <a href="../builtin.html#name-error">error</a></label><span id='Collector-fold-method-Done-docs' class="fold-docs">
+				Done ends collection and returns the collected error(s).
+</span></span>
+			<input type='checkbox' class="showhide" id="Collector-showhide-methods"><i><label for="Collector-showhide-methods" class="show-inline">/* one unexported ... */</label><label for="Collector-showhide-methods" class="hide-inline">/* one unexported: */</label></i><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../src/gopkg.in/warnings.v0/warnings.go.html#line-164">erorr</a>() <a href="../builtin.html#name-error">error</a></span></i></span></span>
+		<input type='checkbox' class="fold" id="Collector-fold-results"><label for="Collector-fold-results">As Outputs Of (<i>at least one exported</i>)</label><span id='Collector-fold-results-items' class="fold-items"><span>
+			func <a href="#name-NewCollector">NewCollector</a>(isFatal func(<a href="../builtin.html#name-error">error</a>) <a href="../builtin.html#name-bool">bool</a>) *<b>Collector</b></span></span>
+		<input type='checkbox' class="fold" id="Collector-fold-params"><label for="Collector-fold-params">As Inputs Of (<i>at least 3, none are exported</i>)</label><span id='Collector-fold-params-items' class="fold-items">
+			<input type='checkbox' class="showhide" id="Collector-showhide-outputofs"><i><label for="Collector-showhide-outputofs" class="show-inline">/* 3+ unexporteds ... */</label><label for="Collector-showhide-outputofs" class="hide-inline">/* 3+ unexporteds: */</label></i><span class="hidden"><i>
+			func github.com/go-git/gcfg.<a href="../github.com/go-git/gcfg.html#name-newValue">newValue</a>(c *<b>Collector</b>, sect <a href="../builtin.html#name-string">string</a>, vCfg <a href="../reflect.html">reflect</a>.<a href="../reflect.html#name-Value">Value</a>, vType <a href="../reflect.html">reflect</a>.<a href="../reflect.html#name-Type">Type</a>) (<a href="../reflect.html">reflect</a>.<a href="../reflect.html#name-Value">Value</a>, <a href="../builtin.html#name-error">error</a>)</i></span><span class="hidden"><i>
+			func github.com/go-git/gcfg.<a href="../github.com/go-git/gcfg.html#name-read">read</a>(c *<b>Collector</b>, callback func(<a href="../builtin.html#name-string">string</a>, <a href="../builtin.html#name-string">string</a>, <a href="../builtin.html#name-string">string</a>, <a href="../builtin.html#name-string">string</a>, <a href="../builtin.html#name-bool">bool</a>) <a href="../builtin.html#name-error">error</a>, fset *<a href="../github.com/go-git/gcfg/token.html">token</a>.<a href="../github.com/go-git/gcfg/token.html#name-FileSet">FileSet</a>, file *<a href="../github.com/go-git/gcfg/token.html">token</a>.<a href="../github.com/go-git/gcfg/token.html#name-File">File</a>, src []<a href="../builtin.html#name-byte">byte</a>) <a href="../builtin.html#name-error">error</a></i></span><span class="hidden"><i>
+			func github.com/go-git/gcfg.<a href="../github.com/go-git/gcfg.html#name-set">set</a>(c *<b>Collector</b>, cfg interface{}, sect, sub, name <a href="../builtin.html#name-string">string</a>, value <a href="../builtin.html#name-string">string</a>, blankValue <a href="../builtin.html#name-bool">bool</a>, subsectPass <a href="../builtin.html#name-bool">bool</a>) <a href="../builtin.html#name-error">error</a></i></span></span>
+
+</span></div><div class="anchor type-res" id="name-List" data-popularity="100">	<input type='checkbox' class="fold" id="List-fold-content"><label for="List-fold-content"> <a href="../../use/gopkg.in/warnings.v0..List.html">type</a> <a href="../../src/gopkg.in/warnings.v0/warnings.go.html#line-89">List</a> <i>(struct)</i></label><span id='List-fold-content-docs' class="fold-docs">
+		List holds a collection of warnings and optionally one fatal error.
+
+		<input type='checkbox' class="fold" id="List-fold-fields"><label for="List-fold-fields">Fields (<i>total 2, both are exported</i>)</label><span id='List-fold-fields-items' class="fold-items"><span>
+			<span class="nodocs"><a href="../../src/gopkg.in/warnings.v0/warnings.go.html#line-91">Fatal</a> <i><a href="../builtin.html#name-error">error</a></i></span></span><span>
+			<span class="nodocs"><a href="../../src/gopkg.in/warnings.v0/warnings.go.html#line-90">Warnings</a> <i>[]<a href="../builtin.html#name-error">error</a></i></span></span></span>
+		<input type='checkbox' class="fold" id="List-fold-methods"><label for="List-fold-methods">Methods (<i>only one, which is exported</i>)</label><span id='List-fold-methods-items' class="fold-items"><span>
+			<input type='checkbox' class="fold" id="List-fold-method-Error"><label for="List-fold-method-Error">( T) <a href="../../src/gopkg.in/warnings.v0/warnings.go.html#line-95">Error</a>() <a href="../builtin.html#name-string">string</a></label><span id='List-fold-method-Error-docs' class="fold-docs">
+				Error implements the error interface.
+</span></span></span>
+		<input type='checkbox' class="fold" id="List-fold-impls"><label for="List-fold-impls">Implements (<i>at least one exported</i>)</label><span id='List-fold-impls-items' class="fold-items"><span>
+			 T : <a href="../builtin.html#name-error">error</a></span></span>
+
+</span></div></div>
+<div id="exported-functions"><span class="title">Package-Level Functions<span class="title-stat"><i> (total 3, all are exported)</i></span></span>
+
+<div class="anchor value-res" id="name-FatalOnly">	<input type='checkbox' class="fold" id="FatalOnly-fold-content"><label for="FatalOnly-fold-content"> <a href="../../use/gopkg.in/warnings.v0..FatalOnly.html">func</a> <a href="../../src/gopkg.in/warnings.v0/warnings.go.html#line-179">FatalOnly</a>(err <a href="../builtin.html#name-error">error</a>) <a href="../builtin.html#name-error">error</a></label><span id='FatalOnly-fold-content-docs' class="fold-docs">
+		FatalOnly returns the fatal error, if any, **in an error returned by a
+		Collector**. It returns nil if and only if err is nil or err is a List
+		with err.Fatal == nil.
+
+</span></div><div class="anchor value-res" id="name-NewCollector">	<input type='checkbox' class="fold" id="NewCollector-fold-content"><label for="NewCollector-fold-content"> <a href="../../use/gopkg.in/warnings.v0..NewCollector.html">func</a> <a href="../../src/gopkg.in/warnings.v0/warnings.go.html#line-131">NewCollector</a>(isFatal func(<a href="../builtin.html#name-error">error</a>) <a href="../builtin.html#name-bool">bool</a>) *<a href="#name-Collector">Collector</a></label><span id='NewCollector-fold-content-docs' class="fold-docs">
+		NewCollector returns a new Collector; it uses isFatal to distinguish between
+		warnings and fatal errors.
+
+</span></div><div class="anchor value-res" id="name-WarningsOnly">	<input type='checkbox' class="fold" id="WarningsOnly-fold-content"><label for="WarningsOnly-fold-content"> <a href="../../use/gopkg.in/warnings.v0..WarningsOnly.html">func</a> <a href="../../src/gopkg.in/warnings.v0/warnings.go.html#line-188">WarningsOnly</a>(err <a href="../builtin.html#name-error">error</a>) []<a href="../builtin.html#name-error">error</a></label><span id='WarningsOnly-fold-content-docs' class="fold-docs">
+		WarningsOnly returns the warnings **in an error returned by a Collector**.
+
+</span></div></div></code></pre><pre id="footer">
+<table><tr><td><img src="../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

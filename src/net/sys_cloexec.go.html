@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: sys_cloexec.go in package net</title>
+<link href="../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	sys_cloexec.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../pkg/net.html">net</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1,
+input[id=i2]:checked ~pre .i2
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<input id="i2" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2013 The Go Authors. All rights reserved.</span><span class="comment"> Use of this source code is governed by a BSD-style</span><span class="comment"> license that can be found in the LICENSE file.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> This file implements sysSocket and accept for platforms that do not</span><span class="comment"> provide a fast path for setting SetNonblock and CloseOnExec.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> +build aix darwin solaris,!illumos</span></div>
+<div class="code"><pre><code>
+<span class="keyword">package</span> net
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"internal/poll"</span></label>
+	<label for="i1"><span class="lit-string i1">"os"</span></label>
+	<label for="i2"><span class="lit-string i2">"syscall"</span></label>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Wrapper around the socket system call that marks the returned file</span><span class="comment"> descriptor as nonblocking and close-on-exec.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> See ../syscall/exec_unix.go for description of ForkLock.</span></div>
+<div class="code"><pre><code>	<a href="../../pkg/syscall.html" class="ident i2">syscall</a>.<a href="../syscall/exec_unix.go.html#line-66" class="ident">ForkLock</a>.<a href="../sync/rwmutex.go.html#line-56" class="ident">RLock</a>()
+	<label for="r4" class="ident">s</label>, <label for="r5" class="ident">err</label> := <a href="hook_unix.go.html#line-16" class="ident">socketFunc</a>(<label for="r1" class="ident">family</label>, <label for="r2" class="ident">sotype</label>, <label for="r3" class="ident">proto</label>)
+	<span class="keyword">if</span> <label for="r5" class="ident">err</label> == <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<a href="../../pkg/syscall.html" class="ident i2">syscall</a>.<a href="../syscall/exec_unix.go.html#line-104" class="ident">CloseOnExec</a>(<label for="r4" class="ident">s</label>)
+	}
+	<a href="../../pkg/syscall.html" class="ident i2">syscall</a>.<a href="../syscall/exec_unix.go.html#line-66" class="ident">ForkLock</a>.<a href="../sync/rwmutex.go.html#line-75" class="ident">RUnlock</a>()
+	<span class="keyword">if</span> <label for="r5" class="ident">err</label> != <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> -<span class="lit-number">1</span>, <a href="../../pkg/os.html" class="ident i1">os</a>.<a href="../os/error.go.html#line-69" class="ident">NewSyscallError</a>(<span class="lit-string">"socket"</span>, <label for="r5" class="ident">err</label>)
+	}
+	<span class="keyword">if</span> <label for="r5" class="ident">err</label> = <a href="../../pkg/syscall.html" class="ident i2">syscall</a>.<a href="../syscall/exec_unix.go.html#line-106" class="ident">SetNonblock</a>(<label for="r4" class="ident">s</label>, <a href="../../pkg/builtin.html#name-true" class="ident">true</a>); <label for="r5" class="ident">err</label> != <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<a href="../../pkg/internal/poll.html" class="ident i0">poll</a>.<a href="../internal/poll/hook_unix.go.html#line-12" class="ident">CloseFunc</a>(<label for="r4" class="ident">s</label>)
+		<span class="keyword">return</span> -<span class="lit-number">1</span>, <a href="../../pkg/os.html" class="ident i1">os</a>.<a href="../os/error.go.html#line-69" class="ident">NewSyscallError</a>(<span class="lit-string">"setnonblock"</span>, <label for="r5" class="ident">err</label>)
+	}
+	<span class="keyword">return</span> <label for="r4" class="ident">s</label>, <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a>
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

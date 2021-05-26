@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: runtime.go in package github.com/evanw/esbuild/internal/runtime</title>
+<link href="../../../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	runtime.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../../../pkg/github.com/evanw/esbuild/internal/runtime.html">github.com/evanw/esbuild/internal/runtime</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> This is esbuild's runtime code. It contains helper functions that are</span><span class="comment"> automatically injected into output files to implement certain features. For</span><span class="comment"> example, the "**" operator is replaced with a call to "__pow" when targeting</span><span class="comment"> ES2015. Tree shaking automatically removes unused code from the runtime.</span></div>
+<div class="code"><pre><code>
+<span class="keyword">package</span> runtime
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"github.com/evanw/esbuild/internal/compat"</span></label>
+	<label for="i1"><span class="lit-string i1">"github.com/evanw/esbuild/internal/logger"</span></label>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> The runtime source is always at a special index. The index is always zero</span><span class="comment"> but this constant is always used instead to improve readability and ensure</span><span class="comment"> all code that references this index can be discovered easily.</span></div>
+<div class="code"><pre><code><span class="keyword">const</span> <a href="../../../../../../pkg/github.com/evanw/esbuild/internal/runtime.html#name-SourceIndex" class="ident">SourceIndex</a> = <a href="../../../../../../pkg/builtin.html#name-uint32" class="ident">uint32</a>(<span class="lit-number">0</span>)
+
+<span class="keyword">func</span> <label for="r0" class="ident"><a href="../../../../../../pkg/github.com/evanw/esbuild/internal/runtime.html#name-CanUseES6" class="ident">CanUseES6</a></label>(<label for="r1" class="ident">unsupportedFeatures</label> <a href="../../../../../../pkg/github.com/evanw/esbuild/internal/compat.html" class="ident i0">compat</a>.<a href="../compat/js_table.go.html#line-17" class="ident">JSFeature</a>) <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> {
+	<span class="keyword">return</span> !<label for="r1" class="ident">unsupportedFeatures</label>.<a href="../compat/js_table.go.html#line-60" class="ident">Has</a>(<a href="../../../../../../pkg/github.com/evanw/esbuild/internal/compat.html" class="ident i0">compat</a>.<a href="../compat/js_table.go.html#line-44" class="ident">Let</a>) &amp;&amp; !<label for="r1" class="ident">unsupportedFeatures</label>.<a href="../compat/js_table.go.html#line-60" class="ident">Has</a>(<a href="../../../../../../pkg/github.com/evanw/esbuild/internal/compat.html" class="ident i0">compat</a>.<a href="../compat/js_table.go.html#line-21" class="ident">Arrow</a>)
+}
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Note: The "__rest" function has a for-of loop which requires ES6, but</span><span class="comment">	 transforming destructuring to ES5 isn't even supported so it's ok.</span></div>
+<div class="code"><pre><code>	<label for="r4" class="ident">text</label> := <span class="lit-string">`</span>
+<span class="lit-string">		var __create = Object.create</span>
+<span class="lit-string">		var __defProp = Object.defineProperty</span>
+<span class="lit-string">		var __getProtoOf = Object.getPrototypeOf</span>
+<span class="lit-string">		var __hasOwnProp = Object.prototype.hasOwnProperty</span>
+<span class="lit-string">		var __getOwnPropNames = Object.getOwnPropertyNames</span>
+<span class="lit-string">		var __getOwnPropDesc = Object.getOwnPropertyDescriptor // Note: can return "undefined" due to a Safari bug</span>
+<span class="lit-string">		var __getOwnPropSymbols = Object.getOwnPropertySymbols</span>
+<span class="lit-string">		var __propIsEnum = Object.prototype.propertyIsEnumerable</span>
+
+<span class="lit-string">		export var __pow = Math.pow</span>
+<span class="lit-string">		export var __assign = Object.assign</span>
+
+<span class="lit-string">		// Tells importing modules that this can be considered an ES6 module</span>
+<span class="lit-string">		var __markAsModule = target =&gt; __defProp(target, '__esModule', { value: true })</span>
+
+<span class="lit-string">		// Tells importing modules that this can be considered an ES6 module</span>
+<span class="lit-string">		export var __name = (target, value) =&gt; __defProp(target, 'name', { value, configurable: true })</span>
+
+<span class="lit-string">		// For object rest patterns</span>
+<span class="lit-string">		export var __restKey = key =&gt; typeof key === 'symbol' ? key : key + ''</span>
+<span class="lit-string">		export var __rest = (source, exclude) =&gt; {</span>
+<span class="lit-string">			var target = {}</span>
+<span class="lit-string">			for (var prop in source)</span>
+<span class="lit-string">				if (__hasOwnProp.call(source, prop) &amp;&amp; exclude.indexOf(prop) &lt; 0)</span>
+<span class="lit-string">					target[prop] = source[prop]</span>
+<span class="lit-string">			if (source != null &amp;&amp; __getOwnPropSymbols)</span>
+<span class="lit-string">	`</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Avoid "of" when not using ES6</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> <label for="r3" class="ident">isES6</label> {
+		<label for="r4" class="ident">text</label> += <span class="lit-string">`</span>
+<span class="lit-string">				for (var prop of __getOwnPropSymbols(source)) {</span>
+<span class="lit-string">		`</span>
+	} <span class="keyword">else</span> {
+		<label for="r4" class="ident">text</label> += <span class="lit-string">`</span>
+<span class="lit-string">				for (var props = __getOwnPropSymbols(source), i = 0, n = props.length, prop; i &lt; n; i++) {</span>
+<span class="lit-string">					prop = props[i]</span>
+<span class="lit-string">		`</span>
+	}
+
+	<label for="r4" class="ident">text</label> += <span class="lit-string">`</span>
+<span class="lit-string">					if (exclude.indexOf(prop) &lt; 0 &amp;&amp; __propIsEnum.call(source, prop))</span>
+<span class="lit-string">						target[prop] = source[prop]</span>
+<span class="lit-string">				}</span>
+<span class="lit-string">			return target</span>
+<span class="lit-string">		}</span>
+
+<span class="lit-string">		// Wraps a CommonJS closure and returns a require() function</span>
+<span class="lit-string">		export var __commonJS = (callback, module) =&gt; () =&gt; {</span>
+<span class="lit-string">			if (!module) {</span>
+<span class="lit-string">				module = {exports: {}}</span>
+<span class="lit-string">				callback(module.exports, module)</span>
+<span class="lit-string">			}</span>
+<span class="lit-string">			return module.exports</span>
+<span class="lit-string">		}</span>
+
+<span class="lit-string">		// Used to implement ES6 exports to CommonJS</span>
+<span class="lit-string">		export var __export = (target, all) =&gt; {</span>
+<span class="lit-string">			for (var name in all)</span>
+<span class="lit-string">				__defProp(target, name, { get: all[name], enumerable: true })</span>
+<span class="lit-string">		}</span>
+<span class="lit-string">		export var __exportStar = (target, module, desc) =&gt; {</span>
+<span class="lit-string">			if (module &amp;&amp; typeof module === 'object' || typeof module === 'function')</span>
+<span class="lit-string">	`</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Avoid "let" when not using ES6</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> <label for="r3" class="ident">isES6</label> {
+		<label for="r4" class="ident">text</label> += <span class="lit-string">`</span>
+<span class="lit-string">				for (let key of __getOwnPropNames(module))</span>
+<span class="lit-string">					if (!__hasOwnProp.call(target, key) &amp;&amp; key !== 'default')</span>
+<span class="lit-string">						__defProp(target, key, { get: () =&gt; module[key], enumerable: !(desc = __getOwnPropDesc(module, key)) || desc.enumerable })</span>
+<span class="lit-string">		`</span>
+	} <span class="keyword">else</span> {
+		<label for="r4" class="ident">text</label> += <span class="lit-string">`</span>
+<span class="lit-string">				for (var keys = __getOwnPropNames(module), i = 0, n = keys.length, key; i &lt; n; i++) {</span>
+<span class="lit-string">					key = keys[i]</span>
+<span class="lit-string">					if (!__hasOwnProp.call(target, key) &amp;&amp; key !== 'default')</span>
+<span class="lit-string">						__defProp(target, key, { get: (k =&gt; module[k]).bind(null, key), enumerable: !(desc = __getOwnPropDesc(module, key)) || desc.enumerable })</span>
+<span class="lit-string">				}</span>
+<span class="lit-string">		`</span>
+	}
+
+	<label for="r4" class="ident">text</label> += <span class="lit-string">`</span>
+<span class="lit-string">			return target</span>
+<span class="lit-string">		}</span>
+
+<span class="lit-string">		// Converts the module from CommonJS to ES6 if necessary</span>
+<span class="lit-string">		export var __toModule = module =&gt; {</span>
+<span class="lit-string">			return __exportStar(__markAsModule(</span>
+<span class="lit-string">				__defProp(</span>
+<span class="lit-string">					module != null ? __create(__getProtoOf(module)) : {},</span>
+<span class="lit-string">					'default',</span>
+
+<span class="lit-string">					// If this is an ESM file that has been converted to a CommonJS file</span>
+<span class="lit-string">					// using a Babel-compatible transform (i.e. "__esModule" has been set)</span>
+<span class="lit-string">					// and there is already a "default" property, then forward "default"</span>
+<span class="lit-string">					// to that property. Otherwise set "default" to "module.exports" for</span>
+<span class="lit-string">					// node compatibility.</span>
+<span class="lit-string">					module &amp;&amp; module.__esModule &amp;&amp; 'default' in module</span>
+<span class="lit-string">						? { get: () =&gt; module.default, enumerable: true }</span>
+<span class="lit-string">						: { value: module, enumerable: true })</span>
+<span class="lit-string">			), module)</span>
+<span class="lit-string">		}</span>
+
+<span class="lit-string">		// For TypeScript decorators</span>
+<span class="lit-string">		// - kind === undefined: class</span>
+<span class="lit-string">		// - kind === 1: method, parameter</span>
+<span class="lit-string">		// - kind === 2: field</span>
+<span class="lit-string">		export var __decorate = (decorators, target, key, kind) =&gt; {</span>
+<span class="lit-string">			var result = kind &gt; 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target</span>
+<span class="lit-string">			for (var i = decorators.length - 1, decorator; i &gt;= 0; i--)</span>
+<span class="lit-string">				if (decorator = decorators[i])</span>
+<span class="lit-string">					result = (kind ? decorator(target, key, result) : decorator(result)) || result</span>
+<span class="lit-string">			if (kind &amp;&amp; result)</span>
+<span class="lit-string">				__defProp(target, key, result)</span>
+<span class="lit-string">			return result</span>
+<span class="lit-string">		}</span>
+<span class="lit-string">		export var __param = (index, decorator) =&gt; (target, key) =&gt; decorator(target, key, index)</span>
+
+<span class="lit-string">		// For class members</span>
+<span class="lit-string">		export var __publicField = (obj, key, value) =&gt; {</span>
+<span class="lit-string">			if (typeof key !== 'symbol') key += ''</span>
+<span class="lit-string">			if (key in obj) return __defProp(obj, key, {enumerable: true, configurable: true, writable: true, value})</span>
+<span class="lit-string">			return obj[key] = value</span>
+<span class="lit-string">		}</span>
+<span class="lit-string">		var __accessCheck = (obj, member, msg) =&gt; {</span>
+<span class="lit-string">			if (!member.has(obj)) throw TypeError('Cannot ' + msg)</span>
+<span class="lit-string">		}</span>
+<span class="lit-string">		export var __privateGet = (obj, member, getter) =&gt; {</span>
+<span class="lit-string">			__accessCheck(obj, member, 'read from private field')</span>
+<span class="lit-string">			return getter ? getter.call(obj) : member.get(obj)</span>
+<span class="lit-string">		}</span>
+<span class="lit-string">		export var __privateSet = (obj, member, value, setter) =&gt; {</span>
+<span class="lit-string">			__accessCheck(obj, member, 'write to private field')</span>
+<span class="lit-string">			setter ? setter.call(obj, value) : member.set(obj, value)</span>
+<span class="lit-string">			return value</span>
+<span class="lit-string">		}</span>
+<span class="lit-string">		export var __privateMethod = (obj, member, method) =&gt; {</span>
+<span class="lit-string">			__accessCheck(obj, member, 'access private method')</span>
+<span class="lit-string">			return method</span>
+<span class="lit-string">		}</span>
+
+<span class="lit-string">		// This helps for lowering async functions</span>
+<span class="lit-string">		export var __async = (__this, __arguments, generator) =&gt; {</span>
+<span class="lit-string">			return new Promise((resolve, reject) =&gt; {</span>
+<span class="lit-string">				var fulfilled = value =&gt; {</span>
+<span class="lit-string">					try {</span>
+<span class="lit-string">						step(generator.next(value))</span>
+<span class="lit-string">					} catch (e) {</span>
+<span class="lit-string">						reject(e)</span>
+<span class="lit-string">					}</span>
+<span class="lit-string">				}</span>
+<span class="lit-string">				var rejected = value =&gt; {</span>
+<span class="lit-string">					try {</span>
+<span class="lit-string">						step(generator.throw(value))</span>
+<span class="lit-string">					} catch (e) {</span>
+<span class="lit-string">						reject(e)</span>
+<span class="lit-string">					}</span>
+<span class="lit-string">				}</span>
+<span class="lit-string">				var step = result =&gt; {</span>
+<span class="lit-string">					return result.done ? resolve(result.value) : Promise.resolve(result.value).then(fulfilled, rejected)</span>
+<span class="lit-string">				}</span>
+<span class="lit-string">				step((generator = generator.apply(__this, __arguments)).next())</span>
+<span class="lit-string">			})</span>
+<span class="lit-string">		}</span>
+
+<span class="lit-string">		// This is for the "binary" loader (custom code is ~2x faster than "atob")</span>
+<span class="lit-string">		export var __toBinary = __platform === 'node'</span>
+<span class="lit-string">			? base64 =&gt; new Uint8Array(Buffer.from(base64, 'base64'))</span>
+<span class="lit-string">			: /* @__PURE__ */ (() =&gt; {</span>
+<span class="lit-string">				var table = new Uint8Array(128)</span>
+<span class="lit-string">				for (var i = 0; i &lt; 64; i++) table[i &lt; 26 ? i + 65 : i &lt; 52 ? i + 71 : i &lt; 62 ? i - 4 : i * 4 - 205] = i</span>
+<span class="lit-string">				return base64 =&gt; {</span>
+<span class="lit-string">					var n = base64.length, bytes = new Uint8Array((n - (base64[n - 1] == '=') - (base64[n - 2] == '=')) * 3 / 4 | 0)</span>
+<span class="lit-string">					for (var i = 0, j = 0; i &lt; n;) {</span>
+<span class="lit-string">						var c0 = table[base64.charCodeAt(i++)], c1 = table[base64.charCodeAt(i++)]</span>
+<span class="lit-string">						var c2 = table[base64.charCodeAt(i++)], c3 = table[base64.charCodeAt(i++)]</span>
+<span class="lit-string">						bytes[j++] = (c0 &lt;&lt; 2) | (c1 &gt;&gt; 4)</span>
+<span class="lit-string">						bytes[j++] = (c1 &lt;&lt; 4) | (c2 &gt;&gt; 2)</span>
+<span class="lit-string">						bytes[j++] = (c2 &lt;&lt; 6) | c3</span>
+<span class="lit-string">					}</span>
+<span class="lit-string">					return bytes</span>
+<span class="lit-string">				}</span>
+<span class="lit-string">			})()</span>
+<span class="lit-string">	`</span>
+
+	<span class="keyword">return</span> <label for="r4" class="ident">text</label>
+}
+
+<span class="keyword">var</span> <a href="../../../../../../pkg/github.com/evanw/esbuild/internal/runtime.html#name-ES6Source" class="ident">ES6Source</a> = <a href="../../../../../../pkg/github.com/evanw/esbuild/internal/logger.html" class="ident i1">logger</a>.<a href="../logger/logger.go.html#line-197" class="ident">Source</a>{
+	<a href="../logger/logger.go.html#line-198" class="ident">Index</a>:          <a href="#line-16" class="ident">SourceIndex</a>,
+	<a href="../logger/logger.go.html#line-211" class="ident">KeyPath</a>:        <a href="../../../../../../pkg/github.com/evanw/esbuild/internal/logger.html" class="ident i1">logger</a>.<a href="../logger/logger.go.html#line-135" class="ident">Path</a>{<a href="../logger/logger.go.html#line-136" class="ident">Text</a>: <span class="lit-string">"&lt;runtime&gt;"</span>},
+	<a href="../logger/logger.go.html#line-220" class="ident">PrettyPath</a>:     <span class="lit-string">"&lt;runtime&gt;"</span>,
+	<a href="../logger/logger.go.html#line-225" class="ident">IdentifierName</a>: <span class="lit-string">"runtime"</span>,
+	<a href="../logger/logger.go.html#line-227" class="ident">Contents</a>:       <a href="#line-22" class="ident">code</a>(<a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a> <span class="comment">/* isES6 */</span>),
+}
+
+<span class="keyword">var</span> <a href="../../../../../../pkg/github.com/evanw/esbuild/internal/runtime.html#name-ES5Source" class="ident">ES5Source</a> = <a href="../../../../../../pkg/github.com/evanw/esbuild/internal/logger.html" class="ident i1">logger</a>.<a href="../logger/logger.go.html#line-197" class="ident">Source</a>{
+	<a href="../logger/logger.go.html#line-198" class="ident">Index</a>:          <a href="#line-16" class="ident">SourceIndex</a>,
+	<a href="../logger/logger.go.html#line-211" class="ident">KeyPath</a>:        <a href="../../../../../../pkg/github.com/evanw/esbuild/internal/logger.html" class="ident i1">logger</a>.<a href="../logger/logger.go.html#line-135" class="ident">Path</a>{<a href="../logger/logger.go.html#line-136" class="ident">Text</a>: <span class="lit-string">"&lt;runtime&gt;"</span>},
+	<a href="../logger/logger.go.html#line-220" class="ident">PrettyPath</a>:     <span class="lit-string">"&lt;runtime&gt;"</span>,
+	<a href="../logger/logger.go.html#line-225" class="ident">IdentifierName</a>: <span class="lit-string">"runtime"</span>,
+	<a href="../logger/logger.go.html#line-227" class="ident">Contents</a>:       <a href="#line-22" class="ident">code</a>(<a href="../../../../../../pkg/builtin.html#name-false" class="ident">false</a> <span class="comment">/* isES6 */</span>),
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> The TypeScript decorator transform behaves similar to the official</span><span class="comment"> TypeScript compiler.</span><span class="comment"></span><span class="comment"> One difference is that the "__decorate" function doesn't contain a reference</span><span class="comment"> to the non-existent "Reflect.decorate" function. This function was never</span><span class="comment"> standardized and checking for it is wasted code (as well as a potentially</span><span class="comment"> dangerous cause of unintentional behavior changes in the future).</span><span class="comment"></span><span class="comment"> Another difference is that the "__decorate" function doesn't take in an</span><span class="comment"> optional property descriptor like it does in the official TypeScript</span><span class="comment"> compiler's support code. This appears to be a dead code path in the official</span><span class="comment"> support code that is only there for legacy reasons.</span><span class="comment"></span><span class="comment"> Here are some examples of how esbuild's decorator transform works:</span><span class="comment"></span><span class="comment"> ============================= Class decorator ==============================</span><span class="comment"></span><span class="comment">   // TypeScript                      // JavaScript</span><span class="comment">   @dec                               let C = class {</span><span class="comment">   class C {                          };</span><span class="comment">   }                                  C = __decorate([</span><span class="comment">                                        dec</span><span class="comment">                                      ], C);</span><span class="comment"></span><span class="comment"> ============================ Method decorator ==============================</span><span class="comment"></span><span class="comment">   // TypeScript                      // JavaScript</span><span class="comment">   class C {                          class C {</span><span class="comment">     @dec                               foo() {}</span><span class="comment">     foo() {}                         }</span><span class="comment">   }                                  __decorate([</span><span class="comment">                                        dec</span><span class="comment">                                      ], C.prototype, 'foo', 1);</span><span class="comment"></span><span class="comment"> =========================== Parameter decorator ============================</span><span class="comment"></span><span class="comment">   // TypeScript                      // JavaScript</span><span class="comment">   class C {                          class C {</span><span class="comment">     foo(@dec bar) {}                   foo(bar) {}</span><span class="comment">   }                                  }</span><span class="comment">                                      __decorate([</span><span class="comment">                                        __param(0, dec)</span><span class="comment">                                      ], C.prototype, 'foo', 1);</span><span class="comment"></span><span class="comment"> ============================= Field decorator ==============================</span><span class="comment"></span><span class="comment">   // TypeScript                      // JavaScript</span><span class="comment">   class C {                          class C {</span><span class="comment">     @dec                               constructor() {</span><span class="comment">     foo = 123                            this.foo = 123</span><span class="comment">   }                                    }</span><span class="comment">                                      }</span><span class="comment">                                      __decorate([</span><span class="comment">                                        dec</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

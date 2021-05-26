@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: writer.go in package compress/zlib</title>
+<link href="../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	writer.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../pkg/compress/zlib.html">compress/zlib</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16],
+input[id=r17]:checked ~pre label[for=r17],
+input[id=r18]:checked ~pre label[for=r18],
+input[id=r19]:checked ~pre label[for=r19],
+input[id=r20]:checked ~pre label[for=r20],
+input[id=r21]:checked ~pre label[for=r21],
+input[id=r22]:checked ~pre label[for=r22],
+input[id=r23]:checked ~pre label[for=r23],
+input[id=r24]:checked ~pre label[for=r24],
+input[id=r25]:checked ~pre label[for=r25],
+input[id=r26]:checked ~pre label[for=r26]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1,
+input[id=i2]:checked ~pre .i2,
+input[id=i3]:checked ~pre .i3,
+input[id=i4]:checked ~pre .i4,
+input[id=i5]:checked ~pre .i5
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="r17" type="radio" name="g"/>
+<input id="r18" type="radio" name="g"/>
+<input id="r19" type="radio" name="g"/>
+<input id="r20" type="radio" name="g"/>
+<input id="r21" type="radio" name="g"/>
+<input id="r22" type="radio" name="g"/>
+<input id="r23" type="radio" name="g"/>
+<input id="r24" type="radio" name="g"/>
+<input id="r25" type="radio" name="g"/>
+<input id="r26" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<input id="i2" type="radio" name="i"/>
+<input id="i3" type="radio" name="i"/>
+<input id="i4" type="radio" name="i"/>
+<input id="i5" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2009 The Go Authors. All rights reserved.</span><span class="comment"> Use of this source code is governed by a BSD-style</span><span class="comment"> license that can be found in the LICENSE file.</span></div>
+<div class="code"><pre><code>
+<span class="keyword">package</span> zlib
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"compress/flate"</span></label>
+	<label for="i1"><span class="lit-string i1">"encoding/binary"</span></label>
+	<label for="i2"><span class="lit-string i2">"fmt"</span></label>
+	<label for="i3"><span class="lit-string i3">"hash"</span></label>
+	<label for="i4"><span class="lit-string i4">"hash/adler32"</span></label>
+	<label for="i5"><span class="lit-string i5">"io"</span></label>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> These constants are copied from the flate package, so that code that imports</span><span class="comment"> "compress/zlib" does not also have to import "compress/flate".</span></div>
+<div class="code"><pre><code><span class="keyword">const</span> (
+	<a href="../../../pkg/compress/zlib.html#name-NoCompression" class="ident">NoCompression</a>      = <a href="../../../pkg/compress/flate.html" class="ident i0">flate</a>.<a href="../flate/deflate.go.html#line-14" class="ident">NoCompression</a>
+	<a href="../../../pkg/compress/zlib.html#name-BestSpeed" class="ident">BestSpeed</a>          = <a href="../../../pkg/compress/flate.html" class="ident i0">flate</a>.<a href="../flate/deflate.go.html#line-15" class="ident">BestSpeed</a>
+	<a href="../../../pkg/compress/zlib.html#name-BestCompression" class="ident">BestCompression</a>    = <a href="../../../pkg/compress/flate.html" class="ident i0">flate</a>.<a href="../flate/deflate.go.html#line-16" class="ident">BestCompression</a>
+	<a href="../../../pkg/compress/zlib.html#name-DefaultCompression" class="ident">DefaultCompression</a> = <a href="../../../pkg/compress/flate.html" class="ident i0">flate</a>.<a href="../flate/deflate.go.html#line-17" class="ident">DefaultCompression</a>
+	<a href="../../../pkg/compress/zlib.html#name-HuffmanOnly" class="ident">HuffmanOnly</a>        = <a href="../../../pkg/compress/flate.html" class="ident i0">flate</a>.<a href="../flate/deflate.go.html#line-28" class="ident">HuffmanOnly</a>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> A Writer takes data written to it and writes the compressed</span><span class="comment"> form of that data to an underlying writer (see NewWriter).</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../pkg/compress/zlib.html#name-Writer" class="ident">Writer</a> <span class="keyword">struct</span> {
+	<a href="../../../use/compress/zlib..Writer.w*50e72.html" class="ident">w</a>           <a href="../../../pkg/io.html" class="ident i5">io</a>.<a href="../../io/io.go.html#line-96" class="ident">Writer</a>
+	<a href="../../../use/compress/zlib..Writer.level*00817.html" class="ident">level</a>       <a href="../../../pkg/builtin.html#name-int" class="ident">int</a>
+	<a href="../../../use/compress/zlib..Writer.dict*6ab47.html" class="ident">dict</a>        []<a href="../../../pkg/builtin.html#name-byte" class="ident">byte</a>
+	<a href="../../../use/compress/zlib..Writer.compressor*bcadf.html" class="ident">compressor</a>  *<a href="../../../pkg/compress/flate.html" class="ident i0">flate</a>.<a href="../flate/deflate.go.html#line-704" class="ident">Writer</a>
+	<a href="../../../use/compress/zlib..Writer.digest*0bf47.html" class="ident">digest</a>      <a href="../../../pkg/hash.html" class="ident i3">hash</a>.<a href="../../hash/hash.go.html#line-49" class="ident">Hash32</a>
+	<a href="../../../use/compress/zlib..Writer.err*d9eb2.html" class="ident">err</a>         <a href="../../../pkg/builtin.html#name-error" class="ident">error</a>
+	<a href="../../../use/compress/zlib..Writer.scratch*5a9cb.html" class="ident">scratch</a>     [<span class="lit-number">4</span>]<a href="../../../pkg/builtin.html#name-byte" class="ident">byte</a>
+	<a href="../../../use/compress/zlib..Writer.wroteHeader*58c63.html" class="ident">wroteHeader</a> <a href="../../../pkg/builtin.html#name-bool" class="ident">bool</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> NewWriter creates a new Writer.</span><span class="comment"> Writes to the returned Writer are compressed and written to w.</span><span class="comment"></span><span class="comment"> It is the caller's responsibility to call Close on the Writer when done.</span><span class="comment"> Writes may be buffered and not flushed until Close.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r0" class="ident"><a href="../../../pkg/compress/zlib.html#name-NewWriter" class="ident">NewWriter</a></label>(<label for="r1" class="ident">w</label> <a href="../../../pkg/io.html" class="ident i5">io</a>.<a href="../../io/io.go.html#line-96" class="ident">Writer</a>) *<a href="#line-28" class="ident">Writer</a> {
+	<label for="r2" class="ident">z</label>, <label for="r3" class="ident">_</label> := <a href="#line-64" class="ident">NewWriterLevelDict</a>(<label for="r1" class="ident">w</label>, <a href="#line-22" class="ident">DefaultCompression</a>, <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a>)
+	<span class="keyword">return</span> <label for="r2" class="ident">z</label>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> NewWriterLevel is like NewWriter but specifies the compression level instead</span><span class="comment"> of assuming DefaultCompression.</span><span class="comment"></span><span class="comment"> The compression level can be DefaultCompression, NoCompression, HuffmanOnly</span><span class="comment"> or any integer value between BestSpeed and BestCompression inclusive.</span><span class="comment"> The error returned will be nil if the level is valid.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r4" class="ident"><a href="../../../pkg/compress/zlib.html#name-NewWriterLevel" class="ident">NewWriterLevel</a></label>(<label for="r5" class="ident">w</label> <a href="../../../pkg/io.html" class="ident i5">io</a>.<a href="../../io/io.go.html#line-96" class="ident">Writer</a>, <label for="r6" class="ident">level</label> <a href="../../../pkg/builtin.html#name-int" class="ident">int</a>) (*<a href="#line-28" class="ident">Writer</a>, <a href="../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<span class="keyword">return</span> <a href="#line-64" class="ident">NewWriterLevelDict</a>(<label for="r5" class="ident">w</label>, <label for="r6" class="ident">level</label>, <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> NewWriterLevelDict is like NewWriterLevel but specifies a dictionary to</span><span class="comment"> compress with.</span><span class="comment"></span><span class="comment"> The dictionary may be nil. If not, its contents should not be modified until</span><span class="comment"> the Writer is closed.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r7" class="ident"><a href="../../../pkg/compress/zlib.html#name-NewWriterLevelDict" class="ident">NewWriterLevelDict</a></label>(<label for="r8" class="ident">w</label> <a href="../../../pkg/io.html" class="ident i5">io</a>.<a href="../../io/io.go.html#line-96" class="ident">Writer</a>, <label for="r9" class="ident">level</label> <a href="../../../pkg/builtin.html#name-int" class="ident">int</a>, <label for="r10" class="ident">dict</label> []<a href="../../../pkg/builtin.html#name-byte" class="ident">byte</a>) (*<a href="#line-28" class="ident">Writer</a>, <a href="../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<span class="keyword">if</span> <label for="r9" class="ident">level</label> &lt; <a href="#line-23" class="ident">HuffmanOnly</a> || <label for="r9" class="ident">level</label> &gt; <a href="#line-21" class="ident">BestCompression</a> {
+		<span class="keyword">return</span> <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="../../../pkg/fmt.html" class="ident i2">fmt</a>.<a href="../../fmt/errors.go.html#line-17" class="ident">Errorf</a>(<span class="lit-string">"zlib: invalid compression level: %d"</span>, <label for="r9" class="ident">level</label>)
+	}
+	<span class="keyword">return</span> &amp;<a href="#line-28" class="ident">Writer</a>{
+		<a href="#line-29" class="ident">w</a>:     <label for="r8" class="ident">w</label>,
+		<a href="#line-30" class="ident">level</a>: <label for="r9" class="ident">level</label>,
+		<a href="#line-31" class="ident">dict</a>:  <label for="r10" class="ident">dict</label>,
+	}, <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Reset clears the state of the Writer z such that it is equivalent to its</span><span class="comment"> initial state from NewWriterLevel or NewWriterLevelDict, but instead writing</span><span class="comment"> to w.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r11" class="ident">z</label> *<a href="#line-28" class="ident">Writer</a>) <label for="r12" class="ident"><a href="../../../use/compress/zlib..Writer.Reset.html" class="ident">Reset</a></label>(<label for="r13" class="ident">w</label> <a href="../../../pkg/io.html" class="ident i5">io</a>.<a href="../../io/io.go.html#line-96" class="ident">Writer</a>) {
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> z.level and z.dict left unchanged.</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> <label for="r11" class="ident">z</label>.<a href="#line-32" class="ident">compressor</a> != <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<label for="r11" class="ident">z</label>.<a href="#line-32" class="ident">compressor</a>.<a href="../flate/deflate.go.html#line-738" class="ident">Reset</a>(<label for="r13" class="ident">w</label>)
+	}
+	<span class="keyword">if</span> <label for="r11" class="ident">z</label>.<a href="#line-33" class="ident">digest</a> != <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<label for="r11" class="ident">z</label>.<a href="#line-33" class="ident">digest</a>.<a href="../../hash/hash.go.html#line-36" class="ident">Reset</a>()
+	}
+	<label for="r11" class="ident">z</label>.<a href="#line-34" class="ident">err</a> = <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+	<label for="r11" class="ident">z</label>.<a href="#line-35" class="ident">scratch</a> = [<span class="lit-number">4</span>]<a href="../../../pkg/builtin.html#name-byte" class="ident">byte</a>{}
+	<label for="r11" class="ident">z</label>.<a href="#line-36" class="ident">wroteHeader</a> = <a href="../../../pkg/builtin.html#name-false" class="ident">false</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> writeHeader writes the ZLIB header.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r14" class="ident">z</label> *<a href="#line-28" class="ident">Writer</a>) <label for="r15" class="ident"><a href="../../../use/compress/zlib..Writer.writeHeader*0454f.html" class="ident">writeHeader</a></label>() (<label for="r16" class="ident">err</label> <a href="../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ZLIB has a two-byte header (as documented in RFC 1950).</span><span class="comment">	 The first four bits is the CINFO (compression info), which is 7 for the default deflate window size.</span><span class="comment">	 The next four bits is the CM (compression method), which is 8 for deflate.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> The next two bits is the FLEVEL (compression level). The four values are:</span><span class="comment">	 0=fastest, 1=fast, 2=default, 3=best.</span><span class="comment">	 The next bit, FDICT, is set if a dictionary is given.</span><span class="comment">	 The final five FCHECK bits form a mod-31 checksum.</span></div>
+<div class="code"><pre><code>	<span class="keyword">switch</span> <label for="r14" class="ident">z</label>.<a href="#line-30" class="ident">level</a> {
+	<span class="keyword">case</span> -<span class="lit-number">2</span>, <span class="lit-number">0</span>, <span class="lit-number">1</span>:
+		<label for="r14" class="ident">z</label>.<a href="#line-35" class="ident">scratch</a>[<span class="lit-number">1</span>] = <span class="lit-number">0</span> &lt;&lt; <span class="lit-number">6</span>
+	<span class="keyword">case</span> <span class="lit-number">2</span>, <span class="lit-number">3</span>, <span class="lit-number">4</span>, <span class="lit-number">5</span>:
+		<label for="r14" class="ident">z</label>.<a href="#line-35" class="ident">scratch</a>[<span class="lit-number">1</span>] = <span class="lit-number">1</span> &lt;&lt; <span class="lit-number">6</span>
+	<span class="keyword">case</span> <span class="lit-number">6</span>, -<span class="lit-number">1</span>:
+		<label for="r14" class="ident">z</label>.<a href="#line-35" class="ident">scratch</a>[<span class="lit-number">1</span>] = <span class="lit-number">2</span> &lt;&lt; <span class="lit-number">6</span>
+	<span class="keyword">case</span> <span class="lit-number">7</span>, <span class="lit-number">8</span>, <span class="lit-number">9</span>:
+		<label for="r14" class="ident">z</label>.<a href="#line-35" class="ident">scratch</a>[<span class="lit-number">1</span>] = <span class="lit-number">3</span> &lt;&lt; <span class="lit-number">6</span>
+	<span class="keyword">default</span>:
+		<a href="../../../pkg/builtin.html#name-panic" class="ident">panic</a>(<span class="lit-string">"unreachable"</span>)
+	}
+	<span class="keyword">if</span> <label for="r14" class="ident">z</label>.<a href="#line-31" class="ident">dict</a> != <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<label for="r14" class="ident">z</label>.<a href="#line-35" class="ident">scratch</a>[<span class="lit-number">1</span>] |= <span class="lit-number">1</span> &lt;&lt; <span class="lit-number">5</span>
+	}
+	<label for="r14" class="ident">z</label>.<a href="#line-35" class="ident">scratch</a>[<span class="lit-number">1</span>] += <a href="../../../pkg/builtin.html#name-uint8" class="ident">uint8</a>(<span class="lit-number">31</span> - (<a href="../../../pkg/builtin.html#name-uint16" class="ident">uint16</a>(<label for="r14" class="ident">z</label>.<a href="#line-35" class="ident">scratch</a>[<span class="lit-number">0</span>])&lt;&lt;<span class="lit-number">8</span>+<a href="../../../pkg/builtin.html#name-uint16" class="ident">uint16</a>(<label for="r14" class="ident">z</label>.<a href="#line-35" class="ident">scratch</a>[<span class="lit-number">1</span>]))%<span class="lit-number">31</span>)
+	<span class="keyword">if</span> _, <label for="r16" class="ident">err</label> = <label for="r14" class="ident">z</label>.<a href="#line-29" class="ident">w</a>.<a href="../../io/io.go.html#line-97" class="ident">Write</a>(<label for="r14" class="ident">z</label>.<a href="#line-35" class="ident">scratch</a>[<span class="lit-number">0</span>:<span class="lit-number">2</span>]); <label for="r16" class="ident">err</label> != <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <label for="r16" class="ident">err</label>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> The next four bytes are the Adler-32 checksum of the dictionary.</span></div>
+<div class="code"><pre><code>		<a href="../../../pkg/encoding/binary.html" class="ident i1">binary</a>.<a href="../../encoding/binary/binary.go.html#line-48" class="ident">BigEndian</a>.<a href="../../encoding/binary/binary.go.html#line-116" class="ident">PutUint32</a>(<label for="r14" class="ident">z</label>.<a href="#line-35" class="ident">scratch</a>[:], <a href="../../../pkg/hash/adler32.html" class="ident i4">adler32</a>.<a href="../../hash/adler32/adler32.go.html#line-134" class="ident">Checksum</a>(<label for="r14" class="ident">z</label>.<a href="#line-31" class="ident">dict</a>))
+		<span class="keyword">if</span> _, <label for="r16" class="ident">err</label> = <label for="r14" class="ident">z</label>.<a href="#line-29" class="ident">w</a>.<a href="../../io/io.go.html#line-97" class="ident">Write</a>(<label for="r14" class="ident">z</label>.<a href="#line-35" class="ident">scratch</a>[<span class="lit-number">0</span>:<span class="lit-number">4</span>]); <label for="r16" class="ident">err</label> != <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<span class="keyword">return</span> <label for="r16" class="ident">err</label>
+		}
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Initialize deflater unless the Writer is being reused</span><span class="comment">		 after a Reset call.</span></div>
+<div class="code"><pre><code>		<label for="r14" class="ident">z</label>.<a href="#line-32" class="ident">compressor</a>, <label for="r16" class="ident">err</label> = <a href="../../../pkg/compress/flate.html" class="ident i0">flate</a>.<a href="../flate/deflate.go.html#line-683" class="ident">NewWriterDict</a>(<label for="r14" class="ident">z</label>.<a href="#line-29" class="ident">w</a>, <label for="r14" class="ident">z</label>.<a href="#line-30" class="ident">level</a>, <label for="r14" class="ident">z</label>.<a href="#line-31" class="ident">dict</a>)
+		<span class="keyword">if</span> <label for="r16" class="ident">err</label> != <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<span class="keyword">return</span> <label for="r16" class="ident">err</label>
+		}
+		<label for="r14" class="ident">z</label>.<a href="#line-33" class="ident">digest</a> = <a href="../../../pkg/hash/adler32.html" class="ident i4">adler32</a>.<a href="../../hash/adler32/adler32.go.html#line-43" class="ident">New</a>()
+	}
+	<span class="keyword">return</span> <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Write writes a compressed form of p to the underlying io.Writer. The</span><span class="comment"> compressed bytes are not necessarily flushed until the Writer is closed or</span><span class="comment"> explicitly flushed.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r17" class="ident">z</label> *<a href="#line-28" class="ident">Writer</a>) <label for="r18" class="ident"><a href="../../../use/compress/zlib..Writer.Write.html" class="ident">Write</a></label>(<label for="r19" class="ident">p</label> []<a href="../../../pkg/builtin.html#name-byte" class="ident">byte</a>) (<label for="r20" class="ident">n</label> <a href="../../../pkg/builtin.html#name-int" class="ident">int</a>, <label for="r21" class="ident">err</label> <a href="../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<span class="keyword">if</span> !<label for="r17" class="ident">z</label>.<a href="#line-36" class="ident">wroteHeader</a> {
+		<label for="r17" class="ident">z</label>.<a href="#line-34" class="ident">err</a> = <label for="r17" class="ident">z</label>.<a href="#line-93" class="ident">writeHeader</a>()
+	}
+	<span class="keyword">if</span> <label for="r17" class="ident">z</label>.<a href="#line-34" class="ident">err</a> != <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <span class="lit-number">0</span>, <label for="r17" class="ident">z</label>.<a href="#line-34" class="ident">err</a>
+	}
+	<span class="keyword">if</span> <a href="../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r19" class="ident">p</label>) == <span class="lit-number">0</span> {
+		<span class="keyword">return</span> <span class="lit-number">0</span>, <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+	}
+	<label for="r20" class="ident">n</label>, <label for="r21" class="ident">err</label> = <label for="r17" class="ident">z</label>.<a href="#line-32" class="ident">compressor</a>.<a href="../flate/deflate.go.html#line-711" class="ident">Write</a>(<label for="r19" class="ident">p</label>)
+	<span class="keyword">if</span> <label for="r21" class="ident">err</label> != <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<label for="r17" class="ident">z</label>.<a href="#line-34" class="ident">err</a> = <label for="r21" class="ident">err</label>
+		<span class="keyword">return</span>
+	}
+	<label for="r17" class="ident">z</label>.<a href="#line-33" class="ident">digest</a>.<a href="../../io/io.go.html#line-97" class="ident">Write</a>(<label for="r19" class="ident">p</label>)
+	<span class="keyword">return</span>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Flush flushes the Writer to its underlying io.Writer.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r22" class="ident">z</label> *<a href="#line-28" class="ident">Writer</a>) <label for="r23" class="ident"><a href="../../../use/compress/zlib..Writer.Flush.html" class="ident">Flush</a></label>() <a href="../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<span class="keyword">if</span> !<label for="r22" class="ident">z</label>.<a href="#line-36" class="ident">wroteHeader</a> {
+		<label for="r22" class="ident">z</label>.<a href="#line-34" class="ident">err</a> = <label for="r22" class="ident">z</label>.<a href="#line-93" class="ident">writeHeader</a>()
+	}
+	<span class="keyword">if</span> <label for="r22" class="ident">z</label>.<a href="#line-34" class="ident">err</a> != <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <label for="r22" class="ident">z</label>.<a href="#line-34" class="ident">err</a>
+	}
+	<label for="r22" class="ident">z</label>.<a href="#line-34" class="ident">err</a> = <label for="r22" class="ident">z</label>.<a href="#line-32" class="ident">compressor</a>.<a href="../flate/deflate.go.html#line-724" class="ident">Flush</a>()
+	<span class="keyword">return</span> <label for="r22" class="ident">z</label>.<a href="#line-34" class="ident">err</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Close closes the Writer, flushing any unwritten data to the underlying</span><span class="comment"> io.Writer, but does not close the underlying io.Writer.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r24" class="ident">z</label> *<a href="#line-28" class="ident">Writer</a>) <label for="r25" class="ident"><a href="../../../use/compress/zlib..Writer.Close.html" class="ident">Close</a></label>() <a href="../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<span class="keyword">if</span> !<label for="r24" class="ident">z</label>.<a href="#line-36" class="ident">wroteHeader</a> {
+		<label for="r24" class="ident">z</label>.<a href="#line-34" class="ident">err</a> = <label for="r24" class="ident">z</label>.<a href="#line-93" class="ident">writeHeader</a>()
+	}
+	<span class="keyword">if</span> <label for="r24" class="ident">z</label>.<a href="#line-34" class="ident">err</a> != <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <label for="r24" class="ident">z</label>.<a href="#line-34" class="ident">err</a>
+	}
+	<label for="r24" class="ident">z</label>.<a href="#line-34" class="ident">err</a> = <label for="r24" class="ident">z</label>.<a href="#line-32" class="ident">compressor</a>.<a href="../flate/deflate.go.html#line-731" class="ident">Close</a>()
+	<span class="keyword">if</span> <label for="r24" class="ident">z</label>.<a href="#line-34" class="ident">err</a> != <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <label for="r24" class="ident">z</label>.<a href="#line-34" class="ident">err</a>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ZLIB (RFC 1950) is big-endian, unlike GZIP (RFC 1952).</span></div>
+<div class="code"><pre><code>	<a href="../../../pkg/encoding/binary.html" class="ident i1">binary</a>.<a href="../../encoding/binary/binary.go.html#line-48" class="ident">BigEndian</a>.<a href="../../encoding/binary/binary.go.html#line-116" class="ident">PutUint32</a>(<label for="r24" class="ident">z</label>.<a href="#line-35" class="ident">scratch</a>[:], <label for="r26" class="ident">checksum</label>)
+	_, <label for="r24" class="ident">z</label>.<a href="#line-34" class="ident">err</a> = <label for="r24" class="ident">z</label>.<a href="#line-29" class="ident">w</a>.<a href="../../io/io.go.html#line-97" class="ident">Write</a>(<label for="r24" class="ident">z</label>.<a href="#line-35" class="ident">scratch</a>[<span class="lit-number">0</span>:<span class="lit-number">4</span>])
+	<span class="keyword">return</span> <label for="r24" class="ident">z</label>.<a href="#line-34" class="ident">err</a>
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

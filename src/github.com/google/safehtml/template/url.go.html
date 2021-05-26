@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: url.go in package github.com/google/safehtml/template</title>
+<link href="../../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	url.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../../pkg/github.com/google/safehtml/template.html">github.com/google/safehtml/template</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1,
+input[id=i2]:checked ~pre .i2,
+input[id=i3]:checked ~pre .i3,
+input[id=i4]:checked ~pre .i4,
+input[id=i5]:checked ~pre .i5
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<input id="i2" type="radio" name="i"/>
+<input id="i3" type="radio" name="i"/>
+<input id="i4" type="radio" name="i"/>
+<input id="i5" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2011 The Go Authors. All rights reserved.</span><span class="comment"> Use of this source code is governed by a BSD-style</span><span class="comment"> license that can be found in the LICENSE file.</span></div>
+<div class="code"><pre><code>
+<span class="keyword">package</span> template
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"fmt"</span></label>
+	<label for="i1"><span class="lit-string i1">"html"</span></label>
+	<label for="i2"><span class="lit-string i2">"regexp"</span></label>
+	<label for="i3"><span class="lit-string i3">"strings"</span></label>
+
+	<label for="i4"><span class="lit-string i4">"github.com/google/safehtml/internal/safehtmlutil"</span></label>
+	<label for="i5"><span class="lit-string i5">"github.com/google/safehtml"</span></label>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> urlPrefixValidators maps URL and TrustedResourceURL sanitization contexts to functions return an error</span><span class="comment"> if the given string is unsafe to use as a URL prefix in that sanitization context.</span></div>
+<div class="code"><pre><code><span class="keyword">var</span> <a href="../../../../../pkg/github.com/google/safehtml/template.html#name-urlPrefixValidators" class="ident">urlPrefixValidators</a> = <span class="keyword">map</span>[<a href="sanitizers.go.html#line-19" class="ident">sanitizationContext</a>]<span class="keyword">func</span>(<a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>) <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a>{
+	<a href="sanitizers.go.html#line-37" class="ident">sanitizationContextURL</a>:                     <a href="#line-41" class="ident">validateURLPrefix</a>,
+	<a href="sanitizers.go.html#line-36" class="ident">sanitizationContextTrustedResourceURLOrURL</a>: <a href="#line-41" class="ident">validateURLPrefix</a>,
+	<a href="sanitizers.go.html#line-35" class="ident">sanitizationContextTrustedResourceURL</a>:      <a href="#line-68" class="ident">validateTrustedResourceURLPrefix</a>,
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> startsWithFullySpecifiedSchemePattern matches strings that have a fully-specified scheme component.</span><span class="comment"> See RFC 3986 Section 3.</span></div>
+<div class="code"><pre><code><span class="keyword">var</span> <a href="../../../../../pkg/github.com/google/safehtml/template.html#name-startsWithFullySpecifiedSchemePattern" class="ident">startsWithFullySpecifiedSchemePattern</a> = <a href="../../../../../pkg/regexp.html" class="ident i2">regexp</a>.<a href="../../../../regexp/regexp.go.html#line-308" class="ident">MustCompile</a>(
+	<span class="lit-string">`^[[:alpha:]](?:[[:alnum:]]|[+-.])*:`</span>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> validateURLPrefix validates if the given non-empty prefix is a safe safehtml.URL prefix.</span><span class="comment"></span><span class="comment"> Prefixes are considered unsafe if they end in an incomplete HTML character reference</span><span class="comment"> or percent-encoding character triplet.</span><span class="comment"></span><span class="comment"> If the prefix contains a fully-specified scheme component, it is considered safe only if</span><span class="comment"> it starts with a whitelisted scheme. See safehtml.URLSanitized for more details.</span><span class="comment"></span><span class="comment"> Otherwise, the prefix is safe only if it contains '/', '?', or '#', since the presence of any</span><span class="comment"> of these runes ensures that this prefix, when combined with some arbitrary suffix, cannot be</span><span class="comment"> interpreted as a part of a scheme.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r0" class="ident"><a href="../../../../../pkg/github.com/google/safehtml/template.html#name-validateURLPrefix" class="ident">validateURLPrefix</a></label>(<label for="r1" class="ident">prefix</label> <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>) <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<label for="r2" class="ident">decoded</label>, <label for="r3" class="ident">err</label> := <a href="#line-95" class="ident">decodeURLPrefix</a>(<label for="r1" class="ident">prefix</label>)
+	<span class="keyword">if</span> <label for="r3" class="ident">err</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <label for="r3" class="ident">err</label>
+	}
+	<span class="keyword">switch</span> {
+	<span class="keyword">case</span> <a href="#line-27" class="ident">startsWithFullySpecifiedSchemePattern</a>.<a href="../../../../regexp/regexp.go.html#line-524" class="ident">MatchString</a>(<label for="r2" class="ident">decoded</label>):
+		<span class="keyword">if</span> <a href="../../../../../pkg/github.com/google/safehtml.html" class="ident i5">safehtml</a>.<a href="../url.go.html#line-62" class="ident">URLSanitized</a>(<label for="r2" class="ident">decoded</label>).<a href="../url.go.html#line-125" class="ident">String</a>() != <label for="r2" class="ident">decoded</label> {
+			<span class="keyword">return</span> <a href="../../../../../pkg/fmt.html" class="ident i0">fmt</a>.<a href="../../../../fmt/errors.go.html#line-17" class="ident">Errorf</a>(<span class="lit-string">"URL prefix %q contains an unsafe scheme"</span>, <label for="r1" class="ident">prefix</label>)
+		}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> If the URL prefix does not already have a ':' scheme delimiter, and does not contain</span><span class="comment">		 '/', '?', or '#', any ':' following this prefix will be intepreted as a scheme</span><span class="comment">		 delimiter, causing this URL prefix to be interpreted as being part of a scheme.</span><span class="comment">		 e.g. `&lt;a href="java{{ "script:" }}alert(1)&gt;`</span></div>
+<div class="code"><pre><code>		<span class="keyword">return</span> <a href="../../../../../pkg/fmt.html" class="ident i0">fmt</a>.<a href="../../../../fmt/errors.go.html#line-17" class="ident">Errorf</a>(<span class="lit-string">"URL prefix %q is unsafe; it might be interpreted as part of a scheme"</span>, <label for="r1" class="ident">prefix</label>)
+	}
+	<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> validateTrustedResourceURLPrefix validates if the given non-empty prefix is a safe</span><span class="comment"> safehtml.TrustedResourceURL prefix.</span><span class="comment"></span><span class="comment"> Prefixes are considered unsafe if they end in an incomplete HTML character reference</span><span class="comment"> or percent-encoding character triplet.</span><span class="comment"></span><span class="comment"> See safehtmlutil.IsSafeTrustedResourceURLPrefix for details on how the prefix is validated.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r4" class="ident"><a href="../../../../../pkg/github.com/google/safehtml/template.html#name-validateTrustedResourceURLPrefix" class="ident">validateTrustedResourceURLPrefix</a></label>(<label for="r5" class="ident">prefix</label> <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>) <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<label for="r6" class="ident">decoded</label>, <label for="r7" class="ident">err</label> := <a href="#line-95" class="ident">decodeURLPrefix</a>(<label for="r5" class="ident">prefix</label>)
+	<span class="keyword">if</span> <label for="r7" class="ident">err</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <label for="r7" class="ident">err</label>
+	}
+	<span class="keyword">if</span> !<a href="../../../../../pkg/github.com/google/safehtml/internal/safehtmlutil.html" class="ident i4">safehtmlutil</a>.<a href="../internal/safehtmlutil/safehtmlutil.go.html#line-33" class="ident">IsSafeTrustedResourceURLPrefix</a>(<label for="r6" class="ident">decoded</label>) {
+		<span class="keyword">return</span> <a href="../../../../../pkg/fmt.html" class="ident i0">fmt</a>.<a href="../../../../fmt/errors.go.html#line-17" class="ident">Errorf</a>(<span class="lit-string">"%q is a disallowed TrustedResourceURL prefix"</span>, <label for="r5" class="ident">prefix</label>)
+	}
+	<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> endsWithPercentEncodingPrefixPattern matches strings that end in an incomplete</span><span class="comment"> URL percent encoding triplet.</span><span class="comment"></span><span class="comment"> See https://tools.ietf.org/html/rfc3986#section-2.1.</span></div>
+<div class="code"><pre><code><span class="keyword">var</span> <a href="../../../../../pkg/github.com/google/safehtml/template.html#name-endsWithPercentEncodingPrefixPattern" class="ident">endsWithPercentEncodingPrefixPattern</a> = <a href="../../../../../pkg/regexp.html" class="ident i2">regexp</a>.<a href="../../../../regexp/regexp.go.html#line-308" class="ident">MustCompile</a>(
+	<span class="lit-string">`%[[:xdigit:]]?$`</span>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> containsWhitespaceOrControlPattern matches strings that contain ASCII whitespace</span><span class="comment"> or control characters.</span></div>
+<div class="code"><pre><code><span class="keyword">var</span> <a href="../../../../../pkg/github.com/google/safehtml/template.html#name-containsWhitespaceOrControlPattern" class="ident">containsWhitespaceOrControlPattern</a> = <a href="../../../../../pkg/regexp.html" class="ident i2">regexp</a>.<a href="../../../../regexp/regexp.go.html#line-308" class="ident">MustCompile</a>(<span class="lit-string">`[[:space:]]|[[:cntrl:]]`</span>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> decodeURLPrefix returns the given prefix after it has been HTML-unescaped.</span><span class="comment"> It returns an error if the prefix:</span><span class="comment">    * ends in an incomplete HTML character reference before HTML-unescaping,</span><span class="comment">    * ends in an incomplete percent-encoding character triplet after HTML-unescaping, or</span><span class="comment">    * contains whitespace before or after HTML-unescaping.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r8" class="ident"><a href="../../../../../pkg/github.com/google/safehtml/template.html#name-decodeURLPrefix" class="ident">decodeURLPrefix</a></label>(<label for="r9" class="ident">prefix</label> <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>) (<a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>, <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<span class="keyword">if</span> <a href="#line-88" class="ident">containsWhitespaceOrControlPattern</a>.<a href="../../../../regexp/regexp.go.html#line-524" class="ident">MatchString</a>(<label for="r9" class="ident">prefix</label>) {
+		<span class="keyword">return</span> <span class="lit-string">""</span>, <a href="../../../../../pkg/fmt.html" class="ident i0">fmt</a>.<a href="../../../../fmt/errors.go.html#line-17" class="ident">Errorf</a>(<span class="lit-string">"URL prefix %q contains whitespace or control characters"</span>, <label for="r9" class="ident">prefix</label>)
+	}
+	<span class="keyword">if</span> <label for="r10" class="ident">err</label> := <a href="sanitize.go.html#line-193" class="ident">validateDoesNotEndsWithCharRefPrefix</a>(<label for="r9" class="ident">prefix</label>); <label for="r10" class="ident">err</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <span class="lit-string">""</span>, <a href="../../../../../pkg/fmt.html" class="ident i0">fmt</a>.<a href="../../../../fmt/errors.go.html#line-17" class="ident">Errorf</a>(<span class="lit-string">"URL %s"</span>, <label for="r10" class="ident">err</label>)
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Check again for whitespace that might have previously been masked by a HTML reference,</span><span class="comment">	 such as in "javascript&amp;NewLine;".</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> <a href="#line-88" class="ident">containsWhitespaceOrControlPattern</a>.<a href="../../../../regexp/regexp.go.html#line-524" class="ident">MatchString</a>(<label for="r11" class="ident">decoded</label>) {
+		<span class="keyword">return</span> <span class="lit-string">""</span>, <a href="../../../../../pkg/fmt.html" class="ident i0">fmt</a>.<a href="../../../../fmt/errors.go.html#line-17" class="ident">Errorf</a>(<span class="lit-string">"URL prefix %q contains whitespace or control characters"</span>, <label for="r9" class="ident">prefix</label>)
+	}
+	<span class="keyword">if</span> <a href="#line-83" class="ident">endsWithPercentEncodingPrefixPattern</a>.<a href="../../../../regexp/regexp.go.html#line-524" class="ident">MatchString</a>(<label for="r11" class="ident">decoded</label>) {
+		<span class="keyword">return</span> <span class="lit-string">""</span>, <a href="../../../../../pkg/fmt.html" class="ident i0">fmt</a>.<a href="../../../../fmt/errors.go.html#line-17" class="ident">Errorf</a>(<span class="lit-string">"URL prefix %q ends with an incomplete percent-encoding character triplet"</span>, <label for="r9" class="ident">prefix</label>)
+	}
+	<span class="keyword">return</span> <label for="r11" class="ident">decoded</label>, <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+}
+
+<span class="keyword">func</span> <label for="r12" class="ident"><a href="../../../../../pkg/github.com/google/safehtml/template.html#name-validateTrustedResourceURLSubstitution" class="ident">validateTrustedResourceURLSubstitution</a></label>(<label for="r13" class="ident">args</label> ...<span class="keyword">interface</span>{}) (<a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>, <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<label for="r14" class="ident">input</label> := <a href="../../../../../pkg/github.com/google/safehtml/internal/safehtmlutil.html" class="ident i4">safehtmlutil</a>.<a href="../internal/safehtmlutil/safehtmlutil.go.html#line-132" class="ident">Stringify</a>(<label for="r13" class="ident">args</label>...)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Reject substitutions containing the ".." dot-segment to prevent the final TrustedResourceURL from referencing</span><span class="comment">		 a resource higher up in the path name hierarchy than the path specified in the prefix.</span></div>
+<div class="code"><pre><code>		<span class="keyword">return</span> <span class="lit-string">""</span>, <a href="../../../../../pkg/fmt.html" class="ident i0">fmt</a>.<a href="../../../../fmt/errors.go.html#line-17" class="ident">Errorf</a>(<span class="lit-string">`cannot substitute %q after TrustedResourceURL prefix: ".." is disallowed`</span>, <label for="r14" class="ident">input</label>)
+	}
+	<span class="keyword">return</span> <label for="r14" class="ident">input</label>, <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: errgroup.go in package golang.org/x/sync/errgroup</title>
+<link href="../../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	errgroup.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../../pkg/golang.org/x/sync/errgroup.html">golang.org/x/sync/errgroup</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2016 The Go Authors. All rights reserved.</span><span class="comment"> Use of this source code is governed by a BSD-style</span><span class="comment"> license that can be found in the LICENSE file.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Package errgroup provides synchronization, error propagation, and Context</span><span class="comment"> cancelation for groups of goroutines working on subtasks of a common task.</span></div>
+<div class="code"><pre><code><span class="keyword">package</span> errgroup
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"context"</span></label>
+	<label for="i1"><span class="lit-string i1">"sync"</span></label>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> A Group is a collection of goroutines working on subtasks that are part of</span><span class="comment"> the same overall task.</span><span class="comment"></span><span class="comment"> A zero Group is valid and does not cancel on error.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../pkg/golang.org/x/sync/errgroup.html#name-Group" class="ident">Group</a> <span class="keyword">struct</span> {
+	<a href="../../../../../use/golang.org/x/sync/errgroup..Group.cancel*2374d.html" class="ident">cancel</a> <span class="keyword">func</span>()
+
+	<a href="../../../../../use/golang.org/x/sync/errgroup..Group.wg*99d38.html" class="ident">wg</a> <a href="../../../../../pkg/sync.html" class="ident i1">sync</a>.<a href="../../../../sync/waitgroup.go.html#line-20" class="ident">WaitGroup</a>
+
+	<a href="../../../../../use/golang.org/x/sync/errgroup..Group.errOnce*a3ad1.html" class="ident">errOnce</a> <a href="../../../../../pkg/sync.html" class="ident i1">sync</a>.<a href="../../../../sync/once.go.html#line-14" class="ident">Once</a>
+	<a href="../../../../../use/golang.org/x/sync/errgroup..Group.err*d9eb2.html" class="ident">err</a>     <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> WithContext returns a new Group and an associated Context derived from ctx.</span><span class="comment"></span><span class="comment"> The derived Context is canceled the first time a function passed to Go</span><span class="comment"> returns a non-nil error or the first time Wait returns, whichever occurs</span><span class="comment"> first.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r0" class="ident"><a href="../../../../../pkg/golang.org/x/sync/errgroup.html#name-WithContext" class="ident">WithContext</a></label>(<label for="r1" class="ident">ctx</label> <a href="../../../../../pkg/context.html" class="ident i0">context</a>.<a href="../../../../context/context.go.html#line-62" class="ident">Context</a>) (*<a href="#line-18" class="ident">Group</a>, <a href="../../../../../pkg/context.html" class="ident i0">context</a>.<a href="../../../../context/context.go.html#line-62" class="ident">Context</a>) {
+	<label for="r1" class="ident">ctx</label>, <label for="r2" class="ident">cancel</label> := <a href="../../../../../pkg/context.html" class="ident i0">context</a>.<a href="../../../../context/context.go.html#line-232" class="ident">WithCancel</a>(<label for="r1" class="ident">ctx</label>)
+	<span class="keyword">return</span> &amp;<a href="#line-18" class="ident">Group</a>{<a href="#line-19" class="ident">cancel</a>: <label for="r2" class="ident">cancel</label>}, <label for="r1" class="ident">ctx</label>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Wait blocks until all function calls from the Go method have returned, then</span><span class="comment"> returns the first non-nil error (if any) from them.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r3" class="ident">g</label> *<a href="#line-18" class="ident">Group</a>) <label for="r4" class="ident"><a href="../../../../../use/golang.org/x/sync/errgroup..Group.Wait.html" class="ident">Wait</a></label>() <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<label for="r3" class="ident">g</label>.<a href="#line-21" class="ident">wg</a>.<a href="../../../../sync/waitgroup.go.html#line-103" class="ident">Wait</a>()
+	<span class="keyword">if</span> <label for="r3" class="ident">g</label>.<a href="#line-19" class="ident">cancel</a> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<label for="r3" class="ident">g</label>.<a href="#line-19" class="ident">cancel</a>()
+	}
+	<span class="keyword">return</span> <label for="r3" class="ident">g</label>.<a href="#line-24" class="ident">err</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Go calls the given function in a new goroutine.</span><span class="comment"></span><span class="comment"> The first call to return a non-nil error cancels the group; its error will be</span><span class="comment"> returned by Wait.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r5" class="ident">g</label> *<a href="#line-18" class="ident">Group</a>) <label for="r6" class="ident"><a href="../../../../../use/golang.org/x/sync/errgroup..Group.Go.html" class="ident">Go</a></label>(<label for="r7" class="ident">f</label> <span class="keyword">func</span>() <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<label for="r5" class="ident">g</label>.<a href="#line-21" class="ident">wg</a>.<a href="../../../../sync/waitgroup.go.html#line-53" class="ident">Add</a>(<span class="lit-number">1</span>)
+
+	<span class="keyword">go</span> <span class="keyword">func</span>() {
+		<span class="keyword">defer</span> <label for="r5" class="ident">g</label>.<a href="#line-21" class="ident">wg</a>.<a href="../../../../sync/waitgroup.go.html#line-98" class="ident">Done</a>()
+
+		<span class="keyword">if</span> <label for="r8" class="ident">err</label> := <label for="r7" class="ident">f</label>(); <label for="r8" class="ident">err</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<label for="r5" class="ident">g</label>.<a href="#line-23" class="ident">errOnce</a>.<a href="../../../../sync/once.go.html#line-42" class="ident">Do</a>(<span class="keyword">func</span>() {
+				<label for="r5" class="ident">g</label>.<a href="#line-24" class="ident">err</a> = <label for="r8" class="ident">err</label>
+				<span class="keyword">if</span> <label for="r5" class="ident">g</label>.<a href="#line-19" class="ident">cancel</a> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+					<label for="r5" class="ident">g</label>.<a href="#line-19" class="ident">cancel</a>()
+				}
+			})
+		}
+	}()
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

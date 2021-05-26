@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: socks.go in package golang.org/x/net/internal/socks</title>
+<link href="../../../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	socks.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../../../pkg/golang.org/x/net/internal/socks.html">golang.org/x/net/internal/socks</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16],
+input[id=r17]:checked ~pre label[for=r17],
+input[id=r18]:checked ~pre label[for=r18],
+input[id=r19]:checked ~pre label[for=r19],
+input[id=r20]:checked ~pre label[for=r20],
+input[id=r21]:checked ~pre label[for=r21],
+input[id=r22]:checked ~pre label[for=r22],
+input[id=r23]:checked ~pre label[for=r23],
+input[id=r24]:checked ~pre label[for=r24],
+input[id=r25]:checked ~pre label[for=r25],
+input[id=r26]:checked ~pre label[for=r26],
+input[id=r27]:checked ~pre label[for=r27],
+input[id=r28]:checked ~pre label[for=r28],
+input[id=r29]:checked ~pre label[for=r29],
+input[id=r30]:checked ~pre label[for=r30],
+input[id=r31]:checked ~pre label[for=r31],
+input[id=r32]:checked ~pre label[for=r32],
+input[id=r33]:checked ~pre label[for=r33],
+input[id=r34]:checked ~pre label[for=r34],
+input[id=r35]:checked ~pre label[for=r35],
+input[id=r36]:checked ~pre label[for=r36],
+input[id=r37]:checked ~pre label[for=r37],
+input[id=r38]:checked ~pre label[for=r38],
+input[id=r39]:checked ~pre label[for=r39],
+input[id=r40]:checked ~pre label[for=r40],
+input[id=r41]:checked ~pre label[for=r41],
+input[id=r42]:checked ~pre label[for=r42],
+input[id=r43]:checked ~pre label[for=r43],
+input[id=r44]:checked ~pre label[for=r44],
+input[id=r45]:checked ~pre label[for=r45],
+input[id=r46]:checked ~pre label[for=r46],
+input[id=r47]:checked ~pre label[for=r47],
+input[id=r48]:checked ~pre label[for=r48],
+input[id=r49]:checked ~pre label[for=r49],
+input[id=r50]:checked ~pre label[for=r50],
+input[id=r51]:checked ~pre label[for=r51],
+input[id=r52]:checked ~pre label[for=r52],
+input[id=r53]:checked ~pre label[for=r53],
+input[id=r54]:checked ~pre label[for=r54],
+input[id=r55]:checked ~pre label[for=r55],
+input[id=r56]:checked ~pre label[for=r56],
+input[id=r57]:checked ~pre label[for=r57],
+input[id=r58]:checked ~pre label[for=r58],
+input[id=r59]:checked ~pre label[for=r59],
+input[id=r60]:checked ~pre label[for=r60],
+input[id=r61]:checked ~pre label[for=r61],
+input[id=r62]:checked ~pre label[for=r62],
+input[id=r63]:checked ~pre label[for=r63],
+input[id=r64]:checked ~pre label[for=r64],
+input[id=r65]:checked ~pre label[for=r65],
+input[id=r66]:checked ~pre label[for=r66],
+input[id=r67]:checked ~pre label[for=r67],
+input[id=r68]:checked ~pre label[for=r68],
+input[id=r69]:checked ~pre label[for=r69],
+input[id=r70]:checked ~pre label[for=r70],
+input[id=r71]:checked ~pre label[for=r71],
+input[id=r72]:checked ~pre label[for=r72],
+input[id=r73]:checked ~pre label[for=r73],
+input[id=r74]:checked ~pre label[for=r74],
+input[id=r75]:checked ~pre label[for=r75],
+input[id=r76]:checked ~pre label[for=r76],
+input[id=r77]:checked ~pre label[for=r77],
+input[id=r78]:checked ~pre label[for=r78],
+input[id=r79]:checked ~pre label[for=r79],
+input[id=r80]:checked ~pre label[for=r80],
+input[id=r81]:checked ~pre label[for=r81],
+input[id=r82]:checked ~pre label[for=r82],
+input[id=r83]:checked ~pre label[for=r83],
+input[id=r84]:checked ~pre label[for=r84],
+input[id=r85]:checked ~pre label[for=r85],
+input[id=r86]:checked ~pre label[for=r86],
+input[id=r87]:checked ~pre label[for=r87],
+input[id=r88]:checked ~pre label[for=r88],
+input[id=r89]:checked ~pre label[for=r89],
+input[id=r90]:checked ~pre label[for=r90],
+input[id=r91]:checked ~pre label[for=r91],
+input[id=r92]:checked ~pre label[for=r92],
+input[id=r93]:checked ~pre label[for=r93],
+input[id=r94]:checked ~pre label[for=r94]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1,
+input[id=i2]:checked ~pre .i2,
+input[id=i3]:checked ~pre .i3,
+input[id=i4]:checked ~pre .i4
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="r17" type="radio" name="g"/>
+<input id="r18" type="radio" name="g"/>
+<input id="r19" type="radio" name="g"/>
+<input id="r20" type="radio" name="g"/>
+<input id="r21" type="radio" name="g"/>
+<input id="r22" type="radio" name="g"/>
+<input id="r23" type="radio" name="g"/>
+<input id="r24" type="radio" name="g"/>
+<input id="r25" type="radio" name="g"/>
+<input id="r26" type="radio" name="g"/>
+<input id="r27" type="radio" name="g"/>
+<input id="r28" type="radio" name="g"/>
+<input id="r29" type="radio" name="g"/>
+<input id="r30" type="radio" name="g"/>
+<input id="r31" type="radio" name="g"/>
+<input id="r32" type="radio" name="g"/>
+<input id="r33" type="radio" name="g"/>
+<input id="r34" type="radio" name="g"/>
+<input id="r35" type="radio" name="g"/>
+<input id="r36" type="radio" name="g"/>
+<input id="r37" type="radio" name="g"/>
+<input id="r38" type="radio" name="g"/>
+<input id="r39" type="radio" name="g"/>
+<input id="r40" type="radio" name="g"/>
+<input id="r41" type="radio" name="g"/>
+<input id="r42" type="radio" name="g"/>
+<input id="r43" type="radio" name="g"/>
+<input id="r44" type="radio" name="g"/>
+<input id="r45" type="radio" name="g"/>
+<input id="r46" type="radio" name="g"/>
+<input id="r47" type="radio" name="g"/>
+<input id="r48" type="radio" name="g"/>
+<input id="r49" type="radio" name="g"/>
+<input id="r50" type="radio" name="g"/>
+<input id="r51" type="radio" name="g"/>
+<input id="r52" type="radio" name="g"/>
+<input id="r53" type="radio" name="g"/>
+<input id="r54" type="radio" name="g"/>
+<input id="r55" type="radio" name="g"/>
+<input id="r56" type="radio" name="g"/>
+<input id="r57" type="radio" name="g"/>
+<input id="r58" type="radio" name="g"/>
+<input id="r59" type="radio" name="g"/>
+<input id="r60" type="radio" name="g"/>
+<input id="r61" type="radio" name="g"/>
+<input id="r62" type="radio" name="g"/>
+<input id="r63" type="radio" name="g"/>
+<input id="r64" type="radio" name="g"/>
+<input id="r65" type="radio" name="g"/>
+<input id="r66" type="radio" name="g"/>
+<input id="r67" type="radio" name="g"/>
+<input id="r68" type="radio" name="g"/>
+<input id="r69" type="radio" name="g"/>
+<input id="r70" type="radio" name="g"/>
+<input id="r71" type="radio" name="g"/>
+<input id="r72" type="radio" name="g"/>
+<input id="r73" type="radio" name="g"/>
+<input id="r74" type="radio" name="g"/>
+<input id="r75" type="radio" name="g"/>
+<input id="r76" type="radio" name="g"/>
+<input id="r77" type="radio" name="g"/>
+<input id="r78" type="radio" name="g"/>
+<input id="r79" type="radio" name="g"/>
+<input id="r80" type="radio" name="g"/>
+<input id="r81" type="radio" name="g"/>
+<input id="r82" type="radio" name="g"/>
+<input id="r83" type="radio" name="g"/>
+<input id="r84" type="radio" name="g"/>
+<input id="r85" type="radio" name="g"/>
+<input id="r86" type="radio" name="g"/>
+<input id="r87" type="radio" name="g"/>
+<input id="r88" type="radio" name="g"/>
+<input id="r89" type="radio" name="g"/>
+<input id="r90" type="radio" name="g"/>
+<input id="r91" type="radio" name="g"/>
+<input id="r92" type="radio" name="g"/>
+<input id="r93" type="radio" name="g"/>
+<input id="r94" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<input id="i2" type="radio" name="i"/>
+<input id="i3" type="radio" name="i"/>
+<input id="i4" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2018 The Go Authors. All rights reserved.</span><span class="comment"> Use of this source code is governed by a BSD-style</span><span class="comment"> license that can be found in the LICENSE file.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Package socks provides a SOCKS version 5 client implementation.</span><span class="comment"></span><span class="comment"> SOCKS protocol version 5 is defined in RFC 1928.</span><span class="comment"> Username/Password authentication for SOCKS version 5 is defined in</span><span class="comment"> RFC 1929.</span></div>
+<div class="code"><pre><code><span class="keyword">package</span> socks
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"context"</span></label>
+	<label for="i1"><span class="lit-string i1">"errors"</span></label>
+	<label for="i2"><span class="lit-string i2">"io"</span></label>
+	<label for="i3"><span class="lit-string i3">"net"</span></label>
+	<label for="i4"><span class="lit-string i4">"strconv"</span></label>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> A Command represents a SOCKS command.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../../pkg/golang.org/x/net/internal/socks.html#name-Command" class="ident">Command</a> <a href="../../../../../../pkg/builtin.html#name-int" class="ident">int</a>
+
+<span class="keyword">func</span> (<label for="r0" class="ident">cmd</label> <a href="#line-21" class="ident">Command</a>) <label for="r1" class="ident"><a href="../../../../../../use/golang.org/x/net/internal/socks..Command.String.html" class="ident">String</a></label>() <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a> {
+	<span class="keyword">switch</span> <label for="r0" class="ident">cmd</label> {
+	<span class="keyword">case</span> <a href="#line-73" class="ident">CmdConnect</a>:
+		<span class="keyword">return</span> <span class="lit-string">"socks connect"</span>
+	<span class="keyword">case</span> <a href="#line-74" class="ident">cmdBind</a>:
+		<span class="keyword">return</span> <span class="lit-string">"socks bind"</span>
+	<span class="keyword">default</span>:
+		<span class="keyword">return</span> <span class="lit-string">"socks "</span> + <a href="../../../../../../pkg/strconv.html" class="ident i4">strconv</a>.<a href="../../../../../strconv/itoa.go.html#line-34" class="ident">Itoa</a>(<a href="../../../../../../pkg/builtin.html#name-int" class="ident">int</a>(<label for="r0" class="ident">cmd</label>))
+	}
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> An AuthMethod represents a SOCKS authentication method.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../../pkg/golang.org/x/net/internal/socks.html#name-AuthMethod" class="ident">AuthMethod</a> <a href="../../../../../../pkg/builtin.html#name-int" class="ident">int</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> A Reply represents a SOCKS command reply code.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../../pkg/golang.org/x/net/internal/socks.html#name-Reply" class="ident">Reply</a> <a href="../../../../../../pkg/builtin.html#name-int" class="ident">int</a>
+
+<span class="keyword">func</span> (<label for="r2" class="ident">code</label> <a href="#line-38" class="ident">Reply</a>) <label for="r3" class="ident"><a href="../../../../../../use/golang.org/x/net/internal/socks..Reply.String.html" class="ident">String</a></label>() <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a> {
+	<span class="keyword">switch</span> <label for="r2" class="ident">code</label> {
+	<span class="keyword">case</span> <a href="#line-80" class="ident">StatusSucceeded</a>:
+		<span class="keyword">return</span> <span class="lit-string">"succeeded"</span>
+	<span class="keyword">case</span> <span class="lit-number">0x01</span>:
+		<span class="keyword">return</span> <span class="lit-string">"general SOCKS server failure"</span>
+	<span class="keyword">case</span> <span class="lit-number">0x02</span>:
+		<span class="keyword">return</span> <span class="lit-string">"connection not allowed by ruleset"</span>
+	<span class="keyword">case</span> <span class="lit-number">0x03</span>:
+		<span class="keyword">return</span> <span class="lit-string">"network unreachable"</span>
+	<span class="keyword">case</span> <span class="lit-number">0x04</span>:
+		<span class="keyword">return</span> <span class="lit-string">"host unreachable"</span>
+	<span class="keyword">case</span> <span class="lit-number">0x05</span>:
+		<span class="keyword">return</span> <span class="lit-string">"connection refused"</span>
+	<span class="keyword">case</span> <span class="lit-number">0x06</span>:
+		<span class="keyword">return</span> <span class="lit-string">"TTL expired"</span>
+	<span class="keyword">case</span> <span class="lit-number">0x07</span>:
+		<span class="keyword">return</span> <span class="lit-string">"command not supported"</span>
+	<span class="keyword">case</span> <span class="lit-number">0x08</span>:
+		<span class="keyword">return</span> <span class="lit-string">"address type not supported"</span>
+	<span class="keyword">default</span>:
+		<span class="keyword">return</span> <span class="lit-string">"unknown code: "</span> + <a href="../../../../../../pkg/strconv.html" class="ident i4">strconv</a>.<a href="../../../../../strconv/itoa.go.html#line-34" class="ident">Itoa</a>(<a href="../../../../../../pkg/builtin.html#name-int" class="ident">int</a>(<label for="r2" class="ident">code</label>))
+	}
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Wire protocol constants.</span></div>
+<div class="code"><pre><code><span class="keyword">const</span> (
+	<a href="../../../../../../pkg/golang.org/x/net/internal/socks.html#name-Version5" class="ident">Version5</a> = <span class="lit-number">0x05</span>
+
+	<a href="../../../../../../pkg/golang.org/x/net/internal/socks.html#name-AddrTypeIPv4" class="ident">AddrTypeIPv4</a> = <span class="lit-number">0x01</span>
+	<a href="../../../../../../pkg/golang.org/x/net/internal/socks.html#name-AddrTypeFQDN" class="ident">AddrTypeFQDN</a> = <span class="lit-number">0x03</span>
+	<a href="../../../../../../pkg/golang.org/x/net/internal/socks.html#name-AddrTypeIPv6" class="ident">AddrTypeIPv6</a> = <span class="lit-number">0x04</span>
+
+	<a href="../../../../../../pkg/golang.org/x/net/internal/socks.html#name-CmdConnect" class="ident">CmdConnect</a> <a href="#line-21" class="ident">Command</a> = <span class="lit-number">0x01</span> <span class="comment">// establishes an active-open forward proxy connection</span>
+	<a href="../../../../../../pkg/golang.org/x/net/internal/socks.html#name-cmdBind" class="ident">cmdBind</a>    <a href="#line-21" class="ident">Command</a> = <span class="lit-number">0x02</span> <span class="comment">// establishes a passive-open forward proxy connection</span>
+
+	<a href="../../../../../../pkg/golang.org/x/net/internal/socks.html#name-AuthMethodNotRequired" class="ident">AuthMethodNotRequired</a>         <a href="#line-35" class="ident">AuthMethod</a> = <span class="lit-number">0x00</span> <span class="comment">// no authentication required</span>
+	<a href="../../../../../../pkg/golang.org/x/net/internal/socks.html#name-AuthMethodUsernamePassword" class="ident">AuthMethodUsernamePassword</a>    <a href="#line-35" class="ident">AuthMethod</a> = <span class="lit-number">0x02</span> <span class="comment">// use username/password</span>
+	<a href="../../../../../../pkg/golang.org/x/net/internal/socks.html#name-AuthMethodNoAcceptableMethods" class="ident">AuthMethodNoAcceptableMethods</a> <a href="#line-35" class="ident">AuthMethod</a> = <span class="lit-number">0xff</span> <span class="comment">// no acceptable authentication methods</span>
+
+	<a href="../../../../../../pkg/golang.org/x/net/internal/socks.html#name-StatusSucceeded" class="ident">StatusSucceeded</a> <a href="#line-38" class="ident">Reply</a> = <span class="lit-number">0x00</span>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> An Addr represents a SOCKS-specific address.</span><span class="comment"> Either Name or IP is used exclusively.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../../pkg/golang.org/x/net/internal/socks.html#name-Addr" class="ident">Addr</a> <span class="keyword">struct</span> {
+	<a href="../../../../../../use/golang.org/x/net/internal/socks..Addr.Name.html" class="ident">Name</a> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a> <span class="comment">// fully-qualified domain name</span>
+	<a href="../../../../../../use/golang.org/x/net/internal/socks..Addr.IP.html" class="ident">IP</a>   <a href="../../../../../../pkg/net.html" class="ident i3">net</a>.<a href="../../../../../net/ip.go.html#line-32" class="ident">IP</a>
+	<a href="../../../../../../use/golang.org/x/net/internal/socks..Addr.Port.html" class="ident">Port</a> <a href="../../../../../../pkg/builtin.html#name-int" class="ident">int</a>
+}
+
+<span class="keyword">func</span> (<label for="r4" class="ident">a</label> *<a href="#line-85" class="ident">Addr</a>) <label for="r5" class="ident"><a href="../../../../../../use/golang.org/x/net/internal/socks..Addr.Network.html" class="ident">Network</a></label>() <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a> { <span class="keyword">return</span> <span class="lit-string">"socks"</span> }
+
+<span class="keyword">func</span> (<label for="r6" class="ident">a</label> *<a href="#line-85" class="ident">Addr</a>) <label for="r7" class="ident"><a href="../../../../../../use/golang.org/x/net/internal/socks..Addr.String.html" class="ident">String</a></label>() <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a> {
+	<span class="keyword">if</span> <label for="r6" class="ident">a</label> == <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <span class="lit-string">"&lt;nil&gt;"</span>
+	}
+	<label for="r8" class="ident">port</label> := <a href="../../../../../../pkg/strconv.html" class="ident i4">strconv</a>.<a href="../../../../../strconv/itoa.go.html#line-34" class="ident">Itoa</a>(<label for="r6" class="ident">a</label>.<a href="#line-88" class="ident">Port</a>)
+	<span class="keyword">if</span> <label for="r6" class="ident">a</label>.<a href="#line-87" class="ident">IP</a> == <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../../../../../pkg/net.html" class="ident i3">net</a>.<a href="../../../../../net/ipsock.go.html#line-227" class="ident">JoinHostPort</a>(<label for="r6" class="ident">a</label>.<a href="#line-86" class="ident">Name</a>, <label for="r8" class="ident">port</label>)
+	}
+	<span class="keyword">return</span> <a href="../../../../../../pkg/net.html" class="ident i3">net</a>.<a href="../../../../../net/ipsock.go.html#line-227" class="ident">JoinHostPort</a>(<label for="r6" class="ident">a</label>.<a href="#line-87" class="ident">IP</a>.<a href="../../../../../net/ip.go.html#line-291" class="ident">String</a>(), <label for="r8" class="ident">port</label>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> A Conn represents a forward proxy connection.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../../pkg/golang.org/x/net/internal/socks.html#name-Conn" class="ident">Conn</a> <span class="keyword">struct</span> {
+	<a href="../../../../../../pkg/net.html" class="ident i3">net</a>.<a href="../../../../../net/net.go.html#line-113" class="ident">Conn</a>
+
+	<a href="../../../../../../use/golang.org/x/net/internal/socks..Conn.boundAddr*3c661.html" class="ident">boundAddr</a> <a href="../../../../../../pkg/net.html" class="ident i3">net</a>.<a href="../../../../../net/net.go.html#line-105" class="ident">Addr</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> BoundAddr returns the address assigned by the proxy server for</span><span class="comment"> connecting to the command target address from the proxy server.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r9" class="ident">c</label> *<a href="#line-105" class="ident">Conn</a>) <label for="r10" class="ident"><a href="../../../../../../use/golang.org/x/net/internal/socks..Conn.BoundAddr.html" class="ident">BoundAddr</a></label>() <a href="../../../../../../pkg/net.html" class="ident i3">net</a>.<a href="../../../../../net/net.go.html#line-105" class="ident">Addr</a> {
+	<span class="keyword">if</span> <label for="r9" class="ident">c</label> == <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+	}
+	<span class="keyword">return</span> <label for="r9" class="ident">c</label>.<a href="#line-108" class="ident">boundAddr</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> A Dialer holds SOCKS-specific options.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../../pkg/golang.org/x/net/internal/socks.html#name-Dialer" class="ident">Dialer</a> <span class="keyword">struct</span> {
+	<a href="../../../../../../use/golang.org/x/net/internal/socks..Dialer.cmd*04dc5.html" class="ident">cmd</a>          <a href="#line-21" class="ident">Command</a> <span class="comment">// either CmdConnect or cmdBind</span>
+	<a href="../../../../../../use/golang.org/x/net/internal/socks..Dialer.proxyNetwork*85a59.html" class="ident">proxyNetwork</a> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>  <span class="comment">// network between a proxy server and a client</span>
+	<a href="../../../../../../use/golang.org/x/net/internal/socks..Dialer.proxyAddress*5e04e.html" class="ident">proxyAddress</a> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>  <span class="comment">// proxy server address</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ProxyDial specifies the optional dial function for</span><span class="comment">	 establishing the transport connection.</span></div>
+<div class="code"><pre><code>	<a href="../../../../../../use/golang.org/x/net/internal/socks..Dialer.ProxyDial.html" class="ident">ProxyDial</a> <span class="keyword">func</span>(<a href="../../../../../../pkg/context.html" class="ident i0">context</a>.<a href="../../../../../context/context.go.html#line-62" class="ident">Context</a>, <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>, <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>) (<a href="../../../../../../pkg/net.html" class="ident i3">net</a>.<a href="../../../../../net/net.go.html#line-113" class="ident">Conn</a>, <a href="../../../../../../pkg/builtin.html#name-error" class="ident">error</a>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> AuthMethods specifies the list of request authentication</span><span class="comment">	 methods.</span><span class="comment">	 If empty, SOCKS client requests only AuthMethodNotRequired.</span></div>
+<div class="code"><pre><code>	<a href="../../../../../../use/golang.org/x/net/internal/socks..Dialer.AuthMethods.html" class="ident">AuthMethods</a> []<a href="#line-35" class="ident">AuthMethod</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Authenticate specifies the optional authentication</span><span class="comment">	 function. It must be non-nil when AuthMethods is not empty.</span><span class="comment">	 It must return an error when the authentication is failed.</span></div>
+<div class="code"><pre><code>	<a href="../../../../../../use/golang.org/x/net/internal/socks..Dialer.Authenticate.html" class="ident">Authenticate</a> <span class="keyword">func</span>(<a href="../../../../../../pkg/context.html" class="ident i0">context</a>.<a href="../../../../../context/context.go.html#line-62" class="ident">Context</a>, <a href="../../../../../../pkg/io.html" class="ident i2">io</a>.<a href="../../../../../io/io.go.html#line-126" class="ident">ReadWriter</a>, <a href="#line-35" class="ident">AuthMethod</a>) <a href="../../../../../../pkg/builtin.html#name-error" class="ident">error</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> DialContext connects to the provided address on the provided</span><span class="comment"> network.</span><span class="comment"></span><span class="comment"> The returned error value may be a net.OpError. When the Op field of</span><span class="comment"> net.OpError contains "socks", the Source field contains a proxy</span><span class="comment"> server address and the Addr field contains a command target</span><span class="comment"> address.</span><span class="comment"></span><span class="comment"> See func Dial of the net package of standard library for a</span><span class="comment"> description of the network and address parameters.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r11" class="ident">d</label> *<a href="#line-121" class="ident">Dialer</a>) <label for="r12" class="ident"><a href="../../../../../../use/golang.org/x/net/internal/socks..Dialer.DialContext.html" class="ident">DialContext</a></label>(<label for="r13" class="ident">ctx</label> <a href="../../../../../../pkg/context.html" class="ident i0">context</a>.<a href="../../../../../context/context.go.html#line-62" class="ident">Context</a>, <label for="r14" class="ident">network</label>, <label for="r15" class="ident">address</label> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>) (<a href="../../../../../../pkg/net.html" class="ident i3">net</a>.<a href="../../../../../net/net.go.html#line-113" class="ident">Conn</a>, <a href="../../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<span class="keyword">if</span> <label for="r16" class="ident">err</label> := <label for="r11" class="ident">d</label>.<a href="#line-233" class="ident">validateTarget</a>(<label for="r14" class="ident">network</label>, <label for="r15" class="ident">address</label>); <label for="r16" class="ident">err</label> != <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<label for="r17" class="ident">proxy</label>, <label for="r18" class="ident">dst</label>, <label for="r19" class="ident">_</label> := <label for="r11" class="ident">d</label>.<a href="#line-247" class="ident">pathAddrs</a>(<label for="r15" class="ident">address</label>)
+		<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, &amp;<a href="../../../../../../pkg/net.html" class="ident i3">net</a>.<a href="../../../../../net/net.go.html#line-435" class="ident">OpError</a>{<a href="../../../../../net/net.go.html#line-438" class="ident">Op</a>: <label for="r11" class="ident">d</label>.<a href="#line-122" class="ident">cmd</a>.<a href="#line-23" class="ident">String</a>(), <a href="../../../../../net/net.go.html#line-442" class="ident">Net</a>: <label for="r14" class="ident">network</label>, <a href="../../../../../net/net.go.html#line-447" class="ident">Source</a>: <label for="r17" class="ident">proxy</label>, <a href="../../../../../net/net.go.html#line-455" class="ident">Addr</a>: <label for="r18" class="ident">dst</label>, <a href="../../../../../net/net.go.html#line-459" class="ident">Err</a>: <label for="r16" class="ident">err</label>}
+	}
+	<span class="keyword">if</span> <label for="r13" class="ident">ctx</label> == <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<label for="r20" class="ident">proxy</label>, <label for="r21" class="ident">dst</label>, <label for="r22" class="ident">_</label> := <label for="r11" class="ident">d</label>.<a href="#line-247" class="ident">pathAddrs</a>(<label for="r15" class="ident">address</label>)
+		<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, &amp;<a href="../../../../../../pkg/net.html" class="ident i3">net</a>.<a href="../../../../../net/net.go.html#line-435" class="ident">OpError</a>{<a href="../../../../../net/net.go.html#line-438" class="ident">Op</a>: <label for="r11" class="ident">d</label>.<a href="#line-122" class="ident">cmd</a>.<a href="#line-23" class="ident">String</a>(), <a href="../../../../../net/net.go.html#line-442" class="ident">Net</a>: <label for="r14" class="ident">network</label>, <a href="../../../../../net/net.go.html#line-447" class="ident">Source</a>: <label for="r20" class="ident">proxy</label>, <a href="../../../../../net/net.go.html#line-455" class="ident">Addr</a>: <label for="r21" class="ident">dst</label>, <a href="../../../../../net/net.go.html#line-459" class="ident">Err</a>: <a href="../../../../../../pkg/errors.html" class="ident i1">errors</a>.<a href="../../../../../errors/errors.go.html#line-58" class="ident">New</a>(<span class="lit-string">"nil context"</span>)}
+	}
+	<span class="keyword">var</span> <label for="r23" class="ident">err</label> <a href="../../../../../../pkg/builtin.html#name-error" class="ident">error</a>
+	<span class="keyword">var</span> <label for="r24" class="ident">c</label> <a href="../../../../../../pkg/net.html" class="ident i3">net</a>.<a href="../../../../../net/net.go.html#line-113" class="ident">Conn</a>
+	<span class="keyword">if</span> <label for="r11" class="ident">d</label>.<a href="#line-128" class="ident">ProxyDial</a> != <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<label for="r24" class="ident">c</label>, <label for="r23" class="ident">err</label> = <label for="r11" class="ident">d</label>.<a href="#line-128" class="ident">ProxyDial</a>(<label for="r13" class="ident">ctx</label>, <label for="r11" class="ident">d</label>.<a href="#line-123" class="ident">proxyNetwork</a>, <label for="r11" class="ident">d</label>.<a href="#line-124" class="ident">proxyAddress</a>)
+	} <span class="keyword">else</span> {
+		<span class="keyword">var</span> <label for="r25" class="ident">dd</label> <a href="../../../../../../pkg/net.html" class="ident i3">net</a>.<a href="../../../../../net/dial.go.html#line-27" class="ident">Dialer</a>
+		<label for="r24" class="ident">c</label>, <label for="r23" class="ident">err</label> = <label for="r25" class="ident">dd</label>.<a href="../../../../../net/dial.go.html#line-369" class="ident">DialContext</a>(<label for="r13" class="ident">ctx</label>, <label for="r11" class="ident">d</label>.<a href="#line-123" class="ident">proxyNetwork</a>, <label for="r11" class="ident">d</label>.<a href="#line-124" class="ident">proxyAddress</a>)
+	}
+	<span class="keyword">if</span> <label for="r23" class="ident">err</label> != <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<label for="r26" class="ident">proxy</label>, <label for="r27" class="ident">dst</label>, <label for="r28" class="ident">_</label> := <label for="r11" class="ident">d</label>.<a href="#line-247" class="ident">pathAddrs</a>(<label for="r15" class="ident">address</label>)
+		<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, &amp;<a href="../../../../../../pkg/net.html" class="ident i3">net</a>.<a href="../../../../../net/net.go.html#line-435" class="ident">OpError</a>{<a href="../../../../../net/net.go.html#line-438" class="ident">Op</a>: <label for="r11" class="ident">d</label>.<a href="#line-122" class="ident">cmd</a>.<a href="#line-23" class="ident">String</a>(), <a href="../../../../../net/net.go.html#line-442" class="ident">Net</a>: <label for="r14" class="ident">network</label>, <a href="../../../../../net/net.go.html#line-447" class="ident">Source</a>: <label for="r26" class="ident">proxy</label>, <a href="../../../../../net/net.go.html#line-455" class="ident">Addr</a>: <label for="r27" class="ident">dst</label>, <a href="../../../../../net/net.go.html#line-459" class="ident">Err</a>: <label for="r23" class="ident">err</label>}
+	}
+	<label for="r29" class="ident">a</label>, <label for="r23" class="ident">err</label> := <label for="r11" class="ident">d</label>.<a href="client.go.html#line-21" class="ident">connect</a>(<label for="r13" class="ident">ctx</label>, <label for="r24" class="ident">c</label>, <label for="r15" class="ident">address</label>)
+	<span class="keyword">if</span> <label for="r23" class="ident">err</label> != <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<label for="r24" class="ident">c</label>.<a href="../../../../../net/net.go.html#line-126" class="ident">Close</a>()
+		<label for="r30" class="ident">proxy</label>, <label for="r31" class="ident">dst</label>, <label for="r32" class="ident">_</label> := <label for="r11" class="ident">d</label>.<a href="#line-247" class="ident">pathAddrs</a>(<label for="r15" class="ident">address</label>)
+		<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, &amp;<a href="../../../../../../pkg/net.html" class="ident i3">net</a>.<a href="../../../../../net/net.go.html#line-435" class="ident">OpError</a>{<a href="../../../../../net/net.go.html#line-438" class="ident">Op</a>: <label for="r11" class="ident">d</label>.<a href="#line-122" class="ident">cmd</a>.<a href="#line-23" class="ident">String</a>(), <a href="../../../../../net/net.go.html#line-442" class="ident">Net</a>: <label for="r14" class="ident">network</label>, <a href="../../../../../net/net.go.html#line-447" class="ident">Source</a>: <label for="r30" class="ident">proxy</label>, <a href="../../../../../net/net.go.html#line-455" class="ident">Addr</a>: <label for="r31" class="ident">dst</label>, <a href="../../../../../net/net.go.html#line-459" class="ident">Err</a>: <label for="r23" class="ident">err</label>}
+	}
+	<span class="keyword">return</span> &amp;<a href="#line-105" class="ident">Conn</a>{<a href="#line-106" class="ident">Conn</a>: <label for="r24" class="ident">c</label>, <a href="#line-108" class="ident">boundAddr</a>: <label for="r29" class="ident">a</label>}, <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> DialWithConn initiates a connection from SOCKS server to the target</span><span class="comment"> network and address using the connection c that is already</span><span class="comment"> connected to the SOCKS server.</span><span class="comment"></span><span class="comment"> It returns the connection's local address assigned by the SOCKS</span><span class="comment"> server.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r33" class="ident">d</label> *<a href="#line-121" class="ident">Dialer</a>) <label for="r34" class="ident"><a href="../../../../../../use/golang.org/x/net/internal/socks..Dialer.DialWithConn.html" class="ident">DialWithConn</a></label>(<label for="r35" class="ident">ctx</label> <a href="../../../../../../pkg/context.html" class="ident i0">context</a>.<a href="../../../../../context/context.go.html#line-62" class="ident">Context</a>, <label for="r36" class="ident">c</label> <a href="../../../../../../pkg/net.html" class="ident i3">net</a>.<a href="../../../../../net/net.go.html#line-113" class="ident">Conn</a>, <label for="r37" class="ident">network</label>, <label for="r38" class="ident">address</label> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>) (<a href="../../../../../../pkg/net.html" class="ident i3">net</a>.<a href="../../../../../net/net.go.html#line-105" class="ident">Addr</a>, <a href="../../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<span class="keyword">if</span> <label for="r39" class="ident">err</label> := <label for="r33" class="ident">d</label>.<a href="#line-233" class="ident">validateTarget</a>(<label for="r37" class="ident">network</label>, <label for="r38" class="ident">address</label>); <label for="r39" class="ident">err</label> != <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<label for="r40" class="ident">proxy</label>, <label for="r41" class="ident">dst</label>, <label for="r42" class="ident">_</label> := <label for="r33" class="ident">d</label>.<a href="#line-247" class="ident">pathAddrs</a>(<label for="r38" class="ident">address</label>)
+		<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, &amp;<a href="../../../../../../pkg/net.html" class="ident i3">net</a>.<a href="../../../../../net/net.go.html#line-435" class="ident">OpError</a>{<a href="../../../../../net/net.go.html#line-438" class="ident">Op</a>: <label for="r33" class="ident">d</label>.<a href="#line-122" class="ident">cmd</a>.<a href="#line-23" class="ident">String</a>(), <a href="../../../../../net/net.go.html#line-442" class="ident">Net</a>: <label for="r37" class="ident">network</label>, <a href="../../../../../net/net.go.html#line-447" class="ident">Source</a>: <label for="r40" class="ident">proxy</label>, <a href="../../../../../net/net.go.html#line-455" class="ident">Addr</a>: <label for="r41" class="ident">dst</label>, <a href="../../../../../net/net.go.html#line-459" class="ident">Err</a>: <label for="r39" class="ident">err</label>}
+	}
+	<span class="keyword">if</span> <label for="r35" class="ident">ctx</label> == <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<label for="r43" class="ident">proxy</label>, <label for="r44" class="ident">dst</label>, <label for="r45" class="ident">_</label> := <label for="r33" class="ident">d</label>.<a href="#line-247" class="ident">pathAddrs</a>(<label for="r38" class="ident">address</label>)
+		<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, &amp;<a href="../../../../../../pkg/net.html" class="ident i3">net</a>.<a href="../../../../../net/net.go.html#line-435" class="ident">OpError</a>{<a href="../../../../../net/net.go.html#line-438" class="ident">Op</a>: <label for="r33" class="ident">d</label>.<a href="#line-122" class="ident">cmd</a>.<a href="#line-23" class="ident">String</a>(), <a href="../../../../../net/net.go.html#line-442" class="ident">Net</a>: <label for="r37" class="ident">network</label>, <a href="../../../../../net/net.go.html#line-447" class="ident">Source</a>: <label for="r43" class="ident">proxy</label>, <a href="../../../../../net/net.go.html#line-455" class="ident">Addr</a>: <label for="r44" class="ident">dst</label>, <a href="../../../../../net/net.go.html#line-459" class="ident">Err</a>: <a href="../../../../../../pkg/errors.html" class="ident i1">errors</a>.<a href="../../../../../errors/errors.go.html#line-58" class="ident">New</a>(<span class="lit-string">"nil context"</span>)}
+	}
+	<label for="r46" class="ident">a</label>, <label for="r47" class="ident">err</label> := <label for="r33" class="ident">d</label>.<a href="client.go.html#line-21" class="ident">connect</a>(<label for="r35" class="ident">ctx</label>, <label for="r36" class="ident">c</label>, <label for="r38" class="ident">address</label>)
+	<span class="keyword">if</span> <label for="r47" class="ident">err</label> != <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<label for="r48" class="ident">proxy</label>, <label for="r49" class="ident">dst</label>, <label for="r50" class="ident">_</label> := <label for="r33" class="ident">d</label>.<a href="#line-247" class="ident">pathAddrs</a>(<label for="r38" class="ident">address</label>)
+		<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, &amp;<a href="../../../../../../pkg/net.html" class="ident i3">net</a>.<a href="../../../../../net/net.go.html#line-435" class="ident">OpError</a>{<a href="../../../../../net/net.go.html#line-438" class="ident">Op</a>: <label for="r33" class="ident">d</label>.<a href="#line-122" class="ident">cmd</a>.<a href="#line-23" class="ident">String</a>(), <a href="../../../../../net/net.go.html#line-442" class="ident">Net</a>: <label for="r37" class="ident">network</label>, <a href="../../../../../net/net.go.html#line-447" class="ident">Source</a>: <label for="r48" class="ident">proxy</label>, <a href="../../../../../net/net.go.html#line-455" class="ident">Addr</a>: <label for="r49" class="ident">dst</label>, <a href="../../../../../net/net.go.html#line-459" class="ident">Err</a>: <label for="r47" class="ident">err</label>}
+	}
+	<span class="keyword">return</span> <label for="r46" class="ident">a</label>, <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Dial connects to the provided address on the provided network.</span><span class="comment"></span><span class="comment"> Unlike DialContext, it returns a raw transport connection instead</span><span class="comment"> of a forward proxy connection.</span><span class="comment"></span><span class="comment"> Deprecated: Use DialContext or DialWithConn instead.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r51" class="ident">d</label> *<a href="#line-121" class="ident">Dialer</a>) <label for="r52" class="ident"><a href="../../../../../../use/golang.org/x/net/internal/socks..Dialer.Dial.html" class="ident">Dial</a></label>(<label for="r53" class="ident">network</label>, <label for="r54" class="ident">address</label> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>) (<a href="../../../../../../pkg/net.html" class="ident i3">net</a>.<a href="../../../../../net/net.go.html#line-113" class="ident">Conn</a>, <a href="../../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<span class="keyword">if</span> <label for="r55" class="ident">err</label> := <label for="r51" class="ident">d</label>.<a href="#line-233" class="ident">validateTarget</a>(<label for="r53" class="ident">network</label>, <label for="r54" class="ident">address</label>); <label for="r55" class="ident">err</label> != <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<label for="r56" class="ident">proxy</label>, <label for="r57" class="ident">dst</label>, <label for="r58" class="ident">_</label> := <label for="r51" class="ident">d</label>.<a href="#line-247" class="ident">pathAddrs</a>(<label for="r54" class="ident">address</label>)
+		<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, &amp;<a href="../../../../../../pkg/net.html" class="ident i3">net</a>.<a href="../../../../../net/net.go.html#line-435" class="ident">OpError</a>{<a href="../../../../../net/net.go.html#line-438" class="ident">Op</a>: <label for="r51" class="ident">d</label>.<a href="#line-122" class="ident">cmd</a>.<a href="#line-23" class="ident">String</a>(), <a href="../../../../../net/net.go.html#line-442" class="ident">Net</a>: <label for="r53" class="ident">network</label>, <a href="../../../../../net/net.go.html#line-447" class="ident">Source</a>: <label for="r56" class="ident">proxy</label>, <a href="../../../../../net/net.go.html#line-455" class="ident">Addr</a>: <label for="r57" class="ident">dst</label>, <a href="../../../../../net/net.go.html#line-459" class="ident">Err</a>: <label for="r55" class="ident">err</label>}
+	}
+	<span class="keyword">var</span> <label for="r59" class="ident">err</label> <a href="../../../../../../pkg/builtin.html#name-error" class="ident">error</a>
+	<span class="keyword">var</span> <label for="r60" class="ident">c</label> <a href="../../../../../../pkg/net.html" class="ident i3">net</a>.<a href="../../../../../net/net.go.html#line-113" class="ident">Conn</a>
+	<span class="keyword">if</span> <label for="r51" class="ident">d</label>.<a href="#line-128" class="ident">ProxyDial</a> != <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<label for="r60" class="ident">c</label>, <label for="r59" class="ident">err</label> = <label for="r51" class="ident">d</label>.<a href="#line-128" class="ident">ProxyDial</a>(<a href="../../../../../../pkg/context.html" class="ident i0">context</a>.<a href="../../../../../context/context.go.html#line-208" class="ident">Background</a>(), <label for="r51" class="ident">d</label>.<a href="#line-123" class="ident">proxyNetwork</a>, <label for="r51" class="ident">d</label>.<a href="#line-124" class="ident">proxyAddress</a>)
+	} <span class="keyword">else</span> {
+		<label for="r60" class="ident">c</label>, <label for="r59" class="ident">err</label> = <a href="../../../../../../pkg/net.html" class="ident i3">net</a>.<a href="../../../../../net/dial.go.html#line-317" class="ident">Dial</a>(<label for="r51" class="ident">d</label>.<a href="#line-123" class="ident">proxyNetwork</a>, <label for="r51" class="ident">d</label>.<a href="#line-124" class="ident">proxyAddress</a>)
+	}
+	<span class="keyword">if</span> <label for="r59" class="ident">err</label> != <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<label for="r61" class="ident">proxy</label>, <label for="r62" class="ident">dst</label>, <label for="r63" class="ident">_</label> := <label for="r51" class="ident">d</label>.<a href="#line-247" class="ident">pathAddrs</a>(<label for="r54" class="ident">address</label>)
+		<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, &amp;<a href="../../../../../../pkg/net.html" class="ident i3">net</a>.<a href="../../../../../net/net.go.html#line-435" class="ident">OpError</a>{<a href="../../../../../net/net.go.html#line-438" class="ident">Op</a>: <label for="r51" class="ident">d</label>.<a href="#line-122" class="ident">cmd</a>.<a href="#line-23" class="ident">String</a>(), <a href="../../../../../net/net.go.html#line-442" class="ident">Net</a>: <label for="r53" class="ident">network</label>, <a href="../../../../../net/net.go.html#line-447" class="ident">Source</a>: <label for="r61" class="ident">proxy</label>, <a href="../../../../../net/net.go.html#line-455" class="ident">Addr</a>: <label for="r62" class="ident">dst</label>, <a href="../../../../../net/net.go.html#line-459" class="ident">Err</a>: <label for="r59" class="ident">err</label>}
+	}
+	<span class="keyword">if</span> <label for="r64" class="ident">_</label>, <label for="r65" class="ident">err</label> := <label for="r51" class="ident">d</label>.<a href="#line-187" class="ident">DialWithConn</a>(<a href="../../../../../../pkg/context.html" class="ident i0">context</a>.<a href="../../../../../context/context.go.html#line-208" class="ident">Background</a>(), <label for="r60" class="ident">c</label>, <label for="r53" class="ident">network</label>, <label for="r54" class="ident">address</label>); <label for="r65" class="ident">err</label> != <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<label for="r60" class="ident">c</label>.<a href="../../../../../net/net.go.html#line-126" class="ident">Close</a>()
+		<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <label for="r65" class="ident">err</label>
+	}
+	<span class="keyword">return</span> <label for="r60" class="ident">c</label>, <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+}
+
+<span class="keyword">func</span> (<label for="r66" class="ident">d</label> *<a href="#line-121" class="ident">Dialer</a>) <label for="r67" class="ident"><a href="../../../../../../use/golang.org/x/net/internal/socks..Dialer.validateTarget*ecec4.html" class="ident">validateTarget</a></label>(<label for="r68" class="ident">network</label>, <label for="r69" class="ident">address</label> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>) <a href="../../../../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<span class="keyword">switch</span> <label for="r68" class="ident">network</label> {
+	<span class="keyword">case</span> <span class="lit-string">"tcp"</span>, <span class="lit-string">"tcp6"</span>, <span class="lit-string">"tcp4"</span>:
+	<span class="keyword">default</span>:
+		<span class="keyword">return</span> <a href="../../../../../../pkg/errors.html" class="ident i1">errors</a>.<a href="../../../../../errors/errors.go.html#line-58" class="ident">New</a>(<span class="lit-string">"network not implemented"</span>)
+	}
+	<span class="keyword">switch</span> <label for="r66" class="ident">d</label>.<a href="#line-122" class="ident">cmd</a> {
+	<span class="keyword">case</span> <a href="#line-73" class="ident">CmdConnect</a>, <a href="#line-74" class="ident">cmdBind</a>:
+	<span class="keyword">default</span>:
+		<span class="keyword">return</span> <a href="../../../../../../pkg/errors.html" class="ident i1">errors</a>.<a href="../../../../../errors/errors.go.html#line-58" class="ident">New</a>(<span class="lit-string">"command not implemented"</span>)
+	}
+	<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+}
+
+<span class="keyword">func</span> (<label for="r70" class="ident">d</label> *<a href="#line-121" class="ident">Dialer</a>) <label for="r71" class="ident"><a href="../../../../../../use/golang.org/x/net/internal/socks..Dialer.pathAddrs*4db95.html" class="ident">pathAddrs</a></label>(<label for="r72" class="ident">address</label> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>) (<label for="r73" class="ident">proxy</label>, <label for="r74" class="ident">dst</label> <a href="../../../../../../pkg/net.html" class="ident i3">net</a>.<a href="../../../../../net/net.go.html#line-105" class="ident">Addr</a>, <label for="r75" class="ident">err</label> <a href="../../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<span class="keyword">for</span> <label for="r76" class="ident">i</label>, <label for="r77" class="ident">s</label> := <span class="keyword">range</span> []<a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>{<label for="r70" class="ident">d</label>.<a href="#line-124" class="ident">proxyAddress</a>, <label for="r72" class="ident">address</label>} {
+		<label for="r78" class="ident">host</label>, <label for="r79" class="ident">port</label>, <label for="r80" class="ident">err</label> := <a href="client.go.html#line-155" class="ident">splitHostPort</a>(<label for="r77" class="ident">s</label>)
+		<span class="keyword">if</span> <label for="r80" class="ident">err</label> != <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <label for="r80" class="ident">err</label>
+		}
+		<label for="r81" class="ident">a</label> := &amp;<a href="#line-85" class="ident">Addr</a>{<a href="#line-88" class="ident">Port</a>: <label for="r79" class="ident">port</label>}
+		<label for="r81" class="ident">a</label>.<a href="#line-87" class="ident">IP</a> = <a href="../../../../../../pkg/net.html" class="ident i3">net</a>.<a href="../../../../../net/ip.go.html#line-678" class="ident">ParseIP</a>(<label for="r78" class="ident">host</label>)
+		<span class="keyword">if</span> <label for="r81" class="ident">a</label>.<a href="#line-87" class="ident">IP</a> == <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<label for="r81" class="ident">a</label>.<a href="#line-86" class="ident">Name</a> = <label for="r78" class="ident">host</label>
+		}
+		<span class="keyword">if</span> <label for="r76" class="ident">i</label> == <span class="lit-number">0</span> {
+			<label for="r73" class="ident">proxy</label> = <label for="r81" class="ident">a</label>
+		} <span class="keyword">else</span> {
+			<label for="r74" class="ident">dst</label> = <label for="r81" class="ident">a</label>
+		}
+	}
+	<span class="keyword">return</span>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> NewDialer returns a new Dialer that dials through the provided</span><span class="comment"> proxy server's network and address.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r82" class="ident"><a href="../../../../../../pkg/golang.org/x/net/internal/socks.html#name-NewDialer" class="ident">NewDialer</a></label>(<label for="r83" class="ident">network</label>, <label for="r84" class="ident">address</label> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>) *<a href="#line-121" class="ident">Dialer</a> {
+	<span class="keyword">return</span> &amp;<a href="#line-121" class="ident">Dialer</a>{<a href="#line-123" class="ident">proxyNetwork</a>: <label for="r83" class="ident">network</label>, <a href="#line-124" class="ident">proxyAddress</a>: <label for="r84" class="ident">address</label>, <a href="#line-122" class="ident">cmd</a>: <a href="#line-73" class="ident">CmdConnect</a>}
+}
+
+<span class="keyword">const</span> (
+	<a href="../../../../../../pkg/golang.org/x/net/internal/socks.html#name-authUsernamePasswordVersion" class="ident">authUsernamePasswordVersion</a> = <span class="lit-number">0x01</span>
+	<a href="../../../../../../pkg/golang.org/x/net/internal/socks.html#name-authStatusSucceeded" class="ident">authStatusSucceeded</a>         = <span class="lit-number">0x00</span>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> UsernamePassword are the credentials for the username/password</span><span class="comment"> authentication method.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../../pkg/golang.org/x/net/internal/socks.html#name-UsernamePassword" class="ident">UsernamePassword</a> <span class="keyword">struct</span> {
+	<a href="../../../../../../use/golang.org/x/net/internal/socks..UsernamePassword.Username.html" class="ident">Username</a> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../../use/golang.org/x/net/internal/socks..UsernamePassword.Password.html" class="ident">Password</a> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Authenticate authenticates a pair of username and password with the</span><span class="comment"> proxy server.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r85" class="ident">up</label> *<a href="#line-280" class="ident">UsernamePassword</a>) <label for="r86" class="ident"><a href="../../../../../../use/golang.org/x/net/internal/socks..UsernamePassword.Authenticate.html" class="ident">Authenticate</a></label>(<label for="r87" class="ident">ctx</label> <a href="../../../../../../pkg/context.html" class="ident i0">context</a>.<a href="../../../../../context/context.go.html#line-62" class="ident">Context</a>, <label for="r88" class="ident">rw</label> <a href="../../../../../../pkg/io.html" class="ident i2">io</a>.<a href="../../../../../io/io.go.html#line-126" class="ident">ReadWriter</a>, <label for="r89" class="ident">auth</label> <a href="#line-35" class="ident">AuthMethod</a>) <a href="../../../../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<span class="keyword">switch</span> <label for="r89" class="ident">auth</label> {
+	<span class="keyword">case</span> <a href="#line-76" class="ident">AuthMethodNotRequired</a>:
+		<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+	<span class="keyword">case</span> <a href="#line-77" class="ident">AuthMethodUsernamePassword</a>:
+		<span class="keyword">if</span> <a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r85" class="ident">up</label>.<a href="#line-281" class="ident">Username</a>) == <span class="lit-number">0</span> || <a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r85" class="ident">up</label>.<a href="#line-281" class="ident">Username</a>) &gt; <span class="lit-number">255</span> || <a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r85" class="ident">up</label>.<a href="#line-282" class="ident">Password</a>) == <span class="lit-number">0</span> || <a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r85" class="ident">up</label>.<a href="#line-282" class="ident">Password</a>) &gt; <span class="lit-number">255</span> {
+			<span class="keyword">return</span> <a href="../../../../../../pkg/errors.html" class="ident i1">errors</a>.<a href="../../../../../errors/errors.go.html#line-58" class="ident">New</a>(<span class="lit-string">"invalid username/password"</span>)
+		}
+		<label for="r90" class="ident">b</label> := []<a href="../../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>{<a href="#line-274" class="ident">authUsernamePasswordVersion</a>}
+		<label for="r90" class="ident">b</label> = <a href="../../../../../../pkg/builtin.html#name-append" class="ident">append</a>(<label for="r90" class="ident">b</label>, <a href="../../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>(<a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r85" class="ident">up</label>.<a href="#line-281" class="ident">Username</a>)))
+		<label for="r90" class="ident">b</label> = <a href="../../../../../../pkg/builtin.html#name-append" class="ident">append</a>(<label for="r90" class="ident">b</label>, <label for="r85" class="ident">up</label>.<a href="#line-281" class="ident">Username</a>...)
+		<label for="r90" class="ident">b</label> = <a href="../../../../../../pkg/builtin.html#name-append" class="ident">append</a>(<label for="r90" class="ident">b</label>, <a href="../../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>(<a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r85" class="ident">up</label>.<a href="#line-282" class="ident">Password</a>)))
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> TODO(mikio): handle IO deadlines and cancelation if</span><span class="comment">		 necessary</span></div>
+<div class="code"><pre><code>		<span class="keyword">if</span> <label for="r91" class="ident">_</label>, <label for="r92" class="ident">err</label> := <label for="r88" class="ident">rw</label>.<a href="../../../../../io/io.go.html#line-97" class="ident">Write</a>(<label for="r90" class="ident">b</label>); <label for="r92" class="ident">err</label> != <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<span class="keyword">return</span> <label for="r92" class="ident">err</label>
+		}
+		<span class="keyword">if</span> <label for="r93" class="ident">_</label>, <label for="r94" class="ident">err</label> := <a href="../../../../../../pkg/io.html" class="ident i2">io</a>.<a href="../../../../../io/io.go.html#line-346" class="ident">ReadFull</a>(<label for="r88" class="ident">rw</label>, <label for="r90" class="ident">b</label>[:<span class="lit-number">2</span>]); <label for="r94" class="ident">err</label> != <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<span class="keyword">return</span> <label for="r94" class="ident">err</label>
+		}
+		<span class="keyword">if</span> <label for="r90" class="ident">b</label>[<span class="lit-number">0</span>] != <a href="#line-274" class="ident">authUsernamePasswordVersion</a> {
+			<span class="keyword">return</span> <a href="../../../../../../pkg/errors.html" class="ident i1">errors</a>.<a href="../../../../../errors/errors.go.html#line-58" class="ident">New</a>(<span class="lit-string">"invalid username/password version"</span>)
+		}
+		<span class="keyword">if</span> <label for="r90" class="ident">b</label>[<span class="lit-number">1</span>] != <a href="#line-275" class="ident">authStatusSucceeded</a> {
+			<span class="keyword">return</span> <a href="../../../../../../pkg/errors.html" class="ident i1">errors</a>.<a href="../../../../../errors/errors.go.html#line-58" class="ident">New</a>(<span class="lit-string">"username/password authentication failed"</span>)
+		}
+		<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+	}
+	<span class="keyword">return</span> <a href="../../../../../../pkg/errors.html" class="ident i1">errors</a>.<a href="../../../../../errors/errors.go.html#line-58" class="ident">New</a>(<span class="lit-string">"unsupported authentication method "</span> + <a href="../../../../../../pkg/strconv.html" class="ident i4">strconv</a>.<a href="../../../../../strconv/itoa.go.html#line-34" class="ident">Itoa</a>(<a href="../../../../../../pkg/builtin.html#name-int" class="ident">int</a>(<label for="r89" class="ident">auth</label>)))
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

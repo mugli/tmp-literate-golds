@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: utf16.go in package unicode/utf16</title>
+<link href="../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	utf16.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../pkg/unicode/utf16.html">unicode/utf16</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16],
+input[id=r17]:checked ~pre label[for=r17],
+input[id=r18]:checked ~pre label[for=r18],
+input[id=r19]:checked ~pre label[for=r19],
+input[id=r20]:checked ~pre label[for=r20],
+input[id=r21]:checked ~pre label[for=r21],
+input[id=r22]:checked ~pre label[for=r22],
+input[id=r23]:checked ~pre label[for=r23],
+input[id=r24]:checked ~pre label[for=r24]
+{background: #226; color: #ff8;}
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="r17" type="radio" name="g"/>
+<input id="r18" type="radio" name="g"/>
+<input id="r19" type="radio" name="g"/>
+<input id="r20" type="radio" name="g"/>
+<input id="r21" type="radio" name="g"/>
+<input id="r22" type="radio" name="g"/>
+<input id="r23" type="radio" name="g"/>
+<input id="r24" type="radio" name="g"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2010 The Go Authors. All rights reserved.</span><span class="comment"> Use of this source code is governed by a BSD-style</span><span class="comment"> license that can be found in the LICENSE file.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Package utf16 implements encoding and decoding of UTF-16 sequences.</span></div>
+<div class="code"><pre><code><span class="keyword">package</span> utf16
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> The conditions replacementChar==unicode.ReplacementChar and</span><span class="comment"> maxRune==unicode.MaxRune are verified in the tests.</span><span class="comment"> Defining them locally avoids this package depending on package unicode.</span></div>
+<div class="code"><pre><code>
+<span class="keyword">const</span> (
+	<a href="../../../pkg/unicode/utf16.html#name-replacementChar" class="ident">replacementChar</a> = <span class="lit-number">'\uFFFD'</span>     <span class="comment">// Unicode replacement character</span>
+	<a href="../../../pkg/unicode/utf16.html#name-maxRune" class="ident">maxRune</a>         = <span class="lit-number">'\U0010FFFF'</span> <span class="comment">// Maximum valid Unicode code point.</span>
+)
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> 0xd800-0xdc00 encodes the high 10 bits of a pair.</span><span class="comment">	 0xdc00-0xe000 encodes the low 10 bits of a pair.</span><span class="comment">	 the value is those 20 bits plus 0x10000.</span></div>
+<div class="code"><pre><code>	<a href="../../../pkg/unicode/utf16.html#name-surr1" class="ident">surr1</a> = <span class="lit-number">0xd800</span>
+	<a href="../../../pkg/unicode/utf16.html#name-surr2" class="ident">surr2</a> = <span class="lit-number">0xdc00</span>
+	<a href="../../../pkg/unicode/utf16.html#name-surr3" class="ident">surr3</a> = <span class="lit-number">0xe000</span>
+
+	<a href="../../../pkg/unicode/utf16.html#name-surrSelf" class="ident">surrSelf</a> = <span class="lit-number">0x10000</span>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> IsSurrogate reports whether the specified Unicode code point</span><span class="comment"> can appear in a surrogate pair.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r0" class="ident"><a href="../../../pkg/unicode/utf16.html#name-IsSurrogate" class="ident">IsSurrogate</a></label>(<label for="r1" class="ident">r</label> <a href="../../../pkg/builtin.html#name-rune" class="ident">rune</a>) <a href="../../../pkg/builtin.html#name-bool" class="ident">bool</a> {
+	<span class="keyword">return</span> <a href="#line-21" class="ident">surr1</a> &lt;= <label for="r1" class="ident">r</label> &amp;&amp; <label for="r1" class="ident">r</label> &lt; <a href="#line-23" class="ident">surr3</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> DecodeRune returns the UTF-16 decoding of a surrogate pair.</span><span class="comment"> If the pair is not a valid UTF-16 surrogate pair, DecodeRune returns</span><span class="comment"> the Unicode replacement code point U+FFFD.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r2" class="ident"><a href="../../../pkg/unicode/utf16.html#name-DecodeRune" class="ident">DecodeRune</a></label>(<label for="r3" class="ident">r1</label>, <label for="r4" class="ident">r2</label> <a href="../../../pkg/builtin.html#name-rune" class="ident">rune</a>) <a href="../../../pkg/builtin.html#name-rune" class="ident">rune</a> {
+	<span class="keyword">if</span> <a href="#line-21" class="ident">surr1</a> &lt;= <label for="r3" class="ident">r1</label> &amp;&amp; <label for="r3" class="ident">r1</label> &lt; <a href="#line-22" class="ident">surr2</a> &amp;&amp; <a href="#line-22" class="ident">surr2</a> &lt;= <label for="r4" class="ident">r2</label> &amp;&amp; <label for="r4" class="ident">r2</label> &lt; <a href="#line-23" class="ident">surr3</a> {
+		<span class="keyword">return</span> (<label for="r3" class="ident">r1</label>-<a href="#line-21" class="ident">surr1</a>)&lt;&lt;<span class="lit-number">10</span> | (<label for="r4" class="ident">r2</label> - <a href="#line-22" class="ident">surr2</a>) + <a href="#line-25" class="ident">surrSelf</a>
+	}
+	<span class="keyword">return</span> <a href="#line-13" class="ident">replacementChar</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> EncodeRune returns the UTF-16 surrogate pair r1, r2 for the given rune.</span><span class="comment"> If the rune is not a valid Unicode code point or does not need encoding,</span><span class="comment"> EncodeRune returns U+FFFD, U+FFFD.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r5" class="ident"><a href="../../../pkg/unicode/utf16.html#name-EncodeRune" class="ident">EncodeRune</a></label>(<label for="r6" class="ident">r</label> <a href="../../../pkg/builtin.html#name-rune" class="ident">rune</a>) (<label for="r7" class="ident">r1</label>, <label for="r8" class="ident">r2</label> <a href="../../../pkg/builtin.html#name-rune" class="ident">rune</a>) {
+	<span class="keyword">if</span> <label for="r6" class="ident">r</label> &lt; <a href="#line-25" class="ident">surrSelf</a> || <label for="r6" class="ident">r</label> &gt; <a href="#line-14" class="ident">maxRune</a> {
+		<span class="keyword">return</span> <a href="#line-13" class="ident">replacementChar</a>, <a href="#line-13" class="ident">replacementChar</a>
+	}
+	<label for="r6" class="ident">r</label> -= <a href="#line-25" class="ident">surrSelf</a>
+	<span class="keyword">return</span> <a href="#line-21" class="ident">surr1</a> + (<label for="r6" class="ident">r</label>&gt;&gt;<span class="lit-number">10</span>)&amp;<span class="lit-number">0x3ff</span>, <a href="#line-22" class="ident">surr2</a> + <label for="r6" class="ident">r</label>&amp;<span class="lit-number">0x3ff</span>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Encode returns the UTF-16 encoding of the Unicode code point sequence s.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r9" class="ident"><a href="../../../pkg/unicode/utf16.html#name-Encode" class="ident">Encode</a></label>(<label for="r10" class="ident">s</label> []<a href="../../../pkg/builtin.html#name-rune" class="ident">rune</a>) []<a href="../../../pkg/builtin.html#name-uint16" class="ident">uint16</a> {
+	<label for="r11" class="ident">n</label> := <a href="../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r10" class="ident">s</label>)
+	<span class="keyword">for</span> <label for="r12" class="ident">_</label>, <label for="r13" class="ident">v</label> := <span class="keyword">range</span> <label for="r10" class="ident">s</label> {
+		<span class="keyword">if</span> <label for="r13" class="ident">v</label> &gt;= <a href="#line-25" class="ident">surrSelf</a> {
+			<label for="r11" class="ident">n</label>++
+		}
+	}
+
+	<label for="r14" class="ident">a</label> := <a href="../../../pkg/builtin.html#name-make" class="ident">make</a>([]<a href="../../../pkg/builtin.html#name-uint16" class="ident">uint16</a>, <label for="r11" class="ident">n</label>)
+	<label for="r11" class="ident">n</label> = <span class="lit-number">0</span>
+	<span class="keyword">for</span> <label for="r15" class="ident">_</label>, <label for="r16" class="ident">v</label> := <span class="keyword">range</span> <label for="r10" class="ident">s</label> {
+		<span class="keyword">switch</span> {
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> normal rune</span></div>
+<div class="code"><pre><code>			<label for="r14" class="ident">a</label>[<label for="r11" class="ident">n</label>] = <a href="../../../pkg/builtin.html#name-uint16" class="ident">uint16</a>(<label for="r16" class="ident">v</label>)
+			<label for="r11" class="ident">n</label>++
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> needs surrogate sequence</span></div>
+<div class="code"><pre><code>			<label for="r17" class="ident">r1</label>, <label for="r18" class="ident">r2</label> := <a href="#line-47" class="ident">EncodeRune</a>(<label for="r16" class="ident">v</label>)
+			<label for="r14" class="ident">a</label>[<label for="r11" class="ident">n</label>] = <a href="../../../pkg/builtin.html#name-uint16" class="ident">uint16</a>(<label for="r17" class="ident">r1</label>)
+			<label for="r14" class="ident">a</label>[<label for="r11" class="ident">n</label>+<span class="lit-number">1</span>] = <a href="../../../pkg/builtin.html#name-uint16" class="ident">uint16</a>(<label for="r18" class="ident">r2</label>)
+			<label for="r11" class="ident">n</label> += <span class="lit-number">2</span>
+		<span class="keyword">default</span>:
+			<label for="r14" class="ident">a</label>[<label for="r11" class="ident">n</label>] = <a href="../../../pkg/builtin.html#name-uint16" class="ident">uint16</a>(<a href="#line-13" class="ident">replacementChar</a>)
+			<label for="r11" class="ident">n</label>++
+		}
+	}
+	<span class="keyword">return</span> <label for="r14" class="ident">a</label>[:<label for="r11" class="ident">n</label>]
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Decode returns the Unicode code point sequence represented</span><span class="comment"> by the UTF-16 encoding s.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r19" class="ident"><a href="../../../pkg/unicode/utf16.html#name-Decode" class="ident">Decode</a></label>(<label for="r20" class="ident">s</label> []<a href="../../../pkg/builtin.html#name-uint16" class="ident">uint16</a>) []<a href="../../../pkg/builtin.html#name-rune" class="ident">rune</a> {
+	<label for="r21" class="ident">a</label> := <a href="../../../pkg/builtin.html#name-make" class="ident">make</a>([]<a href="../../../pkg/builtin.html#name-rune" class="ident">rune</a>, <a href="../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r20" class="ident">s</label>))
+	<label for="r22" class="ident">n</label> := <span class="lit-number">0</span>
+	<span class="keyword">for</span> <label for="r23" class="ident">i</label> := <span class="lit-number">0</span>; <label for="r23" class="ident">i</label> &lt; <a href="../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r20" class="ident">s</label>); <label for="r23" class="ident">i</label>++ {
+		<span class="keyword">switch</span> <label for="r24" class="ident">r</label> := <label for="r20" class="ident">s</label>[<label for="r23" class="ident">i</label>]; {
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> normal rune</span></div>
+<div class="code"><pre><code>			<label for="r21" class="ident">a</label>[<label for="r22" class="ident">n</label>] = <a href="../../../pkg/builtin.html#name-rune" class="ident">rune</a>(<label for="r24" class="ident">r</label>)
+		<span class="keyword">case</span> <a href="#line-21" class="ident">surr1</a> &lt;= <label for="r24" class="ident">r</label> &amp;&amp; <label for="r24" class="ident">r</label> &lt; <a href="#line-22" class="ident">surr2</a> &amp;&amp; <label for="r23" class="ident">i</label>+<span class="lit-number">1</span> &lt; <a href="../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r20" class="ident">s</label>) &amp;&amp;
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> valid surrogate sequence</span></div>
+<div class="code"><pre><code>			<label for="r21" class="ident">a</label>[<label for="r22" class="ident">n</label>] = <a href="#line-37" class="ident">DecodeRune</a>(<a href="../../../pkg/builtin.html#name-rune" class="ident">rune</a>(<label for="r24" class="ident">r</label>), <a href="../../../pkg/builtin.html#name-rune" class="ident">rune</a>(<label for="r20" class="ident">s</label>[<label for="r23" class="ident">i</label>+<span class="lit-number">1</span>]))
+			<label for="r23" class="ident">i</label>++
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> invalid surrogate sequence</span></div>
+<div class="code"><pre><code>			<label for="r21" class="ident">a</label>[<label for="r22" class="ident">n</label>] = <a href="#line-13" class="ident">replacementChar</a>
+		}
+		<label for="r22" class="ident">n</label>++
+	}
+	<span class="keyword">return</span> <label for="r21" class="ident">a</label>[:<label for="r22" class="ident">n</label>]
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

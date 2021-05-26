@@ -1,0 +1,1046 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: globals.go in package github.com/evanw/esbuild/internal/config</title>
+<link href="../../../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	globals.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../../../pkg/github.com/evanw/esbuild/internal/config.html">github.com/evanw/esbuild/internal/config</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16],
+input[id=r17]:checked ~pre label[for=r17],
+input[id=r18]:checked ~pre label[for=r18],
+input[id=r19]:checked ~pre label[for=r19],
+input[id=r20]:checked ~pre label[for=r20],
+input[id=r21]:checked ~pre label[for=r21],
+input[id=r22]:checked ~pre label[for=r22]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1,
+input[id=i2]:checked ~pre .i2,
+input[id=i3]:checked ~pre .i3,
+input[id=i4]:checked ~pre .i4
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="r17" type="radio" name="g"/>
+<input id="r18" type="radio" name="g"/>
+<input id="r19" type="radio" name="g"/>
+<input id="r20" type="radio" name="g"/>
+<input id="r21" type="radio" name="g"/>
+<input id="r22" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<input id="i2" type="radio" name="i"/>
+<input id="i3" type="radio" name="i"/>
+<input id="i4" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+</div>
+<div class="code"><pre><code><span class="keyword">package</span> config
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"math"</span></label>
+	<label for="i1"><span class="lit-string i1">"strings"</span></label>
+	<label for="i2"><span class="lit-string i2">"sync"</span></label>
+
+	<label for="i3"><span class="lit-string i3">"github.com/evanw/esbuild/internal/js_ast"</span></label>
+	<label for="i4"><span class="lit-string i4">"github.com/evanw/esbuild/internal/logger"</span></label>
+)
+
+<span class="keyword">var</span> <a href="../../../../../../pkg/github.com/evanw/esbuild/internal/config.html#name-processedGlobalsMutex" class="ident">processedGlobalsMutex</a> <a href="../../../../../../pkg/sync.html" class="ident i2">sync</a>.<a href="../../../../../sync/mutex.go.html#line-25" class="ident">Mutex</a>
+<span class="keyword">var</span> <a href="../../../../../../pkg/github.com/evanw/esbuild/internal/config.html#name-processedGlobals" class="ident">processedGlobals</a> *<a href="#line-855" class="ident">ProcessedDefines</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> If something is in this list, then a direct identifier expression or property</span><span class="comment"> access chain matching this will be assumed to have no side effects and will</span><span class="comment"> be removed.</span><span class="comment"></span><span class="comment"> This also means code is allowed to be reordered past things in this list. For</span><span class="comment"> example, if "console.log" is in this list, permitting reordering allows for</span><span class="comment"> "if (a) console.log(b); else console.log(c)" to be reordered and transformed</span><span class="comment"> into "console.log(a ? b : c)". Notice that "a" and "console.log" are in a</span><span class="comment"> different order, which can only happen if evaluating the "console.log"</span><span class="comment"> property access can be assumed to not change the value of "a".</span><span class="comment"></span><span class="comment"> Note that membership in this list says nothing about whether calling any of</span><span class="comment"> these functions has any side effects. It only says something about</span><span class="comment"> referencing these function without calling them.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> These global identifiers should exist in all JavaScript environments. This</span><span class="comment">	 deliberately omits "NaN", "Infinity", and "undefined" because these are</span><span class="comment">	 treated as automatically-inlined constants instead of identifiers.</span></div>
+<div class="code"><pre><code>	{<span class="lit-string">"Array"</span>},
+	{<span class="lit-string">"Boolean"</span>},
+	{<span class="lit-string">"Function"</span>},
+	{<span class="lit-string">"Math"</span>},
+	{<span class="lit-string">"Number"</span>},
+	{<span class="lit-string">"Object"</span>},
+	{<span class="lit-string">"RegExp"</span>},
+	{<span class="lit-string">"String"</span>},
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Object: Static methods</span><span class="comment">	 https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object#Static_methods</span></div>
+<div class="code"><pre><code>	{<span class="lit-string">"Object"</span>, <span class="lit-string">"assign"</span>},
+	{<span class="lit-string">"Object"</span>, <span class="lit-string">"create"</span>},
+	{<span class="lit-string">"Object"</span>, <span class="lit-string">"defineProperties"</span>},
+	{<span class="lit-string">"Object"</span>, <span class="lit-string">"defineProperty"</span>},
+	{<span class="lit-string">"Object"</span>, <span class="lit-string">"entries"</span>},
+	{<span class="lit-string">"Object"</span>, <span class="lit-string">"freeze"</span>},
+	{<span class="lit-string">"Object"</span>, <span class="lit-string">"fromEntries"</span>},
+	{<span class="lit-string">"Object"</span>, <span class="lit-string">"getOwnPropertyDescriptor"</span>},
+	{<span class="lit-string">"Object"</span>, <span class="lit-string">"getOwnPropertyDescriptors"</span>},
+	{<span class="lit-string">"Object"</span>, <span class="lit-string">"getOwnPropertyNames"</span>},
+	{<span class="lit-string">"Object"</span>, <span class="lit-string">"getOwnPropertySymbols"</span>},
+	{<span class="lit-string">"Object"</span>, <span class="lit-string">"getPrototypeOf"</span>},
+	{<span class="lit-string">"Object"</span>, <span class="lit-string">"is"</span>},
+	{<span class="lit-string">"Object"</span>, <span class="lit-string">"isExtensible"</span>},
+	{<span class="lit-string">"Object"</span>, <span class="lit-string">"isFrozen"</span>},
+	{<span class="lit-string">"Object"</span>, <span class="lit-string">"isSealed"</span>},
+	{<span class="lit-string">"Object"</span>, <span class="lit-string">"keys"</span>},
+	{<span class="lit-string">"Object"</span>, <span class="lit-string">"preventExtensions"</span>},
+	{<span class="lit-string">"Object"</span>, <span class="lit-string">"seal"</span>},
+	{<span class="lit-string">"Object"</span>, <span class="lit-string">"setPrototypeOf"</span>},
+	{<span class="lit-string">"Object"</span>, <span class="lit-string">"values"</span>},
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Object: Instance methods</span><span class="comment">	 https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object#Instance_methods</span></div>
+<div class="code"><pre><code>	{<span class="lit-string">"Object"</span>, <span class="lit-string">"prototype"</span>, <span class="lit-string">"__defineGetter__"</span>},
+	{<span class="lit-string">"Object"</span>, <span class="lit-string">"prototype"</span>, <span class="lit-string">"__defineSetter__"</span>},
+	{<span class="lit-string">"Object"</span>, <span class="lit-string">"prototype"</span>, <span class="lit-string">"__lookupGetter__"</span>},
+	{<span class="lit-string">"Object"</span>, <span class="lit-string">"prototype"</span>, <span class="lit-string">"__lookupSetter__"</span>},
+	{<span class="lit-string">"Object"</span>, <span class="lit-string">"prototype"</span>, <span class="lit-string">"hasOwnProperty"</span>},
+	{<span class="lit-string">"Object"</span>, <span class="lit-string">"prototype"</span>, <span class="lit-string">"isPrototypeOf"</span>},
+	{<span class="lit-string">"Object"</span>, <span class="lit-string">"prototype"</span>, <span class="lit-string">"propertyIsEnumerable"</span>},
+	{<span class="lit-string">"Object"</span>, <span class="lit-string">"prototype"</span>, <span class="lit-string">"toLocaleString"</span>},
+	{<span class="lit-string">"Object"</span>, <span class="lit-string">"prototype"</span>, <span class="lit-string">"toString"</span>},
+	{<span class="lit-string">"Object"</span>, <span class="lit-string">"prototype"</span>, <span class="lit-string">"unwatch"</span>},
+	{<span class="lit-string">"Object"</span>, <span class="lit-string">"prototype"</span>, <span class="lit-string">"valueOf"</span>},
+	{<span class="lit-string">"Object"</span>, <span class="lit-string">"prototype"</span>, <span class="lit-string">"watch"</span>},
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Math: Static properties</span><span class="comment">	 https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math#Static_properties</span></div>
+<div class="code"><pre><code>	{<span class="lit-string">"Math"</span>, <span class="lit-string">"E"</span>},
+	{<span class="lit-string">"Math"</span>, <span class="lit-string">"LN10"</span>},
+	{<span class="lit-string">"Math"</span>, <span class="lit-string">"LN2"</span>},
+	{<span class="lit-string">"Math"</span>, <span class="lit-string">"LOG10E"</span>},
+	{<span class="lit-string">"Math"</span>, <span class="lit-string">"LOG2E"</span>},
+	{<span class="lit-string">"Math"</span>, <span class="lit-string">"PI"</span>},
+	{<span class="lit-string">"Math"</span>, <span class="lit-string">"SQRT1_2"</span>},
+	{<span class="lit-string">"Math"</span>, <span class="lit-string">"SQRT2"</span>},
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Math: Static methods</span><span class="comment">	 https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math#Static_methods</span></div>
+<div class="code"><pre><code>	{<span class="lit-string">"Math"</span>, <span class="lit-string">"abs"</span>},
+	{<span class="lit-string">"Math"</span>, <span class="lit-string">"acos"</span>},
+	{<span class="lit-string">"Math"</span>, <span class="lit-string">"acosh"</span>},
+	{<span class="lit-string">"Math"</span>, <span class="lit-string">"asin"</span>},
+	{<span class="lit-string">"Math"</span>, <span class="lit-string">"asinh"</span>},
+	{<span class="lit-string">"Math"</span>, <span class="lit-string">"atan"</span>},
+	{<span class="lit-string">"Math"</span>, <span class="lit-string">"atan2"</span>},
+	{<span class="lit-string">"Math"</span>, <span class="lit-string">"atanh"</span>},
+	{<span class="lit-string">"Math"</span>, <span class="lit-string">"cbrt"</span>},
+	{<span class="lit-string">"Math"</span>, <span class="lit-string">"ceil"</span>},
+	{<span class="lit-string">"Math"</span>, <span class="lit-string">"clz32"</span>},
+	{<span class="lit-string">"Math"</span>, <span class="lit-string">"cos"</span>},
+	{<span class="lit-string">"Math"</span>, <span class="lit-string">"cosh"</span>},
+	{<span class="lit-string">"Math"</span>, <span class="lit-string">"exp"</span>},
+	{<span class="lit-string">"Math"</span>, <span class="lit-string">"expm1"</span>},
+	{<span class="lit-string">"Math"</span>, <span class="lit-string">"floor"</span>},
+	{<span class="lit-string">"Math"</span>, <span class="lit-string">"fround"</span>},
+	{<span class="lit-string">"Math"</span>, <span class="lit-string">"hypot"</span>},
+	{<span class="lit-string">"Math"</span>, <span class="lit-string">"imul"</span>},
+	{<span class="lit-string">"Math"</span>, <span class="lit-string">"log"</span>},
+	{<span class="lit-string">"Math"</span>, <span class="lit-string">"log10"</span>},
+	{<span class="lit-string">"Math"</span>, <span class="lit-string">"log1p"</span>},
+	{<span class="lit-string">"Math"</span>, <span class="lit-string">"log2"</span>},
+	{<span class="lit-string">"Math"</span>, <span class="lit-string">"max"</span>},
+	{<span class="lit-string">"Math"</span>, <span class="lit-string">"min"</span>},
+	{<span class="lit-string">"Math"</span>, <span class="lit-string">"pow"</span>},
+	{<span class="lit-string">"Math"</span>, <span class="lit-string">"random"</span>},
+	{<span class="lit-string">"Math"</span>, <span class="lit-string">"round"</span>},
+	{<span class="lit-string">"Math"</span>, <span class="lit-string">"sign"</span>},
+	{<span class="lit-string">"Math"</span>, <span class="lit-string">"sin"</span>},
+	{<span class="lit-string">"Math"</span>, <span class="lit-string">"sinh"</span>},
+	{<span class="lit-string">"Math"</span>, <span class="lit-string">"sqrt"</span>},
+	{<span class="lit-string">"Math"</span>, <span class="lit-string">"tan"</span>},
+	{<span class="lit-string">"Math"</span>, <span class="lit-string">"tanh"</span>},
+	{<span class="lit-string">"Math"</span>, <span class="lit-string">"trunc"</span>},
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Other globals present in both the browser and node (except "eval" because</span><span class="comment">	 it has special behavior)</span></div>
+<div class="code"><pre><code>	{<span class="lit-string">"AbortController"</span>},
+	{<span class="lit-string">"AbortSignal"</span>},
+	{<span class="lit-string">"AggregateError"</span>},
+	{<span class="lit-string">"ArrayBuffer"</span>},
+	{<span class="lit-string">"BigInt"</span>},
+	{<span class="lit-string">"DataView"</span>},
+	{<span class="lit-string">"Date"</span>},
+	{<span class="lit-string">"Error"</span>},
+	{<span class="lit-string">"EvalError"</span>},
+	{<span class="lit-string">"Event"</span>},
+	{<span class="lit-string">"EventTarget"</span>},
+	{<span class="lit-string">"Float32Array"</span>},
+	{<span class="lit-string">"Float64Array"</span>},
+	{<span class="lit-string">"Int16Array"</span>},
+	{<span class="lit-string">"Int32Array"</span>},
+	{<span class="lit-string">"Int8Array"</span>},
+	{<span class="lit-string">"Intl"</span>},
+	{<span class="lit-string">"JSON"</span>},
+	{<span class="lit-string">"Map"</span>},
+	{<span class="lit-string">"MessageChannel"</span>},
+	{<span class="lit-string">"MessageEvent"</span>},
+	{<span class="lit-string">"MessagePort"</span>},
+	{<span class="lit-string">"Promise"</span>},
+	{<span class="lit-string">"Proxy"</span>},
+	{<span class="lit-string">"RangeError"</span>},
+	{<span class="lit-string">"ReferenceError"</span>},
+	{<span class="lit-string">"Reflect"</span>},
+	{<span class="lit-string">"Set"</span>},
+	{<span class="lit-string">"Symbol"</span>},
+	{<span class="lit-string">"SyntaxError"</span>},
+	{<span class="lit-string">"TextDecoder"</span>},
+	{<span class="lit-string">"TextEncoder"</span>},
+	{<span class="lit-string">"TypeError"</span>},
+	{<span class="lit-string">"URIError"</span>},
+	{<span class="lit-string">"URL"</span>},
+	{<span class="lit-string">"URLSearchParams"</span>},
+	{<span class="lit-string">"Uint16Array"</span>},
+	{<span class="lit-string">"Uint32Array"</span>},
+	{<span class="lit-string">"Uint8Array"</span>},
+	{<span class="lit-string">"Uint8ClampedArray"</span>},
+	{<span class="lit-string">"WeakMap"</span>},
+	{<span class="lit-string">"WeakSet"</span>},
+	{<span class="lit-string">"WebAssembly"</span>},
+	{<span class="lit-string">"clearInterval"</span>},
+	{<span class="lit-string">"clearTimeout"</span>},
+	{<span class="lit-string">"console"</span>},
+	{<span class="lit-string">"decodeURI"</span>},
+	{<span class="lit-string">"decodeURIComponent"</span>},
+	{<span class="lit-string">"encodeURI"</span>},
+	{<span class="lit-string">"encodeURIComponent"</span>},
+	{<span class="lit-string">"escape"</span>},
+	{<span class="lit-string">"globalThis"</span>},
+	{<span class="lit-string">"isFinite"</span>},
+	{<span class="lit-string">"isNaN"</span>},
+	{<span class="lit-string">"parseFloat"</span>},
+	{<span class="lit-string">"parseInt"</span>},
+	{<span class="lit-string">"queueMicrotask"</span>},
+	{<span class="lit-string">"setInterval"</span>},
+	{<span class="lit-string">"setTimeout"</span>},
+	{<span class="lit-string">"unescape"</span>},
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Console method references are assumed to have no side effects</span><span class="comment">	 https://developer.mozilla.org/en-US/docs/Web/API/console</span></div>
+<div class="code"><pre><code>	{<span class="lit-string">"console"</span>, <span class="lit-string">"assert"</span>},
+	{<span class="lit-string">"console"</span>, <span class="lit-string">"clear"</span>},
+	{<span class="lit-string">"console"</span>, <span class="lit-string">"count"</span>},
+	{<span class="lit-string">"console"</span>, <span class="lit-string">"countReset"</span>},
+	{<span class="lit-string">"console"</span>, <span class="lit-string">"debug"</span>},
+	{<span class="lit-string">"console"</span>, <span class="lit-string">"dir"</span>},
+	{<span class="lit-string">"console"</span>, <span class="lit-string">"dirxml"</span>},
+	{<span class="lit-string">"console"</span>, <span class="lit-string">"error"</span>},
+	{<span class="lit-string">"console"</span>, <span class="lit-string">"group"</span>},
+	{<span class="lit-string">"console"</span>, <span class="lit-string">"groupCollapsed"</span>},
+	{<span class="lit-string">"console"</span>, <span class="lit-string">"groupEnd"</span>},
+	{<span class="lit-string">"console"</span>, <span class="lit-string">"info"</span>},
+	{<span class="lit-string">"console"</span>, <span class="lit-string">"log"</span>},
+	{<span class="lit-string">"console"</span>, <span class="lit-string">"table"</span>},
+	{<span class="lit-string">"console"</span>, <span class="lit-string">"time"</span>},
+	{<span class="lit-string">"console"</span>, <span class="lit-string">"timeEnd"</span>},
+	{<span class="lit-string">"console"</span>, <span class="lit-string">"timeLog"</span>},
+	{<span class="lit-string">"console"</span>, <span class="lit-string">"trace"</span>},
+	{<span class="lit-string">"console"</span>, <span class="lit-string">"warn"</span>},
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> CSSOM APIs</span></div>
+<div class="code"><pre><code>	{<span class="lit-string">"CSSAnimation"</span>},
+	{<span class="lit-string">"CSSFontFaceRule"</span>},
+	{<span class="lit-string">"CSSImportRule"</span>},
+	{<span class="lit-string">"CSSKeyframeRule"</span>},
+	{<span class="lit-string">"CSSKeyframesRule"</span>},
+	{<span class="lit-string">"CSSMediaRule"</span>},
+	{<span class="lit-string">"CSSNamespaceRule"</span>},
+	{<span class="lit-string">"CSSPageRule"</span>},
+	{<span class="lit-string">"CSSRule"</span>},
+	{<span class="lit-string">"CSSRuleList"</span>},
+	{<span class="lit-string">"CSSStyleDeclaration"</span>},
+	{<span class="lit-string">"CSSStyleRule"</span>},
+	{<span class="lit-string">"CSSStyleSheet"</span>},
+	{<span class="lit-string">"CSSSupportsRule"</span>},
+	{<span class="lit-string">"CSSTransition"</span>},
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> SVG DOM</span></div>
+<div class="code"><pre><code>	{<span class="lit-string">"SVGAElement"</span>},
+	{<span class="lit-string">"SVGAngle"</span>},
+	{<span class="lit-string">"SVGAnimateElement"</span>},
+	{<span class="lit-string">"SVGAnimateMotionElement"</span>},
+	{<span class="lit-string">"SVGAnimateTransformElement"</span>},
+	{<span class="lit-string">"SVGAnimatedAngle"</span>},
+	{<span class="lit-string">"SVGAnimatedBoolean"</span>},
+	{<span class="lit-string">"SVGAnimatedEnumeration"</span>},
+	{<span class="lit-string">"SVGAnimatedInteger"</span>},
+	{<span class="lit-string">"SVGAnimatedLength"</span>},
+	{<span class="lit-string">"SVGAnimatedLengthList"</span>},
+	{<span class="lit-string">"SVGAnimatedNumber"</span>},
+	{<span class="lit-string">"SVGAnimatedNumberList"</span>},
+	{<span class="lit-string">"SVGAnimatedPreserveAspectRatio"</span>},
+	{<span class="lit-string">"SVGAnimatedRect"</span>},
+	{<span class="lit-string">"SVGAnimatedString"</span>},
+	{<span class="lit-string">"SVGAnimatedTransformList"</span>},
+	{<span class="lit-string">"SVGAnimationElement"</span>},
+	{<span class="lit-string">"SVGCircleElement"</span>},
+	{<span class="lit-string">"SVGClipPathElement"</span>},
+	{<span class="lit-string">"SVGComponentTransferFunctionElement"</span>},
+	{<span class="lit-string">"SVGDefsElement"</span>},
+	{<span class="lit-string">"SVGDescElement"</span>},
+	{<span class="lit-string">"SVGElement"</span>},
+	{<span class="lit-string">"SVGEllipseElement"</span>},
+	{<span class="lit-string">"SVGFEBlendElement"</span>},
+	{<span class="lit-string">"SVGFEColorMatrixElement"</span>},
+	{<span class="lit-string">"SVGFEComponentTransferElement"</span>},
+	{<span class="lit-string">"SVGFECompositeElement"</span>},
+	{<span class="lit-string">"SVGFEConvolveMatrixElement"</span>},
+	{<span class="lit-string">"SVGFEDiffuseLightingElement"</span>},
+	{<span class="lit-string">"SVGFEDisplacementMapElement"</span>},
+	{<span class="lit-string">"SVGFEDistantLightElement"</span>},
+	{<span class="lit-string">"SVGFEDropShadowElement"</span>},
+	{<span class="lit-string">"SVGFEFloodElement"</span>},
+	{<span class="lit-string">"SVGFEFuncAElement"</span>},
+	{<span class="lit-string">"SVGFEFuncBElement"</span>},
+	{<span class="lit-string">"SVGFEFuncGElement"</span>},
+	{<span class="lit-string">"SVGFEFuncRElement"</span>},
+	{<span class="lit-string">"SVGFEGaussianBlurElement"</span>},
+	{<span class="lit-string">"SVGFEImageElement"</span>},
+	{<span class="lit-string">"SVGFEMergeElement"</span>},
+	{<span class="lit-string">"SVGFEMergeNodeElement"</span>},
+	{<span class="lit-string">"SVGFEMorphologyElement"</span>},
+	{<span class="lit-string">"SVGFEOffsetElement"</span>},
+	{<span class="lit-string">"SVGFEPointLightElement"</span>},
+	{<span class="lit-string">"SVGFESpecularLightingElement"</span>},
+	{<span class="lit-string">"SVGFESpotLightElement"</span>},
+	{<span class="lit-string">"SVGFETileElement"</span>},
+	{<span class="lit-string">"SVGFETurbulenceElement"</span>},
+	{<span class="lit-string">"SVGFilterElement"</span>},
+	{<span class="lit-string">"SVGForeignObjectElement"</span>},
+	{<span class="lit-string">"SVGGElement"</span>},
+	{<span class="lit-string">"SVGGeometryElement"</span>},
+	{<span class="lit-string">"SVGGradientElement"</span>},
+	{<span class="lit-string">"SVGGraphicsElement"</span>},
+	{<span class="lit-string">"SVGImageElement"</span>},
+	{<span class="lit-string">"SVGLength"</span>},
+	{<span class="lit-string">"SVGLengthList"</span>},
+	{<span class="lit-string">"SVGLineElement"</span>},
+	{<span class="lit-string">"SVGLinearGradientElement"</span>},
+	{<span class="lit-string">"SVGMPathElement"</span>},
+	{<span class="lit-string">"SVGMarkerElement"</span>},
+	{<span class="lit-string">"SVGMaskElement"</span>},
+	{<span class="lit-string">"SVGMatrix"</span>},
+	{<span class="lit-string">"SVGMetadataElement"</span>},
+	{<span class="lit-string">"SVGNumber"</span>},
+	{<span class="lit-string">"SVGNumberList"</span>},
+	{<span class="lit-string">"SVGPathElement"</span>},
+	{<span class="lit-string">"SVGPatternElement"</span>},
+	{<span class="lit-string">"SVGPoint"</span>},
+	{<span class="lit-string">"SVGPointList"</span>},
+	{<span class="lit-string">"SVGPolygonElement"</span>},
+	{<span class="lit-string">"SVGPolylineElement"</span>},
+	{<span class="lit-string">"SVGPreserveAspectRatio"</span>},
+	{<span class="lit-string">"SVGRadialGradientElement"</span>},
+	{<span class="lit-string">"SVGRect"</span>},
+	{<span class="lit-string">"SVGRectElement"</span>},
+	{<span class="lit-string">"SVGSVGElement"</span>},
+	{<span class="lit-string">"SVGScriptElement"</span>},
+	{<span class="lit-string">"SVGSetElement"</span>},
+	{<span class="lit-string">"SVGStopElement"</span>},
+	{<span class="lit-string">"SVGStringList"</span>},
+	{<span class="lit-string">"SVGStyleElement"</span>},
+	{<span class="lit-string">"SVGSwitchElement"</span>},
+	{<span class="lit-string">"SVGSymbolElement"</span>},
+	{<span class="lit-string">"SVGTSpanElement"</span>},
+	{<span class="lit-string">"SVGTextContentElement"</span>},
+	{<span class="lit-string">"SVGTextElement"</span>},
+	{<span class="lit-string">"SVGTextPathElement"</span>},
+	{<span class="lit-string">"SVGTextPositioningElement"</span>},
+	{<span class="lit-string">"SVGTitleElement"</span>},
+	{<span class="lit-string">"SVGTransform"</span>},
+	{<span class="lit-string">"SVGTransformList"</span>},
+	{<span class="lit-string">"SVGUnitTypes"</span>},
+	{<span class="lit-string">"SVGUseElement"</span>},
+	{<span class="lit-string">"SVGViewElement"</span>},
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Other browser APIs</span><span class="comment">	</span><span class="comment">	 This list contains all globals present in modern versions of Chrome, Safari,</span><span class="comment">	 and Firefox except for the following properties, since they have a side effect</span><span class="comment">	 of triggering layout (https://gist.github.com/paulirish/5d52fb081b3570c81e3a):</span><span class="comment">	</span><span class="comment">	   - scrollX</span><span class="comment">	   - scrollY</span><span class="comment">	   - innerWidth</span><span class="comment">	   - innerHeight</span><span class="comment">	   - pageXOffset</span><span class="comment">	   - pageYOffset</span><span class="comment">	</span><span class="comment">	 The following globals have also been removed since they sometimes throw an</span><span class="comment">	 exception when accessed, which is a side effect (for more information see</span><span class="comment">	 https://stackoverflow.com/a/33047477):</span><span class="comment">	</span><span class="comment">	   - localStorage</span><span class="comment">	   - sessionStorage</span><span class="comment">	</span></div>
+<div class="code"><pre><code>	{<span class="lit-string">"AnalyserNode"</span>},
+	{<span class="lit-string">"Animation"</span>},
+	{<span class="lit-string">"AnimationEffect"</span>},
+	{<span class="lit-string">"AnimationEvent"</span>},
+	{<span class="lit-string">"AnimationPlaybackEvent"</span>},
+	{<span class="lit-string">"AnimationTimeline"</span>},
+	{<span class="lit-string">"Attr"</span>},
+	{<span class="lit-string">"Audio"</span>},
+	{<span class="lit-string">"AudioBuffer"</span>},
+	{<span class="lit-string">"AudioBufferSourceNode"</span>},
+	{<span class="lit-string">"AudioDestinationNode"</span>},
+	{<span class="lit-string">"AudioListener"</span>},
+	{<span class="lit-string">"AudioNode"</span>},
+	{<span class="lit-string">"AudioParam"</span>},
+	{<span class="lit-string">"AudioProcessingEvent"</span>},
+	{<span class="lit-string">"AudioScheduledSourceNode"</span>},
+	{<span class="lit-string">"BarProp"</span>},
+	{<span class="lit-string">"BeforeUnloadEvent"</span>},
+	{<span class="lit-string">"BiquadFilterNode"</span>},
+	{<span class="lit-string">"Blob"</span>},
+	{<span class="lit-string">"BlobEvent"</span>},
+	{<span class="lit-string">"ByteLengthQueuingStrategy"</span>},
+	{<span class="lit-string">"CDATASection"</span>},
+	{<span class="lit-string">"CSS"</span>},
+	{<span class="lit-string">"CanvasGradient"</span>},
+	{<span class="lit-string">"CanvasPattern"</span>},
+	{<span class="lit-string">"CanvasRenderingContext2D"</span>},
+	{<span class="lit-string">"ChannelMergerNode"</span>},
+	{<span class="lit-string">"ChannelSplitterNode"</span>},
+	{<span class="lit-string">"CharacterData"</span>},
+	{<span class="lit-string">"ClipboardEvent"</span>},
+	{<span class="lit-string">"CloseEvent"</span>},
+	{<span class="lit-string">"Comment"</span>},
+	{<span class="lit-string">"CompositionEvent"</span>},
+	{<span class="lit-string">"ConvolverNode"</span>},
+	{<span class="lit-string">"CountQueuingStrategy"</span>},
+	{<span class="lit-string">"Crypto"</span>},
+	{<span class="lit-string">"CustomElementRegistry"</span>},
+	{<span class="lit-string">"CustomEvent"</span>},
+	{<span class="lit-string">"DOMException"</span>},
+	{<span class="lit-string">"DOMImplementation"</span>},
+	{<span class="lit-string">"DOMMatrix"</span>},
+	{<span class="lit-string">"DOMMatrixReadOnly"</span>},
+	{<span class="lit-string">"DOMParser"</span>},
+	{<span class="lit-string">"DOMPoint"</span>},
+	{<span class="lit-string">"DOMPointReadOnly"</span>},
+	{<span class="lit-string">"DOMQuad"</span>},
+	{<span class="lit-string">"DOMRect"</span>},
+	{<span class="lit-string">"DOMRectList"</span>},
+	{<span class="lit-string">"DOMRectReadOnly"</span>},
+	{<span class="lit-string">"DOMStringList"</span>},
+	{<span class="lit-string">"DOMStringMap"</span>},
+	{<span class="lit-string">"DOMTokenList"</span>},
+	{<span class="lit-string">"DataTransfer"</span>},
+	{<span class="lit-string">"DataTransferItem"</span>},
+	{<span class="lit-string">"DataTransferItemList"</span>},
+	{<span class="lit-string">"DelayNode"</span>},
+	{<span class="lit-string">"Document"</span>},
+	{<span class="lit-string">"DocumentFragment"</span>},
+	{<span class="lit-string">"DocumentTimeline"</span>},
+	{<span class="lit-string">"DocumentType"</span>},
+	{<span class="lit-string">"DragEvent"</span>},
+	{<span class="lit-string">"DynamicsCompressorNode"</span>},
+	{<span class="lit-string">"Element"</span>},
+	{<span class="lit-string">"ErrorEvent"</span>},
+	{<span class="lit-string">"EventSource"</span>},
+	{<span class="lit-string">"File"</span>},
+	{<span class="lit-string">"FileList"</span>},
+	{<span class="lit-string">"FileReader"</span>},
+	{<span class="lit-string">"FocusEvent"</span>},
+	{<span class="lit-string">"FontFace"</span>},
+	{<span class="lit-string">"FormData"</span>},
+	{<span class="lit-string">"GainNode"</span>},
+	{<span class="lit-string">"Gamepad"</span>},
+	{<span class="lit-string">"GamepadButton"</span>},
+	{<span class="lit-string">"GamepadEvent"</span>},
+	{<span class="lit-string">"Geolocation"</span>},
+	{<span class="lit-string">"GeolocationPositionError"</span>},
+	{<span class="lit-string">"HTMLAllCollection"</span>},
+	{<span class="lit-string">"HTMLAnchorElement"</span>},
+	{<span class="lit-string">"HTMLAreaElement"</span>},
+	{<span class="lit-string">"HTMLAudioElement"</span>},
+	{<span class="lit-string">"HTMLBRElement"</span>},
+	{<span class="lit-string">"HTMLBaseElement"</span>},
+	{<span class="lit-string">"HTMLBodyElement"</span>},
+	{<span class="lit-string">"HTMLButtonElement"</span>},
+	{<span class="lit-string">"HTMLCanvasElement"</span>},
+	{<span class="lit-string">"HTMLCollection"</span>},
+	{<span class="lit-string">"HTMLDListElement"</span>},
+	{<span class="lit-string">"HTMLDataElement"</span>},
+	{<span class="lit-string">"HTMLDataListElement"</span>},
+	{<span class="lit-string">"HTMLDetailsElement"</span>},
+	{<span class="lit-string">"HTMLDirectoryElement"</span>},
+	{<span class="lit-string">"HTMLDivElement"</span>},
+	{<span class="lit-string">"HTMLDocument"</span>},
+	{<span class="lit-string">"HTMLElement"</span>},
+	{<span class="lit-string">"HTMLEmbedElement"</span>},
+	{<span class="lit-string">"HTMLFieldSetElement"</span>},
+	{<span class="lit-string">"HTMLFontElement"</span>},
+	{<span class="lit-string">"HTMLFormControlsCollection"</span>},
+	{<span class="lit-string">"HTMLFormElement"</span>},
+	{<span class="lit-string">"HTMLFrameElement"</span>},
+	{<span class="lit-string">"HTMLFrameSetElement"</span>},
+	{<span class="lit-string">"HTMLHRElement"</span>},
+	{<span class="lit-string">"HTMLHeadElement"</span>},
+	{<span class="lit-string">"HTMLHeadingElement"</span>},
+	{<span class="lit-string">"HTMLHtmlElement"</span>},
+	{<span class="lit-string">"HTMLIFrameElement"</span>},
+	{<span class="lit-string">"HTMLImageElement"</span>},
+	{<span class="lit-string">"HTMLInputElement"</span>},
+	{<span class="lit-string">"HTMLLIElement"</span>},
+	{<span class="lit-string">"HTMLLabelElement"</span>},
+	{<span class="lit-string">"HTMLLegendElement"</span>},
+	{<span class="lit-string">"HTMLLinkElement"</span>},
+	{<span class="lit-string">"HTMLMapElement"</span>},
+	{<span class="lit-string">"HTMLMarqueeElement"</span>},
+	{<span class="lit-string">"HTMLMediaElement"</span>},
+	{<span class="lit-string">"HTMLMenuElement"</span>},
+	{<span class="lit-string">"HTMLMetaElement"</span>},
+	{<span class="lit-string">"HTMLMeterElement"</span>},
+	{<span class="lit-string">"HTMLModElement"</span>},
+	{<span class="lit-string">"HTMLOListElement"</span>},
+	{<span class="lit-string">"HTMLObjectElement"</span>},
+	{<span class="lit-string">"HTMLOptGroupElement"</span>},
+	{<span class="lit-string">"HTMLOptionElement"</span>},
+	{<span class="lit-string">"HTMLOptionsCollection"</span>},
+	{<span class="lit-string">"HTMLOutputElement"</span>},
+	{<span class="lit-string">"HTMLParagraphElement"</span>},
+	{<span class="lit-string">"HTMLParamElement"</span>},
+	{<span class="lit-string">"HTMLPictureElement"</span>},
+	{<span class="lit-string">"HTMLPreElement"</span>},
+	{<span class="lit-string">"HTMLProgressElement"</span>},
+	{<span class="lit-string">"HTMLQuoteElement"</span>},
+	{<span class="lit-string">"HTMLScriptElement"</span>},
+	{<span class="lit-string">"HTMLSelectElement"</span>},
+	{<span class="lit-string">"HTMLSlotElement"</span>},
+	{<span class="lit-string">"HTMLSourceElement"</span>},
+	{<span class="lit-string">"HTMLSpanElement"</span>},
+	{<span class="lit-string">"HTMLStyleElement"</span>},
+	{<span class="lit-string">"HTMLTableCaptionElement"</span>},
+	{<span class="lit-string">"HTMLTableCellElement"</span>},
+	{<span class="lit-string">"HTMLTableColElement"</span>},
+	{<span class="lit-string">"HTMLTableElement"</span>},
+	{<span class="lit-string">"HTMLTableRowElement"</span>},
+	{<span class="lit-string">"HTMLTableSectionElement"</span>},
+	{<span class="lit-string">"HTMLTemplateElement"</span>},
+	{<span class="lit-string">"HTMLTextAreaElement"</span>},
+	{<span class="lit-string">"HTMLTimeElement"</span>},
+	{<span class="lit-string">"HTMLTitleElement"</span>},
+	{<span class="lit-string">"HTMLTrackElement"</span>},
+	{<span class="lit-string">"HTMLUListElement"</span>},
+	{<span class="lit-string">"HTMLUnknownElement"</span>},
+	{<span class="lit-string">"HTMLVideoElement"</span>},
+	{<span class="lit-string">"HashChangeEvent"</span>},
+	{<span class="lit-string">"Headers"</span>},
+	{<span class="lit-string">"History"</span>},
+	{<span class="lit-string">"IDBCursor"</span>},
+	{<span class="lit-string">"IDBCursorWithValue"</span>},
+	{<span class="lit-string">"IDBDatabase"</span>},
+	{<span class="lit-string">"IDBFactory"</span>},
+	{<span class="lit-string">"IDBIndex"</span>},
+	{<span class="lit-string">"IDBKeyRange"</span>},
+	{<span class="lit-string">"IDBObjectStore"</span>},
+	{<span class="lit-string">"IDBOpenDBRequest"</span>},
+	{<span class="lit-string">"IDBRequest"</span>},
+	{<span class="lit-string">"IDBTransaction"</span>},
+	{<span class="lit-string">"IDBVersionChangeEvent"</span>},
+	{<span class="lit-string">"Image"</span>},
+	{<span class="lit-string">"ImageData"</span>},
+	{<span class="lit-string">"InputEvent"</span>},
+	{<span class="lit-string">"IntersectionObserver"</span>},
+	{<span class="lit-string">"IntersectionObserverEntry"</span>},
+	{<span class="lit-string">"KeyboardEvent"</span>},
+	{<span class="lit-string">"KeyframeEffect"</span>},
+	{<span class="lit-string">"Location"</span>},
+	{<span class="lit-string">"MediaCapabilities"</span>},
+	{<span class="lit-string">"MediaElementAudioSourceNode"</span>},
+	{<span class="lit-string">"MediaEncryptedEvent"</span>},
+	{<span class="lit-string">"MediaError"</span>},
+	{<span class="lit-string">"MediaList"</span>},
+	{<span class="lit-string">"MediaQueryList"</span>},
+	{<span class="lit-string">"MediaQueryListEvent"</span>},
+	{<span class="lit-string">"MediaRecorder"</span>},
+	{<span class="lit-string">"MediaSource"</span>},
+	{<span class="lit-string">"MediaStream"</span>},
+	{<span class="lit-string">"MediaStreamAudioDestinationNode"</span>},
+	{<span class="lit-string">"MediaStreamAudioSourceNode"</span>},
+	{<span class="lit-string">"MediaStreamTrack"</span>},
+	{<span class="lit-string">"MediaStreamTrackEvent"</span>},
+	{<span class="lit-string">"MimeType"</span>},
+	{<span class="lit-string">"MimeTypeArray"</span>},
+	{<span class="lit-string">"MouseEvent"</span>},
+	{<span class="lit-string">"MutationEvent"</span>},
+	{<span class="lit-string">"MutationObserver"</span>},
+	{<span class="lit-string">"MutationRecord"</span>},
+	{<span class="lit-string">"NamedNodeMap"</span>},
+	{<span class="lit-string">"Navigator"</span>},
+	{<span class="lit-string">"Node"</span>},
+	{<span class="lit-string">"NodeFilter"</span>},
+	{<span class="lit-string">"NodeIterator"</span>},
+	{<span class="lit-string">"NodeList"</span>},
+	{<span class="lit-string">"Notification"</span>},
+	{<span class="lit-string">"OfflineAudioCompletionEvent"</span>},
+	{<span class="lit-string">"Option"</span>},
+	{<span class="lit-string">"OscillatorNode"</span>},
+	{<span class="lit-string">"PageTransitionEvent"</span>},
+	{<span class="lit-string">"Path2D"</span>},
+	{<span class="lit-string">"Performance"</span>},
+	{<span class="lit-string">"PerformanceEntry"</span>},
+	{<span class="lit-string">"PerformanceMark"</span>},
+	{<span class="lit-string">"PerformanceMeasure"</span>},
+	{<span class="lit-string">"PerformanceNavigation"</span>},
+	{<span class="lit-string">"PerformanceObserver"</span>},
+	{<span class="lit-string">"PerformanceObserverEntryList"</span>},
+	{<span class="lit-string">"PerformanceResourceTiming"</span>},
+	{<span class="lit-string">"PerformanceTiming"</span>},
+	{<span class="lit-string">"PeriodicWave"</span>},
+	{<span class="lit-string">"Plugin"</span>},
+	{<span class="lit-string">"PluginArray"</span>},
+	{<span class="lit-string">"PointerEvent"</span>},
+	{<span class="lit-string">"PopStateEvent"</span>},
+	{<span class="lit-string">"ProcessingInstruction"</span>},
+	{<span class="lit-string">"ProgressEvent"</span>},
+	{<span class="lit-string">"PromiseRejectionEvent"</span>},
+	{<span class="lit-string">"RTCCertificate"</span>},
+	{<span class="lit-string">"RTCDTMFSender"</span>},
+	{<span class="lit-string">"RTCDTMFToneChangeEvent"</span>},
+	{<span class="lit-string">"RTCDataChannel"</span>},
+	{<span class="lit-string">"RTCDataChannelEvent"</span>},
+	{<span class="lit-string">"RTCIceCandidate"</span>},
+	{<span class="lit-string">"RTCPeerConnection"</span>},
+	{<span class="lit-string">"RTCPeerConnectionIceEvent"</span>},
+	{<span class="lit-string">"RTCRtpReceiver"</span>},
+	{<span class="lit-string">"RTCRtpSender"</span>},
+	{<span class="lit-string">"RTCRtpTransceiver"</span>},
+	{<span class="lit-string">"RTCSessionDescription"</span>},
+	{<span class="lit-string">"RTCStatsReport"</span>},
+	{<span class="lit-string">"RTCTrackEvent"</span>},
+	{<span class="lit-string">"RadioNodeList"</span>},
+	{<span class="lit-string">"Range"</span>},
+	{<span class="lit-string">"ReadableStream"</span>},
+	{<span class="lit-string">"Request"</span>},
+	{<span class="lit-string">"ResizeObserver"</span>},
+	{<span class="lit-string">"ResizeObserverEntry"</span>},
+	{<span class="lit-string">"Response"</span>},
+	{<span class="lit-string">"Screen"</span>},
+	{<span class="lit-string">"ScriptProcessorNode"</span>},
+	{<span class="lit-string">"SecurityPolicyViolationEvent"</span>},
+	{<span class="lit-string">"Selection"</span>},
+	{<span class="lit-string">"ShadowRoot"</span>},
+	{<span class="lit-string">"SourceBuffer"</span>},
+	{<span class="lit-string">"SourceBufferList"</span>},
+	{<span class="lit-string">"SpeechSynthesisEvent"</span>},
+	{<span class="lit-string">"SpeechSynthesisUtterance"</span>},
+	{<span class="lit-string">"StaticRange"</span>},
+	{<span class="lit-string">"Storage"</span>},
+	{<span class="lit-string">"StorageEvent"</span>},
+	{<span class="lit-string">"StyleSheet"</span>},
+	{<span class="lit-string">"StyleSheetList"</span>},
+	{<span class="lit-string">"Text"</span>},
+	{<span class="lit-string">"TextMetrics"</span>},
+	{<span class="lit-string">"TextTrack"</span>},
+	{<span class="lit-string">"TextTrackCue"</span>},
+	{<span class="lit-string">"TextTrackCueList"</span>},
+	{<span class="lit-string">"TextTrackList"</span>},
+	{<span class="lit-string">"TimeRanges"</span>},
+	{<span class="lit-string">"TrackEvent"</span>},
+	{<span class="lit-string">"TransitionEvent"</span>},
+	{<span class="lit-string">"TreeWalker"</span>},
+	{<span class="lit-string">"UIEvent"</span>},
+	{<span class="lit-string">"VTTCue"</span>},
+	{<span class="lit-string">"ValidityState"</span>},
+	{<span class="lit-string">"VisualViewport"</span>},
+	{<span class="lit-string">"WaveShaperNode"</span>},
+	{<span class="lit-string">"WebGLActiveInfo"</span>},
+	{<span class="lit-string">"WebGLBuffer"</span>},
+	{<span class="lit-string">"WebGLContextEvent"</span>},
+	{<span class="lit-string">"WebGLFramebuffer"</span>},
+	{<span class="lit-string">"WebGLProgram"</span>},
+	{<span class="lit-string">"WebGLQuery"</span>},
+	{<span class="lit-string">"WebGLRenderbuffer"</span>},
+	{<span class="lit-string">"WebGLRenderingContext"</span>},
+	{<span class="lit-string">"WebGLSampler"</span>},
+	{<span class="lit-string">"WebGLShader"</span>},
+	{<span class="lit-string">"WebGLShaderPrecisionFormat"</span>},
+	{<span class="lit-string">"WebGLSync"</span>},
+	{<span class="lit-string">"WebGLTexture"</span>},
+	{<span class="lit-string">"WebGLUniformLocation"</span>},
+	{<span class="lit-string">"WebKitCSSMatrix"</span>},
+	{<span class="lit-string">"WebSocket"</span>},
+	{<span class="lit-string">"WheelEvent"</span>},
+	{<span class="lit-string">"Window"</span>},
+	{<span class="lit-string">"Worker"</span>},
+	{<span class="lit-string">"XMLDocument"</span>},
+	{<span class="lit-string">"XMLHttpRequest"</span>},
+	{<span class="lit-string">"XMLHttpRequestEventTarget"</span>},
+	{<span class="lit-string">"XMLHttpRequestUpload"</span>},
+	{<span class="lit-string">"XMLSerializer"</span>},
+	{<span class="lit-string">"XPathEvaluator"</span>},
+	{<span class="lit-string">"XPathExpression"</span>},
+	{<span class="lit-string">"XPathResult"</span>},
+	{<span class="lit-string">"XSLTProcessor"</span>},
+	{<span class="lit-string">"alert"</span>},
+	{<span class="lit-string">"atob"</span>},
+	{<span class="lit-string">"blur"</span>},
+	{<span class="lit-string">"btoa"</span>},
+	{<span class="lit-string">"cancelAnimationFrame"</span>},
+	{<span class="lit-string">"captureEvents"</span>},
+	{<span class="lit-string">"close"</span>},
+	{<span class="lit-string">"closed"</span>},
+	{<span class="lit-string">"confirm"</span>},
+	{<span class="lit-string">"customElements"</span>},
+	{<span class="lit-string">"devicePixelRatio"</span>},
+	{<span class="lit-string">"document"</span>},
+	{<span class="lit-string">"event"</span>},
+	{<span class="lit-string">"fetch"</span>},
+	{<span class="lit-string">"find"</span>},
+	{<span class="lit-string">"focus"</span>},
+	{<span class="lit-string">"frameElement"</span>},
+	{<span class="lit-string">"frames"</span>},
+	{<span class="lit-string">"getComputedStyle"</span>},
+	{<span class="lit-string">"getSelection"</span>},
+	{<span class="lit-string">"history"</span>},
+	{<span class="lit-string">"indexedDB"</span>},
+	{<span class="lit-string">"isSecureContext"</span>},
+	{<span class="lit-string">"length"</span>},
+	{<span class="lit-string">"location"</span>},
+	{<span class="lit-string">"locationbar"</span>},
+	{<span class="lit-string">"matchMedia"</span>},
+	{<span class="lit-string">"menubar"</span>},
+	{<span class="lit-string">"moveBy"</span>},
+	{<span class="lit-string">"moveTo"</span>},
+	{<span class="lit-string">"name"</span>},
+	{<span class="lit-string">"navigator"</span>},
+	{<span class="lit-string">"onabort"</span>},
+	{<span class="lit-string">"onafterprint"</span>},
+	{<span class="lit-string">"onanimationend"</span>},
+	{<span class="lit-string">"onanimationiteration"</span>},
+	{<span class="lit-string">"onanimationstart"</span>},
+	{<span class="lit-string">"onbeforeprint"</span>},
+	{<span class="lit-string">"onbeforeunload"</span>},
+	{<span class="lit-string">"onblur"</span>},
+	{<span class="lit-string">"oncanplay"</span>},
+	{<span class="lit-string">"oncanplaythrough"</span>},
+	{<span class="lit-string">"onchange"</span>},
+	{<span class="lit-string">"onclick"</span>},
+	{<span class="lit-string">"oncontextmenu"</span>},
+	{<span class="lit-string">"oncuechange"</span>},
+	{<span class="lit-string">"ondblclick"</span>},
+	{<span class="lit-string">"ondrag"</span>},
+	{<span class="lit-string">"ondragend"</span>},
+	{<span class="lit-string">"ondragenter"</span>},
+	{<span class="lit-string">"ondragleave"</span>},
+	{<span class="lit-string">"ondragover"</span>},
+	{<span class="lit-string">"ondragstart"</span>},
+	{<span class="lit-string">"ondrop"</span>},
+	{<span class="lit-string">"ondurationchange"</span>},
+	{<span class="lit-string">"onemptied"</span>},
+	{<span class="lit-string">"onended"</span>},
+	{<span class="lit-string">"onerror"</span>},
+	{<span class="lit-string">"onfocus"</span>},
+	{<span class="lit-string">"ongotpointercapture"</span>},
+	{<span class="lit-string">"onhashchange"</span>},
+	{<span class="lit-string">"oninput"</span>},
+	{<span class="lit-string">"oninvalid"</span>},
+	{<span class="lit-string">"onkeydown"</span>},
+	{<span class="lit-string">"onkeypress"</span>},
+	{<span class="lit-string">"onkeyup"</span>},
+	{<span class="lit-string">"onlanguagechange"</span>},
+	{<span class="lit-string">"onload"</span>},
+	{<span class="lit-string">"onloadeddata"</span>},
+	{<span class="lit-string">"onloadedmetadata"</span>},
+	{<span class="lit-string">"onloadstart"</span>},
+	{<span class="lit-string">"onlostpointercapture"</span>},
+	{<span class="lit-string">"onmessage"</span>},
+	{<span class="lit-string">"onmousedown"</span>},
+	{<span class="lit-string">"onmouseenter"</span>},
+	{<span class="lit-string">"onmouseleave"</span>},
+	{<span class="lit-string">"onmousemove"</span>},
+	{<span class="lit-string">"onmouseout"</span>},
+	{<span class="lit-string">"onmouseover"</span>},
+	{<span class="lit-string">"onmouseup"</span>},
+	{<span class="lit-string">"onoffline"</span>},
+	{<span class="lit-string">"ononline"</span>},
+	{<span class="lit-string">"onpagehide"</span>},
+	{<span class="lit-string">"onpageshow"</span>},
+	{<span class="lit-string">"onpause"</span>},
+	{<span class="lit-string">"onplay"</span>},
+	{<span class="lit-string">"onplaying"</span>},
+	{<span class="lit-string">"onpointercancel"</span>},
+	{<span class="lit-string">"onpointerdown"</span>},
+	{<span class="lit-string">"onpointerenter"</span>},
+	{<span class="lit-string">"onpointerleave"</span>},
+	{<span class="lit-string">"onpointermove"</span>},
+	{<span class="lit-string">"onpointerout"</span>},
+	{<span class="lit-string">"onpointerover"</span>},
+	{<span class="lit-string">"onpointerup"</span>},
+	{<span class="lit-string">"onpopstate"</span>},
+	{<span class="lit-string">"onprogress"</span>},
+	{<span class="lit-string">"onratechange"</span>},
+	{<span class="lit-string">"onrejectionhandled"</span>},
+	{<span class="lit-string">"onreset"</span>},
+	{<span class="lit-string">"onresize"</span>},
+	{<span class="lit-string">"onscroll"</span>},
+	{<span class="lit-string">"onseeked"</span>},
+	{<span class="lit-string">"onseeking"</span>},
+	{<span class="lit-string">"onselect"</span>},
+	{<span class="lit-string">"onstalled"</span>},
+	{<span class="lit-string">"onstorage"</span>},
+	{<span class="lit-string">"onsubmit"</span>},
+	{<span class="lit-string">"onsuspend"</span>},
+	{<span class="lit-string">"ontimeupdate"</span>},
+	{<span class="lit-string">"ontoggle"</span>},
+	{<span class="lit-string">"ontransitioncancel"</span>},
+	{<span class="lit-string">"ontransitionend"</span>},
+	{<span class="lit-string">"ontransitionrun"</span>},
+	{<span class="lit-string">"ontransitionstart"</span>},
+	{<span class="lit-string">"onunhandledrejection"</span>},
+	{<span class="lit-string">"onunload"</span>},
+	{<span class="lit-string">"onvolumechange"</span>},
+	{<span class="lit-string">"onwaiting"</span>},
+	{<span class="lit-string">"onwebkitanimationend"</span>},
+	{<span class="lit-string">"onwebkitanimationiteration"</span>},
+	{<span class="lit-string">"onwebkitanimationstart"</span>},
+	{<span class="lit-string">"onwebkittransitionend"</span>},
+	{<span class="lit-string">"onwheel"</span>},
+	{<span class="lit-string">"open"</span>},
+	{<span class="lit-string">"opener"</span>},
+	{<span class="lit-string">"origin"</span>},
+	{<span class="lit-string">"outerHeight"</span>},
+	{<span class="lit-string">"outerWidth"</span>},
+	{<span class="lit-string">"parent"</span>},
+	{<span class="lit-string">"performance"</span>},
+	{<span class="lit-string">"personalbar"</span>},
+	{<span class="lit-string">"postMessage"</span>},
+	{<span class="lit-string">"print"</span>},
+	{<span class="lit-string">"prompt"</span>},
+	{<span class="lit-string">"releaseEvents"</span>},
+	{<span class="lit-string">"requestAnimationFrame"</span>},
+	{<span class="lit-string">"resizeBy"</span>},
+	{<span class="lit-string">"resizeTo"</span>},
+	{<span class="lit-string">"screen"</span>},
+	{<span class="lit-string">"screenLeft"</span>},
+	{<span class="lit-string">"screenTop"</span>},
+	{<span class="lit-string">"screenX"</span>},
+	{<span class="lit-string">"screenY"</span>},
+	{<span class="lit-string">"scroll"</span>},
+	{<span class="lit-string">"scrollBy"</span>},
+	{<span class="lit-string">"scrollTo"</span>},
+	{<span class="lit-string">"scrollbars"</span>},
+	{<span class="lit-string">"self"</span>},
+	{<span class="lit-string">"speechSynthesis"</span>},
+	{<span class="lit-string">"status"</span>},
+	{<span class="lit-string">"statusbar"</span>},
+	{<span class="lit-string">"stop"</span>},
+	{<span class="lit-string">"toolbar"</span>},
+	{<span class="lit-string">"top"</span>},
+	{<span class="lit-string">"webkitURL"</span>},
+	{<span class="lit-string">"window"</span>},
+}
+
+<span class="keyword">type</span> <a href="../../../../../../pkg/github.com/evanw/esbuild/internal/config.html#name-DefineArgs" class="ident">DefineArgs</a> <span class="keyword">struct</span> {
+	<a href="../../../../../../use/github.com/evanw/esbuild/internal/config..DefineArgs.Loc.html" class="ident">Loc</a>             <a href="../../../../../../pkg/github.com/evanw/esbuild/internal/logger.html" class="ident i4">logger</a>.<a href="../logger/logger.go.html#line-88" class="ident">Loc</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/internal/config..DefineArgs.FindSymbol.html" class="ident">FindSymbol</a>      <span class="keyword">func</span>(<a href="../../../../../../pkg/github.com/evanw/esbuild/internal/logger.html" class="ident i4">logger</a>.<a href="../logger/logger.go.html#line-88" class="ident">Loc</a>, <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>) <a href="../../../../../../pkg/github.com/evanw/esbuild/internal/js_ast.html" class="ident i3">js_ast</a>.<a href="../js_ast/js_ast.go.html#line-1362" class="ident">Ref</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/internal/config..DefineArgs.SymbolForDefine.html" class="ident">SymbolForDefine</a> <span class="keyword">func</span>(<a href="../../../../../../pkg/builtin.html#name-int" class="ident">int</a>) <a href="../../../../../../pkg/github.com/evanw/esbuild/internal/js_ast.html" class="ident i3">js_ast</a>.<a href="../js_ast/js_ast.go.html#line-1362" class="ident">Ref</a>
+}
+
+<span class="keyword">type</span> <a href="../../../../../../pkg/github.com/evanw/esbuild/internal/config.html#name-DefineFunc" class="ident">DefineFunc</a> <span class="keyword">func</span>(<a href="#line-812" class="ident">DefineArgs</a>) <a href="../../../../../../pkg/github.com/evanw/esbuild/internal/js_ast.html" class="ident i3">js_ast</a>.<a href="../js_ast/js_ast.go.html#line-383" class="ident">E</a>
+
+<span class="keyword">type</span> <a href="../../../../../../pkg/github.com/evanw/esbuild/internal/config.html#name-DefineData" class="ident">DefineData</a> <span class="keyword">struct</span> {
+	<a href="../../../../../../use/github.com/evanw/esbuild/internal/config..DefineData.DefineFunc.html" class="ident">DefineFunc</a> <a href="#line-818" class="ident">DefineFunc</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> True if accessing this value is known to not have any side effects. For</span><span class="comment">	 example, a bare reference to "Object.create" can be removed because it</span><span class="comment">	 does not have any observable side effects.</span></div>
+<div class="code"><pre><code>	<a href="../../../../../../use/github.com/evanw/esbuild/internal/config..DefineData.CanBeRemovedIfUnused.html" class="ident">CanBeRemovedIfUnused</a> <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> True if a call to this value is known to not have any side effects. For</span><span class="comment">	 example, a bare call to "Object()" can be removed because it does not</span><span class="comment">	 have any observable side effects.</span></div>
+<div class="code"><pre><code>	<a href="../../../../../../use/github.com/evanw/esbuild/internal/config..DefineData.CallCanBeUnwrappedIfUnused.html" class="ident">CallCanBeUnwrappedIfUnused</a> <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Set to true to warn users that this should be defined if it's not already.</span></div>
+<div class="code"><pre><code>	<a href="../../../../../../use/github.com/evanw/esbuild/internal/config..DefineData.WarnAboutLackOfDefine.html" class="ident">WarnAboutLackOfDefine</a> <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>
+}
+
+<span class="keyword">func</span> <label for="r0" class="ident"><a href="../../../../../../pkg/github.com/evanw/esbuild/internal/config.html#name-mergeDefineData" class="ident">mergeDefineData</a></label>(<label for="r1" class="ident">old</label> <a href="#line-820" class="ident">DefineData</a>, <label for="r2" class="ident">new</label> <a href="#line-820" class="ident">DefineData</a>) <a href="#line-820" class="ident">DefineData</a> {
+	<span class="keyword">if</span> <label for="r1" class="ident">old</label>.<a href="#line-826" class="ident">CanBeRemovedIfUnused</a> {
+		<label for="r2" class="ident">new</label>.<a href="#line-826" class="ident">CanBeRemovedIfUnused</a> = <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>
+	}
+	<span class="keyword">if</span> <label for="r1" class="ident">old</label>.<a href="#line-831" class="ident">CallCanBeUnwrappedIfUnused</a> {
+		<label for="r2" class="ident">new</label>.<a href="#line-831" class="ident">CallCanBeUnwrappedIfUnused</a> = <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Don't warn if the user defined this</span></div>
+<div class="code"><pre><code>	<label for="r2" class="ident">new</label>.<a href="#line-834" class="ident">WarnAboutLackOfDefine</a> = <a href="../../../../../../pkg/builtin.html#name-false" class="ident">false</a>
+	<span class="keyword">return</span> <label for="r2" class="ident">new</label>
+}
+
+<span class="keyword">type</span> <a href="../../../../../../pkg/github.com/evanw/esbuild/internal/config.html#name-DotDefine" class="ident">DotDefine</a> <span class="keyword">struct</span> {
+	<a href="../../../../../../use/github.com/evanw/esbuild/internal/config..DotDefine.Parts.html" class="ident">Parts</a> []<a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/internal/config..DotDefine.Data.html" class="ident">Data</a>  <a href="#line-820" class="ident">DefineData</a>
+}
+
+<span class="keyword">type</span> <a href="../../../../../../pkg/github.com/evanw/esbuild/internal/config.html#name-ProcessedDefines" class="ident">ProcessedDefines</a> <span class="keyword">struct</span> {
+	<a href="../../../../../../use/github.com/evanw/esbuild/internal/config..ProcessedDefines.IdentifierDefines.html" class="ident">IdentifierDefines</a> <span class="keyword">map</span>[<a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>]<a href="#line-820" class="ident">DefineData</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/internal/config..ProcessedDefines.DotDefines.html" class="ident">DotDefines</a>        <span class="keyword">map</span>[<a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>][]<a href="#line-850" class="ident">DotDefine</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> This transformation is expensive, so we only want to do it once. Make sure</span><span class="comment"> to only call processDefines() once per compilation. Unfortunately Golang</span><span class="comment"> doesn't have an efficient way to copy a map and the overhead of copying</span><span class="comment"> all of the properties into a new map once for every new parser noticeably</span><span class="comment"> slows down our benchmarks.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Optimization: reuse known globals if there are no user-specified defines</span></div>
+<div class="code"><pre><code>	<label for="r5" class="ident">hasUserDefines</label> := <a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r4" class="ident">userDefines</label>) != <span class="lit-number">0</span>
+	<span class="keyword">if</span> !<label for="r5" class="ident">hasUserDefines</label> {
+		<a href="#line-12" class="ident">processedGlobalsMutex</a>.<a href="../../../../../sync/mutex.go.html#line-72" class="ident">Lock</a>()
+		<span class="keyword">if</span> <a href="#line-13" class="ident">processedGlobals</a> != <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<span class="keyword">defer</span> <a href="#line-12" class="ident">processedGlobalsMutex</a>.<a href="../../../../../sync/mutex.go.html#line-179" class="ident">Unlock</a>()
+			<span class="keyword">return</span> *<a href="#line-13" class="ident">processedGlobals</a>
+		}
+		<a href="#line-12" class="ident">processedGlobalsMutex</a>.<a href="../../../../../sync/mutex.go.html#line-179" class="ident">Unlock</a>()
+	}
+
+	<label for="r6" class="ident">result</label> := <a href="#line-855" class="ident">ProcessedDefines</a>{
+		<a href="#line-856" class="ident">IdentifierDefines</a>: <a href="../../../../../../pkg/builtin.html#name-make" class="ident">make</a>(<span class="keyword">map</span>[<a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>]<a href="#line-820" class="ident">DefineData</a>),
+		<a href="#line-857" class="ident">DotDefines</a>:        <a href="../../../../../../pkg/builtin.html#name-make" class="ident">make</a>(<span class="keyword">map</span>[<a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>][]<a href="#line-850" class="ident">DotDefine</a>),
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Mark these property accesses as free of side effects. That means they can</span><span class="comment">	 be removed if their result is unused. We can't just remove all unused</span><span class="comment">	 property accesses since property accesses can have side effects. For</span><span class="comment">	 example, the property access "a.b.c" has the side effect of throwing an</span><span class="comment">	 exception if "a.b" is undefined.</span></div>
+<div class="code"><pre><code>	<span class="keyword">for</span> <label for="r7" class="ident">_</label>, <label for="r8" class="ident">parts</label> := <span class="keyword">range</span> <a href="#line-29" class="ident">knownGlobals</a> {
+		<label for="r9" class="ident">tail</label> := <label for="r8" class="ident">parts</label>[<a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r8" class="ident">parts</label>)-<span class="lit-number">1</span>]
+		<span class="keyword">if</span> <a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r8" class="ident">parts</label>) == <span class="lit-number">1</span> {
+			<label for="r6" class="ident">result</label>.<a href="#line-856" class="ident">IdentifierDefines</a>[<label for="r9" class="ident">tail</label>] = <a href="#line-820" class="ident">DefineData</a>{<a href="#line-826" class="ident">CanBeRemovedIfUnused</a>: <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>}
+		} <span class="keyword">else</span> {
+			<label for="r6" class="ident">result</label>.<a href="#line-857" class="ident">DotDefines</a>[<label for="r9" class="ident">tail</label>] = <a href="../../../../../../pkg/builtin.html#name-append" class="ident">append</a>(<label for="r6" class="ident">result</label>.<a href="#line-857" class="ident">DotDefines</a>[<label for="r9" class="ident">tail</label>], <a href="#line-850" class="ident">DotDefine</a>{<a href="#line-851" class="ident">Parts</a>: <label for="r8" class="ident">parts</label>, <a href="#line-852" class="ident">Data</a>: <a href="#line-820" class="ident">DefineData</a>{<a href="#line-826" class="ident">CanBeRemovedIfUnused</a>: <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>}})
+		}
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Swap in certain literal values because those can be constant folded</span></div>
+<div class="code"><pre><code>	<label for="r6" class="ident">result</label>.<a href="#line-856" class="ident">IdentifierDefines</a>[<span class="lit-string">"undefined"</span>] = <a href="#line-820" class="ident">DefineData</a>{
+		<a href="#line-821" class="ident">DefineFunc</a>: <span class="keyword">func</span>(<a href="#line-812" class="ident">DefineArgs</a>) <a href="../../../../../../pkg/github.com/evanw/esbuild/internal/js_ast.html" class="ident i3">js_ast</a>.<a href="../js_ast/js_ast.go.html#line-383" class="ident">E</a> { <span class="keyword">return</span> &amp;<a href="../../../../../../pkg/github.com/evanw/esbuild/internal/js_ast.html" class="ident i3">js_ast</a>.<a href="../js_ast/js_ast.go.html#line-409" class="ident">EUndefined</a>{} },
+	}
+	<label for="r6" class="ident">result</label>.<a href="#line-856" class="ident">IdentifierDefines</a>[<span class="lit-string">"NaN"</span>] = <a href="#line-820" class="ident">DefineData</a>{
+		<a href="#line-821" class="ident">DefineFunc</a>: <span class="keyword">func</span>(<a href="#line-812" class="ident">DefineArgs</a>) <a href="../../../../../../pkg/github.com/evanw/esbuild/internal/js_ast.html" class="ident i3">js_ast</a>.<a href="../js_ast/js_ast.go.html#line-383" class="ident">E</a> { <span class="keyword">return</span> &amp;<a href="../../../../../../pkg/github.com/evanw/esbuild/internal/js_ast.html" class="ident i3">js_ast</a>.<a href="../js_ast/js_ast.go.html#line-571" class="ident">ENumber</a>{<a href="../js_ast/js_ast.go.html#line-571" class="ident">Value</a>: <a href="../../../../../../pkg/math.html" class="ident i0">math</a>.<a href="../../../../../math/bits.go.html#line-31" class="ident">NaN</a>()} },
+	}
+	<label for="r6" class="ident">result</label>.<a href="#line-856" class="ident">IdentifierDefines</a>[<span class="lit-string">"Infinity"</span>] = <a href="#line-820" class="ident">DefineData</a>{
+		<a href="#line-821" class="ident">DefineFunc</a>: <span class="keyword">func</span>(<a href="#line-812" class="ident">DefineArgs</a>) <a href="../../../../../../pkg/github.com/evanw/esbuild/internal/js_ast.html" class="ident i3">js_ast</a>.<a href="../js_ast/js_ast.go.html#line-383" class="ident">E</a> { <span class="keyword">return</span> &amp;<a href="../../../../../../pkg/github.com/evanw/esbuild/internal/js_ast.html" class="ident i3">js_ast</a>.<a href="../js_ast/js_ast.go.html#line-571" class="ident">ENumber</a>{<a href="../js_ast/js_ast.go.html#line-571" class="ident">Value</a>: <a href="../../../../../../pkg/math.html" class="ident i0">math</a>.<a href="../../../../../math/bits.go.html#line-20" class="ident">Inf</a>(<span class="lit-number">1</span>)} },
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Warn about use of this without a define</span></div>
+<div class="code"><pre><code>	<label for="r6" class="ident">result</label>.<a href="#line-857" class="ident">DotDefines</a>[<span class="lit-string">"NODE_ENV"</span>] = []<a href="#line-850" class="ident">DotDefine</a>{{
+		<a href="#line-851" class="ident">Parts</a>: []<a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>{<span class="lit-string">"process"</span>, <span class="lit-string">"env"</span>, <span class="lit-string">"NODE_ENV"</span>},
+		<a href="#line-852" class="ident">Data</a>:  <a href="#line-820" class="ident">DefineData</a>{<a href="#line-834" class="ident">WarnAboutLackOfDefine</a>: <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>},
+	}}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Then copy the user-specified defines in afterwards, which will overwrite</span><span class="comment">	 any known globals above.</span></div>
+<div class="code"><pre><code>	<span class="keyword">for</span> <label for="r10" class="ident">key</label>, <label for="r11" class="ident">data</label> := <span class="keyword">range</span> <label for="r4" class="ident">userDefines</label> {
+		<label for="r12" class="ident">parts</label> := <a href="../../../../../../pkg/strings.html" class="ident i1">strings</a>.<a href="../../../../../strings/strings.go.html#line-299" class="ident">Split</a>(<label for="r10" class="ident">key</label>, <span class="lit-string">"."</span>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Identifier defines are special-cased</span></div>
+<div class="code"><pre><code>		<span class="keyword">if</span> <a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r12" class="ident">parts</label>) == <span class="lit-number">1</span> {
+			<label for="r6" class="ident">result</label>.<a href="#line-856" class="ident">IdentifierDefines</a>[<label for="r10" class="ident">key</label>] = <a href="#line-837" class="ident">mergeDefineData</a>(<label for="r6" class="ident">result</label>.<a href="#line-856" class="ident">IdentifierDefines</a>[<label for="r10" class="ident">key</label>], <label for="r11" class="ident">data</label>)
+			<span class="keyword">continue</span>
+		}
+
+		<label for="r13" class="ident">tail</label> := <label for="r12" class="ident">parts</label>[<a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r12" class="ident">parts</label>)-<span class="lit-number">1</span>]
+		<label for="r14" class="ident">dotDefines</label> := <label for="r6" class="ident">result</label>.<a href="#line-857" class="ident">DotDefines</a>[<label for="r13" class="ident">tail</label>]
+		<label for="r15" class="ident">found</label> := <a href="../../../../../../pkg/builtin.html#name-false" class="ident">false</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Try to merge with existing dot defines first</span></div>
+<div class="code"><pre><code>		<span class="keyword">for</span> <label for="r16" class="ident">i</label>, <label for="r17" class="ident">define</label> := <span class="keyword">range</span> <label for="r14" class="ident">dotDefines</label> {
+			<span class="keyword">if</span> <a href="#line-955" class="ident">arePartsEqual</a>(<label for="r12" class="ident">parts</label>, <label for="r17" class="ident">define</label>.<a href="#line-851" class="ident">Parts</a>) {
+				<label for="r18" class="ident">define</label> := &amp;<label for="r14" class="ident">dotDefines</label>[<label for="r16" class="ident">i</label>]
+				<label for="r18" class="ident">define</label>.<a href="#line-852" class="ident">Data</a> = <a href="#line-837" class="ident">mergeDefineData</a>(<label for="r18" class="ident">define</label>.<a href="#line-852" class="ident">Data</a>, <label for="r11" class="ident">data</label>)
+				<label for="r15" class="ident">found</label> = <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>
+				<span class="keyword">break</span>
+			}
+		}
+
+		<span class="keyword">if</span> !<label for="r15" class="ident">found</label> {
+			<label for="r14" class="ident">dotDefines</label> = <a href="../../../../../../pkg/builtin.html#name-append" class="ident">append</a>(<label for="r14" class="ident">dotDefines</label>, <a href="#line-850" class="ident">DotDefine</a>{<a href="#line-851" class="ident">Parts</a>: <label for="r12" class="ident">parts</label>, <a href="#line-852" class="ident">Data</a>: <label for="r11" class="ident">data</label>})
+		}
+		<label for="r6" class="ident">result</label>.<a href="#line-857" class="ident">DotDefines</a>[<label for="r13" class="ident">tail</label>] = <label for="r14" class="ident">dotDefines</label>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Potentially cache the result for next time</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> !<label for="r5" class="ident">hasUserDefines</label> {
+		<a href="#line-12" class="ident">processedGlobalsMutex</a>.<a href="../../../../../sync/mutex.go.html#line-72" class="ident">Lock</a>()
+		<span class="keyword">defer</span> <a href="#line-12" class="ident">processedGlobalsMutex</a>.<a href="../../../../../sync/mutex.go.html#line-179" class="ident">Unlock</a>()
+		<span class="keyword">if</span> <a href="#line-13" class="ident">processedGlobals</a> == <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<a href="#line-13" class="ident">processedGlobals</a> = &amp;<label for="r6" class="ident">result</label>
+		}
+	}
+	<span class="keyword">return</span> <label for="r6" class="ident">result</label>
+}
+
+<span class="keyword">func</span> <label for="r19" class="ident"><a href="../../../../../../pkg/github.com/evanw/esbuild/internal/config.html#name-arePartsEqual" class="ident">arePartsEqual</a></label>(<label for="r20" class="ident">a</label> []<a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>, <label for="r21" class="ident">b</label> []<a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>) <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> {
+	<span class="keyword">if</span> <a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r20" class="ident">a</label>) != <a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r21" class="ident">b</label>) {
+		<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-false" class="ident">false</a>
+	}
+	<span class="keyword">for</span> <label for="r22" class="ident">i</label> := <span class="keyword">range</span> <label for="r20" class="ident">a</label> {
+		<span class="keyword">if</span> <label for="r20" class="ident">a</label>[<label for="r22" class="ident">i</label>] != <label for="r21" class="ident">b</label>[<label for="r22" class="ident">i</label>] {
+			<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-false" class="ident">false</a>
+		}
+	}
+	<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

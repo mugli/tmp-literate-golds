@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: collector.go in package github.com/prometheus/client_golang/prometheus</title>
+<link href="../../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	collector.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../../pkg/github.com/prometheus/client_golang/prometheus.html">github.com/prometheus/client_golang/prometheus</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13]
+{background: #226; color: #ff8;}
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2014 The Prometheus Authors</span><span class="comment"> Licensed under the Apache License, Version 2.0 (the "License");</span><span class="comment"> you may not use this file except in compliance with the License.</span><span class="comment"> You may obtain a copy of the License at</span><span class="comment"></span><span class="comment"> http://www.apache.org/licenses/LICENSE-2.0</span><span class="comment"></span><span class="comment"> Unless required by applicable law or agreed to in writing, software</span><span class="comment"> distributed under the License is distributed on an "AS IS" BASIS,</span><span class="comment"> WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span><span class="comment"> See the License for the specific language governing permissions and</span><span class="comment"> limitations under the License.</span></div>
+<div class="code"><pre><code>
+<span class="keyword">package</span> prometheus
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Collector is the interface implemented by anything that can be used by</span><span class="comment"> Prometheus to collect metrics. A Collector has to be registered for</span><span class="comment"> collection. See Registerer.Register.</span><span class="comment"></span><span class="comment"> The stock metrics provided by this package (Gauge, Counter, Summary,</span><span class="comment"> Histogram, Untyped) are also Collectors (which only ever collect one metric,</span><span class="comment"> namely itself). An implementer of Collector may, however, collect multiple</span><span class="comment"> metrics in a coordinated fashion and/or create metrics on the fly. Examples</span><span class="comment"> for collectors already implemented in this library are the metric vectors</span><span class="comment"> (i.e. collection of multiple instances of the same Metric but with different</span><span class="comment"> label values) like GaugeVec or SummaryVec, and the ExpvarCollector.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Describe sends the super-set of all possible descriptors of metrics</span><span class="comment">	 collected by this Collector to the provided channel and returns once</span><span class="comment">	 the last descriptor has been sent. The sent descriptors fulfill the</span><span class="comment">	 consistency and uniqueness requirements described in the Desc</span><span class="comment">	 documentation.</span><span class="comment">	</span><span class="comment">	 It is valid if one and the same Collector sends duplicate</span><span class="comment">	 descriptors. Those duplicates are simply ignored. However, two</span><span class="comment">	 different Collectors must not send duplicate descriptors.</span><span class="comment">	</span><span class="comment">	 Sending no descriptor at all marks the Collector as “unchecked”,</span><span class="comment">	 i.e. no checks will be performed at registration time, and the</span><span class="comment">	 Collector may yield any Metric it sees fit in its Collect method.</span><span class="comment">	</span><span class="comment">	 This method idempotently sends the same descriptors throughout the</span><span class="comment">	 lifetime of the Collector. It may be called concurrently and</span><span class="comment">	 therefore must be implemented in a concurrency safe way.</span><span class="comment">	</span><span class="comment">	 If a Collector encounters an error while executing this method, it</span><span class="comment">	 must send an invalid descriptor (created with NewInvalidDesc) to</span><span class="comment">	 signal the error to the registry.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Collect is called by the Prometheus registry when collecting</span><span class="comment">	 metrics. The implementation sends each collected metric via the</span><span class="comment">	 provided channel and returns once the last metric has been sent. The</span><span class="comment">	 descriptor of each sent metric is one of those returned by Describe</span><span class="comment">	 (unless the Collector is unchecked, see above). Returned metrics that</span><span class="comment">	 share the same descriptor must differ in their variable label</span><span class="comment">	 values.</span><span class="comment">	</span><span class="comment">	 This method may be called concurrently and must therefore be</span><span class="comment">	 implemented in a concurrency safe way. Blocking occurs at the expense</span><span class="comment">	 of total performance of rendering all registered metrics. Ideally,</span><span class="comment">	 Collector implementations support concurrent readers.</span></div>
+<div class="code"><pre><code>	Collect(<span class="keyword">chan</span>&lt;- <a href="metric.go.html#line-31" class="ident">Metric</a>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> DescribeByCollect is a helper to implement the Describe method of a custom</span><span class="comment"> Collector. It collects the metrics from the provided Collector and sends</span><span class="comment"> their descriptors to the provided channel.</span><span class="comment"></span><span class="comment"> If a Collector collects the same metrics throughout its lifetime, its</span><span class="comment"> Describe method can simply be implemented as:</span><span class="comment"></span><span class="comment">   func (c customCollector) Describe(ch chan&lt;- *Desc) {</span><span class="comment">   	DescribeByCollect(c, ch)</span><span class="comment">   }</span><span class="comment"></span><span class="comment"> However, this will not work if the metrics collected change dynamically over</span><span class="comment"> the lifetime of the Collector in a way that their combined set of descriptors</span><span class="comment"> changes as well. The shortcut implementation will then violate the contract</span><span class="comment"> of the Describe method. If a Collector sometimes collects no metrics at all</span><span class="comment"> (for example vectors like CounterVec, GaugeVec, etc., which only collect</span><span class="comment"> metrics after a metric with a fully specified label set has been accessed),</span><span class="comment"> it might even get registered as an unchecked Collector (cf. the Register</span><span class="comment"> method of the Registerer interface). Hence, only use this shortcut</span><span class="comment"> implementation of Describe if you are certain to fulfill the contract.</span><span class="comment"></span><span class="comment"> The Collector example demonstrates a use of DescribeByCollect.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r0" class="ident"><a href="../../../../../pkg/github.com/prometheus/client_golang/prometheus.html#name-DescribeByCollect" class="ident">DescribeByCollect</a></label>(<label for="r1" class="ident">c</label> <a href="#line-27" class="ident">Collector</a>, <label for="r2" class="ident">descs</label> <span class="keyword">chan</span>&lt;- *<a href="desc.go.html#line-45" class="ident">Desc</a>) {
+	<label for="r3" class="ident">metrics</label> := <a href="../../../../runtime/chan.go.html#line-71">make</a>(<span class="keyword">chan</span> <a href="metric.go.html#line-31" class="ident">Metric</a>)
+	<span class="keyword">go</span> <span class="keyword">func</span>() {
+		<label for="r1" class="ident">c</label>.<a href="#line-62" class="ident">Collect</a>(<label for="r3" class="ident">metrics</label>)
+		<a href="../../../../../pkg/builtin.html#name-close" class="ident">close</a>(<label for="r3" class="ident">metrics</label>)
+	}()
+	<span class="keyword">for</span> <label for="r4" class="ident">m</label> := <span class="keyword">range</span> <label for="r3" class="ident">metrics</label> {
+		<label for="r2" class="ident">descs</label> &lt;- <label for="r4" class="ident">m</label>.<a href="metric.go.html#line-37" class="ident">Desc</a>()
+	}
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> selfCollector implements Collector for a single Metric so that the Metric</span><span class="comment"> collects itself. Add it as an anonymous field to a struct that implements</span><span class="comment"> Metric, and call init with the Metric itself as an argument.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../pkg/github.com/prometheus/client_golang/prometheus.html#name-selfCollector" class="ident">selfCollector</a> <span class="keyword">struct</span> {
+	<a href="../../../../../use/github.com/prometheus/client_golang/prometheus..selfCollector*ab6e7.self*06c60.html" class="ident">self</a> <a href="metric.go.html#line-31" class="ident">Metric</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> init provides the selfCollector with a reference to the metric it is supposed</span><span class="comment"> to collect. It is usually called within the factory function to create a</span><span class="comment"> metric. See example.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r5" class="ident">c</label> *<a href="#line-101" class="ident">selfCollector</a>) <label for="r6" class="ident"><a href="../../../../../use/github.com/prometheus/client_golang/prometheus..selfCollector*ab6e7.init*bb540.html" class="ident">init</a></label>(<label for="r7" class="ident">self</label> <a href="metric.go.html#line-31" class="ident">Metric</a>) {
+	<label for="r5" class="ident">c</label>.<a href="#line-102" class="ident">self</a> = <label for="r7" class="ident">self</label>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Describe implements Collector.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r8" class="ident">c</label> *<a href="#line-101" class="ident">selfCollector</a>) <label for="r9" class="ident"><a href="../../../../../use/github.com/prometheus/client_golang/prometheus..selfCollector*ab6e7.Describe.html" class="ident">Describe</a></label>(<label for="r10" class="ident">ch</label> <span class="keyword">chan</span>&lt;- *<a href="desc.go.html#line-45" class="ident">Desc</a>) {
+	<label for="r10" class="ident">ch</label> &lt;- <label for="r8" class="ident">c</label>.<a href="#line-102" class="ident">self</a>.<a href="metric.go.html#line-37" class="ident">Desc</a>()
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Collect implements Collector.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r11" class="ident">c</label> *<a href="#line-101" class="ident">selfCollector</a>) <label for="r12" class="ident"><a href="../../../../../use/github.com/prometheus/client_golang/prometheus..selfCollector*ab6e7.Collect.html" class="ident">Collect</a></label>(<label for="r13" class="ident">ch</label> <span class="keyword">chan</span>&lt;- <a href="metric.go.html#line-31" class="ident">Metric</a>) {
+	<label for="r13" class="ident">ch</label> &lt;- <label for="r11" class="ident">c</label>.<a href="#line-102" class="ident">self</a>
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

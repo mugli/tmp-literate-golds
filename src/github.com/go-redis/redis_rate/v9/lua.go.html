@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: lua.go in package github.com/go-redis/redis_rate/v9</title>
+<link href="../../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	lua.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../../pkg/github.com/go-redis/redis_rate/v9.html">github.com/go-redis/redis_rate/v9</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0
+{background: brown; color: #eed;}
+</style><input id="i0" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+</div>
+<div class="code"><pre><code><span class="keyword">package</span> redis_rate
+
+<span class="keyword">import</span> <label for="i0"><span class="lit-string i0">"github.com/go-redis/redis/v8"</span></label>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Copyright (c) 2017 Pavel Pravosud</span><span class="comment"> https://github.com/rwz/redis-gcra/blob/master/vendor/perform_gcra_ratelimit.lua</span></div>
+<div class="code"><pre><code><span class="keyword">var</span> <a href="../../../../../pkg/github.com/go-redis/redis_rate/v9.html#name-allowN" class="ident">allowN</a> = <a href="../../../../../pkg/github.com/go-redis/redis/v8.html" class="ident i0">redis</a>.<a href="../../redis/v8/script.go.html#line-28" class="ident">NewScript</a>(<span class="lit-string">`</span>
+<span class="lit-string">-- this script has side-effects, so it requires replicate commands mode</span>
+<span class="lit-string">redis.replicate_commands()</span>
+
+<span class="lit-string">local rate_limit_key = KEYS[1]</span>
+<span class="lit-string">local burst = ARGV[1]</span>
+<span class="lit-string">local rate = ARGV[2]</span>
+<span class="lit-string">local period = ARGV[3]</span>
+<span class="lit-string">local cost = tonumber(ARGV[4])</span>
+
+<span class="lit-string">local emission_interval = period / rate</span>
+<span class="lit-string">local increment = emission_interval * cost</span>
+<span class="lit-string">local burst_offset = emission_interval * burst</span>
+
+<span class="lit-string">-- redis returns time as an array containing two integers: seconds of the epoch</span>
+<span class="lit-string">-- time (10 digits) and microseconds (6 digits). for convenience we need to</span>
+<span class="lit-string">-- convert them to a floating point number. the resulting number is 16 digits,</span>
+<span class="lit-string">-- bordering on the limits of a 64-bit double-precision floating point number.</span>
+<span class="lit-string">-- adjust the epoch to be relative to Jan 1, 2017 00:00:00 GMT to avoid floating</span>
+<span class="lit-string">-- point problems. this approach is good until "now" is 2,483,228,799 (Wed, 09</span>
+<span class="lit-string">-- Sep 2048 01:46:39 GMT), when the adjusted value is 16 digits.</span>
+<span class="lit-string">local jan_1_2017 = 1483228800</span>
+<span class="lit-string">local now = redis.call("TIME")</span>
+<span class="lit-string">now = (now[1] - jan_1_2017) + (now[2] / 1000000)</span>
+
+<span class="lit-string">local tat = redis.call("GET", rate_limit_key)</span>
+
+<span class="lit-string">if not tat then</span>
+<span class="lit-string">  tat = now</span>
+<span class="lit-string">else</span>
+<span class="lit-string">  tat = tonumber(tat)</span>
+<span class="lit-string">end</span>
+
+<span class="lit-string">tat = math.max(tat, now)</span>
+
+<span class="lit-string">local new_tat = tat + increment</span>
+<span class="lit-string">local allow_at = new_tat - burst_offset</span>
+
+<span class="lit-string">local diff = now - allow_at</span>
+<span class="lit-string">local remaining = math.floor(diff / emission_interval + 0.5)</span>
+
+<span class="lit-string">if remaining &lt; 0 then</span>
+<span class="lit-string">  local reset_after = tat - now</span>
+<span class="lit-string">  local retry_after = diff * -1</span>
+<span class="lit-string">  return {</span>
+<span class="lit-string">    0, -- allowed</span>
+<span class="lit-string">    0, -- remaining</span>
+<span class="lit-string">    tostring(retry_after),</span>
+<span class="lit-string">    tostring(reset_after),</span>
+<span class="lit-string">  }</span>
+<span class="lit-string">end</span>
+
+<span class="lit-string">local reset_after = new_tat - now</span>
+<span class="lit-string">redis.call("SET", rate_limit_key, new_tat, "EX", math.ceil(reset_after))</span>
+<span class="lit-string">local retry_after = -1</span>
+<span class="lit-string">return {cost, remaining, tostring(retry_after), tostring(reset_after)}</span>
+<span class="lit-string">`</span>)
+
+<span class="keyword">var</span> <a href="../../../../../pkg/github.com/go-redis/redis_rate/v9.html#name-allowAtMost" class="ident">allowAtMost</a> = <a href="../../../../../pkg/github.com/go-redis/redis/v8.html" class="ident i0">redis</a>.<a href="../../redis/v8/script.go.html#line-28" class="ident">NewScript</a>(<span class="lit-string">`</span>
+<span class="lit-string">-- this script has side-effects, so it requires replicate commands mode</span>
+<span class="lit-string">redis.replicate_commands()</span>
+
+<span class="lit-string">local rate_limit_key = KEYS[1]</span>
+<span class="lit-string">local burst = ARGV[1]</span>
+<span class="lit-string">local rate = ARGV[2]</span>
+<span class="lit-string">local period = ARGV[3]</span>
+<span class="lit-string">local cost = tonumber(ARGV[4])</span>
+
+<span class="lit-string">local emission_interval = period / rate</span>
+<span class="lit-string">local burst_offset = emission_interval * burst</span>
+
+<span class="lit-string">-- redis returns time as an array containing two integers: seconds of the epoch</span>
+<span class="lit-string">-- time (10 digits) and microseconds (6 digits). for convenience we need to</span>
+<span class="lit-string">-- convert them to a floating point number. the resulting number is 16 digits,</span>
+<span class="lit-string">-- bordering on the limits of a 64-bit double-precision floating point number.</span>
+<span class="lit-string">-- adjust the epoch to be relative to Jan 1, 2017 00:00:00 GMT to avoid floating</span>
+<span class="lit-string">-- point problems. this approach is good until "now" is 2,483,228,799 (Wed, 09</span>
+<span class="lit-string">-- Sep 2048 01:46:39 GMT), when the adjusted value is 16 digits.</span>
+<span class="lit-string">local jan_1_2017 = 1483228800</span>
+<span class="lit-string">local now = redis.call("TIME")</span>
+<span class="lit-string">now = (now[1] - jan_1_2017) + (now[2] / 1000000)</span>
+
+<span class="lit-string">local tat = redis.call("GET", rate_limit_key)</span>
+
+<span class="lit-string">if not tat then</span>
+<span class="lit-string">  tat = now</span>
+<span class="lit-string">else</span>
+<span class="lit-string">  tat = tonumber(tat)</span>
+<span class="lit-string">end</span>
+
+<span class="lit-string">tat = math.max(tat, now)</span>
+
+<span class="lit-string">local diff = now - (tat - burst_offset)</span>
+<span class="lit-string">local remaining = math.floor(diff / emission_interval + 0.5)</span>
+
+<span class="lit-string">if remaining == 0 then</span>
+<span class="lit-string">  local reset_after = tat - now</span>
+<span class="lit-string">  local retry_after = emission_interval - diff</span>
+<span class="lit-string">  return {</span>
+<span class="lit-string">    0, -- allowed</span>
+<span class="lit-string">    0, -- remaining</span>
+<span class="lit-string">    tostring(retry_after),</span>
+<span class="lit-string">    tostring(reset_after),</span>
+<span class="lit-string">  }</span>
+<span class="lit-string">end</span>
+
+<span class="lit-string">if remaining &lt; cost then</span>
+<span class="lit-string">  cost = remaining</span>
+<span class="lit-string">  remaining = 0</span>
+<span class="lit-string">else</span>
+<span class="lit-string">  remaining = remaining - cost</span>
+<span class="lit-string">end</span>
+
+<span class="lit-string">local increment = emission_interval * cost</span>
+<span class="lit-string">local new_tat = tat + increment</span>
+
+<span class="lit-string">local reset_after = new_tat - now</span>
+<span class="lit-string">redis.call("SET", rate_limit_key, new_tat, "EX", math.ceil(reset_after))</span>
+
+<span class="lit-string">return {</span>
+<span class="lit-string">  cost,</span>
+<span class="lit-string">  remaining,</span>
+<span class="lit-string">  tostring(-1),</span>
+<span class="lit-string">  tostring(reset_after),</span>
+<span class="lit-string">}</span>
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

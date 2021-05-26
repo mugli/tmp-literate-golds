@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: metrics_batcher.go in package contrib.go.opencensus.io/exporter/stackdriver</title>
+<link href="../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	metrics_batcher.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../pkg/contrib.go.opencensus.io/exporter/stackdriver.html">contrib.go.opencensus.io/exporter/stackdriver</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16],
+input[id=r17]:checked ~pre label[for=r17],
+input[id=r18]:checked ~pre label[for=r18],
+input[id=r19]:checked ~pre label[for=r19],
+input[id=r20]:checked ~pre label[for=r20],
+input[id=r21]:checked ~pre label[for=r21],
+input[id=r22]:checked ~pre label[for=r22],
+input[id=r23]:checked ~pre label[for=r23],
+input[id=r24]:checked ~pre label[for=r24],
+input[id=r25]:checked ~pre label[for=r25],
+input[id=r26]:checked ~pre label[for=r26],
+input[id=r27]:checked ~pre label[for=r27],
+input[id=r28]:checked ~pre label[for=r28],
+input[id=r29]:checked ~pre label[for=r29],
+input[id=r30]:checked ~pre label[for=r30],
+input[id=r31]:checked ~pre label[for=r31],
+input[id=r32]:checked ~pre label[for=r32],
+input[id=r33]:checked ~pre label[for=r33],
+input[id=r34]:checked ~pre label[for=r34],
+input[id=r35]:checked ~pre label[for=r35],
+input[id=r36]:checked ~pre label[for=r36],
+input[id=r37]:checked ~pre label[for=r37],
+input[id=r38]:checked ~pre label[for=r38],
+input[id=r39]:checked ~pre label[for=r39],
+input[id=r40]:checked ~pre label[for=r40],
+input[id=r41]:checked ~pre label[for=r41],
+input[id=r42]:checked ~pre label[for=r42],
+input[id=r43]:checked ~pre label[for=r43],
+input[id=r44]:checked ~pre label[for=r44],
+input[id=r45]:checked ~pre label[for=r45],
+input[id=r46]:checked ~pre label[for=r46],
+input[id=r47]:checked ~pre label[for=r47],
+input[id=r48]:checked ~pre label[for=r48],
+input[id=r49]:checked ~pre label[for=r49],
+input[id=r50]:checked ~pre label[for=r50],
+input[id=r51]:checked ~pre label[for=r51],
+input[id=r52]:checked ~pre label[for=r52],
+input[id=r53]:checked ~pre label[for=r53],
+input[id=r54]:checked ~pre label[for=r54],
+input[id=r55]:checked ~pre label[for=r55],
+input[id=r56]:checked ~pre label[for=r56],
+input[id=r57]:checked ~pre label[for=r57],
+input[id=r58]:checked ~pre label[for=r58],
+input[id=r59]:checked ~pre label[for=r59],
+input[id=r60]:checked ~pre label[for=r60],
+input[id=r61]:checked ~pre label[for=r61],
+input[id=r62]:checked ~pre label[for=r62],
+input[id=r63]:checked ~pre label[for=r63],
+input[id=r64]:checked ~pre label[for=r64],
+input[id=r65]:checked ~pre label[for=r65],
+input[id=r66]:checked ~pre label[for=r66],
+input[id=r67]:checked ~pre label[for=r67],
+input[id=r68]:checked ~pre label[for=r68]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1,
+input[id=i2]:checked ~pre .i2,
+input[id=i3]:checked ~pre .i3,
+input[id=i4]:checked ~pre .i4,
+input[id=i5]:checked ~pre .i5,
+input[id=i6]:checked ~pre .i6,
+input[id=i7]:checked ~pre .i7,
+input[id=i8]:checked ~pre .i8
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="r17" type="radio" name="g"/>
+<input id="r18" type="radio" name="g"/>
+<input id="r19" type="radio" name="g"/>
+<input id="r20" type="radio" name="g"/>
+<input id="r21" type="radio" name="g"/>
+<input id="r22" type="radio" name="g"/>
+<input id="r23" type="radio" name="g"/>
+<input id="r24" type="radio" name="g"/>
+<input id="r25" type="radio" name="g"/>
+<input id="r26" type="radio" name="g"/>
+<input id="r27" type="radio" name="g"/>
+<input id="r28" type="radio" name="g"/>
+<input id="r29" type="radio" name="g"/>
+<input id="r30" type="radio" name="g"/>
+<input id="r31" type="radio" name="g"/>
+<input id="r32" type="radio" name="g"/>
+<input id="r33" type="radio" name="g"/>
+<input id="r34" type="radio" name="g"/>
+<input id="r35" type="radio" name="g"/>
+<input id="r36" type="radio" name="g"/>
+<input id="r37" type="radio" name="g"/>
+<input id="r38" type="radio" name="g"/>
+<input id="r39" type="radio" name="g"/>
+<input id="r40" type="radio" name="g"/>
+<input id="r41" type="radio" name="g"/>
+<input id="r42" type="radio" name="g"/>
+<input id="r43" type="radio" name="g"/>
+<input id="r44" type="radio" name="g"/>
+<input id="r45" type="radio" name="g"/>
+<input id="r46" type="radio" name="g"/>
+<input id="r47" type="radio" name="g"/>
+<input id="r48" type="radio" name="g"/>
+<input id="r49" type="radio" name="g"/>
+<input id="r50" type="radio" name="g"/>
+<input id="r51" type="radio" name="g"/>
+<input id="r52" type="radio" name="g"/>
+<input id="r53" type="radio" name="g"/>
+<input id="r54" type="radio" name="g"/>
+<input id="r55" type="radio" name="g"/>
+<input id="r56" type="radio" name="g"/>
+<input id="r57" type="radio" name="g"/>
+<input id="r58" type="radio" name="g"/>
+<input id="r59" type="radio" name="g"/>
+<input id="r60" type="radio" name="g"/>
+<input id="r61" type="radio" name="g"/>
+<input id="r62" type="radio" name="g"/>
+<input id="r63" type="radio" name="g"/>
+<input id="r64" type="radio" name="g"/>
+<input id="r65" type="radio" name="g"/>
+<input id="r66" type="radio" name="g"/>
+<input id="r67" type="radio" name="g"/>
+<input id="r68" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<input id="i2" type="radio" name="i"/>
+<input id="i3" type="radio" name="i"/>
+<input id="i4" type="radio" name="i"/>
+<input id="i5" type="radio" name="i"/>
+<input id="i6" type="radio" name="i"/>
+<input id="i7" type="radio" name="i"/>
+<input id="i8" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2019, OpenCensus Authors</span><span class="comment"></span><span class="comment"> Licensed under the Apache License, Version 2.0 (the "License");</span><span class="comment"> you may not use this file except in compliance with the License.</span><span class="comment"> You may obtain a copy of the License at</span><span class="comment"></span><span class="comment">     http://www.apache.org/licenses/LICENSE-2.0</span><span class="comment"></span><span class="comment"> Unless required by applicable law or agreed to in writing, software</span><span class="comment"> distributed under the License is distributed on an "AS IS" BASIS,</span><span class="comment"> WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span><span class="comment"> See the License for the specific language governing permissions and</span><span class="comment"> limitations under the License.</span></div>
+<div class="code"><pre><code>
+<span class="keyword">package</span> stackdriver
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"context"</span></label>
+	<label for="i1"><span class="lit-string i1">"fmt"</span></label>
+	<label for="i2"><span class="lit-string i2">"regexp"</span></label>
+	<label for="i3"><span class="lit-string i3">"strconv"</span></label>
+	<label for="i4"><span class="lit-string i4">"strings"</span></label>
+	<label for="i5"><span class="lit-string i5">"sync"</span></label>
+	<label for="i6"><span class="lit-string i6">"time"</span></label>
+
+	<a href="../../../../pkg/cloud.google.com/go/monitoring/apiv3.html" class="ident i7">monitoring</a> <label for="i7"><span class="lit-string i7">"cloud.google.com/go/monitoring/apiv3"</span></label>
+	<a href="../../../../pkg/google.golang.org/genproto/googleapis/monitoring/v3.html" class="ident i8">monitoringpb</a> <label for="i8"><span class="lit-string i8">"google.golang.org/genproto/googleapis/monitoring/v3"</span></label>
+)
+
+<span class="keyword">const</span> (
+	<a href="../../../../pkg/contrib.go.opencensus.io/exporter/stackdriver.html#name-minNumWorkers" class="ident">minNumWorkers</a>   = <span class="lit-number">1</span>
+	<a href="../../../../pkg/contrib.go.opencensus.io/exporter/stackdriver.html#name-minReqsChanSize" class="ident">minReqsChanSize</a> = <span class="lit-number">5</span>
+)
+
+<span class="keyword">type</span> <a href="../../../../pkg/contrib.go.opencensus.io/exporter/stackdriver.html#name-metricsBatcher" class="ident">metricsBatcher</a> <span class="keyword">struct</span> {
+	<a href="../../../../use/contrib.go.opencensus.io/exporter/stackdriver..metricsBatcher*f1ebf.projectName*91f15.html" class="ident">projectName</a> <a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../use/contrib.go.opencensus.io/exporter/stackdriver..metricsBatcher*f1ebf.allTss*05bc4.html" class="ident">allTss</a>      []*<a href="../../../../pkg/google.golang.org/genproto/googleapis/monitoring/v3.html" class="ident i8">monitoringpb</a>.<a href="../../../google.golang.org/genproto/googleapis/monitoring/v3/metric.pb.go.html#line-118" class="ident">TimeSeries</a>
+	<a href="../../../../use/contrib.go.opencensus.io/exporter/stackdriver..metricsBatcher*f1ebf.allErrs*d4dad.html" class="ident">allErrs</a>     []<a href="../../../../pkg/builtin.html#name-error" class="ident">error</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Counts all dropped TimeSeries by this metricsBatcher.</span></div>
+<div class="code"><pre><code>	<a href="../../../../use/contrib.go.opencensus.io/exporter/stackdriver..metricsBatcher*f1ebf.droppedTimeSeries*db411.html" class="ident">droppedTimeSeries</a> <a href="../../../../pkg/builtin.html#name-int" class="ident">int</a>
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> reqsChan, respsChan and wg are shared between metricsBatcher and worker goroutines.</span></div>
+<div class="code"><pre><code>	<a href="../../../../use/contrib.go.opencensus.io/exporter/stackdriver..metricsBatcher*f1ebf.reqsChan*3fafe.html" class="ident">reqsChan</a>  <span class="keyword">chan</span> *<a href="../../../../pkg/google.golang.org/genproto/googleapis/monitoring/v3.html" class="ident i8">monitoringpb</a>.<a href="../../../google.golang.org/genproto/googleapis/monitoring/v3/metric_service.pb.go.html#line-825" class="ident">CreateTimeSeriesRequest</a>
+	<a href="../../../../use/contrib.go.opencensus.io/exporter/stackdriver..metricsBatcher*f1ebf.respsChan*541f8.html" class="ident">respsChan</a> <span class="keyword">chan</span> *<a href="#line-229" class="ident">response</a>
+	<a href="../../../../use/contrib.go.opencensus.io/exporter/stackdriver..metricsBatcher*f1ebf.wg*99d38.html" class="ident">wg</a>        *<a href="../../../../pkg/sync.html" class="ident i5">sync</a>.<a href="../../../sync/waitgroup.go.html#line-20" class="ident">WaitGroup</a>
+}
+
+<span class="keyword">func</span> <label for="r0" class="ident"><a href="../../../../pkg/contrib.go.opencensus.io/exporter/stackdriver.html#name-newMetricsBatcher" class="ident">newMetricsBatcher</a></label>(<label for="r1" class="ident">ctx</label> <a href="../../../../pkg/context.html" class="ident i0">context</a>.<a href="../../../context/context.go.html#line-62" class="ident">Context</a>, <label for="r2" class="ident">projectID</label> <a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>, <label for="r3" class="ident">numWorkers</label> <a href="../../../../pkg/builtin.html#name-int" class="ident">int</a>, <label for="r4" class="ident">mc</label> *<a href="../../../../pkg/cloud.google.com/go/monitoring/apiv3.html" class="ident i7">monitoring</a>.<a href="../../../cloud.google.com/go/monitoring/apiv3/metric_client.go.html#line-145" class="ident">MetricClient</a>, <label for="r5" class="ident">timeout</label> <a href="../../../../pkg/time.html" class="ident i6">time</a>.<a href="../../../time/time.go.html#line-583" class="ident">Duration</a>) *<a href="#line-35" class="ident">metricsBatcher</a> {
+	<span class="keyword">if</span> <label for="r3" class="ident">numWorkers</label> &lt; <a href="#line-31" class="ident">minNumWorkers</a> {
+		<label for="r3" class="ident">numWorkers</label> = <a href="#line-31" class="ident">minNumWorkers</a>
+	}
+	<label for="r6" class="ident">workers</label> := <a href="../../../../pkg/builtin.html#name-make" class="ident">make</a>([]*<a href="#line-177" class="ident">worker</a>, <span class="lit-number">0</span>, <label for="r3" class="ident">numWorkers</label>)
+	<label for="r7" class="ident">reqsChanSize</label> := <label for="r3" class="ident">numWorkers</label>
+	<span class="keyword">if</span> <label for="r7" class="ident">reqsChanSize</label> &lt; <a href="#line-32" class="ident">minReqsChanSize</a> {
+		<label for="r7" class="ident">reqsChanSize</label> = <a href="#line-32" class="ident">minReqsChanSize</a>
+	}
+	<label for="r8" class="ident">reqsChan</label> := <a href="../../../runtime/chan.go.html#line-71">make</a>(<span class="keyword">chan</span> *<a href="../../../../pkg/google.golang.org/genproto/googleapis/monitoring/v3.html" class="ident i8">monitoringpb</a>.<a href="../../../google.golang.org/genproto/googleapis/monitoring/v3/metric_service.pb.go.html#line-825" class="ident">CreateTimeSeriesRequest</a>, <label for="r7" class="ident">reqsChanSize</label>)
+	<label for="r9" class="ident">respsChan</label> := <a href="../../../runtime/chan.go.html#line-71">make</a>(<span class="keyword">chan</span> *<a href="#line-229" class="ident">response</a>, <label for="r3" class="ident">numWorkers</label>)
+	<span class="keyword">var</span> <label for="r10" class="ident">wg</label> <a href="../../../../pkg/sync.html" class="ident i5">sync</a>.<a href="../../../sync/waitgroup.go.html#line-20" class="ident">WaitGroup</a>
+	<label for="r10" class="ident">wg</label>.<a href="../../../sync/waitgroup.go.html#line-53" class="ident">Add</a>(<label for="r3" class="ident">numWorkers</label>)
+	<span class="keyword">for</span> <label for="r11" class="ident">i</label> := <span class="lit-number">0</span>; <label for="r11" class="ident">i</label> &lt; <label for="r3" class="ident">numWorkers</label>; <label for="r11" class="ident">i</label>++ {
+		<label for="r12" class="ident">w</label> := <a href="#line-190" class="ident">newWorker</a>(<label for="r1" class="ident">ctx</label>, <label for="r4" class="ident">mc</label>, <label for="r8" class="ident">reqsChan</label>, <label for="r9" class="ident">respsChan</label>, &amp;<label for="r10" class="ident">wg</label>, <label for="r5" class="ident">timeout</label>)
+		<label for="r6" class="ident">workers</label> = <a href="../../../../pkg/builtin.html#name-append" class="ident">append</a>(<label for="r6" class="ident">workers</label>, <label for="r12" class="ident">w</label>)
+		<span class="keyword">go</span> <label for="r12" class="ident">w</label>.<a href="#line-207" class="ident">start</a>()
+	}
+	<span class="keyword">return</span> &amp;<a href="#line-35" class="ident">metricsBatcher</a>{
+		<a href="#line-36" class="ident">projectName</a>:       <a href="../../../../pkg/fmt.html" class="ident i1">fmt</a>.<a href="../../../fmt/print.go.html#line-217" class="ident">Sprintf</a>(<span class="lit-string">"projects/%s"</span>, <label for="r2" class="ident">projectID</label>),
+		<a href="#line-37" class="ident">allTss</a>:            <a href="../../../../pkg/builtin.html#name-make" class="ident">make</a>([]*<a href="../../../../pkg/google.golang.org/genproto/googleapis/monitoring/v3.html" class="ident i8">monitoringpb</a>.<a href="../../../google.golang.org/genproto/googleapis/monitoring/v3/metric.pb.go.html#line-118" class="ident">TimeSeries</a>, <span class="lit-number">0</span>, <a href="stats.go.html#line-50" class="ident">maxTimeSeriesPerUpload</a>),
+		<a href="#line-41" class="ident">droppedTimeSeries</a>: <span class="lit-number">0</span>,
+		<a href="#line-43" class="ident">workers</a>:           <label for="r6" class="ident">workers</label>,
+		<a href="#line-47" class="ident">wg</a>:                &amp;<label for="r10" class="ident">wg</label>,
+		<a href="#line-45" class="ident">reqsChan</a>:          <label for="r8" class="ident">reqsChan</label>,
+		<a href="#line-46" class="ident">respsChan</a>:         <label for="r9" class="ident">respsChan</label>,
+	}
+}
+
+<span class="keyword">func</span> (<label for="r13" class="ident">mb</label> *<a href="#line-35" class="ident">metricsBatcher</a>) <label for="r14" class="ident"><a href="../../../../use/contrib.go.opencensus.io/exporter/stackdriver..metricsBatcher*f1ebf.recordDroppedTimeseries*76525.html" class="ident">recordDroppedTimeseries</a></label>(<label for="r15" class="ident">numTimeSeries</label> <a href="../../../../pkg/builtin.html#name-int" class="ident">int</a>, <label for="r16" class="ident">errs</label> ...<a href="../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<label for="r13" class="ident">mb</label>.<a href="#line-41" class="ident">droppedTimeSeries</a> += <label for="r15" class="ident">numTimeSeries</label>
+	<span class="keyword">for</span> <label for="r17" class="ident">_</label>, <label for="r18" class="ident">err</label> := <span class="keyword">range</span> <label for="r16" class="ident">errs</label> {
+		<span class="keyword">if</span> <label for="r18" class="ident">err</label> != <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<label for="r13" class="ident">mb</label>.<a href="#line-38" class="ident">allErrs</a> = <a href="../../../../pkg/builtin.html#name-append" class="ident">append</a>(<label for="r13" class="ident">mb</label>.<a href="#line-38" class="ident">allErrs</a>, <label for="r18" class="ident">err</label>)
+		}
+	}
+}
+
+<span class="keyword">func</span> (<label for="r19" class="ident">mb</label> *<a href="#line-35" class="ident">metricsBatcher</a>) <label for="r20" class="ident"><a href="../../../../use/contrib.go.opencensus.io/exporter/stackdriver..metricsBatcher*f1ebf.addTimeSeries*aa7e6.html" class="ident">addTimeSeries</a></label>(<label for="r21" class="ident">ts</label> *<a href="../../../../pkg/google.golang.org/genproto/googleapis/monitoring/v3.html" class="ident i8">monitoringpb</a>.<a href="../../../google.golang.org/genproto/googleapis/monitoring/v3/metric.pb.go.html#line-118" class="ident">TimeSeries</a>) {
+	<label for="r19" class="ident">mb</label>.<a href="#line-37" class="ident">allTss</a> = <a href="../../../../pkg/builtin.html#name-append" class="ident">append</a>(<label for="r19" class="ident">mb</label>.<a href="#line-37" class="ident">allTss</a>, <label for="r21" class="ident">ts</label>)
+	<span class="keyword">if</span> <a href="../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r19" class="ident">mb</label>.<a href="#line-37" class="ident">allTss</a>) == <a href="stats.go.html#line-50" class="ident">maxTimeSeriesPerUpload</a> {
+		<label for="r19" class="ident">mb</label>.<a href="#line-128" class="ident">sendReqToChan</a>()
+		<label for="r19" class="ident">mb</label>.<a href="#line-37" class="ident">allTss</a> = <a href="../../../../pkg/builtin.html#name-make" class="ident">make</a>([]*<a href="../../../../pkg/google.golang.org/genproto/googleapis/monitoring/v3.html" class="ident i8">monitoringpb</a>.<a href="../../../google.golang.org/genproto/googleapis/monitoring/v3/metric.pb.go.html#line-118" class="ident">TimeSeries</a>, <span class="lit-number">0</span>, <a href="stats.go.html#line-50" class="ident">maxTimeSeriesPerUpload</a>)
+	}
+}
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Send any remaining time series, must be &lt;200</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> <a href="../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r22" class="ident">mb</label>.<a href="#line-37" class="ident">allTss</a>) &gt; <span class="lit-number">0</span> {
+		<label for="r22" class="ident">mb</label>.<a href="#line-128" class="ident">sendReqToChan</a>()
+	}
+
+	<a href="../../../../pkg/builtin.html#name-close" class="ident">close</a>(<label for="r22" class="ident">mb</label>.<a href="#line-45" class="ident">reqsChan</a>)
+	<label for="r22" class="ident">mb</label>.<a href="#line-47" class="ident">wg</a>.<a href="../../../sync/waitgroup.go.html#line-103" class="ident">Wait</a>()
+	<span class="keyword">for</span> <label for="r25" class="ident">i</label> := <span class="lit-number">0</span>; <label for="r25" class="ident">i</label> &lt; <a href="../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r22" class="ident">mb</label>.<a href="#line-43" class="ident">workers</a>); <label for="r25" class="ident">i</label>++ {
+		<label for="r26" class="ident">resp</label> := &lt;-<label for="r22" class="ident">mb</label>.<a href="#line-46" class="ident">respsChan</a>
+		<label for="r22" class="ident">mb</label>.<a href="#line-79" class="ident">recordDroppedTimeseries</a>(<label for="r26" class="ident">resp</label>.<a href="#line-230" class="ident">droppedTimeSeries</a>, <label for="r26" class="ident">resp</label>.<a href="#line-231" class="ident">errs</a>...)
+	}
+	<a href="../../../../pkg/builtin.html#name-close" class="ident">close</a>(<label for="r22" class="ident">mb</label>.<a href="#line-46" class="ident">respsChan</a>)
+
+	<label for="r27" class="ident">numErrors</label> := <a href="../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r22" class="ident">mb</label>.<a href="#line-38" class="ident">allErrs</a>)
+	<span class="keyword">if</span> <label for="r27" class="ident">numErrors</label> == <span class="lit-number">0</span> {
+		<span class="keyword">return</span> <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+	}
+
+	<span class="keyword">if</span> <label for="r27" class="ident">numErrors</label> == <span class="lit-number">1</span> {
+		<span class="keyword">return</span> <label for="r22" class="ident">mb</label>.<a href="#line-38" class="ident">allErrs</a>[<span class="lit-number">0</span>]
+	}
+
+	<label for="r28" class="ident">errMsgs</label> := <a href="../../../../pkg/builtin.html#name-make" class="ident">make</a>([]<a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>, <span class="lit-number">0</span>, <label for="r27" class="ident">numErrors</label>)
+	<span class="keyword">for</span> <label for="r29" class="ident">_</label>, <label for="r30" class="ident">err</label> := <span class="keyword">range</span> <label for="r22" class="ident">mb</label>.<a href="#line-38" class="ident">allErrs</a> {
+		<label for="r28" class="ident">errMsgs</label> = <a href="../../../../pkg/builtin.html#name-append" class="ident">append</a>(<label for="r28" class="ident">errMsgs</label>, <label for="r30" class="ident">err</label>.Error())
+	}
+	<span class="keyword">return</span> <a href="../../../../pkg/fmt.html" class="ident i1">fmt</a>.<a href="../../../fmt/errors.go.html#line-17" class="ident">Errorf</a>(<span class="lit-string">"[%s]"</span>, <a href="../../../../pkg/strings.html" class="ident i4">strings</a>.<a href="../../../strings/strings.go.html#line-421" class="ident">Join</a>(<label for="r28" class="ident">errMsgs</label>, <span class="lit-string">"; "</span>))
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> sendReqToChan grabs all the timeseies in this metricsBatcher, puts them</span><span class="comment"> to a CreateTimeSeriesRequest and sends the request to reqsChan.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r31" class="ident">mb</label> *<a href="#line-35" class="ident">metricsBatcher</a>) <label for="r32" class="ident"><a href="../../../../use/contrib.go.opencensus.io/exporter/stackdriver..metricsBatcher*f1ebf.sendReqToChan*aa91d.html" class="ident">sendReqToChan</a></label>() {
+	<label for="r33" class="ident">req</label> := &amp;<a href="../../../../pkg/google.golang.org/genproto/googleapis/monitoring/v3.html" class="ident i8">monitoringpb</a>.<a href="../../../google.golang.org/genproto/googleapis/monitoring/v3/metric_service.pb.go.html#line-825" class="ident">CreateTimeSeriesRequest</a>{
+		<a href="../../../google.golang.org/genproto/googleapis/monitoring/v3/metric_service.pb.go.html#line-833" class="ident">Name</a>:       <label for="r31" class="ident">mb</label>.<a href="#line-36" class="ident">projectName</a>,
+		<a href="../../../google.golang.org/genproto/googleapis/monitoring/v3/metric_service.pb.go.html#line-841" class="ident">TimeSeries</a>: <label for="r31" class="ident">mb</label>.<a href="#line-37" class="ident">allTss</a>,
+	}
+	<label for="r31" class="ident">mb</label>.<a href="#line-45" class="ident">reqsChan</a> &lt;- <label for="r33" class="ident">req</label>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> regex to extract min-max ranges from error response strings in the format "timeSeries[(min-max,...)] ..." (max is optional)</span></div>
+<div class="code"><pre><code><span class="keyword">var</span> <a href="../../../../pkg/contrib.go.opencensus.io/exporter/stackdriver.html#name-timeSeriesErrRegex" class="ident">timeSeriesErrRegex</a> = <a href="../../../../pkg/regexp.html" class="ident i2">regexp</a>.<a href="../../../regexp/regexp.go.html#line-308" class="ident">MustCompile</a>(<span class="lit-string">`: timeSeries\[([0-9]+(?:-[0-9]+)?(?:,[0-9]+(?:-[0-9]+)?)*)\]`</span>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> sendReq sends create time series requests to Stackdriver,</span><span class="comment"> and returns the count of dropped time series and error.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> c == nil only happens in unit tests where we don't make real calls to Stackdriver server</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> <label for="r36" class="ident">c</label> == <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <span class="lit-number">0</span>, <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+	}
+
+	<label for="r38" class="ident">err</label> := <a href="stats.go.html#line-611" class="ident">createTimeSeries</a>(<label for="r35" class="ident">ctx</label>, <label for="r36" class="ident">c</label>, <label for="r37" class="ident">req</label>)
+	<span class="keyword">if</span> <label for="r38" class="ident">err</label> == <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <span class="lit-number">0</span>, <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+	}
+
+	<label for="r39" class="ident">droppedTimeSeriesRangeMatches</label> := <a href="#line-137" class="ident">timeSeriesErrRegex</a>.<a href="../../../regexp/regexp.go.html#line-1190" class="ident">FindAllStringSubmatch</a>(<label for="r38" class="ident">err</label>.Error(), -<span class="lit-number">1</span>)
+	<span class="keyword">if</span> !<a href="../../../../pkg/strings.html" class="ident i4">strings</a>.<a href="../../../strings/strings.go.html#line-444" class="ident">HasPrefix</a>(<label for="r38" class="ident">err</label>.Error(), <span class="lit-string">"One or more TimeSeries could not be written:"</span>) || <a href="../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r39" class="ident">droppedTimeSeriesRangeMatches</label>) == <span class="lit-number">0</span> {
+		<span class="keyword">return</span> <a href="../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r37" class="ident">req</label>.<a href="../../../google.golang.org/genproto/googleapis/monitoring/v3/metric_service.pb.go.html#line-841" class="ident">TimeSeries</a>), <label for="r38" class="ident">err</label>
+	}
+
+	<label for="r40" class="ident">dropped</label> := <span class="lit-number">0</span>
+	<span class="keyword">for</span> <label for="r41" class="ident">_</label>, <label for="r42" class="ident">submatches</label> := <span class="keyword">range</span> <label for="r39" class="ident">droppedTimeSeriesRangeMatches</label> {
+		<span class="keyword">for</span> <label for="r43" class="ident">i</label> := <span class="lit-number">1</span>; <label for="r43" class="ident">i</label> &lt; <a href="../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r42" class="ident">submatches</label>); <label for="r43" class="ident">i</label>++ {
+			<span class="keyword">for</span> <label for="r44" class="ident">_</label>, <label for="r45" class="ident">rng</label> := <span class="keyword">range</span> <a href="../../../../pkg/strings.html" class="ident i4">strings</a>.<a href="../../../strings/strings.go.html#line-299" class="ident">Split</a>(<label for="r42" class="ident">submatches</label>[<label for="r43" class="ident">i</label>], <span class="lit-string">","</span>) {
+				<label for="r46" class="ident">rngSlice</label> := <a href="../../../../pkg/strings.html" class="ident i4">strings</a>.<a href="../../../strings/strings.go.html#line-299" class="ident">Split</a>(<label for="r45" class="ident">rng</label>, <span class="lit-string">"-"</span>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> strconv errors not possible due to regex above</span></div>
+<div class="code"><pre><code>				<label for="r47" class="ident">min</label>, <label for="r48" class="ident">_</label> := <a href="../../../../pkg/strconv.html" class="ident i3">strconv</a>.<a href="../../../strconv/atoi.go.html#line-224" class="ident">Atoi</a>(<label for="r46" class="ident">rngSlice</label>[<span class="lit-number">0</span>])
+				<label for="r49" class="ident">max</label> := <label for="r47" class="ident">min</label>
+				<span class="keyword">if</span> <a href="../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r46" class="ident">rngSlice</label>) &gt; <span class="lit-number">1</span> {
+					<label for="r49" class="ident">max</label>, _ = <a href="../../../../pkg/strconv.html" class="ident i3">strconv</a>.<a href="../../../strconv/atoi.go.html#line-224" class="ident">Atoi</a>(<label for="r46" class="ident">rngSlice</label>[<span class="lit-number">1</span>])
+				}
+
+				<label for="r40" class="ident">dropped</label> += <label for="r49" class="ident">max</label> - <label for="r47" class="ident">min</label> + <span class="lit-number">1</span>
+			}
+		}
+	}
+	<span class="keyword">return</span> <label for="r40" class="ident">dropped</label>, <label for="r38" class="ident">err</label>
+}
+
+<span class="keyword">type</span> <a href="../../../../pkg/contrib.go.opencensus.io/exporter/stackdriver.html#name-worker" class="ident">worker</a> <span class="keyword">struct</span> {
+	<a href="../../../../use/contrib.go.opencensus.io/exporter/stackdriver..worker*87eba.ctx*0230c.html" class="ident">ctx</a>     <a href="../../../../pkg/context.html" class="ident i0">context</a>.<a href="../../../context/context.go.html#line-62" class="ident">Context</a>
+	<a href="../../../../use/contrib.go.opencensus.io/exporter/stackdriver..worker*87eba.timeout*f77d1.html" class="ident">timeout</a> <a href="../../../../pkg/time.html" class="ident i6">time</a>.<a href="../../../time/time.go.html#line-583" class="ident">Duration</a>
+	<a href="../../../../use/contrib.go.opencensus.io/exporter/stackdriver..worker*87eba.mc*6bc0f.html" class="ident">mc</a>      *<a href="../../../../pkg/cloud.google.com/go/monitoring/apiv3.html" class="ident i7">monitoring</a>.<a href="../../../cloud.google.com/go/monitoring/apiv3/metric_client.go.html#line-145" class="ident">MetricClient</a>
+
+	<a href="../../../../use/contrib.go.opencensus.io/exporter/stackdriver..worker*87eba.resp*d30db.html" class="ident">resp</a> *<a href="#line-229" class="ident">response</a>
+
+	<a href="../../../../use/contrib.go.opencensus.io/exporter/stackdriver..worker*87eba.respsChan*541f8.html" class="ident">respsChan</a> <span class="keyword">chan</span> *<a href="#line-229" class="ident">response</a>
+	<a href="../../../../use/contrib.go.opencensus.io/exporter/stackdriver..worker*87eba.reqsChan*3fafe.html" class="ident">reqsChan</a>  <span class="keyword">chan</span> *<a href="../../../../pkg/google.golang.org/genproto/googleapis/monitoring/v3.html" class="ident i8">monitoringpb</a>.<a href="../../../google.golang.org/genproto/googleapis/monitoring/v3/metric_service.pb.go.html#line-825" class="ident">CreateTimeSeriesRequest</a>
+
+	<a href="../../../../use/contrib.go.opencensus.io/exporter/stackdriver..worker*87eba.wg*99d38.html" class="ident">wg</a> *<a href="../../../../pkg/sync.html" class="ident i5">sync</a>.<a href="../../../sync/waitgroup.go.html#line-20" class="ident">WaitGroup</a>
+}
+
+<span class="keyword">func</span> <label for="r50" class="ident"><a href="../../../../pkg/contrib.go.opencensus.io/exporter/stackdriver.html#name-newWorker" class="ident">newWorker</a></label>(
+	<label for="r51" class="ident">ctx</label> <a href="../../../../pkg/context.html" class="ident i0">context</a>.<a href="../../../context/context.go.html#line-62" class="ident">Context</a>,
+	<label for="r52" class="ident">mc</label> *<a href="../../../../pkg/cloud.google.com/go/monitoring/apiv3.html" class="ident i7">monitoring</a>.<a href="../../../cloud.google.com/go/monitoring/apiv3/metric_client.go.html#line-145" class="ident">MetricClient</a>,
+	<label for="r53" class="ident">reqsChan</label> <span class="keyword">chan</span> *<a href="../../../../pkg/google.golang.org/genproto/googleapis/monitoring/v3.html" class="ident i8">monitoringpb</a>.<a href="../../../google.golang.org/genproto/googleapis/monitoring/v3/metric_service.pb.go.html#line-825" class="ident">CreateTimeSeriesRequest</a>,
+	<label for="r54" class="ident">respsChan</label> <span class="keyword">chan</span> *<a href="#line-229" class="ident">response</a>,
+	<label for="r55" class="ident">wg</label> *<a href="../../../../pkg/sync.html" class="ident i5">sync</a>.<a href="../../../sync/waitgroup.go.html#line-20" class="ident">WaitGroup</a>,
+	<label for="r56" class="ident">timeout</label> <a href="../../../../pkg/time.html" class="ident i6">time</a>.<a href="../../../time/time.go.html#line-583" class="ident">Duration</a>) *<a href="#line-177" class="ident">worker</a> {
+	<span class="keyword">return</span> &amp;<a href="#line-177" class="ident">worker</a>{
+		<a href="#line-178" class="ident">ctx</a>:       <label for="r51" class="ident">ctx</label>,
+		<a href="#line-180" class="ident">mc</a>:        <label for="r52" class="ident">mc</label>,
+		<a href="#line-182" class="ident">resp</a>:      &amp;<a href="#line-229" class="ident">response</a>{},
+		<a href="#line-185" class="ident">reqsChan</a>:  <label for="r53" class="ident">reqsChan</label>,
+		<a href="#line-184" class="ident">respsChan</a>: <label for="r54" class="ident">respsChan</label>,
+		<a href="#line-187" class="ident">wg</a>:        <label for="r55" class="ident">wg</label>,
+	}
+}
+
+<span class="keyword">func</span> (<label for="r57" class="ident">w</label> *<a href="#line-177" class="ident">worker</a>) <label for="r58" class="ident"><a href="../../../../use/contrib.go.opencensus.io/exporter/stackdriver..worker*87eba.start*cced2.html" class="ident">start</a></label>() {
+	<span class="keyword">for</span> <label for="r59" class="ident">req</label> := <span class="keyword">range</span> <label for="r57" class="ident">w</label>.<a href="#line-185" class="ident">reqsChan</a> {
+		<label for="r57" class="ident">w</label>.<a href="#line-215" class="ident">sendReqWithTimeout</a>(<label for="r59" class="ident">req</label>)
+	}
+	<label for="r57" class="ident">w</label>.<a href="#line-184" class="ident">respsChan</a> &lt;- <label for="r57" class="ident">w</label>.<a href="#line-182" class="ident">resp</a>
+	<label for="r57" class="ident">w</label>.<a href="#line-187" class="ident">wg</a>.<a href="../../../sync/waitgroup.go.html#line-98" class="ident">Done</a>()
+}
+
+<span class="keyword">func</span> (<label for="r60" class="ident">w</label> *<a href="#line-177" class="ident">worker</a>) <label for="r61" class="ident"><a href="../../../../use/contrib.go.opencensus.io/exporter/stackdriver..worker*87eba.sendReqWithTimeout*63c19.html" class="ident">sendReqWithTimeout</a></label>(<label for="r62" class="ident">req</label> *<a href="../../../../pkg/google.golang.org/genproto/googleapis/monitoring/v3.html" class="ident i8">monitoringpb</a>.<a href="../../../google.golang.org/genproto/googleapis/monitoring/v3/metric_service.pb.go.html#line-825" class="ident">CreateTimeSeriesRequest</a>) {
+	<label for="r63" class="ident">ctx</label>, <label for="r64" class="ident">cancel</label> := <a href="stackdriver.go.html#line-480" class="ident">newContextWithTimeout</a>(<label for="r60" class="ident">w</label>.<a href="#line-178" class="ident">ctx</a>, <label for="r60" class="ident">w</label>.<a href="#line-179" class="ident">timeout</a>)
+	<span class="keyword">defer</span> <label for="r64" class="ident">cancel</label>()
+
+	<label for="r60" class="ident">w</label>.<a href="#line-222" class="ident">recordDroppedTimeseries</a>(<a href="#line-141" class="ident">sendReq</a>(<label for="r63" class="ident">ctx</label>, <label for="r60" class="ident">w</label>.<a href="#line-180" class="ident">mc</a>, <label for="r62" class="ident">req</label>))
+}
+
+<span class="keyword">func</span> (<label for="r65" class="ident">w</label> *<a href="#line-177" class="ident">worker</a>) <label for="r66" class="ident"><a href="../../../../use/contrib.go.opencensus.io/exporter/stackdriver..worker*87eba.recordDroppedTimeseries*76525.html" class="ident">recordDroppedTimeseries</a></label>(<label for="r67" class="ident">numTimeSeries</label> <a href="../../../../pkg/builtin.html#name-int" class="ident">int</a>, <label for="r68" class="ident">err</label> <a href="../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<label for="r65" class="ident">w</label>.<a href="#line-182" class="ident">resp</a>.<a href="#line-230" class="ident">droppedTimeSeries</a> += <label for="r67" class="ident">numTimeSeries</label>
+	<span class="keyword">if</span> <label for="r68" class="ident">err</label> != <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<label for="r65" class="ident">w</label>.<a href="#line-182" class="ident">resp</a>.<a href="#line-231" class="ident">errs</a> = <a href="../../../../pkg/builtin.html#name-append" class="ident">append</a>(<label for="r65" class="ident">w</label>.<a href="#line-182" class="ident">resp</a>.<a href="#line-231" class="ident">errs</a>, <label for="r68" class="ident">err</label>)
+	}
+}
+
+<span class="keyword">type</span> <a href="../../../../pkg/contrib.go.opencensus.io/exporter/stackdriver.html#name-response" class="ident">response</a> <span class="keyword">struct</span> {
+	<a href="../../../../use/contrib.go.opencensus.io/exporter/stackdriver..response*a9f4b.droppedTimeSeries*db411.html" class="ident">droppedTimeSeries</a> <a href="../../../../pkg/builtin.html#name-int" class="ident">int</a>
+	<a href="../../../../use/contrib.go.opencensus.io/exporter/stackdriver..response*a9f4b.errs*9a6f6.html" class="ident">errs</a>              []<a href="../../../../pkg/builtin.html#name-error" class="ident">error</a>
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

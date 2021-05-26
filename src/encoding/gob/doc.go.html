@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: doc.go in package encoding/gob</title>
+<link href="../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	doc.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../pkg/encoding/gob.html">encoding/gob</a>
+</code></pre>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2009 The Go Authors. All rights reserved.</span><span class="comment"> Use of this source code is governed by a BSD-style</span><span class="comment"> license that can be found in the LICENSE file.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"></span><span class="comment">Package gob manages streams of gobs - binary values exchanged between an</span><span class="comment">Encoder (transmitter) and a Decoder (receiver). A typical use is transporting</span><span class="comment">arguments and results of remote procedure calls (RPCs) such as those provided by</span><span class="comment">package "net/rpc".</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">The implementation compiles a custom codec for each data type in the stream and</span><span class="comment">is most efficient when a single Encoder is used to transmit a stream of values,</span><span class="comment">amortizing the cost of compilation.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Basics</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">A stream of gobs is self-describing. Each data item in the stream is preceded by</span><span class="comment">a specification of its type, expressed in terms of a small set of predefined</span><span class="comment">types. Pointers are not transmitted, but the things they point to are</span><span class="comment">transmitted; that is, the values are flattened. Nil pointers are not permitted,</span><span class="comment">as they have no value. Recursive types work fine, but</span><span class="comment">recursive values (data with cycles) are problematic. This may change.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">To use gobs, create an Encoder and present it with a series of data items as</span><span class="comment">values or addresses that can be dereferenced to values. The Encoder makes sure</span><span class="comment">all type information is sent before it is needed. At the receive side, a</span><span class="comment">Decoder retrieves values from the encoded stream and unpacks them into local</span><span class="comment">variables.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Types and Values</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">The source and destination values/types need not correspond exactly. For structs,</span><span class="comment">fields (identified by name) that are in the source but absent from the receiving</span><span class="comment">variable will be ignored. Fields that are in the receiving variable but missing</span><span class="comment">from the transmitted type or value will be ignored in the destination. If a field</span><span class="comment">with the same name is present in both, their types must be compatible. Both the</span><span class="comment">receiver and transmitter will do all necessary indirection and dereferencing to</span><span class="comment">convert between gobs and actual Go values. For instance, a gob type that is</span><span class="comment">schematically,</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">	struct { A, B int }</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">can be sent from or received into any of these Go types:</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">	struct { A, B int }	 the same</span><span class="comment">	*struct { A, B int }	 extra indirection of the struct</span><span class="comment">	struct { *A, **B int }	 extra indirection of the fields</span><span class="comment">	struct { A, B int64 }	 different concrete value type; see below</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">It may also be received into any of these:</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">	struct { A, B int }	 the same</span><span class="comment">	struct { B, A int }	 ordering doesn't matter; matching is by name</span><span class="comment">	struct { A, B, C int }	 extra field (C) ignored</span><span class="comment">	struct { B int }	 missing field (A) ignored; data will be dropped</span><span class="comment">	struct { B, C int }	 missing field (A) ignored; extra field (C) ignored.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Attempting to receive into these types will draw a decode error:</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">	struct { A int; B uint }	 change of signedness for B</span><span class="comment">	struct { A int; B float }	 change of type for B</span><span class="comment">	struct { }			 no field names in common</span><span class="comment">	struct { C, D int }		 no field names in common</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Integers are transmitted two ways: arbitrary precision signed integers or</span><span class="comment">arbitrary precision unsigned integers. There is no int8, int16 etc.</span><span class="comment">discrimination in the gob format; there are only signed and unsigned integers. As</span><span class="comment">described below, the transmitter sends the value in a variable-length encoding;</span><span class="comment">the receiver accepts the value and stores it in the destination variable.</span><span class="comment">Floating-point numbers are always sent using IEEE-754 64-bit precision (see</span><span class="comment">below).</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Signed integers may be received into any signed integer variable: int, int16, etc.;</span><span class="comment">unsigned integers may be received into any unsigned integer variable; and floating</span><span class="comment">point values may be received into any floating point variable. However,</span><span class="comment">the destination variable must be able to represent the value or the decode</span><span class="comment">operation will fail.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Structs, arrays and slices are also supported. Structs encode and decode only</span><span class="comment">exported fields. Strings and arrays of bytes are supported with a special,</span><span class="comment">efficient representation (see below). When a slice is decoded, if the existing</span><span class="comment">slice has capacity the slice will be extended in place; if not, a new array is</span><span class="comment">allocated. Regardless, the length of the resulting slice reports the number of</span><span class="comment">elements decoded.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">In general, if allocation is required, the decoder will allocate memory. If not,</span><span class="comment">it will update the destination variables with values read from the stream. It does</span><span class="comment">not initialize them first, so if the destination is a compound value such as a</span><span class="comment">map, struct, or slice, the decoded values will be merged elementwise into the</span><span class="comment">existing variables.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Functions and channels will not be sent in a gob. Attempting to encode such a value</span><span class="comment">at the top level will fail. A struct field of chan or func type is treated exactly</span><span class="comment">like an unexported field and is ignored.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Gob can encode a value of any type implementing the GobEncoder or</span><span class="comment">encoding.BinaryMarshaler interfaces by calling the corresponding method,</span><span class="comment">in that order of preference.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Gob can decode a value of any type implementing the GobDecoder or</span><span class="comment">encoding.BinaryUnmarshaler interfaces by calling the corresponding method,</span><span class="comment">again in that order of preference.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Encoding Details</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">This section documents the encoding, details that are not important for most</span><span class="comment">users. Details are presented bottom-up.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">An unsigned integer is sent one of two ways. If it is less than 128, it is sent</span><span class="comment">as a byte with that value. Otherwise it is sent as a minimal-length big-endian</span><span class="comment">(high byte first) byte stream holding the value, preceded by one byte holding the</span><span class="comment">byte count, negated. Thus 0 is transmitted as (00), 7 is transmitted as (07) and</span><span class="comment">256 is transmitted as (FE 01 00).</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">A boolean is encoded within an unsigned integer: 0 for false, 1 for true.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">A signed integer, i, is encoded within an unsigned integer, u. Within u, bits 1</span><span class="comment">upward contain the value; bit 0 says whether they should be complemented upon</span><span class="comment">receipt. The encode algorithm looks like this:</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">	var u uint</span><span class="comment">	if i &lt; 0 {</span><span class="comment">		u = (^uint(i) &lt;&lt; 1) | 1  complement i, bit 0 is 1</span><span class="comment">	} else {</span><span class="comment">		u = (uint(i) &lt;&lt; 1)  do not complement i, bit 0 is 0</span><span class="comment">	}</span><span class="comment">	encodeUnsigned(u)</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">The low bit is therefore analogous to a sign bit, but making it the complement bit</span><span class="comment">instead guarantees that the largest negative integer is not a special case. For</span><span class="comment">example, -129=^128=(^256&gt;&gt;1) encodes as (FE 01 01).</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Floating-point numbers are always sent as a representation of a float64 value.</span><span class="comment">That value is converted to a uint64 using math.Float64bits. The uint64 is then</span><span class="comment">byte-reversed and sent as a regular unsigned integer. The byte-reversal means the</span><span class="comment">exponent and high-precision part of the mantissa go first. Since the low bits are</span><span class="comment">often zero, this can save encoding bytes. For instance, 17.0 is encoded in only</span><span class="comment">three bytes (FE 31 40).</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Strings and slices of bytes are sent as an unsigned count followed by that many</span><span class="comment">uninterpreted bytes of the value.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">All other slices and arrays are sent as an unsigned count followed by that many</span><span class="comment">elements using the standard gob encoding for their type, recursively.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Maps are sent as an unsigned count followed by that many key, element</span><span class="comment">pairs. Empty but non-nil maps are sent, so if the receiver has not allocated</span><span class="comment">one already, one will always be allocated on receipt unless the transmitted map</span><span class="comment">is nil and not at the top level.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">In slices and arrays, as well as maps, all elements, even zero-valued elements,</span><span class="comment">are transmitted, even if all the elements are zero.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Structs are sent as a sequence of (field number, field value) pairs. The field</span><span class="comment">value is sent using the standard gob encoding for its type, recursively. If a</span><span class="comment">field has the zero value for its type (except for arrays; see above), it is omitted</span><span class="comment">from the transmission. The field number is defined by the type of the encoded</span><span class="comment">struct: the first field of the encoded type is field 0, the second is field 1,</span><span class="comment">etc. When encoding a value, the field numbers are delta encoded for efficiency</span><span class="comment">and the fields are always sent in order of increasing field number; the deltas are</span><span class="comment">therefore unsigned. The initialization for the delta encoding sets the field</span><span class="comment">number to -1, so an unsigned integer field 0 with value 7 is transmitted as unsigned</span><span class="comment">delta = 1, unsigned value = 7 or (01 07). Finally, after all the fields have been</span><span class="comment">sent a terminating mark denotes the end of the struct. That mark is a delta=0</span><span class="comment">value, which has representation (00).</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Interface types are not checked for compatibility; all interface types are</span><span class="comment">treated, for transmission, as members of a single "interface" type, analogous to</span><span class="comment">int or []byte - in effect they're all treated as interface{}. Interface values</span><span class="comment">are transmitted as a string identifying the concrete type being sent (a name</span><span class="comment">that must be pre-defined by calling Register), followed by a byte count of the</span><span class="comment">length of the following data (so the value can be skipped if it cannot be</span><span class="comment">stored), followed by the usual encoding of concrete (dynamic) value stored in</span><span class="comment">the interface value. (A nil interface value is identified by the empty string</span><span class="comment">and transmits no value.) Upon receipt, the decoder verifies that the unpacked</span><span class="comment">concrete item satisfies the interface of the receiving variable.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">If a value is passed to Encode and the type is not a struct (or pointer to struct,</span><span class="comment">etc.), for simplicity of processing it is represented as a struct of one field.</span><span class="comment">The only visible effect of this is to encode a zero byte after the value, just as</span><span class="comment">after the last field of an encoded struct, so that the decode algorithm knows when</span><span class="comment">the top-level value is complete.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">The representation of types is described below. When a type is defined on a given</span><span class="comment">connection between an Encoder and Decoder, it is assigned a signed integer type</span><span class="comment">id. When Encoder.Encode(v) is called, it makes sure there is an id assigned for</span><span class="comment">the type of v and all its elements and then it sends the pair (typeid, encoded-v)</span><span class="comment">where typeid is the type id of the encoded type of v and encoded-v is the gob</span><span class="comment">encoding of the value v.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">To define a type, the encoder chooses an unused, positive type id and sends the</span><span class="comment">pair (-type id, encoded-type) where encoded-type is the gob encoding of a wireType</span><span class="comment">description, constructed from these types:</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">	type wireType struct {</span><span class="comment">		ArrayT           *ArrayType</span><span class="comment">		SliceT           *SliceType</span><span class="comment">		StructT          *StructType</span><span class="comment">		MapT             *MapType</span><span class="comment">		GobEncoderT      *gobEncoderType</span><span class="comment">		BinaryMarshalerT *gobEncoderType</span><span class="comment">		TextMarshalerT   *gobEncoderType</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">	}</span><span class="comment">	type arrayType struct {</span><span class="comment">		CommonType</span><span class="comment">		Elem typeId</span><span class="comment">		Len  int</span><span class="comment">	}</span><span class="comment">	type CommonType struct {</span><span class="comment">		Name string  the name of the struct type</span><span class="comment">		Id  int     the id of the type, repeated so it's inside the type</span><span class="comment">	}</span><span class="comment">	type sliceType struct {</span><span class="comment">		CommonType</span><span class="comment">		Elem typeId</span><span class="comment">	}</span><span class="comment">	type structType struct {</span><span class="comment">		CommonType</span><span class="comment">		Field []*fieldType  the fields of the struct.</span><span class="comment">	}</span><span class="comment">	type fieldType struct {</span><span class="comment">		Name string  the name of the field.</span><span class="comment">		Id   int     the type id of the field, which must be already defined</span><span class="comment">	}</span><span class="comment">	type mapType struct {</span><span class="comment">		CommonType</span><span class="comment">		Key  typeId</span><span class="comment">		Elem typeId</span><span class="comment">	}</span><span class="comment">	type gobEncoderType struct {</span><span class="comment">		CommonType</span><span class="comment">	}</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">If there are nested type ids, the types for all inner type ids must be defined</span><span class="comment">before the top-level type id is used to describe an encoded-v.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">For simplicity in setup, the connection is defined to understand these types a</span><span class="comment">priori, as well as the basic gob types int, uint, etc. Their ids are:</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">	bool        1</span><span class="comment">	int         2</span><span class="comment">	uint        3</span><span class="comment">	float       4</span><span class="comment">	[]byte      5</span><span class="comment">	string      6</span><span class="comment">	complex     7</span><span class="comment">	interface   8</span><span class="comment">	 gap for reserved ids.</span><span class="comment">	WireType    16</span><span class="comment">	ArrayType   17</span><span class="comment">	CommonType  18</span><span class="comment">	SliceType   19</span><span class="comment">	StructType  20</span><span class="comment">	FieldType   21</span><span class="comment">	 22 is slice of fieldType.</span><span class="comment">	MapType     23</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Finally, each message created by a call to Encode is preceded by an encoded</span><span class="comment">unsigned integer count of the number of bytes remaining in the message. After</span><span class="comment">the initial type name, interface values are wrapped the same way; in effect, the</span><span class="comment">interface value acts like a recursive invocation of Encode.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">In summary, a gob stream looks like</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">	(byteCount (-type id, encoding of a wireType)* (type id, encoding of a value))*</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">where * signifies zero or more repetitions and the type id of a value must</span><span class="comment">be predefined or be defined before the value in the stream.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Compatibility: Any future changes to the package will endeavor to maintain</span><span class="comment">compatibility with streams encoded using previous versions. That is, any released</span><span class="comment">version of this package should be able to decode data written with any previously</span><span class="comment">released version, subject to issues such as security fixes. See the Go compatibility</span><span class="comment">document for background: https:golang.org/doc/go1compat</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">See "Gobs of data" for a design discussion of the gob wire format:</span><span class="comment">https:blog.golang.org/gobs-of-data</span><span class="comment"></span></div>
+<div class="code"><pre><code><span class="keyword">package</span> gob
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"></span><span class="comment">Grammar:</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Tokens starting with a lower case letter are terminals; int(n)</span><span class="comment">and uint(n) represent the signed/unsigned encodings of the value n.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">GobStream:</span><span class="comment">	DelimitedMessage*</span><span class="comment">DelimitedMessage:</span><span class="comment">	uint(lengthOfMessage) Message</span><span class="comment">Message:</span><span class="comment">	TypeSequence TypedValue</span><span class="comment">TypeSequence</span><span class="comment">	(TypeDefinition DelimitedTypeDefinition*)?</span><span class="comment">DelimitedTypeDefinition:</span><span class="comment">	uint(lengthOfTypeDefinition) TypeDefinition</span><span class="comment">TypedValue:</span><span class="comment">	int(typeId) Value</span><span class="comment">TypeDefinition:</span><span class="comment">	int(-typeId) encodingOfWireType</span><span class="comment">Value:</span><span class="comment">	SingletonValue | StructValue</span><span class="comment">SingletonValue:</span><span class="comment">	uint(0) FieldValue</span><span class="comment">FieldValue:</span><span class="comment">	builtinValue | ArrayValue | MapValue | SliceValue | StructValue | InterfaceValue</span><span class="comment">InterfaceValue:</span><span class="comment">	NilInterfaceValue | NonNilInterfaceValue</span><span class="comment">NilInterfaceValue:</span><span class="comment">	uint(0)</span><span class="comment">NonNilInterfaceValue:</span><span class="comment">	ConcreteTypeName TypeSequence InterfaceContents</span><span class="comment">ConcreteTypeName:</span><span class="comment">	uint(lengthOfName) [already read=n] name</span><span class="comment">InterfaceContents:</span><span class="comment">	int(concreteTypeId) DelimitedValue</span><span class="comment">DelimitedValue:</span><span class="comment">	uint(length) Value</span><span class="comment">ArrayValue:</span><span class="comment">	uint(n) FieldValue*n [n elements]</span><span class="comment">MapValue:</span><span class="comment">	uint(n) (FieldValue FieldValue)*n  [n (key, value) pairs]</span><span class="comment">SliceValue:</span><span class="comment">	uint(n) FieldValue*n [n elements]</span><span class="comment">StructValue:</span><span class="comment">	(uint(fieldDelta) FieldValue)*</span><span class="comment"></span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"></span><span class="comment">For implementers and the curious, here is an encoded example. Given</span><span class="comment">	type Point struct {X, Y int}</span><span class="comment">and the value</span><span class="comment">	p := Point{22, 33}</span><span class="comment">the bytes transmitted that encode p will be:</span><span class="comment">	1f ff 81 03 01 01 05 50 6f 69 6e 74 01 ff 82 00</span><span class="comment">	01 02 01 01 58 01 04 00 01 01 59 01 04 00 00 00</span><span class="comment">	07 ff 82 01 2c 01 42 00</span><span class="comment">They are determined as follows.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Since this is the first transmission of type Point, the type descriptor</span><span class="comment">for Point itself must be sent before the value. This is the first type</span><span class="comment">we've sent on this Encoder, so it has type id 65 (0 through 64 are</span><span class="comment">reserved).</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">	1f	 This item (a type descriptor) is 31 bytes long.</span><span class="comment">	ff 81	 The negative of the id for the type we're defining, -65.</span><span class="comment">		 This is one byte (indicated by FF = -1) followed by</span><span class="comment">		 ^-65&lt;&lt;1 | 1. The low 1 bit signals to complement the</span><span class="comment">		 rest upon receipt.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">	 Now we send a type descriptor, which is itself a struct (wireType).</span><span class="comment">	 The type of wireType itself is known (it's built in, as is the type of</span><span class="comment">	 all its components), so we just need to send a *value* of type wireType</span><span class="comment">	 that represents type "Point".</span><span class="comment">	 Here starts the encoding of that value.</span><span class="comment">	 Set the field number implicitly to -1; this is done at the beginning</span><span class="comment">	 of every struct, including nested structs.</span><span class="comment">	03	 Add 3 to field number; now 2 (wireType.structType; this is a struct).</span><span class="comment">		 structType starts with an embedded CommonType, which appears</span><span class="comment">		 as a regular structure here too.</span><span class="comment">	01	 add 1 to field number (now 0); start of embedded CommonType.</span><span class="comment">	01	 add 1 to field number (now 0, the name of the type)</span><span class="comment">	05	 string is (unsigned) 5 bytes long</span><span class="comment">	50 6f 69 6e 74	 wireType.structType.CommonType.name = "Point"</span><span class="comment">	01	 add 1 to field number (now 1, the id of the type)</span><span class="comment">	ff 82	 wireType.structType.CommonType._id = 65</span><span class="comment">	00	 end of embedded wiretype.structType.CommonType struct</span><span class="comment">	01	 add 1 to field number (now 1, the field array in wireType.structType)</span><span class="comment">	02	 There are two fields in the type (len(structType.field))</span><span class="comment">	01	 Start of first field structure; add 1 to get field number 0: field[0].name</span><span class="comment">	01	 1 byte</span><span class="comment">	58	 structType.field[0].name = "X"</span><span class="comment">	01	 Add 1 to get field number 1: field[0].id</span><span class="comment">	04	 structType.field[0].typeId is 2 (signed int).</span><span class="comment">	00	 End of structType.field[0]; start structType.field[1]; set field number to -1.</span><span class="comment">	01	 Add 1 to get field number 0: field[1].name</span><span class="comment">	01	 1 byte</span><span class="comment">	59	 structType.field[1].name = "Y"</span><span class="comment">	01	 Add 1 to get field number 1: field[1].id</span><span class="comment">	04	 struct.Type.field[1].typeId is 2 (signed int).</span><span class="comment">	00	 End of structType.field[1]; end of structType.field.</span><span class="comment">	00	 end of wireType.structType structure</span><span class="comment">	00	 end of wireType structure</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Now we can send the Point value. Again the field number resets to -1:</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">	07	 this value is 7 bytes long</span><span class="comment">	ff 82	 the type number, 65 (1 byte (-FF) followed by 65&lt;&lt;1)</span><span class="comment">	01	 add one to field number, yielding field 0</span><span class="comment">	2c	 encoding of signed "22" (0x2c = 44 = 22&lt;&lt;1); Point.x = 22</span><span class="comment">	01	 add one to field number, yielding field 1</span><span class="comment">	42	 encoding of signed "33" (0x42 = 66 = 33&lt;&lt;1); Point.y = 33</span><span class="comment">	00	 end of structure</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">The type encoding is long and fairly intricate but we send it only once.</span><span class="comment">If p is transmitted a second time, the type is already known so the</span><span class="comment">output will be just:</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">	07 ff 82 01 2c 01 42 00</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">A single non-struct value at top level is transmitted like a field with</span><span class="comment">delta tag 0. For instance, a signed integer with value 3 presented as</span><span class="comment">the argument to Encode will emit:</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">	03 04 00 06</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Which represents:</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">	03	 this value is 3 bytes long</span><span class="comment">	04	 the type number, 2, represents an integer</span><span class="comment">	00	 tag delta 0</span><span class="comment">	06	 value 3</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

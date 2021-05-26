@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: zoneinfo.go in package github.com/prometheus/procfs</title>
+<link href="../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	zoneinfo.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../pkg/github.com/prometheus/procfs.html">github.com/prometheus/procfs</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16],
+input[id=r17]:checked ~pre label[for=r17],
+input[id=r18]:checked ~pre label[for=r18],
+input[id=r19]:checked ~pre label[for=r19],
+input[id=r20]:checked ~pre label[for=r20],
+input[id=r21]:checked ~pre label[for=r21],
+input[id=r22]:checked ~pre label[for=r22]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1,
+input[id=i2]:checked ~pre .i2,
+input[id=i3]:checked ~pre .i3,
+input[id=i4]:checked ~pre .i4,
+input[id=i5]:checked ~pre .i5
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="r17" type="radio" name="g"/>
+<input id="r18" type="radio" name="g"/>
+<input id="r19" type="radio" name="g"/>
+<input id="r20" type="radio" name="g"/>
+<input id="r21" type="radio" name="g"/>
+<input id="r22" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<input id="i2" type="radio" name="i"/>
+<input id="i3" type="radio" name="i"/>
+<input id="i4" type="radio" name="i"/>
+<input id="i5" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2019 The Prometheus Authors</span><span class="comment"> Licensed under the Apache License, Version 2.0 (the "License");</span><span class="comment"> you may not use this file except in compliance with the License.</span><span class="comment"> You may obtain a copy of the License at</span><span class="comment"></span><span class="comment"> http://www.apache.org/licenses/LICENSE-2.0</span><span class="comment"></span><span class="comment"> Unless required by applicable law or agreed to in writing, software</span><span class="comment"> distributed under the License is distributed on an "AS IS" BASIS,</span><span class="comment"> WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span><span class="comment"> See the License for the specific language governing permissions and</span><span class="comment"> limitations under the License.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> +build !windows</span></div>
+<div class="code"><pre><code>
+<span class="keyword">package</span> procfs
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"bytes"</span></label>
+	<label for="i1"><span class="lit-string i1">"fmt"</span></label>
+	<label for="i2"><span class="lit-string i2">"io/ioutil"</span></label>
+	<label for="i3"><span class="lit-string i3">"regexp"</span></label>
+	<label for="i4"><span class="lit-string i4">"strings"</span></label>
+
+	<label for="i5"><span class="lit-string i5">"github.com/prometheus/procfs/internal/util"</span></label>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Zoneinfo holds info parsed from /proc/zoneinfo.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../pkg/github.com/prometheus/procfs.html#name-Zoneinfo" class="ident">Zoneinfo</a> <span class="keyword">struct</span> {
+	<a href="../../../../use/github.com/prometheus/procfs..Zoneinfo.Node.html" class="ident">Node</a>                       <a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../use/github.com/prometheus/procfs..Zoneinfo.Zone.html" class="ident">Zone</a>                       <a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../use/github.com/prometheus/procfs..Zoneinfo.NrFreePages.html" class="ident">NrFreePages</a>                *<a href="../../../../pkg/builtin.html#name-int64" class="ident">int64</a>
+	<a href="../../../../use/github.com/prometheus/procfs..Zoneinfo.Min.html" class="ident">Min</a>                        *<a href="../../../../pkg/builtin.html#name-int64" class="ident">int64</a>
+	<a href="../../../../use/github.com/prometheus/procfs..Zoneinfo.Low.html" class="ident">Low</a>                        *<a href="../../../../pkg/builtin.html#name-int64" class="ident">int64</a>
+	<a href="../../../../use/github.com/prometheus/procfs..Zoneinfo.High.html" class="ident">High</a>                       *<a href="../../../../pkg/builtin.html#name-int64" class="ident">int64</a>
+	<a href="../../../../use/github.com/prometheus/procfs..Zoneinfo.Scanned.html" class="ident">Scanned</a>                    *<a href="../../../../pkg/builtin.html#name-int64" class="ident">int64</a>
+	<a href="../../../../use/github.com/prometheus/procfs..Zoneinfo.Spanned.html" class="ident">Spanned</a>                    *<a href="../../../../pkg/builtin.html#name-int64" class="ident">int64</a>
+	<a href="../../../../use/github.com/prometheus/procfs..Zoneinfo.Present.html" class="ident">Present</a>                    *<a href="../../../../pkg/builtin.html#name-int64" class="ident">int64</a>
+	<a href="../../../../use/github.com/prometheus/procfs..Zoneinfo.Managed.html" class="ident">Managed</a>                    *<a href="../../../../pkg/builtin.html#name-int64" class="ident">int64</a>
+	<a href="../../../../use/github.com/prometheus/procfs..Zoneinfo.NrActiveAnon.html" class="ident">NrActiveAnon</a>               *<a href="../../../../pkg/builtin.html#name-int64" class="ident">int64</a>
+	<a href="../../../../use/github.com/prometheus/procfs..Zoneinfo.NrInactiveAnon.html" class="ident">NrInactiveAnon</a>             *<a href="../../../../pkg/builtin.html#name-int64" class="ident">int64</a>
+	<a href="../../../../use/github.com/prometheus/procfs..Zoneinfo.NrIsolatedAnon.html" class="ident">NrIsolatedAnon</a>             *<a href="../../../../pkg/builtin.html#name-int64" class="ident">int64</a>
+	<a href="../../../../use/github.com/prometheus/procfs..Zoneinfo.NrAnonPages.html" class="ident">NrAnonPages</a>                *<a href="../../../../pkg/builtin.html#name-int64" class="ident">int64</a>
+	<a href="../../../../use/github.com/prometheus/procfs..Zoneinfo.NrAnonTransparentHugepages.html" class="ident">NrAnonTransparentHugepages</a> *<a href="../../../../pkg/builtin.html#name-int64" class="ident">int64</a>
+	<a href="../../../../use/github.com/prometheus/procfs..Zoneinfo.NrActiveFile.html" class="ident">NrActiveFile</a>               *<a href="../../../../pkg/builtin.html#name-int64" class="ident">int64</a>
+	<a href="../../../../use/github.com/prometheus/procfs..Zoneinfo.NrInactiveFile.html" class="ident">NrInactiveFile</a>             *<a href="../../../../pkg/builtin.html#name-int64" class="ident">int64</a>
+	<a href="../../../../use/github.com/prometheus/procfs..Zoneinfo.NrIsolatedFile.html" class="ident">NrIsolatedFile</a>             *<a href="../../../../pkg/builtin.html#name-int64" class="ident">int64</a>
+	<a href="../../../../use/github.com/prometheus/procfs..Zoneinfo.NrFilePages.html" class="ident">NrFilePages</a>                *<a href="../../../../pkg/builtin.html#name-int64" class="ident">int64</a>
+	<a href="../../../../use/github.com/prometheus/procfs..Zoneinfo.NrSlabReclaimable.html" class="ident">NrSlabReclaimable</a>          *<a href="../../../../pkg/builtin.html#name-int64" class="ident">int64</a>
+	<a href="../../../../use/github.com/prometheus/procfs..Zoneinfo.NrSlabUnreclaimable.html" class="ident">NrSlabUnreclaimable</a>        *<a href="../../../../pkg/builtin.html#name-int64" class="ident">int64</a>
+	<a href="../../../../use/github.com/prometheus/procfs..Zoneinfo.NrMlockStack.html" class="ident">NrMlockStack</a>               *<a href="../../../../pkg/builtin.html#name-int64" class="ident">int64</a>
+	<a href="../../../../use/github.com/prometheus/procfs..Zoneinfo.NrKernelStack.html" class="ident">NrKernelStack</a>              *<a href="../../../../pkg/builtin.html#name-int64" class="ident">int64</a>
+	<a href="../../../../use/github.com/prometheus/procfs..Zoneinfo.NrMapped.html" class="ident">NrMapped</a>                   *<a href="../../../../pkg/builtin.html#name-int64" class="ident">int64</a>
+	<a href="../../../../use/github.com/prometheus/procfs..Zoneinfo.NrDirty.html" class="ident">NrDirty</a>                    *<a href="../../../../pkg/builtin.html#name-int64" class="ident">int64</a>
+	<a href="../../../../use/github.com/prometheus/procfs..Zoneinfo.NrWriteback.html" class="ident">NrWriteback</a>                *<a href="../../../../pkg/builtin.html#name-int64" class="ident">int64</a>
+	<a href="../../../../use/github.com/prometheus/procfs..Zoneinfo.NrUnevictable.html" class="ident">NrUnevictable</a>              *<a href="../../../../pkg/builtin.html#name-int64" class="ident">int64</a>
+	<a href="../../../../use/github.com/prometheus/procfs..Zoneinfo.NrShmem.html" class="ident">NrShmem</a>                    *<a href="../../../../pkg/builtin.html#name-int64" class="ident">int64</a>
+	<a href="../../../../use/github.com/prometheus/procfs..Zoneinfo.NrDirtied.html" class="ident">NrDirtied</a>                  *<a href="../../../../pkg/builtin.html#name-int64" class="ident">int64</a>
+	<a href="../../../../use/github.com/prometheus/procfs..Zoneinfo.NrWritten.html" class="ident">NrWritten</a>                  *<a href="../../../../pkg/builtin.html#name-int64" class="ident">int64</a>
+	<a href="../../../../use/github.com/prometheus/procfs..Zoneinfo.NumaHit.html" class="ident">NumaHit</a>                    *<a href="../../../../pkg/builtin.html#name-int64" class="ident">int64</a>
+	<a href="../../../../use/github.com/prometheus/procfs..Zoneinfo.NumaMiss.html" class="ident">NumaMiss</a>                   *<a href="../../../../pkg/builtin.html#name-int64" class="ident">int64</a>
+	<a href="../../../../use/github.com/prometheus/procfs..Zoneinfo.NumaForeign.html" class="ident">NumaForeign</a>                *<a href="../../../../pkg/builtin.html#name-int64" class="ident">int64</a>
+	<a href="../../../../use/github.com/prometheus/procfs..Zoneinfo.NumaInterleave.html" class="ident">NumaInterleave</a>             *<a href="../../../../pkg/builtin.html#name-int64" class="ident">int64</a>
+	<a href="../../../../use/github.com/prometheus/procfs..Zoneinfo.NumaLocal.html" class="ident">NumaLocal</a>                  *<a href="../../../../pkg/builtin.html#name-int64" class="ident">int64</a>
+	<a href="../../../../use/github.com/prometheus/procfs..Zoneinfo.NumaOther.html" class="ident">NumaOther</a>                  *<a href="../../../../pkg/builtin.html#name-int64" class="ident">int64</a>
+	<a href="../../../../use/github.com/prometheus/procfs..Zoneinfo.Protection.html" class="ident">Protection</a>                 []*<a href="../../../../pkg/builtin.html#name-int64" class="ident">int64</a>
+}
+
+<span class="keyword">var</span> <a href="../../../../pkg/github.com/prometheus/procfs.html#name-nodeZoneRE" class="ident">nodeZoneRE</a> = <a href="../../../../pkg/regexp.html" class="ident i3">regexp</a>.<a href="../../../regexp/regexp.go.html#line-308" class="ident">MustCompile</a>(<span class="lit-string">`(\d+), zone\s+(\w+)`</span>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Zoneinfo parses an zoneinfo-file (/proc/zoneinfo) and returns a slice of</span><span class="comment"> structs containing the relevant info.  More information available here:</span><span class="comment"> https://www.kernel.org/doc/Documentation/sysctl/vm.txt</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r0" class="ident">fs</label> <a href="fs.go.html#line-22" class="ident">FS</a>) <label for="r1" class="ident"><a href="../../../../use/github.com/prometheus/procfs..FS.Zoneinfo.html" class="ident">Zoneinfo</a></label>() ([]<a href="#line-29" class="ident">Zoneinfo</a>, <a href="../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<label for="r2" class="ident">data</label>, <label for="r3" class="ident">err</label> := <a href="../../../../pkg/io/ioutil.html" class="ident i2">ioutil</a>.<a href="../../../io/ioutil/ioutil.go.html#line-36" class="ident">ReadFile</a>(<label for="r0" class="ident">fs</label>.<a href="fs.go.html#line-23" class="ident">proc</a>.<a href="internal/fs/fs.go.html#line-53" class="ident">Path</a>(<span class="lit-string">"zoneinfo"</span>))
+	<span class="keyword">if</span> <label for="r3" class="ident">err</label> != <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="../../../../pkg/fmt.html" class="ident i1">fmt</a>.<a href="../../../fmt/errors.go.html#line-17" class="ident">Errorf</a>(<span class="lit-string">"error reading zoneinfo %s: %s"</span>, <label for="r0" class="ident">fs</label>.<a href="fs.go.html#line-23" class="ident">proc</a>.<a href="internal/fs/fs.go.html#line-53" class="ident">Path</a>(<span class="lit-string">"zoneinfo"</span>), <label for="r3" class="ident">err</label>)
+	}
+	<label for="r4" class="ident">zoneinfo</label>, <label for="r3" class="ident">err</label> := <a href="#line-86" class="ident">parseZoneinfo</a>(<label for="r2" class="ident">data</label>)
+	<span class="keyword">if</span> <label for="r3" class="ident">err</label> != <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="../../../../pkg/fmt.html" class="ident i1">fmt</a>.<a href="../../../fmt/errors.go.html#line-17" class="ident">Errorf</a>(<span class="lit-string">"error parsing zoneinfo %s: %s"</span>, <label for="r0" class="ident">fs</label>.<a href="fs.go.html#line-23" class="ident">proc</a>.<a href="internal/fs/fs.go.html#line-53" class="ident">Path</a>(<span class="lit-string">"zoneinfo"</span>), <label for="r3" class="ident">err</label>)
+	}
+	<span class="keyword">return</span> <label for="r4" class="ident">zoneinfo</label>, <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+}
+
+<span class="keyword">func</span> <label for="r5" class="ident"><a href="../../../../pkg/github.com/prometheus/procfs.html#name-parseZoneinfo" class="ident">parseZoneinfo</a></label>(<label for="r6" class="ident">zoneinfoData</label> []<a href="../../../../pkg/builtin.html#name-byte" class="ident">byte</a>) ([]<a href="#line-29" class="ident">Zoneinfo</a>, <a href="../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+
+	<label for="r7" class="ident">zoneinfo</label> := []<a href="#line-29" class="ident">Zoneinfo</a>{}
+
+	<label for="r8" class="ident">zoneinfoBlocks</label> := <a href="../../../../pkg/bytes.html" class="ident i0">bytes</a>.<a href="../../../bytes/bytes.go.html#line-392" class="ident">Split</a>(<label for="r6" class="ident">zoneinfoData</label>, []<a href="../../../../pkg/builtin.html#name-byte" class="ident">byte</a>(<span class="lit-string">"\nNode"</span>))
+	<span class="keyword">for</span> <label for="r9" class="ident">_</label>, <label for="r10" class="ident">block</label> := <span class="keyword">range</span> <label for="r8" class="ident">zoneinfoBlocks</label> {
+		<span class="keyword">var</span> <label for="r11" class="ident">zoneinfoElement</label> <a href="#line-29" class="ident">Zoneinfo</a>
+		<label for="r12" class="ident">lines</label> := <a href="../../../../pkg/strings.html" class="ident i4">strings</a>.<a href="../../../strings/strings.go.html#line-299" class="ident">Split</a>(<a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>(<label for="r10" class="ident">block</label>), <span class="lit-string">"\n"</span>)
+		<span class="keyword">for</span> <label for="r13" class="ident">_</label>, <label for="r14" class="ident">line</label> := <span class="keyword">range</span> <label for="r12" class="ident">lines</label> {
+
+			<span class="keyword">if</span> <label for="r15" class="ident">nodeZone</label> := <a href="#line-69" class="ident">nodeZoneRE</a>.<a href="../../../regexp/regexp.go.html#line-1037" class="ident">FindStringSubmatch</a>(<label for="r14" class="ident">line</label>); <label for="r15" class="ident">nodeZone</label> != <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+				<label for="r11" class="ident">zoneinfoElement</label>.<a href="#line-30" class="ident">Node</a> = <label for="r15" class="ident">nodeZone</label>[<span class="lit-number">1</span>]
+				<label for="r11" class="ident">zoneinfoElement</label>.<a href="#line-31" class="ident">Zone</a> = <label for="r15" class="ident">nodeZone</label>[<span class="lit-number">2</span>]
+				<span class="keyword">continue</span>
+			}
+			<span class="keyword">if</span> <a href="../../../../pkg/strings.html" class="ident i4">strings</a>.<a href="../../../strings/strings.go.html#line-444" class="ident">HasPrefix</a>(<a href="../../../../pkg/strings.html" class="ident i4">strings</a>.<a href="../../../strings/strings.go.html#line-867" class="ident">TrimSpace</a>(<label for="r14" class="ident">line</label>), <span class="lit-string">"per-node stats"</span>) {
+				<label for="r11" class="ident">zoneinfoElement</label>.<a href="#line-31" class="ident">Zone</a> = <span class="lit-string">""</span>
+				<span class="keyword">continue</span>
+			}
+			<label for="r16" class="ident">parts</label> := <a href="../../../../pkg/strings.html" class="ident i4">strings</a>.<a href="../../../strings/strings.go.html#line-320" class="ident">Fields</a>(<a href="../../../../pkg/strings.html" class="ident i4">strings</a>.<a href="../../../strings/strings.go.html#line-867" class="ident">TrimSpace</a>(<label for="r14" class="ident">line</label>))
+			<span class="keyword">if</span> <a href="../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r16" class="ident">parts</label>) &lt; <span class="lit-number">2</span> {
+				<span class="keyword">continue</span>
+			}
+			<label for="r17" class="ident">vp</label> := <a href="../../../../pkg/github.com/prometheus/procfs/internal/util.html" class="ident i5">util</a>.<a href="internal/util/valueparser.go.html#line-32" class="ident">NewValueParser</a>(<label for="r16" class="ident">parts</label>[<span class="lit-number">1</span>])
+			<span class="keyword">switch</span> <label for="r16" class="ident">parts</label>[<span class="lit-number">0</span>] {
+			<span class="keyword">case</span> <span class="lit-string">"nr_free_pages"</span>:
+				<label for="r11" class="ident">zoneinfoElement</label>.<a href="#line-32" class="ident">NrFreePages</a> = <label for="r17" class="ident">vp</label>.<a href="internal/util/valueparser.go.html#line-41" class="ident">PInt64</a>()
+			<span class="keyword">case</span> <span class="lit-string">"min"</span>:
+				<label for="r11" class="ident">zoneinfoElement</label>.<a href="#line-33" class="ident">Min</a> = <label for="r17" class="ident">vp</label>.<a href="internal/util/valueparser.go.html#line-41" class="ident">PInt64</a>()
+			<span class="keyword">case</span> <span class="lit-string">"low"</span>:
+				<label for="r11" class="ident">zoneinfoElement</label>.<a href="#line-34" class="ident">Low</a> = <label for="r17" class="ident">vp</label>.<a href="internal/util/valueparser.go.html#line-41" class="ident">PInt64</a>()
+			<span class="keyword">case</span> <span class="lit-string">"high"</span>:
+				<label for="r11" class="ident">zoneinfoElement</label>.<a href="#line-35" class="ident">High</a> = <label for="r17" class="ident">vp</label>.<a href="internal/util/valueparser.go.html#line-41" class="ident">PInt64</a>()
+			<span class="keyword">case</span> <span class="lit-string">"scanned"</span>:
+				<label for="r11" class="ident">zoneinfoElement</label>.<a href="#line-36" class="ident">Scanned</a> = <label for="r17" class="ident">vp</label>.<a href="internal/util/valueparser.go.html#line-41" class="ident">PInt64</a>()
+			<span class="keyword">case</span> <span class="lit-string">"spanned"</span>:
+				<label for="r11" class="ident">zoneinfoElement</label>.<a href="#line-37" class="ident">Spanned</a> = <label for="r17" class="ident">vp</label>.<a href="internal/util/valueparser.go.html#line-41" class="ident">PInt64</a>()
+			<span class="keyword">case</span> <span class="lit-string">"present"</span>:
+				<label for="r11" class="ident">zoneinfoElement</label>.<a href="#line-38" class="ident">Present</a> = <label for="r17" class="ident">vp</label>.<a href="internal/util/valueparser.go.html#line-41" class="ident">PInt64</a>()
+			<span class="keyword">case</span> <span class="lit-string">"managed"</span>:
+				<label for="r11" class="ident">zoneinfoElement</label>.<a href="#line-39" class="ident">Managed</a> = <label for="r17" class="ident">vp</label>.<a href="internal/util/valueparser.go.html#line-41" class="ident">PInt64</a>()
+			<span class="keyword">case</span> <span class="lit-string">"nr_active_anon"</span>:
+				<label for="r11" class="ident">zoneinfoElement</label>.<a href="#line-40" class="ident">NrActiveAnon</a> = <label for="r17" class="ident">vp</label>.<a href="internal/util/valueparser.go.html#line-41" class="ident">PInt64</a>()
+			<span class="keyword">case</span> <span class="lit-string">"nr_inactive_anon"</span>:
+				<label for="r11" class="ident">zoneinfoElement</label>.<a href="#line-41" class="ident">NrInactiveAnon</a> = <label for="r17" class="ident">vp</label>.<a href="internal/util/valueparser.go.html#line-41" class="ident">PInt64</a>()
+			<span class="keyword">case</span> <span class="lit-string">"nr_isolated_anon"</span>:
+				<label for="r11" class="ident">zoneinfoElement</label>.<a href="#line-42" class="ident">NrIsolatedAnon</a> = <label for="r17" class="ident">vp</label>.<a href="internal/util/valueparser.go.html#line-41" class="ident">PInt64</a>()
+			<span class="keyword">case</span> <span class="lit-string">"nr_anon_pages"</span>:
+				<label for="r11" class="ident">zoneinfoElement</label>.<a href="#line-43" class="ident">NrAnonPages</a> = <label for="r17" class="ident">vp</label>.<a href="internal/util/valueparser.go.html#line-41" class="ident">PInt64</a>()
+			<span class="keyword">case</span> <span class="lit-string">"nr_anon_transparent_hugepages"</span>:
+				<label for="r11" class="ident">zoneinfoElement</label>.<a href="#line-44" class="ident">NrAnonTransparentHugepages</a> = <label for="r17" class="ident">vp</label>.<a href="internal/util/valueparser.go.html#line-41" class="ident">PInt64</a>()
+			<span class="keyword">case</span> <span class="lit-string">"nr_active_file"</span>:
+				<label for="r11" class="ident">zoneinfoElement</label>.<a href="#line-45" class="ident">NrActiveFile</a> = <label for="r17" class="ident">vp</label>.<a href="internal/util/valueparser.go.html#line-41" class="ident">PInt64</a>()
+			<span class="keyword">case</span> <span class="lit-string">"nr_inactive_file"</span>:
+				<label for="r11" class="ident">zoneinfoElement</label>.<a href="#line-46" class="ident">NrInactiveFile</a> = <label for="r17" class="ident">vp</label>.<a href="internal/util/valueparser.go.html#line-41" class="ident">PInt64</a>()
+			<span class="keyword">case</span> <span class="lit-string">"nr_isolated_file"</span>:
+				<label for="r11" class="ident">zoneinfoElement</label>.<a href="#line-47" class="ident">NrIsolatedFile</a> = <label for="r17" class="ident">vp</label>.<a href="internal/util/valueparser.go.html#line-41" class="ident">PInt64</a>()
+			<span class="keyword">case</span> <span class="lit-string">"nr_file_pages"</span>:
+				<label for="r11" class="ident">zoneinfoElement</label>.<a href="#line-48" class="ident">NrFilePages</a> = <label for="r17" class="ident">vp</label>.<a href="internal/util/valueparser.go.html#line-41" class="ident">PInt64</a>()
+			<span class="keyword">case</span> <span class="lit-string">"nr_slab_reclaimable"</span>:
+				<label for="r11" class="ident">zoneinfoElement</label>.<a href="#line-49" class="ident">NrSlabReclaimable</a> = <label for="r17" class="ident">vp</label>.<a href="internal/util/valueparser.go.html#line-41" class="ident">PInt64</a>()
+			<span class="keyword">case</span> <span class="lit-string">"nr_slab_unreclaimable"</span>:
+				<label for="r11" class="ident">zoneinfoElement</label>.<a href="#line-50" class="ident">NrSlabUnreclaimable</a> = <label for="r17" class="ident">vp</label>.<a href="internal/util/valueparser.go.html#line-41" class="ident">PInt64</a>()
+			<span class="keyword">case</span> <span class="lit-string">"nr_mlock_stack"</span>:
+				<label for="r11" class="ident">zoneinfoElement</label>.<a href="#line-51" class="ident">NrMlockStack</a> = <label for="r17" class="ident">vp</label>.<a href="internal/util/valueparser.go.html#line-41" class="ident">PInt64</a>()
+			<span class="keyword">case</span> <span class="lit-string">"nr_kernel_stack"</span>:
+				<label for="r11" class="ident">zoneinfoElement</label>.<a href="#line-52" class="ident">NrKernelStack</a> = <label for="r17" class="ident">vp</label>.<a href="internal/util/valueparser.go.html#line-41" class="ident">PInt64</a>()
+			<span class="keyword">case</span> <span class="lit-string">"nr_mapped"</span>:
+				<label for="r11" class="ident">zoneinfoElement</label>.<a href="#line-53" class="ident">NrMapped</a> = <label for="r17" class="ident">vp</label>.<a href="internal/util/valueparser.go.html#line-41" class="ident">PInt64</a>()
+			<span class="keyword">case</span> <span class="lit-string">"nr_dirty"</span>:
+				<label for="r11" class="ident">zoneinfoElement</label>.<a href="#line-54" class="ident">NrDirty</a> = <label for="r17" class="ident">vp</label>.<a href="internal/util/valueparser.go.html#line-41" class="ident">PInt64</a>()
+			<span class="keyword">case</span> <span class="lit-string">"nr_writeback"</span>:
+				<label for="r11" class="ident">zoneinfoElement</label>.<a href="#line-55" class="ident">NrWriteback</a> = <label for="r17" class="ident">vp</label>.<a href="internal/util/valueparser.go.html#line-41" class="ident">PInt64</a>()
+			<span class="keyword">case</span> <span class="lit-string">"nr_unevictable"</span>:
+				<label for="r11" class="ident">zoneinfoElement</label>.<a href="#line-56" class="ident">NrUnevictable</a> = <label for="r17" class="ident">vp</label>.<a href="internal/util/valueparser.go.html#line-41" class="ident">PInt64</a>()
+			<span class="keyword">case</span> <span class="lit-string">"nr_shmem"</span>:
+				<label for="r11" class="ident">zoneinfoElement</label>.<a href="#line-57" class="ident">NrShmem</a> = <label for="r17" class="ident">vp</label>.<a href="internal/util/valueparser.go.html#line-41" class="ident">PInt64</a>()
+			<span class="keyword">case</span> <span class="lit-string">"nr_dirtied"</span>:
+				<label for="r11" class="ident">zoneinfoElement</label>.<a href="#line-58" class="ident">NrDirtied</a> = <label for="r17" class="ident">vp</label>.<a href="internal/util/valueparser.go.html#line-41" class="ident">PInt64</a>()
+			<span class="keyword">case</span> <span class="lit-string">"nr_written"</span>:
+				<label for="r11" class="ident">zoneinfoElement</label>.<a href="#line-59" class="ident">NrWritten</a> = <label for="r17" class="ident">vp</label>.<a href="internal/util/valueparser.go.html#line-41" class="ident">PInt64</a>()
+			<span class="keyword">case</span> <span class="lit-string">"numa_hit"</span>:
+				<label for="r11" class="ident">zoneinfoElement</label>.<a href="#line-60" class="ident">NumaHit</a> = <label for="r17" class="ident">vp</label>.<a href="internal/util/valueparser.go.html#line-41" class="ident">PInt64</a>()
+			<span class="keyword">case</span> <span class="lit-string">"numa_miss"</span>:
+				<label for="r11" class="ident">zoneinfoElement</label>.<a href="#line-61" class="ident">NumaMiss</a> = <label for="r17" class="ident">vp</label>.<a href="internal/util/valueparser.go.html#line-41" class="ident">PInt64</a>()
+			<span class="keyword">case</span> <span class="lit-string">"numa_foreign"</span>:
+				<label for="r11" class="ident">zoneinfoElement</label>.<a href="#line-62" class="ident">NumaForeign</a> = <label for="r17" class="ident">vp</label>.<a href="internal/util/valueparser.go.html#line-41" class="ident">PInt64</a>()
+			<span class="keyword">case</span> <span class="lit-string">"numa_interleave"</span>:
+				<label for="r11" class="ident">zoneinfoElement</label>.<a href="#line-63" class="ident">NumaInterleave</a> = <label for="r17" class="ident">vp</label>.<a href="internal/util/valueparser.go.html#line-41" class="ident">PInt64</a>()
+			<span class="keyword">case</span> <span class="lit-string">"numa_local"</span>:
+				<label for="r11" class="ident">zoneinfoElement</label>.<a href="#line-64" class="ident">NumaLocal</a> = <label for="r17" class="ident">vp</label>.<a href="internal/util/valueparser.go.html#line-41" class="ident">PInt64</a>()
+			<span class="keyword">case</span> <span class="lit-string">"numa_other"</span>:
+				<label for="r11" class="ident">zoneinfoElement</label>.<a href="#line-65" class="ident">NumaOther</a> = <label for="r17" class="ident">vp</label>.<a href="internal/util/valueparser.go.html#line-41" class="ident">PInt64</a>()
+			<span class="keyword">case</span> <span class="lit-string">"protection:"</span>:
+				<label for="r18" class="ident">protectionParts</label> := <a href="../../../../pkg/strings.html" class="ident i4">strings</a>.<a href="../../../strings/strings.go.html#line-299" class="ident">Split</a>(<label for="r14" class="ident">line</label>, <span class="lit-string">":"</span>)
+				<label for="r19" class="ident">protectionValues</label> := <a href="../../../../pkg/strings.html" class="ident i4">strings</a>.<a href="../../../strings/strings.go.html#line-924" class="ident">Replace</a>(<label for="r18" class="ident">protectionParts</label>[<span class="lit-number">1</span>], <span class="lit-string">"("</span>, <span class="lit-string">""</span>, <span class="lit-number">1</span>)
+				<label for="r19" class="ident">protectionValues</label> = <a href="../../../../pkg/strings.html" class="ident i4">strings</a>.<a href="../../../strings/strings.go.html#line-924" class="ident">Replace</a>(<label for="r19" class="ident">protectionValues</label>, <span class="lit-string">")"</span>, <span class="lit-string">""</span>, <span class="lit-number">1</span>)
+				<label for="r19" class="ident">protectionValues</label> = <a href="../../../../pkg/strings.html" class="ident i4">strings</a>.<a href="../../../strings/strings.go.html#line-867" class="ident">TrimSpace</a>(<label for="r19" class="ident">protectionValues</label>)
+				<label for="r20" class="ident">protectionStringMap</label> := <a href="../../../../pkg/strings.html" class="ident i4">strings</a>.<a href="../../../strings/strings.go.html#line-299" class="ident">Split</a>(<label for="r19" class="ident">protectionValues</label>, <span class="lit-string">", "</span>)
+				<label for="r21" class="ident">val</label>, <label for="r22" class="ident">err</label> := <a href="../../../../pkg/github.com/prometheus/procfs/internal/util.html" class="ident i5">util</a>.<a href="internal/util/parse.go.html#line-53" class="ident">ParsePInt64s</a>(<label for="r20" class="ident">protectionStringMap</label>)
+				<span class="keyword">if</span> <label for="r22" class="ident">err</label> == <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+					<label for="r11" class="ident">zoneinfoElement</label>.<a href="#line-66" class="ident">Protection</a> = <label for="r21" class="ident">val</label>
+				}
+			}
+
+		}
+
+		<label for="r7" class="ident">zoneinfo</label> = <a href="../../../../pkg/builtin.html#name-append" class="ident">append</a>(<label for="r7" class="ident">zoneinfo</label>, <label for="r11" class="ident">zoneinfoElement</label>)
+	}
+	<span class="keyword">return</span> <label for="r7" class="ident">zoneinfo</label>, <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

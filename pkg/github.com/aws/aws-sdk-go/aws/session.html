@@ -1,0 +1,1106 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Package: github.com/aws/aws-sdk-go/aws/session</title>
+<link href="../../../../../css/light-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="package-details"><code><span style="font-size:xx-large;">package <b>session</b></span>
+
+<span class="title">Import Path</span>
+	<a href="../../../../../index.html#pkg-github.com/aws/aws-sdk-go/aws/session">github.com/aws/aws-sdk-go/aws/session</a><i> (on <a href="https://pkg.go.dev/github.com/aws/aws-sdk-go/aws/session" target="_blank">go.dev</a>)</i>
+
+<span class="title">Dependency Relation</span>
+	imports <a href="../../../../../dep/github.com/aws/aws-sdk-go/aws/session.html">24 packages</a>, and imported by <a href="../../../../../dep/github.com/aws/aws-sdk-go/aws/session.html#imported-by">one package</a>
+
+<div id="files"><span class="title">Involved Source Files</span>
+
+	<span class="nodocs">      <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/cabundle_transport.go.html">cabundle_transport.go</a></span>
+	<span class="nodocs">      <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/credentials.go.html">credentials.go</a></span>
+	<input type='checkbox' checked class="fold" id="file-2-fold-content"><label for="file-2-fold-content">   <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/doc.go.html#doc">d➜</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/doc.go.html">doc.go</a></label><span id='file-2-fold-content-items' class="fold-items">
+		Package session provides configuration for the SDK's service clients. Sessions
+		can be shared across service clients that share the same base configuration.
+
+		Sessions are safe to use concurrently as long as the Session is not being
+		modified. Sessions should be cached when possible, because creating a new
+		Session will load all configuration values from the environment, and config
+		files each time the Session is created. Sharing the Session value across all of
+		your service clients will ensure the configuration is loaded the fewest number
+		of times possible.
+
+		Sessions options from Shared Config
+
+		By default NewSession will only load credentials from the shared credentials
+		file (~/.aws/credentials). If the AWS_SDK_LOAD_CONFIG environment variable is
+		set to a truthy value the Session will be created from the configuration
+		values from the shared config (~/.aws/config) and shared credentials
+		(~/.aws/credentials) files. Using the NewSessionWithOptions with
+		SharedConfigState set to SharedConfigEnable will create the session as if the
+		AWS_SDK_LOAD_CONFIG environment variable was set.
+
+		Credential and config loading order
+
+		The Session will attempt to load configuration and credentials from the
+		environment, configuration files, and other credential sources. The order
+		configuration is loaded in is:
+
+		  * Environment Variables
+		  * Shared Credentials file
+		  * Shared Configuration file (if SharedConfig is enabled)
+		  * EC2 Instance Metadata (credentials only)
+
+		The Environment variables for credentials will have precedence over shared
+		config even if SharedConfig is enabled. To override this behavior, and use
+		shared config credentials instead specify the session.Options.Profile, (e.g.
+		when using credential_source=Environment to assume a role).
+
+		  sess, err := session.NewSessionWithOptions(session.Options{
+			  Profile: "myProfile",
+		  })
+
+		Creating Sessions
+
+		Creating a Session without additional options will load credentials region, and
+		profile loaded from the environment and shared config automatically. See,
+		"Environment Variables" section for information on environment variables used
+		by Session.
+
+			// Create Session
+			sess, err := session.NewSession()
+
+		When creating Sessions optional aws.Config values can be passed in that will
+		override the default, or loaded, config values the Session is being created
+		with. This allows you to provide additional, or case based, configuration
+		as needed.
+
+			// Create a Session with a custom region
+			sess, err := session.NewSession(&amp;aws.Config{
+				Region: aws.String("us-west-2"),
+			})
+
+		Use NewSessionWithOptions to provide additional configuration driving how the
+		Session's configuration will be loaded. Such as, specifying shared config
+		profile, or override the shared config state,  (AWS_SDK_LOAD_CONFIG).
+
+			// Equivalent to session.NewSession()
+			sess, err := session.NewSessionWithOptions(session.Options{
+				// Options
+			})
+
+			sess, err := session.NewSessionWithOptions(session.Options{
+				// Specify profile to load for the session's config
+				Profile: "profile_name",
+
+				// Provide SDK Config options, such as Region.
+				Config: aws.Config{
+					Region: aws.String("us-west-2"),
+				},
+
+				// Force enable Shared Config support
+				SharedConfigState: session.SharedConfigEnable,
+			})
+
+		Adding Handlers
+
+		You can add handlers to a session to decorate API operation, (e.g. adding HTTP
+		headers). All clients that use the Session receive a copy of the Session's
+		handlers. For example, the following request handler added to the Session logs
+		every requests made.
+
+			// Create a session, and add additional handlers for all service
+			// clients created with the Session to inherit. Adds logging handler.
+			sess := session.Must(session.NewSession())
+
+			sess.Handlers.Send.PushFront(func(r *request.Request) {
+				// Log every request made and its payload
+				logger.Printf("Request: %s/%s, Params: %s",
+					r.ClientInfo.ServiceName, r.Operation, r.Params)
+			})
+
+		Shared Config Fields
+
+		By default the SDK will only load the shared credentials file's
+		(~/.aws/credentials) credentials values, and all other config is provided by
+		the environment variables, SDK defaults, and user provided aws.Config values.
+
+		If the AWS_SDK_LOAD_CONFIG environment variable is set, or SharedConfigEnable
+		option is used to create the Session the full shared config values will be
+		loaded. This includes credentials, region, and support for assume role. In
+		addition the Session will load its configuration from both the shared config
+		file (~/.aws/config) and shared credentials file (~/.aws/credentials). Both
+		files have the same format.
+
+		If both config files are present the configuration from both files will be
+		read. The Session will be created from configuration values from the shared
+		credentials file (~/.aws/credentials) over those in the shared config file
+		(~/.aws/config).
+
+		Credentials are the values the SDK uses to authenticating requests with AWS
+		Services. When specified in a file, both aws_access_key_id and
+		aws_secret_access_key must be provided together in the same file to be
+		considered valid. They will be ignored if both are not present.
+		aws_session_token is an optional field that can be provided in addition to the
+		other two fields.
+
+			aws_access_key_id = AKID
+			aws_secret_access_key = SECRET
+			aws_session_token = TOKEN
+
+			; region only supported if SharedConfigEnabled.
+			region = us-east-1
+
+		Assume Role configuration
+
+		The role_arn field allows you to configure the SDK to assume an IAM role using
+		a set of credentials from another source. Such as when paired with static
+		credentials, "profile_source", "credential_process", or "credential_source"
+		fields. If "role_arn" is provided, a source of credentials must also be
+		specified, such as "source_profile", "credential_source", or
+		"credential_process".
+
+			role_arn = arn:aws:iam::&lt;account_number&gt;:role/&lt;role_name&gt;
+			source_profile = profile_with_creds
+			external_id = 1234
+			mfa_serial = &lt;serial or mfa arn&gt;
+			role_session_name = session_name
+
+		The SDK supports assuming a role with MFA token. If "mfa_serial" is set, you
+		must also set the Session Option.AssumeRoleTokenProvider. The Session will fail
+		to load if the AssumeRoleTokenProvider is not specified.
+
+		    sess := session.Must(session.NewSessionWithOptions(session.Options{
+		        AssumeRoleTokenProvider: stscreds.StdinTokenProvider,
+		    }))
+
+		To setup Assume Role outside of a session see the stscreds.AssumeRoleProvider
+		documentation.
+
+		Environment Variables
+
+		When a Session is created several environment variables can be set to adjust
+		how the SDK functions, and what configuration data it loads when creating
+		Sessions. All environment values are optional, but some values like credentials
+		require multiple of the values to set or the partial values will be ignored.
+		All environment variable values are strings unless otherwise noted.
+
+		Environment configuration values. If set both Access Key ID and Secret Access
+		Key must be provided. Session Token and optionally also be provided, but is
+		not required.
+
+			# Access Key ID
+			AWS_ACCESS_KEY_ID=AKID
+			AWS_ACCESS_KEY=AKID # only read if AWS_ACCESS_KEY_ID is not set.
+
+			# Secret Access Key
+			AWS_SECRET_ACCESS_KEY=SECRET
+			AWS_SECRET_KEY=SECRET=SECRET # only read if AWS_SECRET_ACCESS_KEY is not set.
+
+			# Session Token
+			AWS_SESSION_TOKEN=TOKEN
+
+		Region value will instruct the SDK where to make service API requests to. If is
+		not provided in the environment the region must be provided before a service
+		client request is made.
+
+			AWS_REGION=us-east-1
+
+			# AWS_DEFAULT_REGION is only read if AWS_SDK_LOAD_CONFIG is also set,
+			# and AWS_REGION is not also set.
+			AWS_DEFAULT_REGION=us-east-1
+
+		Profile name the SDK should load use when loading shared config from the
+		configuration files. If not provided "default" will be used as the profile name.
+
+			AWS_PROFILE=my_profile
+
+			# AWS_DEFAULT_PROFILE is only read if AWS_SDK_LOAD_CONFIG is also set,
+			# and AWS_PROFILE is not also set.
+			AWS_DEFAULT_PROFILE=my_profile
+
+		SDK load config instructs the SDK to load the shared config in addition to
+		shared credentials. This also expands the configuration loaded so the shared
+		credentials will have parity with the shared config file. This also enables
+		Region and Profile support for the AWS_DEFAULT_REGION and AWS_DEFAULT_PROFILE
+		env values as well.
+
+			AWS_SDK_LOAD_CONFIG=1
+
+		Shared credentials file path can be set to instruct the SDK to use an alternative
+		file for the shared credentials. If not set the file will be loaded from
+		$HOME/.aws/credentials on Linux/Unix based systems, and
+		%USERPROFILE%\.aws\credentials on Windows.
+
+			AWS_SHARED_CREDENTIALS_FILE=$HOME/my_shared_credentials
+
+		Shared config file path can be set to instruct the SDK to use an alternative
+		file for the shared config. If not set the file will be loaded from
+		$HOME/.aws/config on Linux/Unix based systems, and
+		%USERPROFILE%\.aws\config on Windows.
+
+			AWS_CONFIG_FILE=$HOME/my_shared_config
+
+		Path to a custom Credentials Authority (CA) bundle PEM file that the SDK
+		will use instead of the default system's root CA bundle. Use this only
+		if you want to replace the CA bundle the SDK uses for TLS requests.
+
+			AWS_CA_BUNDLE=$HOME/my_custom_ca_bundle
+
+		Enabling this option will attempt to merge the Transport into the SDK's HTTP
+		client. If the client's Transport is not a http.Transport an error will be
+		returned. If the Transport's TLS config is set this option will cause the SDK
+		to overwrite the Transport's TLS config's  RootCAs value. If the CA bundle file
+		contains multiple certificates all of them will be loaded.
+
+		The Session option CustomCABundle is also available when creating sessions
+		to also enable this feature. CustomCABundle session option field has priority
+		over the AWS_CA_BUNDLE environment variable, and will be used if both are set.
+
+		Setting a custom HTTPClient in the aws.Config options will override this setting.
+		To use this option and custom HTTP client, the HTTP client needs to be provided
+		when creating the session. Not the service client.
+
+		The endpoint of the EC2 IMDS client can be configured via the environment
+		variable, AWS_EC2_METADATA_SERVICE_ENDPOINT when creating the client with a
+		Session. See Options.EC2IMDSEndpoint for more details.
+
+		  AWS_EC2_METADATA_SERVICE_ENDPOINT=http://169.254.169.254
+
+		If using an URL with an IPv6 address literal, the IPv6 address
+		component must be enclosed in square brackets.
+
+		  AWS_EC2_METADATA_SERVICE_ENDPOINT=http://[::1]
+
+		The custom EC2 IMDS endpoint can also be specified via the Session options.
+
+		  sess, err := session.NewSessionWithOptions(session.Options{
+		      EC2IMDSEndpoint: "http://[::1]",
+		  })
+</span>
+	<span class="nodocs">      <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/env_config.go.html">env_config.go</a></span>
+	<span class="nodocs">      <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/session.go.html">session.go</a></span>
+	<span class="nodocs">      <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html">shared_config.go</a></span></div>
+<div id="exported-types"><span class="title">Package-Level Type Names<span class="title-stat"><i> (total 13, in which 8 are exported)</i></span></span>
+
+<div id="exported-types-buttons" class="js-on">	/* sort exporteds by: <label id="sort-types-by-alphabet" class="button">alphabet</label> | <label id="sort-types-by-popularity" class="button">popularity</label> */</div><div class="anchor type-res" id="name-AssumeRoleTokenProviderNotSetError" data-popularity="400">	<input type='checkbox' class="fold" id="AssumeRoleTokenProviderNotSetError-fold-content"><label for="AssumeRoleTokenProviderNotSetError-fold-content"> <a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..AssumeRoleTokenProviderNotSetError.html">type</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/credentials.go.html#line-236">AssumeRoleTokenProviderNotSetError</a> <i>(struct)</i></label><span id='AssumeRoleTokenProviderNotSetError-fold-content-docs' class="fold-docs">
+		AssumeRoleTokenProviderNotSetError is an error returned when creating a
+		session when the MFAToken option is not set when shared config is configured
+		load assume a role with an MFA token.
+
+		<input type='checkbox' class="fold" id="AssumeRoleTokenProviderNotSetError-fold-methods"><label for="AssumeRoleTokenProviderNotSetError-fold-methods">Methods (<i>total 4, all are exported</i>)</label><span id='AssumeRoleTokenProviderNotSetError-fold-methods-items' class="fold-items"><span>
+			<input type='checkbox' class="fold" id="AssumeRoleTokenProviderNotSetError-fold-method-Code"><label for="AssumeRoleTokenProviderNotSetError-fold-method-Code">( T) <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/credentials.go.html#line-239">Code</a>() <a href="../../../../builtin.html#name-string">string</a></label><span id='AssumeRoleTokenProviderNotSetError-fold-method-Code-docs' class="fold-docs">
+				Code is the short id of the error.
+</span></span><span>
+			<input type='checkbox' class="fold" id="AssumeRoleTokenProviderNotSetError-fold-method-Error"><label for="AssumeRoleTokenProviderNotSetError-fold-method-Error">( T) <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/credentials.go.html#line-254">Error</a>() <a href="../../../../builtin.html#name-string">string</a></label><span id='AssumeRoleTokenProviderNotSetError-fold-method-Error-docs' class="fold-docs">
+				Error satisfies the error interface.
+</span></span><span>
+			<input type='checkbox' class="fold" id="AssumeRoleTokenProviderNotSetError-fold-method-Message"><label for="AssumeRoleTokenProviderNotSetError-fold-method-Message">( T) <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/credentials.go.html#line-244">Message</a>() <a href="../../../../builtin.html#name-string">string</a></label><span id='AssumeRoleTokenProviderNotSetError-fold-method-Message-docs' class="fold-docs">
+				Message is the description of the error
+</span></span><span>
+			<input type='checkbox' class="fold" id="AssumeRoleTokenProviderNotSetError-fold-method-OrigErr"><label for="AssumeRoleTokenProviderNotSetError-fold-method-OrigErr">( T) <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/credentials.go.html#line-249">OrigErr</a>() <a href="../../../../builtin.html#name-error">error</a></label><span id='AssumeRoleTokenProviderNotSetError-fold-method-OrigErr-docs' class="fold-docs">
+				OrigErr is the underlying error that caused the failure.
+</span></span></span>
+		<input type='checkbox' class="fold" id="AssumeRoleTokenProviderNotSetError-fold-impls"><label for="AssumeRoleTokenProviderNotSetError-fold-impls">Implements (<i>at least 4, in which 2 are exported</i>)</label><span id='AssumeRoleTokenProviderNotSetError-fold-impls-items' class="fold-items"><span>
+			 T : github.com/aws/aws-sdk-go/aws/awserr.<a href="awserr.html#name-Error">Error</a></span><span>
+			 T : <a href="../../../../builtin.html#name-error">error</a></span>
+			<input type='checkbox' class="showhide" id="AssumeRoleTokenProviderNotSetError-showhide-impls"><i><label for="AssumeRoleTokenProviderNotSetError-showhide-impls" class="show-inline">/* 2+ unexporteds ... */</label><label for="AssumeRoleTokenProviderNotSetError-showhide-impls" class="hide-inline">/* 2+ unexporteds: */</label></i><span class="hidden"><i>
+			 T : github.com/aws/aws-sdk-go/aws/awserr.<a href="awserr.html#name-awsError">awsError</a></i></span><span class="hidden"><i>
+			 T : github.com/aws/aws-sdk-go/aws/endpoints.<a href="endpoints.html#name-awsError">awsError</a></i></span></span>
+
+</span></div><div class="anchor type-res" id="name-CredentialRequiresARNError" data-popularity="400">	<input type='checkbox' class="fold" id="CredentialRequiresARNError-fold-content"><label for="CredentialRequiresARNError-fold-content"> <a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..CredentialRequiresARNError.html">type</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-526">CredentialRequiresARNError</a> <i>(struct)</i></label><span id='CredentialRequiresARNError-fold-content-docs' class="fold-docs">
+		CredentialRequiresARNError provides the error for shared config credentials
+		that are incorrectly configured in the shared config or credentials file.
+
+		<input type='checkbox' class="fold" id="CredentialRequiresARNError-fold-fields"><label for="CredentialRequiresARNError-fold-fields">Fields (<i>total 2, both are exported</i>)</label><span id='CredentialRequiresARNError-fold-fields-items' class="fold-items"><span>
+			<input type='checkbox' class="fold" id="CredentialRequiresARNError-fold-field-Profile"><label for="CredentialRequiresARNError-fold-field-Profile"><a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-531">Profile</a> <i><a href="../../../../builtin.html#name-string">string</a></i></label><span id='CredentialRequiresARNError-fold-field-Profile-docs' class="fold-docs">
+				Profile name the credentials were in.
+</span></span><span>
+			<input type='checkbox' class="fold" id="CredentialRequiresARNError-fold-field-Type"><label for="CredentialRequiresARNError-fold-field-Type"><a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-528">Type</a> <i><a href="../../../../builtin.html#name-string">string</a></i></label><span id='CredentialRequiresARNError-fold-field-Type-docs' class="fold-docs">
+				type of credentials that were configured.
+</span></span></span>
+		<input type='checkbox' class="fold" id="CredentialRequiresARNError-fold-methods"><label for="CredentialRequiresARNError-fold-methods">Methods (<i>total 4, all are exported</i>)</label><span id='CredentialRequiresARNError-fold-methods-items' class="fold-items"><span>
+			<input type='checkbox' class="fold" id="CredentialRequiresARNError-fold-method-Code"><label for="CredentialRequiresARNError-fold-method-Code">( T) <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-535">Code</a>() <a href="../../../../builtin.html#name-string">string</a></label><span id='CredentialRequiresARNError-fold-method-Code-docs' class="fold-docs">
+				Code is the short id of the error.
+</span></span><span>
+			<input type='checkbox' class="fold" id="CredentialRequiresARNError-fold-method-Error"><label for="CredentialRequiresARNError-fold-method-Error">( T) <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-553">Error</a>() <a href="../../../../builtin.html#name-string">string</a></label><span id='CredentialRequiresARNError-fold-method-Error-docs' class="fold-docs">
+				Error satisfies the error interface.
+</span></span><span>
+			<input type='checkbox' class="fold" id="CredentialRequiresARNError-fold-method-Message"><label for="CredentialRequiresARNError-fold-method-Message">( T) <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-540">Message</a>() <a href="../../../../builtin.html#name-string">string</a></label><span id='CredentialRequiresARNError-fold-method-Message-docs' class="fold-docs">
+				Message is the description of the error
+</span></span><span>
+			<input type='checkbox' class="fold" id="CredentialRequiresARNError-fold-method-OrigErr"><label for="CredentialRequiresARNError-fold-method-OrigErr">( T) <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-548">OrigErr</a>() <a href="../../../../builtin.html#name-error">error</a></label><span id='CredentialRequiresARNError-fold-method-OrigErr-docs' class="fold-docs">
+				OrigErr is the underlying error that caused the failure.
+</span></span></span>
+		<input type='checkbox' class="fold" id="CredentialRequiresARNError-fold-impls"><label for="CredentialRequiresARNError-fold-impls">Implements (<i>at least 4, in which 2 are exported</i>)</label><span id='CredentialRequiresARNError-fold-impls-items' class="fold-items"><span>
+			 T : github.com/aws/aws-sdk-go/aws/awserr.<a href="awserr.html#name-Error">Error</a></span><span>
+			 T : <a href="../../../../builtin.html#name-error">error</a></span>
+			<input type='checkbox' class="showhide" id="CredentialRequiresARNError-showhide-impls"><i><label for="CredentialRequiresARNError-showhide-impls" class="show-inline">/* 2+ unexporteds ... */</label><label for="CredentialRequiresARNError-showhide-impls" class="hide-inline">/* 2+ unexporteds: */</label></i><span class="hidden"><i>
+			 T : github.com/aws/aws-sdk-go/aws/awserr.<a href="awserr.html#name-awsError">awsError</a></i></span><span class="hidden"><i>
+			 T : github.com/aws/aws-sdk-go/aws/endpoints.<a href="endpoints.html#name-awsError">awsError</a></i></span></span>
+
+</span></div><div class="anchor type-res" id="name-Options" data-popularity="245">	<input type='checkbox' class="fold" id="Options-fold-content"><label for="Options-fold-content"> <a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..Options.html">type</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/session.go.html#line-170">Options</a> <i>(struct)</i></label><span id='Options-fold-content-docs' class="fold-docs">
+		Options provides the means to control how a Session is created and what
+		configuration values will be loaded.
+
+		<input type='checkbox' class="fold" id="Options-fold-fields"><label for="Options-fold-fields">Fields (<i>total 9, all are exported</i>)</label><span id='Options-fold-fields-items' class="fold-items"><span>
+			<input type='checkbox' class="fold" id="Options-fold-field-AssumeRoleDuration"><label for="Options-fold-field-AssumeRoleDuration"><a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/session.go.html#line-226">AssumeRoleDuration</a> <i><a href="../../../../time.html">time</a>.<a href="../../../../time.html#name-Duration">Duration</a></i></label><span id='Options-fold-field-AssumeRoleDuration-docs' class="fold-docs">
+				When the SDK's shared config is configured to assume a role this option
+				may be provided to set the expiry duration of the STS credentials.
+				Defaults to 15 minutes if not set as documented in the
+				stscreds.AssumeRoleProvider.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Options-fold-field-AssumeRoleTokenProvider"><label for="Options-fold-field-AssumeRoleTokenProvider"><a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/session.go.html#line-220">AssumeRoleTokenProvider</a> <i>func() (<a href="../../../../builtin.html#name-string">string</a>, <a href="../../../../builtin.html#name-error">error</a>)</i></label><span id='Options-fold-field-AssumeRoleTokenProvider-docs' class="fold-docs">
+				When the SDK's shared config is configured to assume a role with MFA
+				this option is required in order to provide the mechanism that will
+				retrieve the MFA token. There is no default value for this field. If
+				it is not set an error will be returned when creating the session.
+
+				This token provider will be called when ever the assumed role's
+				credentials need to be refreshed. Within the context of service clients
+				all sharing the same session the SDK will ensure calls to the token
+				provider are atomic. When sharing a token provider across multiple
+				sessions additional synchronization logic is needed to ensure the
+				token providers do not introduce race conditions. It is recommend to
+				share the session where possible.
+
+				stscreds.StdinTokenProvider is a basic implementation that will prompt
+				from stdin for the MFA token code.
+
+				This field is only used if the shared configuration is enabled, and
+				the config enables assume role wit MFA via the mfa_serial field.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Options-fold-field-Config"><label for="Options-fold-field-Config"><a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/session.go.html#line-178">Config</a> <i><a href="../aws.html">aws</a>.<a href="../aws.html#name-Config">Config</a></i></label><span id='Options-fold-field-Config-docs' class="fold-docs">
+				Provides config values for the SDK to use when creating service clients
+				and making API requests to services. Any value set in with this field
+				will override the associated value provided by the SDK defaults,
+				environment or config files where relevant.
+
+				If not set, configuration values from from SDK defaults, environment,
+				config will be used.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Options-fold-field-CustomCABundle"><label for="Options-fold-field-CustomCABundle"><a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/session.go.html#line-241">CustomCABundle</a> <i><a href="../../../../io.html">io</a>.<a href="../../../../io.html#name-Reader">Reader</a></i></label><span id='Options-fold-field-CustomCABundle-docs' class="fold-docs">
+				Reader for a custom Credentials Authority (CA) bundle in PEM format that
+				the SDK will use instead of the default system's root CA bundle. Use this
+				only if you want to replace the CA bundle the SDK uses for TLS requests.
+
+				Enabling this option will attempt to merge the Transport into the SDK's HTTP
+				client. If the client's Transport is not a http.Transport an error will be
+				returned. If the Transport's TLS config is set this option will cause the SDK
+				to overwrite the Transport's TLS config's  RootCAs value. If the CA
+				bundle reader contains multiple certificates all of them will be loaded.
+
+				The Session option CustomCABundle is also available when creating sessions
+				to also enable this feature. CustomCABundle session option field has priority
+				over the AWS_CA_BUNDLE environment variable, and will be used if both are set.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Options-fold-field-EC2IMDSEndpoint"><label for="Options-fold-field-EC2IMDSEndpoint"><a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/session.go.html#line-264">EC2IMDSEndpoint</a> <i><a href="../../../../builtin.html#name-string">string</a></i></label><span id='Options-fold-field-EC2IMDSEndpoint-docs' class="fold-docs">
+				Allows specifying a custom endpoint to be used by the EC2 IMDS client
+				when making requests to the EC2 IMDS API. The must endpoint value must
+				include protocol prefix.
+
+				If unset, will the EC2 IMDS client will use its default endpoint.
+
+				Can also be specified via the environment variable,
+				AWS_EC2_METADATA_SERVICE_ENDPOINT.
+
+				  AWS_EC2_METADATA_SERVICE_ENDPOINT=http://169.254.169.254
+
+				If using an URL with an IPv6 address literal, the IPv6 address
+				component must be enclosed in square brackets.
+
+				  AWS_EC2_METADATA_SERVICE_ENDPOINT=http://[::1]
+</span></span><span>
+			<input type='checkbox' class="fold" id="Options-fold-field-Handlers"><label for="Options-fold-field-Handlers"><a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/session.go.html#line-247">Handlers</a> <i><a href="request.html">request</a>.<a href="request.html#name-Handlers">Handlers</a></i></label><span id='Options-fold-field-Handlers-docs' class="fold-docs">
+				The handlers that the session and all API clients will be created with.
+				This must be a complete set of handlers. Use the defaults.Handlers()
+				function to initialize this value before changing the handlers to be
+				used by the SDK.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Options-fold-field-Profile"><label for="Options-fold-field-Profile"><a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/session.go.html#line-187">Profile</a> <i><a href="../../../../builtin.html#name-string">string</a></i></label><span id='Options-fold-field-Profile-docs' class="fold-docs">
+				Overrides the config profile the Session should be created from. If not
+				set the value of the environment variable will be loaded (AWS_PROFILE,
+				or AWS_DEFAULT_PROFILE if the Shared Config is enabled).
+
+				If not set and environment variables are not set the "default"
+				(DefaultSharedConfigProfile) will be used as the profile to load the
+				session config from.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Options-fold-field-SharedConfigFiles"><label for="Options-fold-field-SharedConfigFiles"><a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/session.go.html#line-200">SharedConfigFiles</a> <i>[]<a href="../../../../builtin.html#name-string">string</a></i></label><span id='Options-fold-field-SharedConfigFiles-docs' class="fold-docs">
+				Ordered list of files the session will load configuration from.
+				It will override environment variable AWS_SHARED_CREDENTIALS_FILE, AWS_CONFIG_FILE.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Options-fold-field-SharedConfigState"><label for="Options-fold-field-SharedConfigState"><a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/session.go.html#line-196">SharedConfigState</a> <i><a href="#name-SharedConfigState">SharedConfigState</a></i></label><span id='Options-fold-field-SharedConfigState-docs' class="fold-docs">
+				Instructs how the Session will be created based on the AWS_SDK_LOAD_CONFIG
+				environment variable. By default a Session will be created using the
+				value provided by the AWS_SDK_LOAD_CONFIG environment variable.
+
+				Setting this value to SharedConfigEnable or SharedConfigDisable
+				will allow you to override the AWS_SDK_LOAD_CONFIG environment variable
+				and enable or disable the shared config functionality.
+</span></span></span>
+		<input type='checkbox' class="fold" id="Options-fold-params"><label for="Options-fold-params">As Inputs Of (<i>at least 7, in which 1 are exported</i>)</label><span id='Options-fold-params-items' class="fold-items"><span>
+			func <a href="#name-NewSessionWithOptions">NewSessionWithOptions</a>(opts <b>Options</b>) (*<a href="#name-Session">Session</a>, <a href="../../../../builtin.html#name-error">error</a>)</span>
+			<input type='checkbox' class="showhide" id="Options-showhide-outputofs"><i><label for="Options-showhide-outputofs" class="show-inline">/* 6+ unexporteds ... */</label><label for="Options-showhide-outputofs" class="hide-inline">/* 6+ unexporteds: */</label></i><span class="hidden"><i>
+			func <a href="#name-credsFromAssumeRole">credsFromAssumeRole</a>(cfg <a href="../aws.html">aws</a>.<a href="../aws.html#name-Config">Config</a>, handlers <a href="request.html">request</a>.<a href="request.html#name-Handlers">Handlers</a>, sharedCfg <a href="#name-sharedConfig">sharedConfig</a>, sessOpts <b>Options</b>) (*<a href="credentials.html">credentials</a>.<a href="credentials.html#name-Credentials">Credentials</a>, <a href="../../../../builtin.html#name-error">error</a>)</i></span><span class="hidden"><i>
+			func <a href="#name-mergeConfigSrcs">mergeConfigSrcs</a>(cfg, userCfg *<a href="../aws.html">aws</a>.<a href="../aws.html#name-Config">Config</a>, envCfg <a href="#name-envConfig">envConfig</a>, sharedCfg <a href="#name-sharedConfig">sharedConfig</a>, handlers <a href="request.html">request</a>.<a href="request.html#name-Handlers">Handlers</a>, sessOpts <b>Options</b>) <a href="../../../../builtin.html#name-error">error</a></i></span><span class="hidden"><i>
+			func <a href="#name-newSession">newSession</a>(opts <b>Options</b>, envCfg <a href="#name-envConfig">envConfig</a>, cfgs ...*<a href="../aws.html">aws</a>.<a href="../aws.html#name-Config">Config</a>) (*<a href="#name-Session">Session</a>, <a href="../../../../builtin.html#name-error">error</a>)</i></span><span class="hidden"><i>
+			func <a href="#name-resolveCredentials">resolveCredentials</a>(cfg *<a href="../aws.html">aws</a>.<a href="../aws.html#name-Config">Config</a>, envCfg <a href="#name-envConfig">envConfig</a>, sharedCfg <a href="#name-sharedConfig">sharedConfig</a>, handlers <a href="request.html">request</a>.<a href="request.html#name-Handlers">Handlers</a>, sessOpts <b>Options</b>) (*<a href="credentials.html">credentials</a>.<a href="credentials.html#name-Credentials">Credentials</a>, <a href="../../../../builtin.html#name-error">error</a>)</i></span><span class="hidden"><i>
+			func <a href="#name-resolveCredsFromProfile">resolveCredsFromProfile</a>(cfg *<a href="../aws.html">aws</a>.<a href="../aws.html#name-Config">Config</a>, envCfg <a href="#name-envConfig">envConfig</a>, sharedCfg <a href="#name-sharedConfig">sharedConfig</a>, handlers <a href="request.html">request</a>.<a href="request.html#name-Handlers">Handlers</a>, sessOpts <b>Options</b>) (creds *<a href="credentials.html">credentials</a>.<a href="credentials.html#name-Credentials">Credentials</a>, err <a href="../../../../builtin.html#name-error">error</a>)</i></span><span class="hidden"><i>
+			func <a href="#name-resolveCredsFromSource">resolveCredsFromSource</a>(cfg *<a href="../aws.html">aws</a>.<a href="../aws.html#name-Config">Config</a>, envCfg <a href="#name-envConfig">envConfig</a>, sharedCfg <a href="#name-sharedConfig">sharedConfig</a>, handlers <a href="request.html">request</a>.<a href="request.html#name-Handlers">Handlers</a>, sessOpts <b>Options</b>) (creds *<a href="credentials.html">credentials</a>.<a href="credentials.html#name-Credentials">Credentials</a>, err <a href="../../../../builtin.html#name-error">error</a>)</i></span></span>
+
+</span></div><div class="anchor type-res" id="name-Session" data-popularity="980">	<input type='checkbox' class="fold" id="Session-fold-content"><label for="Session-fold-content"> <a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..Session.html">type</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/session.go.html#line-48">Session</a> <i>(struct)</i></label><span id='Session-fold-content-docs' class="fold-docs">
+		A Session provides a central location to create service clients from and
+		store configurations and request handlers for those services.
+
+		Sessions are safe to create service clients concurrently, but it is not safe
+		to mutate the Session concurrently.
+
+		The Session satisfies the service client's client.ConfigProvider.
+
+		<input type='checkbox' class="fold" id="Session-fold-fields"><label for="Session-fold-fields">Fields (<i>total 3, in which 2 are exported</i>)</label><span id='Session-fold-fields-items' class="fold-items"><span>
+			<span class="nodocs"><a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/session.go.html#line-49">Config</a> <i>*<a href="../aws.html">aws</a>.<a href="../aws.html#name-Config">Config</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/session.go.html#line-50">Handlers</a> <i><a href="request.html">request</a>.<a href="request.html#name-Handlers">Handlers</a></i></span></span>
+			<input type='checkbox' class="showhide" id="Session-showhide-fields"><i><label for="Session-showhide-fields" class="show-inline">/* one unexported ... */</label><label for="Session-showhide-fields" class="hide-inline">/* one unexported: */</label></i><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/session.go.html#line-52">options</a> <i><a href="#name-Options">Options</a></i></span></i></span></span>
+		<input type='checkbox' class="fold" id="Session-fold-methods"><label for="Session-fold-methods">Methods (<i>total 5, in which 3 are exported</i>)</label><span id='Session-fold-methods-items' class="fold-items"><span>
+			<input type='checkbox' class="fold" id="Session-fold-method-ClientConfig"><label for="Session-fold-method-ClientConfig">(*T) <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/session.go.html#line-695">ClientConfig</a>(service <a href="../../../../builtin.html#name-string">string</a>, cfgs ...*<a href="../aws.html">aws</a>.<a href="../aws.html#name-Config">Config</a>) <a href="client.html">client</a>.<a href="client.html#name-Config">Config</a></label><span id='Session-fold-method-ClientConfig-docs' class="fold-docs">
+				ClientConfig satisfies the client.ConfigProvider interface and is used to
+				configure the service client instances. Passing the Session to the service
+				client's constructor (New) will use this method to configure the client.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Session-fold-method-ClientConfigNoResolveEndpoint"><label for="Session-fold-method-ClientConfigNoResolveEndpoint">(*T) <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/session.go.html#line-763">ClientConfigNoResolveEndpoint</a>(cfgs ...*<a href="../aws.html">aws</a>.<a href="../aws.html#name-Config">Config</a>) <a href="client.html">client</a>.<a href="client.html#name-Config">Config</a></label><span id='Session-fold-method-ClientConfigNoResolveEndpoint-docs' class="fold-docs">
+				ClientConfigNoResolveEndpoint is the same as ClientConfig with the exception
+				that the EndpointResolver will not be used to resolve the endpoint. The only
+				endpoint set must come from the aws.Config.Endpoint field.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Session-fold-method-Copy"><label for="Session-fold-method-Copy">(*T) <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/session.go.html#line-680">Copy</a>(cfgs ...*<a href="../aws.html">aws</a>.<a href="../aws.html#name-Config">Config</a>) *<b>Session</b></label><span id='Session-fold-method-Copy-docs' class="fold-docs">
+				Copy creates and returns a copy of the current Session, copying the config
+				and handlers. If any additional configs are provided they will be merged
+				on top of the Session's copied config.
+
+				    // Create a copy of the current Session, configured for the us-west-2 region.
+				    sess.Copy(&amp;aws.Config{Region: aws.String("us-west-2")})
+</span></span>
+			<input type='checkbox' class="showhide" id="Session-showhide-methods"><i><label for="Session-showhide-methods" class="show-inline">/* 2 unexporteds ... */</label><label for="Session-showhide-methods" class="hide-inline">/* 2 unexporteds: */</label></i><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="Session-fold-method-logDeprecatedNewSessionError"><label for="Session-fold-method-logDeprecatedNewSessionError">(*T) <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/session.go.html#line-783">logDeprecatedNewSessionError</a>(msg <a href="../../../../builtin.html#name-string">string</a>, err <a href="../../../../builtin.html#name-error">error</a>, cfgs []*<a href="../aws.html">aws</a>.<a href="../aws.html#name-Config">Config</a>)</label><span id='Session-fold-method-logDeprecatedNewSessionError-docs' class="fold-docs">
+				logDeprecatedNewSessionError function enables error handling for session
+</span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/session.go.html#line-725">resolveEndpoint</a>(service, region <a href="../../../../builtin.html#name-string">string</a>, cfg *<a href="../aws.html">aws</a>.<a href="../aws.html#name-Config">Config</a>) (<a href="endpoints.html">endpoints</a>.<a href="endpoints.html#name-ResolvedEndpoint">ResolvedEndpoint</a>, <a href="../../../../builtin.html#name-error">error</a>)</span></i></span></span>
+		<input type='checkbox' class="fold" id="Session-fold-impls"><label for="Session-fold-impls">Implements (<i>at least 2, both are exported</i>)</label><span id='Session-fold-impls-items' class="fold-items"><span>
+			*T : github.com/aws/aws-sdk-go/aws/client.<a href="client.html#name-ConfigNoResolveEndpointProvider">ConfigNoResolveEndpointProvider</a></span><span>
+			*T : github.com/aws/aws-sdk-go/aws/client.<a href="client.html#name-ConfigProvider">ConfigProvider</a></span></span>
+		<input type='checkbox' class="fold" id="Session-fold-results"><label for="Session-fold-results">As Outputs Of (<i>at least 7, in which 5 are exported</i>)</label><span id='Session-fold-results-items' class="fold-items"><span>
+			func <a href="#name-Must">Must</a>(sess *<b>Session</b>, err <a href="../../../../builtin.html#name-error">error</a>) *<b>Session</b></span><span>
+			func <a href="#name-New">New</a>(cfgs ...*<a href="../aws.html">aws</a>.<a href="../aws.html#name-Config">Config</a>) *<b>Session</b></span><span>
+			func <a href="#name-NewSession">NewSession</a>(cfgs ...*<a href="../aws.html">aws</a>.<a href="../aws.html#name-Config">Config</a>) (*<b>Session</b>, <a href="../../../../builtin.html#name-error">error</a>)</span><span>
+			func <a href="#name-NewSessionWithOptions">NewSessionWithOptions</a>(opts <a href="#name-Options">Options</a>) (*<b>Session</b>, <a href="../../../../builtin.html#name-error">error</a>)</span><span>
+			func (*Session).<a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/session.go.html#line-680">Copy</a>(cfgs ...*<a href="../aws.html">aws</a>.<a href="../aws.html#name-Config">Config</a>) *<b>Session</b></span>
+			<input type='checkbox' class="showhide" id="Session-showhide-inputofs"><i><label for="Session-showhide-inputofs" class="show-inline">/* 2+ unexporteds ... */</label><label for="Session-showhide-inputofs" class="hide-inline">/* 2+ unexporteds: */</label></i><span class="hidden"><i>
+			func <a href="#name-deprecatedNewSession">deprecatedNewSession</a>(envCfg <a href="#name-envConfig">envConfig</a>, cfgs ...*<a href="../aws.html">aws</a>.<a href="../aws.html#name-Config">Config</a>) *<b>Session</b></i></span><span class="hidden"><i>
+			func <a href="#name-newSession">newSession</a>(opts <a href="#name-Options">Options</a>, envCfg <a href="#name-envConfig">envConfig</a>, cfgs ...*<a href="../aws.html">aws</a>.<a href="../aws.html#name-Config">Config</a>) (*<b>Session</b>, <a href="../../../../builtin.html#name-error">error</a>)</i></span></span>
+		<input type='checkbox' class="fold" id="Session-fold-params"><label for="Session-fold-params">As Inputs Of (<i>at least 3, in which 1 are exported</i>)</label><span id='Session-fold-params-items' class="fold-items"><span>
+			func <a href="#name-Must">Must</a>(sess *<b>Session</b>, err <a href="../../../../builtin.html#name-error">error</a>) *<b>Session</b></span>
+			<input type='checkbox' class="showhide" id="Session-showhide-outputofs"><i><label for="Session-showhide-outputofs" class="show-inline">/* 2+ unexporteds ... */</label><label for="Session-showhide-outputofs" class="hide-inline">/* 2+ unexporteds: */</label></i><span class="hidden"><i>
+			func <a href="#name-initHandlers">initHandlers</a>(s *<b>Session</b>)</i></span><span class="hidden"><i>
+			func <a href="#name-loadCustomCABundle">loadCustomCABundle</a>(s *<b>Session</b>, bundle <a href="../../../../io.html">io</a>.<a href="../../../../io.html#name-Reader">Reader</a>) <a href="../../../../builtin.html#name-error">error</a></i></span></span>
+
+</span></div><div class="anchor type-res" id="name-SharedConfigAssumeRoleError" data-popularity="400">	<input type='checkbox' class="fold" id="SharedConfigAssumeRoleError-fold-content"><label for="SharedConfigAssumeRoleError-fold-content"> <a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..SharedConfigAssumeRoleError.html">type</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-496">SharedConfigAssumeRoleError</a> <i>(struct)</i></label><span id='SharedConfigAssumeRoleError-fold-content-docs' class="fold-docs">
+		SharedConfigAssumeRoleError is an error for the shared config when the
+		profile contains assume role information, but that information is invalid
+		or not complete.
+
+		<input type='checkbox' class="fold" id="SharedConfigAssumeRoleError-fold-fields"><label for="SharedConfigAssumeRoleError-fold-fields">Fields (<i>total 2, both are exported</i>)</label><span id='SharedConfigAssumeRoleError-fold-fields-items' class="fold-items"><span>
+			<span class="nodocs"><a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-497">RoleARN</a> <i><a href="../../../../builtin.html#name-string">string</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-498">SourceProfile</a> <i><a href="../../../../builtin.html#name-string">string</a></i></span></span></span>
+		<input type='checkbox' class="fold" id="SharedConfigAssumeRoleError-fold-methods"><label for="SharedConfigAssumeRoleError-fold-methods">Methods (<i>total 4, all are exported</i>)</label><span id='SharedConfigAssumeRoleError-fold-methods-items' class="fold-items"><span>
+			<input type='checkbox' class="fold" id="SharedConfigAssumeRoleError-fold-method-Code"><label for="SharedConfigAssumeRoleError-fold-method-Code">( T) <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-502">Code</a>() <a href="../../../../builtin.html#name-string">string</a></label><span id='SharedConfigAssumeRoleError-fold-method-Code-docs' class="fold-docs">
+				Code is the short id of the error.
+</span></span><span>
+			<input type='checkbox' class="fold" id="SharedConfigAssumeRoleError-fold-method-Error"><label for="SharedConfigAssumeRoleError-fold-method-Error">( T) <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-520">Error</a>() <a href="../../../../builtin.html#name-string">string</a></label><span id='SharedConfigAssumeRoleError-fold-method-Error-docs' class="fold-docs">
+				Error satisfies the error interface.
+</span></span><span>
+			<input type='checkbox' class="fold" id="SharedConfigAssumeRoleError-fold-method-Message"><label for="SharedConfigAssumeRoleError-fold-method-Message">( T) <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-507">Message</a>() <a href="../../../../builtin.html#name-string">string</a></label><span id='SharedConfigAssumeRoleError-fold-method-Message-docs' class="fold-docs">
+				Message is the description of the error
+</span></span><span>
+			<input type='checkbox' class="fold" id="SharedConfigAssumeRoleError-fold-method-OrigErr"><label for="SharedConfigAssumeRoleError-fold-method-OrigErr">( T) <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-515">OrigErr</a>() <a href="../../../../builtin.html#name-error">error</a></label><span id='SharedConfigAssumeRoleError-fold-method-OrigErr-docs' class="fold-docs">
+				OrigErr is the underlying error that caused the failure.
+</span></span></span>
+		<input type='checkbox' class="fold" id="SharedConfigAssumeRoleError-fold-impls"><label for="SharedConfigAssumeRoleError-fold-impls">Implements (<i>at least 4, in which 2 are exported</i>)</label><span id='SharedConfigAssumeRoleError-fold-impls-items' class="fold-items"><span>
+			 T : github.com/aws/aws-sdk-go/aws/awserr.<a href="awserr.html#name-Error">Error</a></span><span>
+			 T : <a href="../../../../builtin.html#name-error">error</a></span>
+			<input type='checkbox' class="showhide" id="SharedConfigAssumeRoleError-showhide-impls"><i><label for="SharedConfigAssumeRoleError-showhide-impls" class="show-inline">/* 2+ unexporteds ... */</label><label for="SharedConfigAssumeRoleError-showhide-impls" class="hide-inline">/* 2+ unexporteds: */</label></i><span class="hidden"><i>
+			 T : github.com/aws/aws-sdk-go/aws/awserr.<a href="awserr.html#name-awsError">awsError</a></i></span><span class="hidden"><i>
+			 T : github.com/aws/aws-sdk-go/aws/endpoints.<a href="endpoints.html#name-awsError">awsError</a></i></span></span>
+
+</span></div><div class="anchor type-res" id="name-SharedConfigLoadError" data-popularity="400">	<input type='checkbox' class="fold" id="SharedConfigLoadError-fold-content"><label for="SharedConfigLoadError-fold-content"> <a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..SharedConfigLoadError.html">type</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-441">SharedConfigLoadError</a> <i>(struct)</i></label><span id='SharedConfigLoadError-fold-content-docs' class="fold-docs">
+		SharedConfigLoadError is an error for the shared config file failed to load.
+
+		<input type='checkbox' class="fold" id="SharedConfigLoadError-fold-fields"><label for="SharedConfigLoadError-fold-fields">Fields (<i>total 2, both are exported</i>)</label><span id='SharedConfigLoadError-fold-fields-items' class="fold-items"><span>
+			<span class="nodocs"><a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-443">Err</a> <i><a href="../../../../builtin.html#name-error">error</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-442">Filename</a> <i><a href="../../../../builtin.html#name-string">string</a></i></span></span></span>
+		<input type='checkbox' class="fold" id="SharedConfigLoadError-fold-methods"><label for="SharedConfigLoadError-fold-methods">Methods (<i>total 4, all are exported</i>)</label><span id='SharedConfigLoadError-fold-methods-items' class="fold-items"><span>
+			<input type='checkbox' class="fold" id="SharedConfigLoadError-fold-method-Code"><label for="SharedConfigLoadError-fold-method-Code">( T) <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-447">Code</a>() <a href="../../../../builtin.html#name-string">string</a></label><span id='SharedConfigLoadError-fold-method-Code-docs' class="fold-docs">
+				Code is the short id of the error.
+</span></span><span>
+			<input type='checkbox' class="fold" id="SharedConfigLoadError-fold-method-Error"><label for="SharedConfigLoadError-fold-method-Error">( T) <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-462">Error</a>() <a href="../../../../builtin.html#name-string">string</a></label><span id='SharedConfigLoadError-fold-method-Error-docs' class="fold-docs">
+				Error satisfies the error interface.
+</span></span><span>
+			<input type='checkbox' class="fold" id="SharedConfigLoadError-fold-method-Message"><label for="SharedConfigLoadError-fold-method-Message">( T) <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-452">Message</a>() <a href="../../../../builtin.html#name-string">string</a></label><span id='SharedConfigLoadError-fold-method-Message-docs' class="fold-docs">
+				Message is the description of the error
+</span></span><span>
+			<input type='checkbox' class="fold" id="SharedConfigLoadError-fold-method-OrigErr"><label for="SharedConfigLoadError-fold-method-OrigErr">( T) <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-457">OrigErr</a>() <a href="../../../../builtin.html#name-error">error</a></label><span id='SharedConfigLoadError-fold-method-OrigErr-docs' class="fold-docs">
+				OrigErr is the underlying error that caused the failure.
+</span></span></span>
+		<input type='checkbox' class="fold" id="SharedConfigLoadError-fold-impls"><label for="SharedConfigLoadError-fold-impls">Implements (<i>at least 4, in which 2 are exported</i>)</label><span id='SharedConfigLoadError-fold-impls-items' class="fold-items"><span>
+			 T : github.com/aws/aws-sdk-go/aws/awserr.<a href="awserr.html#name-Error">Error</a></span><span>
+			 T : <a href="../../../../builtin.html#name-error">error</a></span>
+			<input type='checkbox' class="showhide" id="SharedConfigLoadError-showhide-impls"><i><label for="SharedConfigLoadError-showhide-impls" class="show-inline">/* 2+ unexporteds ... */</label><label for="SharedConfigLoadError-showhide-impls" class="hide-inline">/* 2+ unexporteds: */</label></i><span class="hidden"><i>
+			 T : github.com/aws/aws-sdk-go/aws/awserr.<a href="awserr.html#name-awsError">awsError</a></i></span><span class="hidden"><i>
+			 T : github.com/aws/aws-sdk-go/aws/endpoints.<a href="endpoints.html#name-awsError">awsError</a></i></span></span>
+
+</span></div><div class="anchor type-res" id="name-SharedConfigProfileNotExistsError" data-popularity="400">	<input type='checkbox' class="fold" id="SharedConfigProfileNotExistsError-fold-content"><label for="SharedConfigProfileNotExistsError-fold-content"> <a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..SharedConfigProfileNotExistsError.html">type</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-468">SharedConfigProfileNotExistsError</a> <i>(struct)</i></label><span id='SharedConfigProfileNotExistsError-fold-content-docs' class="fold-docs">
+		SharedConfigProfileNotExistsError is an error for the shared config when
+		the profile was not find in the config file.
+
+		<input type='checkbox' class="fold" id="SharedConfigProfileNotExistsError-fold-fields"><label for="SharedConfigProfileNotExistsError-fold-fields">Fields (<i>total 2, both are exported</i>)</label><span id='SharedConfigProfileNotExistsError-fold-fields-items' class="fold-items"><span>
+			<span class="nodocs"><a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-470">Err</a> <i><a href="../../../../builtin.html#name-error">error</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-469">Profile</a> <i><a href="../../../../builtin.html#name-string">string</a></i></span></span></span>
+		<input type='checkbox' class="fold" id="SharedConfigProfileNotExistsError-fold-methods"><label for="SharedConfigProfileNotExistsError-fold-methods">Methods (<i>total 4, all are exported</i>)</label><span id='SharedConfigProfileNotExistsError-fold-methods-items' class="fold-items"><span>
+			<input type='checkbox' class="fold" id="SharedConfigProfileNotExistsError-fold-method-Code"><label for="SharedConfigProfileNotExistsError-fold-method-Code">( T) <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-474">Code</a>() <a href="../../../../builtin.html#name-string">string</a></label><span id='SharedConfigProfileNotExistsError-fold-method-Code-docs' class="fold-docs">
+				Code is the short id of the error.
+</span></span><span>
+			<input type='checkbox' class="fold" id="SharedConfigProfileNotExistsError-fold-method-Error"><label for="SharedConfigProfileNotExistsError-fold-method-Error">( T) <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-489">Error</a>() <a href="../../../../builtin.html#name-string">string</a></label><span id='SharedConfigProfileNotExistsError-fold-method-Error-docs' class="fold-docs">
+				Error satisfies the error interface.
+</span></span><span>
+			<input type='checkbox' class="fold" id="SharedConfigProfileNotExistsError-fold-method-Message"><label for="SharedConfigProfileNotExistsError-fold-method-Message">( T) <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-479">Message</a>() <a href="../../../../builtin.html#name-string">string</a></label><span id='SharedConfigProfileNotExistsError-fold-method-Message-docs' class="fold-docs">
+				Message is the description of the error
+</span></span><span>
+			<input type='checkbox' class="fold" id="SharedConfigProfileNotExistsError-fold-method-OrigErr"><label for="SharedConfigProfileNotExistsError-fold-method-OrigErr">( T) <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-484">OrigErr</a>() <a href="../../../../builtin.html#name-error">error</a></label><span id='SharedConfigProfileNotExistsError-fold-method-OrigErr-docs' class="fold-docs">
+				OrigErr is the underlying error that caused the failure.
+</span></span></span>
+		<input type='checkbox' class="fold" id="SharedConfigProfileNotExistsError-fold-impls"><label for="SharedConfigProfileNotExistsError-fold-impls">Implements (<i>at least 4, in which 2 are exported</i>)</label><span id='SharedConfigProfileNotExistsError-fold-impls-items' class="fold-items"><span>
+			 T : github.com/aws/aws-sdk-go/aws/awserr.<a href="awserr.html#name-Error">Error</a></span><span>
+			 T : <a href="../../../../builtin.html#name-error">error</a></span>
+			<input type='checkbox' class="showhide" id="SharedConfigProfileNotExistsError-showhide-impls"><i><label for="SharedConfigProfileNotExistsError-showhide-impls" class="show-inline">/* 2+ unexporteds ... */</label><label for="SharedConfigProfileNotExistsError-showhide-impls" class="hide-inline">/* 2+ unexporteds: */</label></i><span class="hidden"><i>
+			 T : github.com/aws/aws-sdk-go/aws/awserr.<a href="awserr.html#name-awsError">awsError</a></i></span><span class="hidden"><i>
+			 T : github.com/aws/aws-sdk-go/aws/endpoints.<a href="endpoints.html#name-awsError">awsError</a></i></span></span>
+
+</span></div><div class="anchor type-res" id="name-SharedConfigState" data-popularity="15">	<input type='checkbox' class="fold" id="SharedConfigState-fold-content"><label for="SharedConfigState-fold-content"> <a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..SharedConfigState.html">type</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/session.go.html#line-150">SharedConfigState</a> <a href="../../../../builtin.html#name-int">int</a> <i>(basic type)</i></label><span id='SharedConfigState-fold-content-docs' class="fold-docs">
+		SharedConfigState provides the ability to optionally override the state
+		of the session's creation based on the shared config being enabled or
+		disabled.
+
+		<input type='checkbox' class="fold" id="SharedConfigState-fold-values"><label for="SharedConfigState-fold-values">As Types Of (<i>total 3, all are exported</i>)</label><span id='SharedConfigState-fold-values-items' class="fold-items"><span>
+			const <a href="#name-SharedConfigDisable">SharedConfigDisable</a></span><span>
+			const <a href="#name-SharedConfigEnable">SharedConfigEnable</a></span><span>
+			const <a href="#name-SharedConfigStateFromEnv">SharedConfigStateFromEnv</a></span></span>
+
+</span></div></div><div>	<input type='checkbox' class="showhide" id="unexported-typenames-showhide"><i><label for="unexported-typenames-showhide" class="show-inline">/* 5 unexporteds ... */</label><label for="unexported-typenames-showhide" class="hide-inline">/* 5 unexporteds: */</label></i><div class="anchor type-res hidden" id="name-credProviderError" data-popularity="150">	<input type='checkbox' class="fold" id="credProviderError-fold-content"><label for="credProviderError-fold-content"> <a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..credProviderError*c8cd4.html">type</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/credentials.go.html#line-258">credProviderError</a> <i>(struct)</i></label><span id='credProviderError-fold-content-docs' class="fold-docs">
+
+		<input type='checkbox' class="fold" id="credProviderError-fold-fields"><label for="credProviderError-fold-fields">Fields (<i>only one, which is exported</i>)</label><span id='credProviderError-fold-fields-items' class="fold-items"><span>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/net/http2/hpack/hpack.go.html#line-19">Err</a> <i><a href="../../../../builtin.html#name-error">error</a></i></span></span></span>
+		<input type='checkbox' class="fold" id="credProviderError-fold-methods"><label for="credProviderError-fold-methods">Methods (<i>total 2, both are exported</i>)</label><span id='credProviderError-fold-methods-items' class="fold-items"><span>
+			<span class="nodocs">( T) <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/credentials.go.html#line-265">IsExpired</a>() <a href="../../../../builtin.html#name-bool">bool</a></span></span><span>
+			<span class="nodocs">( T) <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/credentials.go.html#line-262">Retrieve</a>() (<a href="credentials.html">credentials</a>.<a href="credentials.html#name-Value">Value</a>, <a href="../../../../builtin.html#name-error">error</a>)</span></span></span>
+		<input type='checkbox' class="fold" id="credProviderError-fold-impls"><label for="credProviderError-fold-impls">Implements (<i>at least one exported</i>)</label><span id='credProviderError-fold-impls-items' class="fold-items"><span>
+			 T : github.com/aws/aws-sdk-go/aws/credentials.<a href="credentials.html#name-Provider">Provider</a></span></span>
+
+</span></div><div class="anchor type-res hidden" id="name-csmConfig" data-popularity="110">	<input type='checkbox' class="fold" id="csmConfig-fold-content"><label for="csmConfig-fold-content"> <a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..csmConfig*42c02.html">type</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/session.go.html#line-492">csmConfig</a> <i>(struct)</i></label><span id='csmConfig-fold-content-docs' class="fold-docs">
+
+		<input type='checkbox' class="fold" id="csmConfig-fold-fields"><label for="csmConfig-fold-fields">Fields (<i>total 4, all are exported</i>)</label><span id='csmConfig-fold-fields-items' class="fold-items"><span>
+			<span class="nodocs"><a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/session.go.html#line-496">ClientID</a> <i><a href="../../../../builtin.html#name-string">string</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/session.go.html#line-493">Enabled</a> <i><a href="../../../../builtin.html#name-bool">bool</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/session.go.html#line-494">Host</a> <i><a href="../../../../builtin.html#name-string">string</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/session.go.html#line-495">Port</a> <i><a href="../../../../builtin.html#name-string">string</a></i></span></span></span>
+		<input type='checkbox' class="fold" id="csmConfig-fold-results"><label for="csmConfig-fold-results">As Outputs Of (<i>at least one unexported</i>)</label><span id='csmConfig-fold-results-items' class="fold-items">
+			<input type='checkbox' checked class="showhide" id="csmConfig-showhide-inputofs"><i><label for="csmConfig-showhide-inputofs" class="show-inline">/* at least one unexported ... */</label><label for="csmConfig-showhide-inputofs" class="hide-inline">/* at least one unexported: */</label></i><span class="hidden"><i>
+			func <a href="#name-loadCSMConfig">loadCSMConfig</a>(envCfg <a href="#name-envConfig">envConfig</a>, cfgFiles []<a href="../../../../builtin.html#name-string">string</a>) (<b>csmConfig</b>, <a href="../../../../builtin.html#name-error">error</a>)</i></span></span>
+		<input type='checkbox' class="fold" id="csmConfig-fold-params"><label for="csmConfig-fold-params">As Inputs Of (<i>at least one unexported</i>)</label><span id='csmConfig-fold-params-items' class="fold-items">
+			<input type='checkbox' checked class="showhide" id="csmConfig-showhide-outputofs"><i><label for="csmConfig-showhide-outputofs" class="show-inline">/* at least one unexported ... */</label><label for="csmConfig-showhide-outputofs" class="hide-inline">/* at least one unexported: */</label></i><span class="hidden"><i>
+			func <a href="#name-enableCSM">enableCSM</a>(handlers *<a href="request.html">request</a>.<a href="request.html#name-Handlers">Handlers</a>, cfg <b>csmConfig</b>, logger <a href="../aws.html">aws</a>.<a href="../aws.html#name-Logger">Logger</a>) <a href="../../../../builtin.html#name-error">error</a></i></span></span>
+
+</span></div><div class="anchor type-res hidden" id="name-envConfig" data-popularity="470">	<input type='checkbox' class="fold" id="envConfig-fold-content"><label for="envConfig-fold-content"> <a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..envConfig*17e84.html">type</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/env_config.go.html#line-22">envConfig</a> <i>(struct)</i></label><span id='envConfig-fold-content-docs' class="fold-docs">
+		envConfig is a collection of environment values the SDK will read
+		setup config from. All environment values are optional. But some values
+		such as credentials require multiple values to be complete or the values
+		will be ignored.
+
+		<input type='checkbox' class="fold" id="envConfig-fold-fields"><label for="envConfig-fold-fields">Fields (<i>total 21, in which 19 are exported</i>)</label><span id='envConfig-fold-fields-items' class="fold-items"><span>
+			<span class="nodocs"><a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/env_config.go.html#line-108">CSMClientID</a> <i><a href="../../../../builtin.html#name-string">string</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/env_config.go.html#line-105">CSMEnabled</a> <i>*<a href="../../../../builtin.html#name-bool">bool</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/env_config.go.html#line-107">CSMHost</a> <i><a href="../../../../builtin.html#name-string">string</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/env_config.go.html#line-106">CSMPort</a> <i><a href="../../../../builtin.html#name-string">string</a></i></span></span><span>
+			<input type='checkbox' class="fold" id="envConfig-fold-field-Creds"><label for="envConfig-fold-field-Creds"><a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/env_config.go.html#line-37">Creds</a> <i><a href="credentials.html">credentials</a>.<a href="credentials.html#name-Value">Value</a></i></label><span id='envConfig-fold-field-Creds-docs' class="fold-docs">
+				Environment configuration values. If set both Access Key ID and Secret Access
+				Key must be provided. Session Token and optionally also be provided, but is
+				not required.
+
+					# Access Key ID
+					AWS_ACCESS_KEY_ID=AKID
+					AWS_ACCESS_KEY=AKID # only read if AWS_ACCESS_KEY_ID is not set.
+
+					# Secret Access Key
+					AWS_SECRET_ACCESS_KEY=SECRET
+					AWS_SECRET_KEY=SECRET=SECRET # only read if AWS_SECRET_ACCESS_KEY is not set.
+
+					# Session Token
+					AWS_SESSION_TOKEN=TOKEN
+</span></span><span>
+			<input type='checkbox' class="fold" id="envConfig-fold-field-CustomCABundle"><label for="envConfig-fold-field-CustomCABundle"><a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/env_config.go.html#line-102">CustomCABundle</a> <i><a href="../../../../builtin.html#name-string">string</a></i></label><span id='envConfig-fold-field-CustomCABundle-docs' class="fold-docs">
+				Sets the path to a custom Credentials Authority (CA) Bundle PEM file
+				that the SDK will use instead of the system's root CA bundle.
+				Only use this if you want to configure the SDK to use a custom set
+				of CAs.
+
+				Enabling this option will attempt to merge the Transport
+				into the SDK's HTTP client. If the client's Transport is
+				not a http.Transport an error will be returned. If the
+				Transport's TLS config is set this option will cause the
+				SDK to overwrite the Transport's TLS config's  RootCAs value.
+
+				Setting a custom HTTPClient in the aws.Config options will override this setting.
+				To use this option and custom HTTP client, the HTTP client needs to be provided
+				when creating the session. Not the service client.
+
+				 AWS_CA_BUNDLE=$HOME/my_custom_ca_bundle
+</span></span><span>
+			<input type='checkbox' class="fold" id="envConfig-fold-field-EC2IMDSEndpoint"><label for="envConfig-fold-field-EC2IMDSEndpoint"><a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/env_config.go.html#line-155">EC2IMDSEndpoint</a> <i><a href="../../../../builtin.html#name-string">string</a></i></label><span id='envConfig-fold-field-EC2IMDSEndpoint-docs' class="fold-docs">
+				Specifies the alternative endpoint to use for EC2 IMDS.
+
+				AWS_EC2_METADATA_SERVICE_ENDPOINT=http://[::1]
+</span></span><span>
+			<input type='checkbox' class="fold" id="envConfig-fold-field-EnableEndpointDiscovery"><label for="envConfig-fold-field-EnableEndpointDiscovery"><a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/env_config.go.html#line-113">EnableEndpointDiscovery</a> <i>*<a href="../../../../builtin.html#name-bool">bool</a></i></label><span id='envConfig-fold-field-EnableEndpointDiscovery-docs' class="fold-docs">
+				Enables endpoint discovery via environment variables.
+
+					AWS_ENABLE_ENDPOINT_DISCOVERY=true
+</span></span><span>
+			<input type='checkbox' class="fold" id="envConfig-fold-field-EnableSharedConfig"><label for="envConfig-fold-field-EnableSharedConfig"><a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/env_config.go.html#line-68">EnableSharedConfig</a> <i><a href="../../../../builtin.html#name-bool">bool</a></i></label><span id='envConfig-fold-field-EnableSharedConfig-docs' class="fold-docs">
+				SDK load config instructs the SDK to load the shared config in addition to
+				shared credentials. This also expands the configuration loaded from the shared
+				credentials to have parity with the shared config file. This also enables
+				Region and Profile support for the AWS_DEFAULT_REGION and AWS_DEFAULT_PROFILE
+				env values as well.
+
+					AWS_SDK_LOAD_CONFIG=1
+</span></span><span>
+			<input type='checkbox' class="fold" id="envConfig-fold-field-Profile"><label for="envConfig-fold-field-Profile"><a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/env_config.go.html#line-59">Profile</a> <i><a href="../../../../builtin.html#name-string">string</a></i></label><span id='envConfig-fold-field-Profile-docs' class="fold-docs">
+				Profile name the SDK should load use when loading shared configuration from the
+				shared configuration files. If not provided "default" will be used as the
+				profile name.
+
+					AWS_PROFILE=my_profile
+
+					# AWS_DEFAULT_PROFILE is only read if AWS_SDK_LOAD_CONFIG is also set,
+					# and AWS_PROFILE is not also set.
+					AWS_DEFAULT_PROFILE=my_profile
+</span></span><span>
+			<input type='checkbox' class="fold" id="envConfig-fold-field-Region"><label for="envConfig-fold-field-Region"><a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/env_config.go.html#line-48">Region</a> <i><a href="../../../../builtin.html#name-string">string</a></i></label><span id='envConfig-fold-field-Region-docs' class="fold-docs">
+				Region value will instruct the SDK where to make service API requests to. If is
+				not provided in the environment the region must be provided before a service
+				client request is made.
+
+					AWS_REGION=us-east-1
+
+					# AWS_DEFAULT_REGION is only read if AWS_SDK_LOAD_CONFIG is also set,
+					# and AWS_REGION is not also set.
+					AWS_DEFAULT_REGION=us-east-1
+</span></span><span>
+			<input type='checkbox' class="fold" id="envConfig-fold-field-RoleARN"><label for="envConfig-fold-field-RoleARN"><a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/env_config.go.html#line-125">RoleARN</a> <i><a href="../../../../builtin.html#name-string">string</a></i></label><span id='envConfig-fold-field-RoleARN-docs' class="fold-docs">
+				Specifies the IAM role arn to use when assuming an role.
+
+				 AWS_ROLE_ARN=role_arn
+</span></span><span>
+			<input type='checkbox' class="fold" id="envConfig-fold-field-RoleSessionName"><label for="envConfig-fold-field-RoleSessionName"><a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/env_config.go.html#line-130">RoleSessionName</a> <i><a href="../../../../builtin.html#name-string">string</a></i></label><span id='envConfig-fold-field-RoleSessionName-docs' class="fold-docs">
+				Specifies the IAM role session name to use when assuming a role.
+
+				 AWS_ROLE_SESSION_NAME=session_name
+</span></span><span>
+			<input type='checkbox' class="fold" id="envConfig-fold-field-S3UsEast1RegionalEndpoint"><label for="envConfig-fold-field-S3UsEast1RegionalEndpoint"><a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/env_config.go.html#line-144">S3UsEast1RegionalEndpoint</a> <i><a href="endpoints.html">endpoints</a>.<a href="endpoints.html#name-S3UsEast1RegionalEndpoint">S3UsEast1RegionalEndpoint</a></i></label><span id='envConfig-fold-field-S3UsEast1RegionalEndpoint-docs' class="fold-docs">
+				Specifies the S3 Regional Endpoint flag for the SDK to resolve the
+				endpoint for a service.
+
+				AWS_S3_US_EAST_1_REGIONAL_ENDPOINT=regional
+				This can take value as `regional` or `legacy`
+</span></span><span>
+			<input type='checkbox' class="fold" id="envConfig-fold-field-S3UseARNRegion"><label for="envConfig-fold-field-S3UseARNRegion"><a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/env_config.go.html#line-150">S3UseARNRegion</a> <i><a href="../../../../builtin.html#name-bool">bool</a></i></label><span id='envConfig-fold-field-S3UseARNRegion-docs' class="fold-docs">
+				Specifies if the S3 service should allow ARNs to direct the region
+				the client's requests are sent to.
+
+				AWS_S3_USE_ARN_REGION=true
+</span></span><span>
+			<input type='checkbox' class="fold" id="envConfig-fold-field-STSRegionalEndpoint"><label for="envConfig-fold-field-STSRegionalEndpoint"><a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/env_config.go.html#line-137">STSRegionalEndpoint</a> <i><a href="endpoints.html">endpoints</a>.<a href="endpoints.html#name-STSRegionalEndpoint">STSRegionalEndpoint</a></i></label><span id='envConfig-fold-field-STSRegionalEndpoint-docs' class="fold-docs">
+				Specifies the STS Regional Endpoint flag for the SDK to resolve the endpoint
+				for a service.
+
+				AWS_STS_REGIONAL_ENDPOINTS=regional
+				This can take value as `regional` or `legacy`
+</span></span><span>
+			<input type='checkbox' class="fold" id="envConfig-fold-field-SharedConfigFile"><label for="envConfig-fold-field-SharedConfigFile"><a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/env_config.go.html#line-84">SharedConfigFile</a> <i><a href="../../../../builtin.html#name-string">string</a></i></label><span id='envConfig-fold-field-SharedConfigFile-docs' class="fold-docs">
+				Shared config file path can be set to instruct the SDK to use an alternate
+				file for the shared config. If not set the file will be loaded from
+				$HOME/.aws/config on Linux/Unix based systems, and
+				%USERPROFILE%\.aws\config on Windows.
+
+					AWS_CONFIG_FILE=$HOME/my_shared_config
+</span></span><span>
+			<input type='checkbox' class="fold" id="envConfig-fold-field-SharedCredentialsFile"><label for="envConfig-fold-field-SharedCredentialsFile"><a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/env_config.go.html#line-76">SharedCredentialsFile</a> <i><a href="../../../../builtin.html#name-string">string</a></i></label><span id='envConfig-fold-field-SharedCredentialsFile-docs' class="fold-docs">
+				Shared credentials file path can be set to instruct the SDK to use an alternate
+				file for the shared credentials. If not set the file will be loaded from
+				$HOME/.aws/credentials on Linux/Unix based systems, and
+				%USERPROFILE%\.aws\credentials on Windows.
+
+					AWS_SHARED_CREDENTIALS_FILE=$HOME/my_shared_credentials
+</span></span><span>
+			<input type='checkbox' class="fold" id="envConfig-fold-field-WebIdentityTokenFilePath"><label for="envConfig-fold-field-WebIdentityTokenFilePath"><a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/env_config.go.html#line-120">WebIdentityTokenFilePath</a> <i><a href="../../../../builtin.html#name-string">string</a></i></label><span id='envConfig-fold-field-WebIdentityTokenFilePath-docs' class="fold-docs">
+				Specifies the WebIdentity token the SDK should use to assume a role
+				with.
+
+				 AWS_WEB_IDENTITY_TOKEN_FILE=file_path
+</span></span>
+			<input type='checkbox' checked class="showhide" id="envConfig-showhide-fields"><i><label for="envConfig-showhide-fields" class="show-inline">/* 2 unexporteds ... */</label><label for="envConfig-showhide-fields" class="hide-inline">/* 2 unexporteds: */</label></i><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/env_config.go.html#line-104">csmEnabled</a> <i><a href="../../../../builtin.html#name-string">string</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/env_config.go.html#line-114">enableEndpointDiscovery</a> <i><a href="../../../../builtin.html#name-string">string</a></i></span></i></span></span>
+		<input type='checkbox' class="fold" id="envConfig-fold-results"><label for="envConfig-fold-results">As Outputs Of (<i>at least 3, none are exported</i>)</label><span id='envConfig-fold-results-items' class="fold-items">
+			<input type='checkbox' checked class="showhide" id="envConfig-showhide-inputofs"><i><label for="envConfig-showhide-inputofs" class="show-inline">/* 3+ unexporteds ... */</label><label for="envConfig-showhide-inputofs" class="hide-inline">/* 3+ unexporteds: */</label></i><span class="hidden"><i>
+			func <a href="#name-envConfigLoad">envConfigLoad</a>(enableSharedConfig <a href="../../../../builtin.html#name-bool">bool</a>) (<b>envConfig</b>, <a href="../../../../builtin.html#name-error">error</a>)</i></span><span class="hidden"><i>
+			func <a href="#name-loadEnvConfig">loadEnvConfig</a>() (<b>envConfig</b>, <a href="../../../../builtin.html#name-error">error</a>)</i></span><span class="hidden"><i>
+			func <a href="#name-loadSharedEnvConfig">loadSharedEnvConfig</a>() (<b>envConfig</b>, <a href="../../../../builtin.html#name-error">error</a>)</i></span></span>
+		<input type='checkbox' class="fold" id="envConfig-fold-params"><label for="envConfig-fold-params">As Inputs Of (<i>at least 7, none are exported</i>)</label><span id='envConfig-fold-params-items' class="fold-items">
+			<input type='checkbox' checked class="showhide" id="envConfig-showhide-outputofs"><i><label for="envConfig-showhide-outputofs" class="show-inline">/* 7+ unexporteds ... */</label><label for="envConfig-showhide-outputofs" class="hide-inline">/* 7+ unexporteds: */</label></i><span class="hidden"><i>
+			func <a href="#name-deprecatedNewSession">deprecatedNewSession</a>(envCfg <b>envConfig</b>, cfgs ...*<a href="../aws.html">aws</a>.<a href="../aws.html#name-Config">Config</a>) *<a href="#name-Session">Session</a></i></span><span class="hidden"><i>
+			func <a href="#name-loadCSMConfig">loadCSMConfig</a>(envCfg <b>envConfig</b>, cfgFiles []<a href="../../../../builtin.html#name-string">string</a>) (<a href="#name-csmConfig">csmConfig</a>, <a href="../../../../builtin.html#name-error">error</a>)</i></span><span class="hidden"><i>
+			func <a href="#name-mergeConfigSrcs">mergeConfigSrcs</a>(cfg, userCfg *<a href="../aws.html">aws</a>.<a href="../aws.html#name-Config">Config</a>, envCfg <b>envConfig</b>, sharedCfg <a href="#name-sharedConfig">sharedConfig</a>, handlers <a href="request.html">request</a>.<a href="request.html#name-Handlers">Handlers</a>, sessOpts <a href="#name-Options">Options</a>) <a href="../../../../builtin.html#name-error">error</a></i></span><span class="hidden"><i>
+			func <a href="#name-newSession">newSession</a>(opts <a href="#name-Options">Options</a>, envCfg <b>envConfig</b>, cfgs ...*<a href="../aws.html">aws</a>.<a href="../aws.html#name-Config">Config</a>) (*<a href="#name-Session">Session</a>, <a href="../../../../builtin.html#name-error">error</a>)</i></span><span class="hidden"><i>
+			func <a href="#name-resolveCredentials">resolveCredentials</a>(cfg *<a href="../aws.html">aws</a>.<a href="../aws.html#name-Config">Config</a>, envCfg <b>envConfig</b>, sharedCfg <a href="#name-sharedConfig">sharedConfig</a>, handlers <a href="request.html">request</a>.<a href="request.html#name-Handlers">Handlers</a>, sessOpts <a href="#name-Options">Options</a>) (*<a href="credentials.html">credentials</a>.<a href="credentials.html#name-Credentials">Credentials</a>, <a href="../../../../builtin.html#name-error">error</a>)</i></span><span class="hidden"><i>
+			func <a href="#name-resolveCredsFromProfile">resolveCredsFromProfile</a>(cfg *<a href="../aws.html">aws</a>.<a href="../aws.html#name-Config">Config</a>, envCfg <b>envConfig</b>, sharedCfg <a href="#name-sharedConfig">sharedConfig</a>, handlers <a href="request.html">request</a>.<a href="request.html#name-Handlers">Handlers</a>, sessOpts <a href="#name-Options">Options</a>) (creds *<a href="credentials.html">credentials</a>.<a href="credentials.html#name-Credentials">Credentials</a>, err <a href="../../../../builtin.html#name-error">error</a>)</i></span><span class="hidden"><i>
+			func <a href="#name-resolveCredsFromSource">resolveCredsFromSource</a>(cfg *<a href="../aws.html">aws</a>.<a href="../aws.html#name-Config">Config</a>, envCfg <b>envConfig</b>, sharedCfg <a href="#name-sharedConfig">sharedConfig</a>, handlers <a href="request.html">request</a>.<a href="request.html#name-Handlers">Handlers</a>, sessOpts <a href="#name-Options">Options</a>) (creds *<a href="credentials.html">credentials</a>.<a href="credentials.html#name-Credentials">Credentials</a>, err <a href="../../../../builtin.html#name-error">error</a>)</i></span></span>
+
+</span></div><div class="anchor type-res hidden" id="name-sharedConfig" data-popularity="600">	<input type='checkbox' class="fold" id="sharedConfig-fold-content"><label for="sharedConfig-fold-content"> <a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..sharedConfig*30229.html">type</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-62">sharedConfig</a> <i>(struct)</i></label><span id='sharedConfig-fold-content-docs' class="fold-docs">
+		sharedConfig represents the configuration fields of the SDK config files.
+
+		<input type='checkbox' class="fold" id="sharedConfig-fold-fields"><label for="sharedConfig-fold-fields">Fields (<i>total 20, all are exported</i>)</label><span id='sharedConfig-fold-fields-items' class="fold-items"><span>
+			<span class="nodocs"><a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-82">AssumeRoleDuration</a> <i>*<a href="../../../../time.html">time</a>.<a href="../../../../time.html#name-Duration">Duration</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-103">CSMClientID</a> <i><a href="../../../../builtin.html#name-string">string</a></i></span></span><span>
+			<input type='checkbox' class="fold" id="sharedConfig-fold-field-CSMEnabled"><label for="sharedConfig-fold-field-CSMEnabled"><a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-100">CSMEnabled</a> <i>*<a href="../../../../builtin.html#name-bool">bool</a></i></label><span id='sharedConfig-fold-field-CSMEnabled-docs' class="fold-docs">
+				CSM Options
+</span></span><span>
+			<span class="nodocs"><a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-101">CSMHost</a> <i><a href="../../../../builtin.html#name-string">string</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-102">CSMPort</a> <i><a href="../../../../builtin.html#name-string">string</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-75">CredentialProcess</a> <i><a href="../../../../builtin.html#name-string">string</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-74">CredentialSource</a> <i><a href="../../../../builtin.html#name-string">string</a></i></span></span><span>
+			<input type='checkbox' class="fold" id="sharedConfig-fold-field-Creds"><label for="sharedConfig-fold-field-Creds"><a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-72">Creds</a> <i><a href="credentials.html">credentials</a>.<a href="credentials.html#name-Value">Value</a></i></label><span id='sharedConfig-fold-field-Creds-docs' class="fold-docs">
+				Credentials values from the config file. Both aws_access_key_id and
+				aws_secret_access_key must be provided together in the same file to be
+				considered valid. The values will be ignored if not a complete group.
+				aws_session_token is an optional field that can be provided if both of
+				the other two fields are also provided.
+
+					aws_access_key_id
+					aws_secret_access_key
+					aws_session_token
+</span></span><span>
+			<input type='checkbox' class="fold" id="sharedConfig-fold-field-EnableEndpointDiscovery"><label for="sharedConfig-fold-field-EnableEndpointDiscovery"><a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-97">EnableEndpointDiscovery</a> <i>*<a href="../../../../builtin.html#name-bool">bool</a></i></label><span id='sharedConfig-fold-field-EnableEndpointDiscovery-docs' class="fold-docs">
+				EnableEndpointDiscovery can be enabled in the shared config by setting
+				endpoint_discovery_enabled to true
+
+					endpoint_discovery_enabled = true
+</span></span><span>
+			<span class="nodocs"><a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-80">ExternalID</a> <i><a href="../../../../builtin.html#name-string">string</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-81">MFASerial</a> <i><a href="../../../../builtin.html#name-string">string</a></i></span></span><span>
+			<input type='checkbox' class="fold" id="sharedConfig-fold-field-Region"><label for="sharedConfig-fold-field-Region"><a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-91">Region</a> <i><a href="../../../../builtin.html#name-string">string</a></i></label><span id='sharedConfig-fold-field-Region-docs' class="fold-docs">
+				Region is the region the SDK should use for looking up AWS service
+				endpoints and signing requests.
+
+					region
+</span></span><span>
+			<span class="nodocs"><a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-78">RoleARN</a> <i><a href="../../../../builtin.html#name-string">string</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-79">RoleSessionName</a> <i><a href="../../../../builtin.html#name-string">string</a></i></span></span><span>
+			<input type='checkbox' class="fold" id="sharedConfig-fold-field-S3UsEast1RegionalEndpoint"><label for="sharedConfig-fold-field-S3UsEast1RegionalEndpoint"><a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-115">S3UsEast1RegionalEndpoint</a> <i><a href="endpoints.html">endpoints</a>.<a href="endpoints.html#name-S3UsEast1RegionalEndpoint">S3UsEast1RegionalEndpoint</a></i></label><span id='sharedConfig-fold-field-S3UsEast1RegionalEndpoint-docs' class="fold-docs">
+				Specifies the Regional Endpoint flag for the SDK to resolve the endpoint for a service
+
+				s3_us_east_1_regional_endpoint = regional
+				This can take value as `LegacyS3UsEast1Endpoint` or `RegionalS3UsEast1Endpoint`
+</span></span><span>
+			<input type='checkbox' class="fold" id="sharedConfig-fold-field-S3UseARNRegion"><label for="sharedConfig-fold-field-S3UseARNRegion"><a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-121">S3UseARNRegion</a> <i><a href="../../../../builtin.html#name-bool">bool</a></i></label><span id='sharedConfig-fold-field-S3UseARNRegion-docs' class="fold-docs">
+				Specifies if the S3 service should allow ARNs to direct the region
+				the client's requests are sent to.
+
+				s3_use_arn_region=true
+</span></span><span>
+			<input type='checkbox' class="fold" id="sharedConfig-fold-field-STSRegionalEndpoint"><label for="sharedConfig-fold-field-STSRegionalEndpoint"><a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-109">STSRegionalEndpoint</a> <i><a href="endpoints.html">endpoints</a>.<a href="endpoints.html#name-STSRegionalEndpoint">STSRegionalEndpoint</a></i></label><span id='sharedConfig-fold-field-STSRegionalEndpoint-docs' class="fold-docs">
+				Specifies the Regional Endpoint flag for the SDK to resolve the endpoint for a service
+
+				sts_regional_endpoints = regional
+				This can take value as `LegacySTSEndpoint` or `RegionalSTSEndpoint`
+</span></span><span>
+			<span class="nodocs"><a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-85">SourceProfile</a> <i>*<b>sharedConfig</b></i></span></span><span>
+			<span class="nodocs"><a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-84">SourceProfileName</a> <i><a href="../../../../builtin.html#name-string">string</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-76">WebIdentityTokenFile</a> <i><a href="../../../../builtin.html#name-string">string</a></i></span></span></span>
+		<input type='checkbox' class="fold" id="sharedConfig-fold-methods"><label for="sharedConfig-fold-methods">Methods (<i>total 7, none are exported</i>)</label><span id='sharedConfig-fold-methods-items' class="fold-items">
+			<input type='checkbox' checked class="showhide" id="sharedConfig-showhide-methods"><i><label for="sharedConfig-showhide-methods" class="show-inline">/* 7 unexporteds ... */</label><label for="sharedConfig-showhide-methods" class="hide-inline">/* 7 unexporteds: */</label></i><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-389">clearAssumeRoleOptions</a>()</span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-382">clearCredentialOptions</a>()</span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-368">hasCredentials</a>() <a href="../../../../builtin.html#name-bool">bool</a></span></i></span><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="sharedConfig-fold-method-setFromIniFile"><label for="sharedConfig-fold-method-setFromIniFile">(*T) <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-260">setFromIniFile</a>(profile <a href="../../../../builtin.html#name-string">string</a>, file <a href="#name-sharedConfigFile">sharedConfigFile</a>, exOpts <a href="../../../../builtin.html#name-bool">bool</a>) <a href="../../../../builtin.html#name-error">error</a></label><span id='sharedConfig-fold-method-setFromIniFile-docs' class="fold-docs">
+				setFromFile loads the configuration from the file using the profile
+				provided. A sharedConfig pointer type value is used so that multiple config
+				file loadings can be chained.
+
+				Only loads complete logically grouped values, and will not set fields in cfg
+				for incomplete grouped values in the config. Such as credentials. For
+				example if a config file only includes aws_access_key_id but no
+				aws_secret_access_key the aws_access_key_id will be ignored.
+</span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-179">setFromIniFiles</a>(profiles map[<a href="../../../../builtin.html#name-string">string</a>]struct{}, profile <a href="../../../../builtin.html#name-string">string</a>, files []<a href="#name-sharedConfigFile">sharedConfigFile</a>, exOpts <a href="../../../../builtin.html#name-bool">bool</a>) <a href="../../../../builtin.html#name-error">error</a></span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-354">validateCredentialType</a>() <a href="../../../../builtin.html#name-error">error</a></span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-332">validateCredentialsRequireARN</a>(profile <a href="../../../../builtin.html#name-string">string</a>) <a href="../../../../builtin.html#name-error">error</a></span></i></span></span>
+		<input type='checkbox' class="fold" id="sharedConfig-fold-results"><label for="sharedConfig-fold-results">As Outputs Of (<i>at least one unexported</i>)</label><span id='sharedConfig-fold-results-items' class="fold-items">
+			<input type='checkbox' checked class="showhide" id="sharedConfig-showhide-inputofs"><i><label for="sharedConfig-showhide-inputofs" class="show-inline">/* at least one unexported ... */</label><label for="sharedConfig-showhide-inputofs" class="hide-inline">/* at least one unexported: */</label></i><span class="hidden"><i>
+			func <a href="#name-loadSharedConfig">loadSharedConfig</a>(profile <a href="../../../../builtin.html#name-string">string</a>, filenames []<a href="../../../../builtin.html#name-string">string</a>, exOpts <a href="../../../../builtin.html#name-bool">bool</a>) (<b>sharedConfig</b>, <a href="../../../../builtin.html#name-error">error</a>)</i></span></span>
+		<input type='checkbox' class="fold" id="sharedConfig-fold-params"><label for="sharedConfig-fold-params">As Inputs Of (<i>at least 5, none are exported</i>)</label><span id='sharedConfig-fold-params-items' class="fold-items">
+			<input type='checkbox' checked class="showhide" id="sharedConfig-showhide-outputofs"><i><label for="sharedConfig-showhide-outputofs" class="show-inline">/* 5+ unexporteds ... */</label><label for="sharedConfig-showhide-outputofs" class="hide-inline">/* 5+ unexporteds: */</label></i><span class="hidden"><i>
+			func <a href="#name-credsFromAssumeRole">credsFromAssumeRole</a>(cfg <a href="../aws.html">aws</a>.<a href="../aws.html#name-Config">Config</a>, handlers <a href="request.html">request</a>.<a href="request.html#name-Handlers">Handlers</a>, sharedCfg <b>sharedConfig</b>, sessOpts <a href="#name-Options">Options</a>) (*<a href="credentials.html">credentials</a>.<a href="credentials.html#name-Credentials">Credentials</a>, <a href="../../../../builtin.html#name-error">error</a>)</i></span><span class="hidden"><i>
+			func <a href="#name-mergeConfigSrcs">mergeConfigSrcs</a>(cfg, userCfg *<a href="../aws.html">aws</a>.<a href="../aws.html#name-Config">Config</a>, envCfg <a href="#name-envConfig">envConfig</a>, sharedCfg <b>sharedConfig</b>, handlers <a href="request.html">request</a>.<a href="request.html#name-Handlers">Handlers</a>, sessOpts <a href="#name-Options">Options</a>) <a href="../../../../builtin.html#name-error">error</a></i></span><span class="hidden"><i>
+			func <a href="#name-resolveCredentials">resolveCredentials</a>(cfg *<a href="../aws.html">aws</a>.<a href="../aws.html#name-Config">Config</a>, envCfg <a href="#name-envConfig">envConfig</a>, sharedCfg <b>sharedConfig</b>, handlers <a href="request.html">request</a>.<a href="request.html#name-Handlers">Handlers</a>, sessOpts <a href="#name-Options">Options</a>) (*<a href="credentials.html">credentials</a>.<a href="credentials.html#name-Credentials">Credentials</a>, <a href="../../../../builtin.html#name-error">error</a>)</i></span><span class="hidden"><i>
+			func <a href="#name-resolveCredsFromProfile">resolveCredsFromProfile</a>(cfg *<a href="../aws.html">aws</a>.<a href="../aws.html#name-Config">Config</a>, envCfg <a href="#name-envConfig">envConfig</a>, sharedCfg <b>sharedConfig</b>, handlers <a href="request.html">request</a>.<a href="request.html#name-Handlers">Handlers</a>, sessOpts <a href="#name-Options">Options</a>) (creds *<a href="credentials.html">credentials</a>.<a href="credentials.html#name-Credentials">Credentials</a>, err <a href="../../../../builtin.html#name-error">error</a>)</i></span><span class="hidden"><i>
+			func <a href="#name-resolveCredsFromSource">resolveCredsFromSource</a>(cfg *<a href="../aws.html">aws</a>.<a href="../aws.html#name-Config">Config</a>, envCfg <a href="#name-envConfig">envConfig</a>, sharedCfg <b>sharedConfig</b>, handlers <a href="request.html">request</a>.<a href="request.html#name-Handlers">Handlers</a>, sessOpts <a href="#name-Options">Options</a>) (creds *<a href="credentials.html">credentials</a>.<a href="credentials.html#name-Credentials">Credentials</a>, err <a href="../../../../builtin.html#name-error">error</a>)</i></span></span>
+
+</span></div><div class="anchor type-res hidden" id="name-sharedConfigFile" data-popularity="75">	<input type='checkbox' class="fold" id="sharedConfigFile-fold-content"><label for="sharedConfigFile-fold-content"> <a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..sharedConfigFile*e94a2.html">type</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-124">sharedConfigFile</a> <i>(struct)</i></label><span id='sharedConfigFile-fold-content-docs' class="fold-docs">
+
+		<input type='checkbox' class="fold" id="sharedConfigFile-fold-fields"><label for="sharedConfigFile-fold-fields">Fields (<i>total 2, both are exported</i>)</label><span id='sharedConfigFile-fold-fields-items' class="fold-items"><span>
+			<span class="nodocs"><a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-125">Filename</a> <i><a href="../../../../builtin.html#name-string">string</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-126">IniData</a> <i><a href="../internal/ini.html">ini</a>.<a href="../internal/ini.html#name-Sections">Sections</a></i></span></span></span>
+		<input type='checkbox' class="fold" id="sharedConfigFile-fold-results"><label for="sharedConfigFile-fold-results">As Outputs Of (<i>at least one unexported</i>)</label><span id='sharedConfigFile-fold-results-items' class="fold-items">
+			<input type='checkbox' checked class="showhide" id="sharedConfigFile-showhide-inputofs"><i><label for="sharedConfigFile-showhide-inputofs" class="show-inline">/* at least one unexported ... */</label><label for="sharedConfigFile-showhide-inputofs" class="hide-inline">/* at least one unexported: */</label></i><span class="hidden"><i>
+			func <a href="#name-loadSharedConfigIniFiles">loadSharedConfigIniFiles</a>(filenames []<a href="../../../../builtin.html#name-string">string</a>) ([]<b>sharedConfigFile</b>, <a href="../../../../builtin.html#name-error">error</a>)</i></span></span>
+
+</span></div></div>
+<div id="exported-functions"><span class="title">Package-Level Functions<span class="title-stat"><i> (total 31, in which 4 are exported)</i></span></span>
+
+<div class="anchor value-res" id="name-Must">	<input type='checkbox' class="fold" id="Must-fold-content"><label for="Must-fold-content"> <a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..Must.html">func</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/session.go.html#line-343">Must</a>(sess *<a href="#name-Session">Session</a>, err <a href="../../../../builtin.html#name-error">error</a>) *<a href="#name-Session">Session</a></label><span id='Must-fold-content-docs' class="fold-docs">
+		Must is a helper function to ensure the Session is valid and there was no
+		error when calling a NewSession function.
+
+		This helper is intended to be used in variable initialization to load the
+		Session and configuration at startup. Such as:
+
+		    var sess = session.Must(session.NewSession())
+
+</span></div><div class="anchor value-res" id="name-New">	<input type='checkbox' class="fold" id="New-fold-content"><label for="New-fold-content"> <a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..New.html">func</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/session.go.html#line-76">New</a>(cfgs ...*<a href="../aws.html">aws</a>.<a href="../aws.html#name-Config">Config</a>) *<a href="#name-Session">Session</a></label><span id='New-fold-content-docs' class="fold-docs">
+		New creates a new instance of the handlers merging in the provided configs
+		on top of the SDK's default configurations. Once the Session is created it
+		can be mutated to modify the Config or Handlers. The Session is safe to be
+		read concurrently, but it should not be written to concurrently.
+
+		If the AWS_SDK_LOAD_CONFIG environment is set to a truthy value, the New
+		method could now encounter an error when loading the configuration. When
+		The environment variable is set, and an error occurs, New will return a
+		session that will fail all requests reporting the error that occurred while
+		loading the session. Use NewSession to get the error when creating the
+		session.
+
+		If the AWS_SDK_LOAD_CONFIG environment variable is set to a truthy value
+		the shared config file (~/.aws/config) will also be loaded, in addition to
+		the shared credentials file (~/.aws/credentials). Values set in both the
+		shared config, and shared credentials will be taken from the shared
+		credentials file.
+
+		Deprecated: Use NewSession functions to create sessions instead. NewSession
+		has the same functionality as New except an error can be returned when the
+		func is called instead of waiting to receive an error until a request is made.
+
+</span></div><div class="anchor value-res" id="name-NewSession">	<input type='checkbox' class="fold" id="NewSession-fold-content"><label for="NewSession-fold-content"> <a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..NewSession.html">func</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/session.go.html#line-140">NewSession</a>(cfgs ...*<a href="../aws.html">aws</a>.<a href="../aws.html#name-Config">Config</a>) (*<a href="#name-Session">Session</a>, <a href="../../../../builtin.html#name-error">error</a>)</label><span id='NewSession-fold-content-docs' class="fold-docs">
+		NewSession returns a new Session created from SDK defaults, config files,
+		environment, and user provided config files. Once the Session is created
+		it can be mutated to modify the Config or Handlers. The Session is safe to
+		be read concurrently, but it should not be written to concurrently.
+
+		If the AWS_SDK_LOAD_CONFIG environment variable is set to a truthy value
+		the shared config file (~/.aws/config) will also be loaded in addition to
+		the shared credentials file (~/.aws/credentials). Values set in both the
+		shared config, and shared credentials will be taken from the shared
+		credentials file. Enabling the Shared Config will also allow the Session
+		to be built with retrieving credentials with AssumeRole set in the config.
+
+		See the NewSessionWithOptions func for information on how to override or
+		control through code how the Session will be created, such as specifying the
+		config profile, and controlling if shared config is enabled or not.
+
+</span></div><div class="anchor value-res" id="name-NewSessionWithOptions">	<input type='checkbox' class="fold" id="NewSessionWithOptions-fold-content"><label for="NewSessionWithOptions-fold-content"> <a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..NewSessionWithOptions.html">func</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/session.go.html#line-296">NewSessionWithOptions</a>(opts <a href="#name-Options">Options</a>) (*<a href="#name-Session">Session</a>, <a href="../../../../builtin.html#name-error">error</a>)</label><span id='NewSessionWithOptions-fold-content-docs' class="fold-docs">
+		NewSessionWithOptions returns a new Session created from SDK defaults, config files,
+		environment, and user provided config files. This func uses the Options
+		values to configure how the Session is created.
+
+		If the AWS_SDK_LOAD_CONFIG environment variable is set to a truthy value
+		the shared config file (~/.aws/config) will also be loaded in addition to
+		the shared credentials file (~/.aws/credentials). Values set in both the
+		shared config, and shared credentials will be taken from the shared
+		credentials file. Enabling the Shared Config will also allow the Session
+		to be built with retrieving credentials with AssumeRole set in the config.
+
+		    // Equivalent to session.New
+		    sess := session.Must(session.NewSessionWithOptions(session.Options{}))
+
+		    // Specify profile to load for the session's config
+		    sess := session.Must(session.NewSessionWithOptions(session.Options{
+		         Profile: "profile_name",
+		    }))
+
+		    // Specify profile for config and region for requests
+		    sess := session.Must(session.NewSessionWithOptions(session.Options{
+		         Config: aws.Config{Region: aws.String("us-east-1")},
+		         Profile: "profile_name",
+		    }))
+
+		    // Force enable Shared Config support
+		    sess := session.Must(session.NewSessionWithOptions(session.Options{
+		        SharedConfigState: session.SharedConfigEnable,
+		    }))
+
+</span></div>	<input type='checkbox' class="showhide" id="unexported-functions-showhide"><i><label for="unexported-functions-showhide" class="show-inline">/* 27 unexporteds ... */</label><label for="unexported-functions-showhide" class="hide-inline">/* 27 unexporteds: */</label></i><div class="anchor value-res hidden" id="name-assumeWebIdentity"><i>	<span class="nodocs"> <a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..assumeWebIdentity*459e1.html">func</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/credentials.go.html#line-58">assumeWebIdentity</a>(cfg *<a href="../aws.html">aws</a>.<a href="../aws.html#name-Config">Config</a>, handlers <a href="request.html">request</a>.<a href="request.html#name-Handlers">Handlers</a>, filepath <a href="../../../../builtin.html#name-string">string</a>, roleARN, sessionName <a href="../../../../builtin.html#name-string">string</a>) (*<a href="credentials.html">credentials</a>.<a href="credentials.html#name-Credentials">Credentials</a>, <a href="../../../../builtin.html#name-error">error</a>)</span></i></div><div class="anchor value-res hidden" id="name-credsFromAssumeRole"><i>	<span class="nodocs"> <a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..credsFromAssumeRole*6eb7b.html">func</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/credentials.go.html#line-190">credsFromAssumeRole</a>(cfg <a href="../aws.html">aws</a>.<a href="../aws.html#name-Config">Config</a>, handlers <a href="request.html">request</a>.<a href="request.html#name-Handlers">Handlers</a>, sharedCfg <a href="#name-sharedConfig">sharedConfig</a>, sessOpts <a href="#name-Options">Options</a>) (*<a href="credentials.html">credentials</a>.<a href="credentials.html#name-Credentials">Credentials</a>, <a href="../../../../builtin.html#name-error">error</a>)</span></i></div><div class="anchor value-res hidden" id="name-deprecatedNewSession"><i>	<span class="nodocs"> <a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..deprecatedNewSession*bdb67.html">func</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/session.go.html#line-369">deprecatedNewSession</a>(envCfg <a href="#name-envConfig">envConfig</a>, cfgs ...*<a href="../aws.html">aws</a>.<a href="../aws.html#name-Config">Config</a>) *<a href="#name-Session">Session</a></span></i></div><div class="anchor value-res hidden" id="name-enableCSM"><i>	<span class="nodocs"> <a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..enableCSM*f3281.html">func</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/session.go.html#line-403">enableCSM</a>(handlers *<a href="request.html">request</a>.<a href="request.html#name-Handlers">Handlers</a>, cfg <a href="#name-csmConfig">csmConfig</a>, logger <a href="../aws.html">aws</a>.<a href="../aws.html#name-Logger">Logger</a>) <a href="../../../../builtin.html#name-error">error</a></span></i></div><div class="anchor value-res hidden" id="name-envConfigLoad"><i>	<span class="nodocs"> <a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..envConfigLoad*ecfd1.html">func</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/env_config.go.html#line-245">envConfigLoad</a>(enableSharedConfig <a href="../../../../builtin.html#name-bool">bool</a>) (<a href="#name-envConfig">envConfig</a>, <a href="../../../../builtin.html#name-error">error</a>)</span></i></div><div class="anchor value-res hidden" id="name-getCABundleTransport"><i>	<input type='checkbox' class="fold" id="getCABundleTransport-fold-content"><label for="getCABundleTransport-fold-content"> <a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..getCABundleTransport*6aa22.html">func</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/cabundle_transport.go.html#line-13">getCABundleTransport</a>() *<a href="../../../../net/http.html">http</a>.<a href="../../../../net/http.html#name-Transport">Transport</a></label><span id='getCABundleTransport-fold-content-docs' class="fold-docs">
+		Transport that should be used when a custom CA bundle is specified with the
+		SDK.
+
+</span></i></div><div class="anchor value-res hidden" id="name-initHandlers"><i>	<span class="nodocs"> <a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..initHandlers*fcbcd.html">func</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/session.go.html#line-666">initHandlers</a>(s *<a href="#name-Session">Session</a>)</span></i></div><div class="anchor value-res hidden" id="name-loadCertPool"><i>	<span class="nodocs"> <a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..loadCertPool*7a4ca.html">func</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/session.go.html#line-564">loadCertPool</a>(r <a href="../../../../io.html">io</a>.<a href="../../../../io.html#name-Reader">Reader</a>) (*<a href="../../../../crypto/x509.html">x509</a>.<a href="../../../../crypto/x509.html#name-CertPool">CertPool</a>, <a href="../../../../builtin.html#name-error">error</a>)</span></i></div><div class="anchor value-res hidden" id="name-loadCSMConfig"><i>	<span class="nodocs"> <a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..loadCSMConfig*ec28e.html">func</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/session.go.html#line-501">loadCSMConfig</a>(envCfg <a href="#name-envConfig">envConfig</a>, cfgFiles []<a href="../../../../builtin.html#name-string">string</a>) (<a href="#name-csmConfig">csmConfig</a>, <a href="../../../../builtin.html#name-error">error</a>)</span></i></div><div class="anchor value-res hidden" id="name-loadCustomCABundle"><i>	<span class="nodocs"> <a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..loadCustomCABundle*0de83.html">func</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/session.go.html#line-532">loadCustomCABundle</a>(s *<a href="#name-Session">Session</a>, bundle <a href="../../../../io.html">io</a>.<a href="../../../../io.html#name-Reader">Reader</a>) <a href="../../../../builtin.html#name-error">error</a></span></i></div><div class="anchor value-res hidden" id="name-loadEnvConfig"><i>	<input type='checkbox' class="fold" id="loadEnvConfig-fold-content"><label for="loadEnvConfig-fold-content"> <a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..loadEnvConfig*4161e.html">func</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/env_config.go.html#line-230">loadEnvConfig</a>() (<a href="#name-envConfig">envConfig</a>, <a href="../../../../builtin.html#name-error">error</a>)</label><span id='loadEnvConfig-fold-content-docs' class="fold-docs">
+		loadEnvConfig retrieves the SDK's environment configuration.
+		See `envConfig` for the values that will be retrieved.
+
+		If the environment variable `AWS_SDK_LOAD_CONFIG` is set to a truthy value
+		the shared SDK config will be loaded in addition to the SDK's specific
+		configuration values.
+
+</span></i></div><div class="anchor value-res hidden" id="name-loadSharedConfig"><i>	<input type='checkbox' class="fold" id="loadSharedConfig-fold-content"><label for="loadSharedConfig-fold-content"> <a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..loadSharedConfig*c6aa5.html">func</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-140">loadSharedConfig</a>(profile <a href="../../../../builtin.html#name-string">string</a>, filenames []<a href="../../../../builtin.html#name-string">string</a>, exOpts <a href="../../../../builtin.html#name-bool">bool</a>) (<a href="#name-sharedConfig">sharedConfig</a>, <a href="../../../../builtin.html#name-error">error</a>)</label><span id='loadSharedConfig-fold-content-docs' class="fold-docs">
+		loadSharedConfig retrieves the configuration from the list of files using
+		the profile provided. The order the files are listed will determine
+		precedence. Values in subsequent files will overwrite values defined in
+		earlier files.
+
+		For example, given two files A and B. Both define credentials. If the order
+		of the files are A then B, B's credential values will be used instead of
+		A's.
+
+		See sharedConfig.setFromFile for information how the config files
+		will be loaded.
+
+</span></i></div><div class="anchor value-res hidden" id="name-loadSharedConfigIniFiles"><i>	<span class="nodocs"> <a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..loadSharedConfigIniFiles*71d0d.html">func</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-159">loadSharedConfigIniFiles</a>(filenames []<a href="../../../../builtin.html#name-string">string</a>) ([]<a href="#name-sharedConfigFile">sharedConfigFile</a>, <a href="../../../../builtin.html#name-error">error</a>)</span></i></div><div class="anchor value-res hidden" id="name-loadSharedEnvConfig"><i>	<input type='checkbox' class="fold" id="loadSharedEnvConfig-fold-content"><label for="loadSharedEnvConfig-fold-content"> <a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..loadSharedEnvConfig*aca7f.html">func</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/env_config.go.html#line-241">loadSharedEnvConfig</a>() (<a href="#name-envConfig">envConfig</a>, <a href="../../../../builtin.html#name-error">error</a>)</label><span id='loadSharedEnvConfig-fold-content-docs' class="fold-docs">
+		loadEnvSharedConfig retrieves the SDK's environment configuration, and the
+		SDK shared config. See `envConfig` for the values that will be retrieved.
+
+		Loads the shared configuration in addition to the SDK's specific configuration.
+		This will load the same values as `loadEnvConfig` if the `AWS_SDK_LOAD_CONFIG`
+		environment variable is set.
+
+</span></i></div><div class="anchor value-res hidden" id="name-mergeConfigSrcs"><i>	<span class="nodocs"> <a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..mergeConfigSrcs*9dda1.html">func</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/session.go.html#line-580">mergeConfigSrcs</a>(cfg, userCfg *<a href="../aws.html">aws</a>.<a href="../aws.html#name-Config">Config</a>, envCfg <a href="#name-envConfig">envConfig</a>, sharedCfg <a href="#name-sharedConfig">sharedConfig</a>, handlers <a href="request.html">request</a>.<a href="request.html#name-Handlers">Handlers</a>, sessOpts <a href="#name-Options">Options</a>) <a href="../../../../builtin.html#name-error">error</a></span></i></div><div class="anchor value-res hidden" id="name-mergeS3UsEast1RegionalEndpointConfig"><i>	<span class="nodocs"> <a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..mergeS3UsEast1RegionalEndpointConfig*103e8.html">func</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/session.go.html#line-657">mergeS3UsEast1RegionalEndpointConfig</a>(cfg *<a href="../aws.html">aws</a>.<a href="../aws.html#name-Config">Config</a>, values []<a href="endpoints.html">endpoints</a>.<a href="endpoints.html#name-S3UsEast1RegionalEndpoint">S3UsEast1RegionalEndpoint</a>)</span></i></div><div class="anchor value-res hidden" id="name-mergeSTSRegionalEndpointConfig"><i>	<span class="nodocs"> <a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..mergeSTSRegionalEndpointConfig*7b729.html">func</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/session.go.html#line-648">mergeSTSRegionalEndpointConfig</a>(cfg *<a href="../aws.html">aws</a>.<a href="../aws.html#name-Config">Config</a>, values []<a href="endpoints.html">endpoints</a>.<a href="endpoints.html#name-STSRegionalEndpoint">STSRegionalEndpoint</a>)</span></i></div><div class="anchor value-res hidden" id="name-newSession"><i>	<span class="nodocs"> <a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..newSession*5a870.html">func</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/session.go.html#line-417">newSession</a>(opts <a href="#name-Options">Options</a>, envCfg <a href="#name-envConfig">envConfig</a>, cfgs ...*<a href="../aws.html">aws</a>.<a href="../aws.html#name-Config">Config</a>) (*<a href="#name-Session">Session</a>, <a href="../../../../builtin.html#name-error">error</a>)</span></i></div><div class="anchor value-res hidden" id="name-oneOrNone"><i>	<span class="nodocs"> <a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..oneOrNone*f7a27.html">func</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-397">oneOrNone</a>(bs ...<a href="../../../../builtin.html#name-bool">bool</a>) <a href="../../../../builtin.html#name-bool">bool</a></span></i></div><div class="anchor value-res hidden" id="name-resolveCredentials"><i>	<span class="nodocs"> <a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..resolveCredentials*07de3.html">func</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/credentials.go.html#line-18">resolveCredentials</a>(cfg *<a href="../aws.html">aws</a>.<a href="../aws.html#name-Config">Config</a>, envCfg <a href="#name-envConfig">envConfig</a>, sharedCfg <a href="#name-sharedConfig">sharedConfig</a>, handlers <a href="request.html">request</a>.<a href="request.html#name-Handlers">Handlers</a>, sessOpts <a href="#name-Options">Options</a>) (*<a href="credentials.html">credentials</a>.<a href="credentials.html#name-Credentials">Credentials</a>, <a href="../../../../builtin.html#name-error">error</a>)</span></i></div><div class="anchor value-res hidden" id="name-resolveCredsFromProfile"><i>	<span class="nodocs"> <a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..resolveCredsFromProfile*fdfb4.html">func</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/credentials.go.html#line-84">resolveCredsFromProfile</a>(cfg *<a href="../aws.html">aws</a>.<a href="../aws.html#name-Config">Config</a>, envCfg <a href="#name-envConfig">envConfig</a>, sharedCfg <a href="#name-sharedConfig">sharedConfig</a>, handlers <a href="request.html">request</a>.<a href="request.html#name-Handlers">Handlers</a>, sessOpts <a href="#name-Options">Options</a>) (creds *<a href="credentials.html">credentials</a>.<a href="credentials.html#name-Credentials">Credentials</a>, err <a href="../../../../builtin.html#name-error">error</a>)</span></i></div><div class="anchor value-res hidden" id="name-resolveCredsFromSource"><i>	<span class="nodocs"> <a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..resolveCredsFromSource*93f27.html">func</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/credentials.go.html#line-161">resolveCredsFromSource</a>(cfg *<a href="../aws.html">aws</a>.<a href="../aws.html#name-Config">Config</a>, envCfg <a href="#name-envConfig">envConfig</a>, sharedCfg <a href="#name-sharedConfig">sharedConfig</a>, handlers <a href="request.html">request</a>.<a href="request.html#name-Handlers">Handlers</a>, sessOpts <a href="#name-Options">Options</a>) (creds *<a href="credentials.html">credentials</a>.<a href="credentials.html#name-Credentials">Credentials</a>, err <a href="../../../../builtin.html#name-error">error</a>)</span></i></div><div class="anchor value-res hidden" id="name-setFromEnvVal"><i>	<span class="nodocs"> <a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..setFromEnvVal*16120.html">func</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/env_config.go.html#line-348">setFromEnvVal</a>(dst *<a href="../../../../builtin.html#name-string">string</a>, keys []<a href="../../../../builtin.html#name-string">string</a>)</span></i></div><div class="anchor value-res hidden" id="name-updateBool"><i>	<input type='checkbox' class="fold" id="updateBool-fold-content"><label for="updateBool-fold-content"> <a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..updateBool*2538b.html">func</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-423">updateBool</a>(dst *<a href="../../../../builtin.html#name-bool">bool</a>, section <a href="../internal/ini.html">ini</a>.<a href="../internal/ini.html#name-Section">Section</a>, key <a href="../../../../builtin.html#name-string">string</a>)</label><span id='updateBool-fold-content-docs' class="fold-docs">
+		updateBool will only update the dst with the value in the section key, key
+		is present in the section.
+
+</span></i></div><div class="anchor value-res hidden" id="name-updateBoolPtr"><i>	<input type='checkbox' class="fold" id="updateBoolPtr-fold-content"><label for="updateBoolPtr-fold-content"> <a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..updateBoolPtr*bf225.html">func</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-432">updateBoolPtr</a>(dst **<a href="../../../../builtin.html#name-bool">bool</a>, section <a href="../internal/ini.html">ini</a>.<a href="../internal/ini.html#name-Section">Section</a>, key <a href="../../../../builtin.html#name-string">string</a>)</label><span id='updateBoolPtr-fold-content-docs' class="fold-docs">
+		updateBoolPtr will only update the dst with the value in the section key,
+		key is present in the section.
+
+</span></i></div><div class="anchor value-res hidden" id="name-updateString"><i>	<input type='checkbox' class="fold" id="updateString-fold-content"><label for="updateString-fold-content"> <a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..updateString*43941.html">func</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-414">updateString</a>(dst *<a href="../../../../builtin.html#name-string">string</a>, section <a href="../internal/ini.html">ini</a>.<a href="../internal/ini.html#name-Section">Section</a>, key <a href="../../../../builtin.html#name-string">string</a>)</label><span id='updateString-fold-content-docs' class="fold-docs">
+		updateString will only update the dst with the value in the section key, key
+		is present in the section.
+
+</span></i></div><div class="anchor value-res hidden" id="name-wrapEC2IMDSEndpoint"><i>	<input type='checkbox' class="fold" id="wrapEC2IMDSEndpoint-fold-content"><label for="wrapEC2IMDSEndpoint-fold-content"> <a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..wrapEC2IMDSEndpoint*64c33.html">func</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/session.go.html#line-353">wrapEC2IMDSEndpoint</a>(resolver <a href="endpoints.html">endpoints</a>.<a href="endpoints.html#name-Resolver">Resolver</a>, endpoint <a href="../../../../builtin.html#name-string">string</a>) <a href="endpoints.html">endpoints</a>.<a href="endpoints.html#name-Resolver">Resolver</a></label><span id='wrapEC2IMDSEndpoint-fold-content-docs' class="fold-docs">
+		Wraps the endpoint resolver with a resolver that will return a custom
+		endpoint for EC2 IMDS.
+
+</span></i></div></div>
+<div id="exported-variables"><span class="title">Package-Level Variables<span class="title-stat"><i> (total 25, in which 5 are exported)</i></span></span>
+
+<div class="anchor value-res" id="name-ErrSharedConfigECSContainerEnvVarEmpty">	<input type='checkbox' class="fold" id="ErrSharedConfigECSContainerEnvVarEmpty-fold-content"><label for="ErrSharedConfigECSContainerEnvVarEmpty-fold-content">  <a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..ErrSharedConfigECSContainerEnvVarEmpty.html">var</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/session.go.html#line-36">ErrSharedConfigECSContainerEnvVarEmpty</a> <a href="awserr.html">awserr</a>.<a href="awserr.html#name-Error">Error</a></label><span id='ErrSharedConfigECSContainerEnvVarEmpty-fold-content-docs' class="fold-docs">
+		ErrSharedConfigECSContainerEnvVarEmpty will be returned if the environment
+		variables are empty and Environment was set as the credential source
+
+</span></div><div class="anchor value-res" id="name-ErrSharedConfigInvalidCredSource">	<input type='checkbox' class="fold" id="ErrSharedConfigInvalidCredSource-fold-content"><label for="ErrSharedConfigInvalidCredSource-fold-content">  <a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..ErrSharedConfigInvalidCredSource.html">var</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/session.go.html#line-39">ErrSharedConfigInvalidCredSource</a> <a href="awserr.html">awserr</a>.<a href="awserr.html#name-Error">Error</a></label><span id='ErrSharedConfigInvalidCredSource-fold-content-docs' class="fold-docs">
+		ErrSharedConfigInvalidCredSource will be returned if an invalid credential source was provided
+
+</span></div><div class="anchor value-res" id="name-ErrSharedConfigSourceCollision">	<input type='checkbox' class="fold" id="ErrSharedConfigSourceCollision-fold-content"><label for="ErrSharedConfigSourceCollision-fold-content">  <a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..ErrSharedConfigSourceCollision.html">var</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/session.go.html#line-32">ErrSharedConfigSourceCollision</a> <a href="awserr.html">awserr</a>.<a href="awserr.html#name-Error">Error</a></label><span id='ErrSharedConfigSourceCollision-fold-content-docs' class="fold-docs">
+		ErrSharedConfigSourceCollision will be returned if a section contains both
+		source_profile and credential_source
+
+</span></div><div class="anchor value-res" id="name-WebIdentityEmptyRoleARNErr">	<input type='checkbox' class="fold" id="WebIdentityEmptyRoleARNErr-fold-content"><label for="WebIdentityEmptyRoleARNErr-fold-content">  <a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..WebIdentityEmptyRoleARNErr.html">var</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/credentials.go.html#line-52">WebIdentityEmptyRoleARNErr</a> <a href="awserr.html">awserr</a>.<a href="awserr.html#name-Error">Error</a></label><span id='WebIdentityEmptyRoleARNErr-fold-content-docs' class="fold-docs">
+		WebIdentityEmptyRoleARNErr will occur if 'AWS_WEB_IDENTITY_TOKEN_FILE' was set but
+		'AWS_ROLE_ARN' was not set.
+
+</span></div><div class="anchor value-res" id="name-WebIdentityEmptyTokenFilePathErr">	<input type='checkbox' class="fold" id="WebIdentityEmptyTokenFilePathErr-fold-content"><label for="WebIdentityEmptyTokenFilePathErr-fold-content">  <a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..WebIdentityEmptyTokenFilePathErr.html">var</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/credentials.go.html#line-56">WebIdentityEmptyTokenFilePathErr</a> <a href="awserr.html">awserr</a>.<a href="awserr.html#name-Error">Error</a></label><span id='WebIdentityEmptyTokenFilePathErr-fold-content-docs' class="fold-docs">
+		WebIdentityEmptyTokenFilePathErr will occur if 'AWS_ROLE_ARN' was set but
+		'AWS_WEB_IDENTITY_TOKEN_FILE' was not set.
+
+</span></div>	<input type='checkbox' class="showhide" id="unexported-variables-showhide"><i><label for="unexported-variables-showhide" class="show-inline">/* 20 unexporteds ... */</label><label for="unexported-variables-showhide" class="hide-inline">/* 20 unexporteds: */</label></i><div class="anchor value-res hidden" id="name-credAccessEnvKey"><i>	<span class="nodocs">  <a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..credAccessEnvKey*8e9d6.html">var</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/env_config.go.html#line-171">credAccessEnvKey</a> []<a href="../../../../builtin.html#name-string">string</a></span></i></div><div class="anchor value-res hidden" id="name-credSecretEnvKey"><i>	<span class="nodocs">  <a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..credSecretEnvKey*a3024.html">var</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/env_config.go.html#line-175">credSecretEnvKey</a> []<a href="../../../../builtin.html#name-string">string</a></span></i></div><div class="anchor value-res hidden" id="name-credSessionEnvKey"><i>	<span class="nodocs">  <a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..credSessionEnvKey*b485b.html">var</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/env_config.go.html#line-179">credSessionEnvKey</a> []<a href="../../../../builtin.html#name-string">string</a></span></i></div><div class="anchor value-res hidden" id="name-csmClientIDEnvKey"><i>	<span class="nodocs">  <a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..csmClientIDEnvKey*c2ed0.html">var</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/env_config.go.html#line-168">csmClientIDEnvKey</a> []<a href="../../../../builtin.html#name-string">string</a></span></i></div><div class="anchor value-res hidden" id="name-csmEnabledEnvKey"><i>	<span class="nodocs">  <a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..csmEnabledEnvKey*8ad3c.html">var</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/env_config.go.html#line-159">csmEnabledEnvKey</a> []<a href="../../../../builtin.html#name-string">string</a></span></i></div><div class="anchor value-res hidden" id="name-csmHostEnvKey"><i>	<span class="nodocs">  <a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..csmHostEnvKey*022f6.html">var</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/env_config.go.html#line-162">csmHostEnvKey</a> []<a href="../../../../builtin.html#name-string">string</a></span></i></div><div class="anchor value-res hidden" id="name-csmPortEnvKey"><i>	<span class="nodocs">  <a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..csmPortEnvKey*6f8c3.html">var</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/env_config.go.html#line-165">csmPortEnvKey</a> []<a href="../../../../builtin.html#name-string">string</a></span></i></div><div class="anchor value-res hidden" id="name-csmProfileName"><i>	<span class="nodocs">  <a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..csmProfileName*bff1c.html">var</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/session.go.html#line-499">csmProfileName</a> <a href="../../../../builtin.html#name-string">string</a></span></i></div><div class="anchor value-res hidden" id="name-ec2IMDSEndpointEnvKey"><i>	<span class="nodocs">  <a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..ec2IMDSEndpointEnvKey*9b396.html">var</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/env_config.go.html#line-219">ec2IMDSEndpointEnvKey</a> []<a href="../../../../builtin.html#name-string">string</a></span></i></div><div class="anchor value-res hidden" id="name-enableEndpointDiscoveryEnvKey"><i>	<span class="nodocs">  <a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..enableEndpointDiscoveryEnvKey*01411.html">var</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/env_config.go.html#line-183">enableEndpointDiscoveryEnvKey</a> []<a href="../../../../builtin.html#name-string">string</a></span></i></div><div class="anchor value-res hidden" id="name-profileEnvKeys"><i>	<span class="nodocs">  <a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..profileEnvKeys*11dd9.html">var</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/env_config.go.html#line-191">profileEnvKeys</a> []<a href="../../../../builtin.html#name-string">string</a></span></i></div><div class="anchor value-res hidden" id="name-regionEnvKeys"><i>	<span class="nodocs">  <a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..regionEnvKeys*17537.html">var</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/env_config.go.html#line-187">regionEnvKeys</a> []<a href="../../../../builtin.html#name-string">string</a></span></i></div><div class="anchor value-res hidden" id="name-roleARNEnvKey"><i>	<span class="nodocs">  <a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..roleARNEnvKey*ab010.html">var</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/env_config.go.html#line-204">roleARNEnvKey</a> []<a href="../../../../builtin.html#name-string">string</a></span></i></div><div class="anchor value-res hidden" id="name-roleSessionNameEnvKey"><i>	<span class="nodocs">  <a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..roleSessionNameEnvKey*977ac.html">var</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/env_config.go.html#line-207">roleSessionNameEnvKey</a> []<a href="../../../../builtin.html#name-string">string</a></span></i></div><div class="anchor value-res hidden" id="name-s3UseARNRegionEnvKey"><i>	<span class="nodocs">  <a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..s3UseARNRegionEnvKey*e3cac.html">var</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/env_config.go.html#line-216">s3UseARNRegionEnvKey</a> []<a href="../../../../builtin.html#name-string">string</a></span></i></div><div class="anchor value-res hidden" id="name-s3UsEast1RegionalEndpoint"><i>	<span class="nodocs">  <a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..s3UsEast1RegionalEndpoint*112ce.html">var</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/env_config.go.html#line-213">s3UsEast1RegionalEndpoint</a> []<a href="../../../../builtin.html#name-string">string</a></span></i></div><div class="anchor value-res hidden" id="name-sharedConfigFileEnvKey"><i>	<span class="nodocs">  <a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..sharedConfigFileEnvKey*96487.html">var</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/env_config.go.html#line-198">sharedConfigFileEnvKey</a> []<a href="../../../../builtin.html#name-string">string</a></span></i></div><div class="anchor value-res hidden" id="name-sharedCredsFileEnvKey"><i>	<span class="nodocs">  <a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..sharedCredsFileEnvKey*ad245.html">var</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/env_config.go.html#line-195">sharedCredsFileEnvKey</a> []<a href="../../../../builtin.html#name-string">string</a></span></i></div><div class="anchor value-res hidden" id="name-stsRegionalEndpointKey"><i>	<span class="nodocs">  <a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..stsRegionalEndpointKey*76dbd.html">var</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/env_config.go.html#line-210">stsRegionalEndpointKey</a> []<a href="../../../../builtin.html#name-string">string</a></span></i></div><div class="anchor value-res hidden" id="name-webIdentityTokenFilePathEnvKey"><i>	<span class="nodocs">  <a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..webIdentityTokenFilePathEnvKey*f44c5.html">var</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/env_config.go.html#line-201">webIdentityTokenFilePathEnvKey</a> []<a href="../../../../builtin.html#name-string">string</a></span></i></div></div>
+<div id="exported-constants"><span class="title">Package-Level Constants<span class="title-stat"><i> (total 31, in which 6 are exported)</i></span></span>
+
+<div class="anchor value-res" id="name-DefaultSharedConfigProfile">	<input type='checkbox' class="fold" id="DefaultSharedConfigProfile-fold-content"><label for="DefaultSharedConfigProfile-fold-content"><a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..DefaultSharedConfigProfile.html">const</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-55">DefaultSharedConfigProfile</a> = "default"</label><span id='DefaultSharedConfigProfile-fold-content-docs' class="fold-docs">
+		DefaultSharedConfigProfile is the default profile to be used when
+		loading configuration from the config files if another profile name
+		is not provided.
+
+</span></div><div class="anchor value-res" id="name-EnvProviderName">	<input type='checkbox' class="fold" id="EnvProviderName-fold-content"><label for="EnvProviderName-fold-content"><a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..EnvProviderName.html">const</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/env_config.go.html#line-16">EnvProviderName</a> = "EnvConfigCredentials"</label><span id='EnvProviderName-fold-content-docs' class="fold-docs">
+		EnvProviderName provides a name of the provider when config is loaded from environment.
+
+</span></div><div class="anchor value-res" id="name-ErrCodeSharedConfig">	<input type='checkbox' class="fold" id="ErrCodeSharedConfig-fold-content"><label for="ErrCodeSharedConfig-fold-content"><a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..ErrCodeSharedConfig.html">const</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/session.go.html#line-27">ErrCodeSharedConfig</a> = "SharedConfigErr"</label><span id='ErrCodeSharedConfig-fold-content-docs' class="fold-docs">
+		ErrCodeSharedConfig represents an error that occurs in the shared
+		configuration logic
+
+</span></div><div class="anchor value-res" id="name-SharedConfigDisable">	<input type='checkbox' class="fold" id="SharedConfigDisable-fold-content"><label for="SharedConfigDisable-fold-content"><a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..SharedConfigDisable.html">const</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/session.go.html#line-160">SharedConfigDisable</a> <a href="#name-SharedConfigState">SharedConfigState</a> = 1</label><span id='SharedConfigDisable-fold-content-docs' class="fold-docs">
+		SharedConfigDisable overrides the AWS_SDK_LOAD_CONFIG env var value
+		and disables the shared config functionality.
+
+</span></div><div class="anchor value-res" id="name-SharedConfigEnable">	<input type='checkbox' class="fold" id="SharedConfigEnable-fold-content"><label for="SharedConfigEnable-fold-content"><a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..SharedConfigEnable.html">const</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/session.go.html#line-164">SharedConfigEnable</a> <a href="#name-SharedConfigState">SharedConfigState</a> = 2</label><span id='SharedConfigEnable-fold-content-docs' class="fold-docs">
+		SharedConfigEnable overrides the AWS_SDK_LOAD_CONFIG env var value
+		and enables the shared config functionality.
+
+</span></div><div class="anchor value-res" id="name-SharedConfigStateFromEnv">	<input type='checkbox' class="fold" id="SharedConfigStateFromEnv-fold-content"><label for="SharedConfigStateFromEnv-fold-content"><a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..SharedConfigStateFromEnv.html">const</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/session.go.html#line-156">SharedConfigStateFromEnv</a> <a href="#name-SharedConfigState">SharedConfigState</a> = 0</label><span id='SharedConfigStateFromEnv-fold-content-docs' class="fold-docs">
+		SharedConfigStateFromEnv does not override any state of the
+		AWS_SDK_LOAD_CONFIG env var. It is the default value of the
+		SharedConfigState type.
+
+</span></div>	<input type='checkbox' class="showhide" id="unexported-constants-showhide"><i><label for="unexported-constants-showhide" class="show-inline">/* 25 unexporteds ... */</label><label for="unexported-constants-showhide" class="hide-inline">/* 25 unexporteds: */</label></i><div class="anchor value-res hidden" id="name-accessKeyIDKey"><i>	<input type='checkbox' class="fold" id="accessKeyIDKey-fold-content"><label for="accessKeyIDKey-fold-content"><a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..accessKeyIDKey*b2bbd.html">const</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-15">accessKeyIDKey</a> = "aws_access_key_id" // group required</label><span id='accessKeyIDKey-fold-content-docs' class="fold-docs">
+		Static Credentials group
+
+</span></i></div><div class="anchor value-res hidden" id="name-credentialProcessKey"><i>	<input type='checkbox' class="fold" id="credentialProcessKey-fold-content"><label for="credentialProcessKey-fold-content"><a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..credentialProcessKey*c360f.html">const</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-41">credentialProcessKey</a> = "credential_process" // optional</label><span id='credentialProcessKey-fold-content-docs' class="fold-docs">
+		External Credential Process
+
+</span></i></div><div class="anchor value-res hidden" id="name-credentialSourceKey"><i>	<span class="nodocs"><a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..credentialSourceKey*d12ae.html">const</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-22">credentialSourceKey</a> = "credential_source" // group required (or source_profile)</span></i></div><div class="anchor value-res hidden" id="name-credSourceEc2Metadata"><i>	<input type='checkbox' class="fold" id="credSourceEc2Metadata-fold-content"><label for="credSourceEc2Metadata-fold-content"><a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..credSourceEc2Metadata*d6c40.html">const</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/credentials.go.html#line-156">credSourceEc2Metadata</a> = "Ec2InstanceMetadata"</label><span id='credSourceEc2Metadata-fold-content-docs' class="fold-docs">
+		valid credential source values
+
+</span></i></div><div class="anchor value-res hidden" id="name-credSourceECSContainer"><i>	<input type='checkbox' class="fold" id="credSourceECSContainer-fold-content"><label for="credSourceECSContainer-fold-content"><a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..credSourceECSContainer*52ee8.html">const</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/credentials.go.html#line-158">credSourceECSContainer</a> = "EcsContainer"</label><span id='credSourceECSContainer-fold-content-docs' class="fold-docs">
+		valid credential source values
+
+</span></i></div><div class="anchor value-res hidden" id="name-credSourceEnvironment"><i>	<input type='checkbox' class="fold" id="credSourceEnvironment-fold-content"><label for="credSourceEnvironment-fold-content"><a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..credSourceEnvironment*97fe2.html">const</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/credentials.go.html#line-157">credSourceEnvironment</a> = "Environment"</label><span id='credSourceEnvironment-fold-content-docs' class="fold-docs">
+		valid credential source values
+
+</span></i></div><div class="anchor value-res hidden" id="name-csmClientIDKey"><i>	<span class="nodocs"><a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..csmClientIDKey*6bb9d.html">const</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-32">csmClientIDKey</a> = "csm_client_id"</span></i></div><div class="anchor value-res hidden" id="name-csmEnabledKey"><i>	<input type='checkbox' class="fold" id="csmEnabledKey-fold-content"><label for="csmEnabledKey-fold-content"><a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..csmEnabledKey*89de3.html">const</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-29">csmEnabledKey</a> = "csm_enabled"</label><span id='csmEnabledKey-fold-content-docs' class="fold-docs">
+		CSM options
+
+</span></i></div><div class="anchor value-res hidden" id="name-csmHostKey"><i>	<span class="nodocs"><a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..csmHostKey*b73c9.html">const</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-30">csmHostKey</a> = "csm_host"</span></i></div><div class="anchor value-res hidden" id="name-csmPortKey"><i>	<span class="nodocs"><a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..csmPortKey*04495.html">const</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-31">csmPortKey</a> = "csm_port"</span></i></div><div class="anchor value-res hidden" id="name-ec2MetadataServiceID"><i>	<span class="nodocs"><a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..ec2MetadataServiceID*1954d.html">const</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/session.go.html#line-723">ec2MetadataServiceID</a> = "ec2metadata"</span></i></div><div class="anchor value-res hidden" id="name-enableEndpointDiscoveryKey"><i>	<input type='checkbox' class="fold" id="enableEndpointDiscoveryKey-fold-content"><label for="enableEndpointDiscoveryKey-fold-content"><a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..enableEndpointDiscoveryKey*3c8d0.html">const</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-38">enableEndpointDiscoveryKey</a> = "endpoint_discovery_enabled" // optional</label><span id='enableEndpointDiscoveryKey-fold-content-docs' class="fold-docs">
+		endpoint discovery group
+
+</span></i></div><div class="anchor value-res hidden" id="name-externalIDKey"><i>	<span class="nodocs"><a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..externalIDKey*fa324.html">const</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-23">externalIDKey</a> = "external_id" // optional</span></i></div><div class="anchor value-res hidden" id="name-mfaSerialKey"><i>	<span class="nodocs"><a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..mfaSerialKey*76fbf.html">const</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-24">mfaSerialKey</a> = "mfa_serial" // optional</span></i></div><div class="anchor value-res hidden" id="name-regionKey"><i>	<input type='checkbox' class="fold" id="regionKey-fold-content"><label for="regionKey-fold-content"><a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..regionKey*4c230.html">const</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-35">regionKey</a> = "region"</label><span id='regionKey-fold-content-docs' class="fold-docs">
+		Additional Config fields
+
+</span></i></div><div class="anchor value-res hidden" id="name-roleArnKey"><i>	<input type='checkbox' class="fold" id="roleArnKey-fold-content"><label for="roleArnKey-fold-content"><a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..roleArnKey*3041c.html">const</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-20">roleArnKey</a> = "role_arn" // group required</label><span id='roleArnKey-fold-content-docs' class="fold-docs">
+		Assume Role Credentials group
+
+</span></i></div><div class="anchor value-res hidden" id="name-roleDurationSecondsKey"><i>	<span class="nodocs"><a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..roleDurationSecondsKey*93ec6.html">const</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-26">roleDurationSecondsKey</a> = "duration_seconds" // optional</span></i></div><div class="anchor value-res hidden" id="name-roleSessionNameKey"><i>	<span class="nodocs"><a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..roleSessionNameKey*8d8cf.html">const</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-25">roleSessionNameKey</a> = "role_session_name" // optional</span></i></div><div class="anchor value-res hidden" id="name-s3UseARNRegionKey"><i>	<input type='checkbox' class="fold" id="s3UseARNRegionKey-fold-content"><label for="s3UseARNRegionKey-fold-content"><a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..s3UseARNRegionKey*eb766.html">const</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-58">s3UseARNRegionKey</a> = "s3_use_arn_region"</label><span id='s3UseARNRegionKey-fold-content-docs' class="fold-docs">
+		S3 ARN Region Usage
+
+</span></i></div><div class="anchor value-res hidden" id="name-s3UsEast1RegionalSharedKey"><i>	<input type='checkbox' class="fold" id="s3UsEast1RegionalSharedKey-fold-content"><label for="s3UsEast1RegionalSharedKey-fold-content"><a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..s3UsEast1RegionalSharedKey*c75e1.html">const</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-50">s3UsEast1RegionalSharedKey</a> = "s3_us_east_1_regional_endpoint"</label><span id='s3UsEast1RegionalSharedKey-fold-content-docs' class="fold-docs">
+		Additional config fields for regional or legacy endpoints
+
+</span></i></div><div class="anchor value-res hidden" id="name-secretAccessKey"><i>	<span class="nodocs"><a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..secretAccessKey*ba314.html">const</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-16">secretAccessKey</a> = "aws_secret_access_key" // group required</span></i></div><div class="anchor value-res hidden" id="name-sessionTokenKey"><i>	<span class="nodocs"><a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..sessionTokenKey*0ed74.html">const</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-17">sessionTokenKey</a> = "aws_session_token" // optional</span></i></div><div class="anchor value-res hidden" id="name-sourceProfileKey"><i>	<span class="nodocs"><a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..sourceProfileKey*e09d1.html">const</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-21">sourceProfileKey</a> = "source_profile" // group required (or credential_source)</span></i></div><div class="anchor value-res hidden" id="name-stsRegionalEndpointSharedKey"><i>	<input type='checkbox' class="fold" id="stsRegionalEndpointSharedKey-fold-content"><label for="stsRegionalEndpointSharedKey-fold-content"><a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..stsRegionalEndpointSharedKey*cd8c4.html">const</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-47">stsRegionalEndpointSharedKey</a> = "sts_regional_endpoints"</label><span id='stsRegionalEndpointSharedKey-fold-content-docs' class="fold-docs">
+		Additional config fields for regional or legacy endpoints
+
+</span></i></div><div class="anchor value-res hidden" id="name-webIdentityTokenFileKey"><i>	<input type='checkbox' class="fold" id="webIdentityTokenFileKey-fold-content"><label for="webIdentityTokenFileKey-fold-content"><a href="../../../../../use/github.com/aws/aws-sdk-go/aws/session..webIdentityTokenFileKey*407a9.html">const</a> <a href="../../../../../src/github.com/aws/aws-sdk-go/aws/session/shared_config.go.html#line-44">webIdentityTokenFileKey</a> = "web_identity_token_file" // optional</label><span id='webIdentityTokenFileKey-fold-content-docs' class="fold-docs">
+		Web Identity Token File
+
+</span></i></div></div></code></pre><pre id="footer">
+<table><tr><td><img src="../../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

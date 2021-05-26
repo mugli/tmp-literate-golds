@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: sigqueue.go in package runtime</title>
+<link href="../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	sigqueue.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../pkg/runtime.html">runtime</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16],
+input[id=r17]:checked ~pre label[for=r17],
+input[id=r18]:checked ~pre label[for=r18],
+input[id=r19]:checked ~pre label[for=r19],
+input[id=r20]:checked ~pre label[for=r20],
+input[id=r21]:checked ~pre label[for=r21],
+input[id=r22]:checked ~pre label[for=r22],
+input[id=r23]:checked ~pre label[for=r23],
+input[id=r24]:checked ~pre label[for=r24],
+input[id=r25]:checked ~pre label[for=r25],
+input[id=r26]:checked ~pre label[for=r26],
+input[id=r27]:checked ~pre label[for=r27],
+input[id=r28]:checked ~pre label[for=r28]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="r17" type="radio" name="g"/>
+<input id="r18" type="radio" name="g"/>
+<input id="r19" type="radio" name="g"/>
+<input id="r20" type="radio" name="g"/>
+<input id="r21" type="radio" name="g"/>
+<input id="r22" type="radio" name="g"/>
+<input id="r23" type="radio" name="g"/>
+<input id="r24" type="radio" name="g"/>
+<input id="r25" type="radio" name="g"/>
+<input id="r26" type="radio" name="g"/>
+<input id="r27" type="radio" name="g"/>
+<input id="r28" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2009 The Go Authors. All rights reserved.</span><span class="comment"> Use of this source code is governed by a BSD-style</span><span class="comment"> license that can be found in the LICENSE file.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> This file implements runtime support for signal handling.</span><span class="comment"></span><span class="comment"> Most synchronization primitives are not available from</span><span class="comment"> the signal handler (it cannot block, allocate memory, or use locks)</span><span class="comment"> so the handler communicates with a processing goroutine</span><span class="comment"> via struct sig, below.</span><span class="comment"></span><span class="comment"> sigsend is called by the signal handler to queue a new signal.</span><span class="comment"> signal_recv is called by the Go program to receive a newly queued signal.</span><span class="comment"> Synchronization between sigsend and signal_recv is based on the sig.state</span><span class="comment"> variable. It can be in 4 states: sigIdle, sigReceiving, sigSending and sigFixup.</span><span class="comment"> sigReceiving means that signal_recv is blocked on sig.Note and there are no</span><span class="comment"> new pending signals.</span><span class="comment"> sigSending means that sig.mask *may* contain new pending signals,</span><span class="comment"> signal_recv can't be blocked in this state.</span><span class="comment"> sigIdle means that there are no new pending signals and signal_recv is not blocked.</span><span class="comment"> sigFixup is a transient state that can only exist as a short</span><span class="comment"> transition from sigReceiving and then on to sigIdle: it is</span><span class="comment"> used to ensure the AllThreadsSyscall()'s mDoFixup() operation</span><span class="comment"> occurs on the sleeping m, waiting to receive a signal.</span><span class="comment"> Transitions between states are done atomically with CAS.</span><span class="comment"> When signal_recv is unblocked, it resets sig.Note and rechecks sig.mask.</span><span class="comment"> If several sigsends and signal_recv execute concurrently, it can lead to</span><span class="comment"> unnecessary rechecks of sig.mask, but it cannot lead to missed signals</span><span class="comment"> nor deadlocks.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> +build !plan9</span></div>
+<div class="code"><pre><code>
+<span class="keyword">package</span> runtime
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"runtime/internal/atomic"</span></label>
+	<a href="../../pkg/unsafe.html" class="ident i1">_</a> <label for="i1"><span class="lit-string i1">"unsafe"</span></label> <span class="comment">// for go:linkname</span>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> sig handles communication between the signal handler and os/signal.</span><span class="comment"> Other than the inuse and recv fields, the fields are accessed atomically.</span><span class="comment"></span><span class="comment"> The wanted and ignored fields are only written by one goroutine at</span><span class="comment"> a time; access is controlled by the handlers Mutex in os/signal.</span><span class="comment"> The fields are only read by that one goroutine and by the signal handler.</span><span class="comment"> We access them atomically to minimize the race between setting them</span><span class="comment"> in the goroutine calling os/signal and the signal handler,</span><span class="comment"> which may be running in a different thread. That race is unavoidable,</span><span class="comment"> as there is no connection between handling a signal and receiving one,</span><span class="comment"> but atomic instructions should minimize it.</span></div>
+<div class="code"><pre><code><span class="keyword">var</span> <a href="../../pkg/runtime.html#name-sig" class="ident">sig</a> <span class="keyword">struct</span> {
+	note       <a href="runtime2.go.html#line-191" class="ident">note</a>
+	mask       [(<a href="os_darwin.go.html#line-339" class="ident">_NSIG</a> + <span class="lit-number">31</span>) / <span class="lit-number">32</span>]<a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>
+	wanted     [(<a href="os_darwin.go.html#line-339" class="ident">_NSIG</a> + <span class="lit-number">31</span>) / <span class="lit-number">32</span>]<a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>
+	ignored    [(<a href="os_darwin.go.html#line-339" class="ident">_NSIG</a> + <span class="lit-number">31</span>) / <span class="lit-number">32</span>]<a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>
+	recv       [(<a href="os_darwin.go.html#line-339" class="ident">_NSIG</a> + <span class="lit-number">31</span>) / <span class="lit-number">32</span>]<a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>
+	state      <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>
+	delivering <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>
+	inuse      <a href="../../pkg/builtin.html#name-bool" class="ident">bool</a>
+}
+
+<span class="keyword">const</span> (
+	<a href="../../pkg/runtime.html#name-sigIdle" class="ident">sigIdle</a> = <a href="../../pkg/builtin.html#name-iota" class="ident">iota</a>
+	<a href="../../pkg/runtime.html#name-sigReceiving" class="ident">sigReceiving</a>
+	<a href="../../pkg/runtime.html#name-sigSending" class="ident">sigSending</a>
+	<a href="../../pkg/runtime.html#name-sigFixup" class="ident">sigFixup</a>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> sigsend delivers a signal from sighandler to the internal signal delivery queue.</span><span class="comment"> It reports whether the signal was sent. If not, the caller typically crashes the program.</span><span class="comment"> It runs from the signal handler, so it's limited in what it can do.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r0" class="ident"><a href="../../pkg/runtime.html#name-sigsend" class="ident">sigsend</a></label>(<label for="r1" class="ident">s</label> <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>) <a href="../../pkg/builtin.html#name-bool" class="ident">bool</a> {
+	<label for="r2" class="ident">bit</label> := <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>(<span class="lit-number">1</span>) &lt;&lt; <a href="../../pkg/builtin.html#name-uint" class="ident">uint</a>(<label for="r1" class="ident">s</label>&amp;<span class="lit-number">31</span>)
+	<span class="keyword">if</span> !<a href="#line-51" class="ident">sig</a>.<a href="#line-59" class="ident">inuse</a> || <label for="r1" class="ident">s</label> &gt;= <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>(<span class="lit-number">32</span>*<a href="../../pkg/builtin.html#name-len" class="ident">len</a>(<a href="#line-51" class="ident">sig</a>.<a href="#line-54" class="ident">wanted</a>)) {
+		<span class="keyword">return</span> <a href="../../pkg/builtin.html#name-false" class="ident">false</a>
+	}
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> We are running in the signal handler; defer is not available.</span></div>
+<div class="code"><pre><code>
+	<span class="keyword">if</span> <label for="r3" class="ident">w</label> := <a href="../../pkg/runtime/internal/atomic.html" class="ident i0">atomic</a>.<a href="internal/atomic/atomic_amd64.go.html#line-16" class="ident">Load</a>(&amp;<a href="#line-51" class="ident">sig</a>.<a href="#line-54" class="ident">wanted</a>[<label for="r1" class="ident">s</label>/<span class="lit-number">32</span>]); <label for="r3" class="ident">w</label>&amp;<label for="r2" class="ident">bit</label> == <span class="lit-number">0</span> {
+		<a href="../../pkg/runtime/internal/atomic.html" class="ident i0">atomic</a>.<a href="internal/atomic/atomic_amd64.go.html#line-51" class="ident">Xadd</a>(&amp;<a href="#line-51" class="ident">sig</a>.<a href="#line-58" class="ident">delivering</a>, -<span class="lit-number">1</span>)
+		<span class="keyword">return</span> <a href="../../pkg/builtin.html#name-false" class="ident">false</a>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Add signal to outgoing queue.</span></div>
+<div class="code"><pre><code>	<span class="keyword">for</span> {
+		<label for="r4" class="ident">mask</label> := <a href="#line-51" class="ident">sig</a>.<a href="#line-53" class="ident">mask</a>[<label for="r1" class="ident">s</label>/<span class="lit-number">32</span>]
+		<span class="keyword">if</span> <label for="r4" class="ident">mask</label>&amp;<label for="r2" class="ident">bit</label> != <span class="lit-number">0</span> {
+			<a href="../../pkg/runtime/internal/atomic.html" class="ident i0">atomic</a>.<a href="internal/atomic/atomic_amd64.go.html#line-51" class="ident">Xadd</a>(&amp;<a href="#line-51" class="ident">sig</a>.<a href="#line-58" class="ident">delivering</a>, -<span class="lit-number">1</span>)
+			<span class="keyword">return</span> <a href="../../pkg/builtin.html#name-true" class="ident">true</a> <span class="comment">// signal already in queue</span>
+		}
+		<span class="keyword">if</span> <a href="../../pkg/runtime/internal/atomic.html" class="ident i0">atomic</a>.<a href="internal/atomic/stubs.go.html#line-12" class="ident">Cas</a>(&amp;<a href="#line-51" class="ident">sig</a>.<a href="#line-53" class="ident">mask</a>[<label for="r1" class="ident">s</label>/<span class="lit-number">32</span>], <label for="r4" class="ident">mask</label>, <label for="r4" class="ident">mask</label>|<label for="r2" class="ident">bit</label>) {
+			<span class="keyword">break</span>
+		}
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Notify receiver that queue has new bit.</span></div>
+<div class="code"><pre><code><label for="r5" class="ident">Send</label>:
+	<span class="keyword">for</span> {
+		<span class="keyword">switch</span> <a href="../../pkg/runtime/internal/atomic.html" class="ident i0">atomic</a>.<a href="internal/atomic/atomic_amd64.go.html#line-16" class="ident">Load</a>(&amp;<a href="#line-51" class="ident">sig</a>.<a href="#line-57" class="ident">state</a>) {
+		<span class="keyword">default</span>:
+			<a href="panic.go.html#line-1107" class="ident">throw</a>(<span class="lit-string">"sigsend: inconsistent state"</span>)
+		<span class="keyword">case</span> <a href="#line-63" class="ident">sigIdle</a>:
+			<span class="keyword">if</span> <a href="../../pkg/runtime/internal/atomic.html" class="ident i0">atomic</a>.<a href="internal/atomic/stubs.go.html#line-12" class="ident">Cas</a>(&amp;<a href="#line-51" class="ident">sig</a>.<a href="#line-57" class="ident">state</a>, <a href="#line-63" class="ident">sigIdle</a>, <a href="#line-65" class="ident">sigSending</a>) {
+				<span class="keyword">break</span> <label for="r5" class="ident">Send</label>
+			}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> notification already pending</span></div>
+<div class="code"><pre><code>			<span class="keyword">break</span> <label for="r5" class="ident">Send</label>
+		<span class="keyword">case</span> <a href="#line-64" class="ident">sigReceiving</a>:
+			<span class="keyword">if</span> <a href="../../pkg/runtime/internal/atomic.html" class="ident i0">atomic</a>.<a href="internal/atomic/stubs.go.html#line-12" class="ident">Cas</a>(&amp;<a href="#line-51" class="ident">sig</a>.<a href="#line-57" class="ident">state</a>, <a href="#line-64" class="ident">sigReceiving</a>, <a href="#line-63" class="ident">sigIdle</a>) {
+				<span class="keyword">if</span> <a href="extern.go.html#line-253" class="ident">GOOS</a> == <span class="lit-string">"darwin"</span> || <a href="extern.go.html#line-253" class="ident">GOOS</a> == <span class="lit-string">"ios"</span> {
+					<a href="os_darwin.go.html#line-111" class="ident">sigNoteWakeup</a>(&amp;<a href="#line-51" class="ident">sig</a>.<a href="#line-52" class="ident">note</a>)
+					<span class="keyword">break</span> <label for="r5" class="ident">Send</label>
+				}
+				<a href="lock_sema.go.html#line-142" class="ident">notewakeup</a>(&amp;<a href="#line-51" class="ident">sig</a>.<a href="#line-52" class="ident">note</a>)
+				<span class="keyword">break</span> <label for="r5" class="ident">Send</label>
+			}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> nothing to do - we need to wait for sigIdle.</span></div>
+<div class="code"><pre><code>			<a href="os_darwin.go.html#line-334" class="ident">osyield</a>()
+		}
+	}
+
+	<a href="../../pkg/runtime/internal/atomic.html" class="ident i0">atomic</a>.<a href="internal/atomic/atomic_amd64.go.html#line-51" class="ident">Xadd</a>(&amp;<a href="#line-51" class="ident">sig</a>.<a href="#line-58" class="ident">delivering</a>, -<span class="lit-number">1</span>)
+	<span class="keyword">return</span> <a href="../../pkg/builtin.html#name-true" class="ident">true</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> sigRecvPrepareForFixup is used to temporarily wake up the</span><span class="comment"> signal_recv() running thread while it is blocked waiting for the</span><span class="comment"> arrival of a signal. If it causes the thread to wake up, the</span><span class="comment"> sig.state travels through this sequence: sigReceiving -&gt; sigFixup</span><span class="comment"> -&gt; sigIdle -&gt; sigReceiving and resumes. (This is only called while</span><span class="comment"> GC is disabled.)</span><span class="comment">go:nosplit</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r6" class="ident"><a href="../../pkg/runtime.html#name-sigRecvPrepareForFixup" class="ident">sigRecvPrepareForFixup</a></label>() {
+	<span class="keyword">if</span> <a href="../../pkg/runtime/internal/atomic.html" class="ident i0">atomic</a>.<a href="internal/atomic/stubs.go.html#line-12" class="ident">Cas</a>(&amp;<a href="#line-51" class="ident">sig</a>.<a href="#line-57" class="ident">state</a>, <a href="#line-64" class="ident">sigReceiving</a>, <a href="#line-66" class="ident">sigFixup</a>) {
+		<a href="lock_sema.go.html#line-142" class="ident">notewakeup</a>(&amp;<a href="#line-51" class="ident">sig</a>.<a href="#line-52" class="ident">note</a>)
+	}
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Called to receive the next queued signal.</span><span class="comment"> Must only be called from a single goroutine at a time.</span><span class="comment">go:linkname signal_recv os/signal.signal_recv</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r7" class="ident"><a href="../../pkg/runtime.html#name-signal_recv" class="ident">signal_recv</a></label>() <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a> {
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Serve any signals from local copy.</span></div>
+<div class="code"><pre><code>		<span class="keyword">for</span> <label for="r8" class="ident">i</label> := <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>(<span class="lit-number">0</span>); <label for="r8" class="ident">i</label> &lt; <a href="os_darwin.go.html#line-339" class="ident">_NSIG</a>; <label for="r8" class="ident">i</label>++ {
+			<span class="keyword">if</span> <a href="#line-51" class="ident">sig</a>.<a href="#line-56" class="ident">recv</a>[<label for="r8" class="ident">i</label>/<span class="lit-number">32</span>]&amp;(<span class="lit-number">1</span>&lt;&lt;(<label for="r8" class="ident">i</label>&amp;<span class="lit-number">31</span>)) != <span class="lit-number">0</span> {
+				<a href="#line-51" class="ident">sig</a>.<a href="#line-56" class="ident">recv</a>[<label for="r8" class="ident">i</label>/<span class="lit-number">32</span>] &amp;^= <span class="lit-number">1</span> &lt;&lt; (<label for="r8" class="ident">i</label> &amp; <span class="lit-number">31</span>)
+				<span class="keyword">return</span> <label for="r8" class="ident">i</label>
+			}
+		}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Wait for updates to be available from signal sender.</span></div>
+<div class="code"><pre><code>	<label for="r9" class="ident">Receive</label>:
+		<span class="keyword">for</span> {
+			<span class="keyword">switch</span> <a href="../../pkg/runtime/internal/atomic.html" class="ident i0">atomic</a>.<a href="internal/atomic/atomic_amd64.go.html#line-16" class="ident">Load</a>(&amp;<a href="#line-51" class="ident">sig</a>.<a href="#line-57" class="ident">state</a>) {
+			<span class="keyword">default</span>:
+				<a href="panic.go.html#line-1107" class="ident">throw</a>(<span class="lit-string">"signal_recv: inconsistent state"</span>)
+			<span class="keyword">case</span> <a href="#line-63" class="ident">sigIdle</a>:
+				<span class="keyword">if</span> <a href="../../pkg/runtime/internal/atomic.html" class="ident i0">atomic</a>.<a href="internal/atomic/stubs.go.html#line-12" class="ident">Cas</a>(&amp;<a href="#line-51" class="ident">sig</a>.<a href="#line-57" class="ident">state</a>, <a href="#line-63" class="ident">sigIdle</a>, <a href="#line-64" class="ident">sigReceiving</a>) {
+					<span class="keyword">if</span> <a href="extern.go.html#line-253" class="ident">GOOS</a> == <span class="lit-string">"darwin"</span> || <a href="extern.go.html#line-253" class="ident">GOOS</a> == <span class="lit-string">"ios"</span> {
+						<a href="os_darwin.go.html#line-117" class="ident">sigNoteSleep</a>(&amp;<a href="#line-51" class="ident">sig</a>.<a href="#line-52" class="ident">note</a>)
+						<span class="keyword">break</span> <label for="r9" class="ident">Receive</label>
+					}
+					<a href="lock_sema.go.html#line-288" class="ident">notetsleepg</a>(&amp;<a href="#line-51" class="ident">sig</a>.<a href="#line-52" class="ident">note</a>, -<span class="lit-number">1</span>)
+					<a href="lock_sema.go.html#line-132" class="ident">noteclear</a>(&amp;<a href="#line-51" class="ident">sig</a>.<a href="#line-52" class="ident">note</a>)
+					<span class="keyword">if</span> !<a href="../../pkg/runtime/internal/atomic.html" class="ident i0">atomic</a>.<a href="internal/atomic/stubs.go.html#line-12" class="ident">Cas</a>(&amp;<a href="#line-51" class="ident">sig</a>.<a href="#line-57" class="ident">state</a>, <a href="#line-66" class="ident">sigFixup</a>, <a href="#line-63" class="ident">sigIdle</a>) {
+						<span class="keyword">break</span> <label for="r9" class="ident">Receive</label>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Getting here, the code will</span><span class="comment">					 loop around again to sleep</span><span class="comment">					 in state sigReceiving. This</span><span class="comment">					 path is taken when</span><span class="comment">					 sigRecvPrepareForFixup()</span><span class="comment">					 has been called by another</span><span class="comment">					 thread.</span></div>
+<div class="code"><pre><code>				}
+			<span class="keyword">case</span> <a href="#line-65" class="ident">sigSending</a>:
+				<span class="keyword">if</span> <a href="../../pkg/runtime/internal/atomic.html" class="ident i0">atomic</a>.<a href="internal/atomic/stubs.go.html#line-12" class="ident">Cas</a>(&amp;<a href="#line-51" class="ident">sig</a>.<a href="#line-57" class="ident">state</a>, <a href="#line-65" class="ident">sigSending</a>, <a href="#line-63" class="ident">sigIdle</a>) {
+					<span class="keyword">break</span> <label for="r9" class="ident">Receive</label>
+				}
+			}
+		}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Incorporate updates from sender into local copy.</span></div>
+<div class="code"><pre><code>		<span class="keyword">for</span> <label for="r10" class="ident">i</label> := <span class="keyword">range</span> <a href="#line-51" class="ident">sig</a>.<a href="#line-53" class="ident">mask</a> {
+			<a href="#line-51" class="ident">sig</a>.<a href="#line-56" class="ident">recv</a>[<label for="r10" class="ident">i</label>] = <a href="../../pkg/runtime/internal/atomic.html" class="ident i0">atomic</a>.<a href="internal/atomic/atomic_amd64.go.html#line-60" class="ident">Xchg</a>(&amp;<a href="#line-51" class="ident">sig</a>.<a href="#line-53" class="ident">mask</a>[<label for="r10" class="ident">i</label>], <span class="lit-number">0</span>)
+		}
+	}
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> signalWaitUntilIdle waits until the signal delivery mechanism is idle.</span><span class="comment"> This is used to ensure that we do not drop a signal notification due</span><span class="comment"> to a race between disabling a signal and receiving a signal.</span><span class="comment"> This assumes that signal delivery has already been disabled for</span><span class="comment"> the signal(s) in question, and here we are just waiting to make sure</span><span class="comment"> that all the signals have been delivered to the user channels</span><span class="comment"> by the os/signal package.</span><span class="comment">go:linkname signalWaitUntilIdle os/signal.signalWaitUntilIdle</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Although the signals we care about have been removed from</span><span class="comment">	 sig.wanted, it is possible that another thread has received</span><span class="comment">	 a signal, has read from sig.wanted, is now updating sig.mask,</span><span class="comment">	 and has not yet woken up the processor thread. We need to wait</span><span class="comment">	 until all current signal deliveries have completed.</span></div>
+<div class="code"><pre><code>	<span class="keyword">for</span> <a href="../../pkg/runtime/internal/atomic.html" class="ident i0">atomic</a>.<a href="internal/atomic/atomic_amd64.go.html#line-16" class="ident">Load</a>(&amp;<a href="#line-51" class="ident">sig</a>.<a href="#line-58" class="ident">delivering</a>) != <span class="lit-number">0</span> {
+		<a href="proc.go.html#line-290" class="ident">Gosched</a>()
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Although WaitUntilIdle seems like the right name for this</span><span class="comment">	 function, the state we are looking for is sigReceiving, not</span><span class="comment">	 sigIdle.  The sigIdle state is really more like sigProcessing.</span></div>
+<div class="code"><pre><code>	<span class="keyword">for</span> <a href="../../pkg/runtime/internal/atomic.html" class="ident i0">atomic</a>.<a href="internal/atomic/atomic_amd64.go.html#line-16" class="ident">Load</a>(&amp;<a href="#line-51" class="ident">sig</a>.<a href="#line-57" class="ident">state</a>) != <a href="#line-64" class="ident">sigReceiving</a> {
+		<a href="proc.go.html#line-290" class="ident">Gosched</a>()
+	}
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Must only be called from a single goroutine at a time.</span><span class="comment">go:linkname signal_enable os/signal.signal_enable</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r12" class="ident"><a href="../../pkg/runtime.html#name-signal_enable" class="ident">signal_enable</a></label>(<label for="r13" class="ident">s</label> <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>) {
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> This is the first call to signal_enable. Initialize.</span></div>
+<div class="code"><pre><code>		<a href="#line-51" class="ident">sig</a>.<a href="#line-59" class="ident">inuse</a> = <a href="../../pkg/builtin.html#name-true" class="ident">true</a> <span class="comment">// enable reception of signals; cannot disable</span>
+		<span class="keyword">if</span> <a href="extern.go.html#line-253" class="ident">GOOS</a> == <span class="lit-string">"darwin"</span> || <a href="extern.go.html#line-253" class="ident">GOOS</a> == <span class="lit-string">"ios"</span> {
+			<a href="os_darwin.go.html#line-91" class="ident">sigNoteSetup</a>(&amp;<a href="#line-51" class="ident">sig</a>.<a href="#line-52" class="ident">note</a>)
+		} <span class="keyword">else</span> {
+			<a href="lock_sema.go.html#line-132" class="ident">noteclear</a>(&amp;<a href="#line-51" class="ident">sig</a>.<a href="#line-52" class="ident">note</a>)
+		}
+	}
+
+	<span class="keyword">if</span> <label for="r13" class="ident">s</label> &gt;= <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>(<a href="../../pkg/builtin.html#name-len" class="ident">len</a>(<a href="#line-51" class="ident">sig</a>.<a href="#line-54" class="ident">wanted</a>)*<span class="lit-number">32</span>) {
+		<span class="keyword">return</span>
+	}
+
+	<label for="r14" class="ident">w</label> := <a href="#line-51" class="ident">sig</a>.<a href="#line-54" class="ident">wanted</a>[<label for="r13" class="ident">s</label>/<span class="lit-number">32</span>]
+	<label for="r14" class="ident">w</label> |= <span class="lit-number">1</span> &lt;&lt; (<label for="r13" class="ident">s</label> &amp; <span class="lit-number">31</span>)
+	<a href="../../pkg/runtime/internal/atomic.html" class="ident i0">atomic</a>.<a href="internal/atomic/atomic_amd64.go.html#line-95" class="ident">Store</a>(&amp;<a href="#line-51" class="ident">sig</a>.<a href="#line-54" class="ident">wanted</a>[<label for="r13" class="ident">s</label>/<span class="lit-number">32</span>], <label for="r14" class="ident">w</label>)
+
+	<label for="r15" class="ident">i</label> := <a href="#line-51" class="ident">sig</a>.<a href="#line-55" class="ident">ignored</a>[<label for="r13" class="ident">s</label>/<span class="lit-number">32</span>]
+	<label for="r15" class="ident">i</label> &amp;^= <span class="lit-number">1</span> &lt;&lt; (<label for="r13" class="ident">s</label> &amp; <span class="lit-number">31</span>)
+	<a href="../../pkg/runtime/internal/atomic.html" class="ident i0">atomic</a>.<a href="internal/atomic/atomic_amd64.go.html#line-95" class="ident">Store</a>(&amp;<a href="#line-51" class="ident">sig</a>.<a href="#line-55" class="ident">ignored</a>[<label for="r13" class="ident">s</label>/<span class="lit-number">32</span>], <label for="r15" class="ident">i</label>)
+
+	<a href="signal_unix.go.html#line-179" class="ident">sigenable</a>(<label for="r13" class="ident">s</label>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Must only be called from a single goroutine at a time.</span><span class="comment">go:linkname signal_disable os/signal.signal_disable</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r16" class="ident"><a href="../../pkg/runtime.html#name-signal_disable" class="ident">signal_disable</a></label>(<label for="r17" class="ident">s</label> <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>) {
+	<span class="keyword">if</span> <label for="r17" class="ident">s</label> &gt;= <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>(<a href="../../pkg/builtin.html#name-len" class="ident">len</a>(<a href="#line-51" class="ident">sig</a>.<a href="#line-54" class="ident">wanted</a>)*<span class="lit-number">32</span>) {
+		<span class="keyword">return</span>
+	}
+	<a href="signal_unix.go.html#line-204" class="ident">sigdisable</a>(<label for="r17" class="ident">s</label>)
+
+	<label for="r18" class="ident">w</label> := <a href="#line-51" class="ident">sig</a>.<a href="#line-54" class="ident">wanted</a>[<label for="r17" class="ident">s</label>/<span class="lit-number">32</span>]
+	<label for="r18" class="ident">w</label> &amp;^= <span class="lit-number">1</span> &lt;&lt; (<label for="r17" class="ident">s</label> &amp; <span class="lit-number">31</span>)
+	<a href="../../pkg/runtime/internal/atomic.html" class="ident i0">atomic</a>.<a href="internal/atomic/atomic_amd64.go.html#line-95" class="ident">Store</a>(&amp;<a href="#line-51" class="ident">sig</a>.<a href="#line-54" class="ident">wanted</a>[<label for="r17" class="ident">s</label>/<span class="lit-number">32</span>], <label for="r18" class="ident">w</label>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Must only be called from a single goroutine at a time.</span><span class="comment">go:linkname signal_ignore os/signal.signal_ignore</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r19" class="ident"><a href="../../pkg/runtime.html#name-signal_ignore" class="ident">signal_ignore</a></label>(<label for="r20" class="ident">s</label> <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>) {
+	<span class="keyword">if</span> <label for="r20" class="ident">s</label> &gt;= <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>(<a href="../../pkg/builtin.html#name-len" class="ident">len</a>(<a href="#line-51" class="ident">sig</a>.<a href="#line-54" class="ident">wanted</a>)*<span class="lit-number">32</span>) {
+		<span class="keyword">return</span>
+	}
+	<a href="signal_unix.go.html#line-233" class="ident">sigignore</a>(<label for="r20" class="ident">s</label>)
+
+	<label for="r21" class="ident">w</label> := <a href="#line-51" class="ident">sig</a>.<a href="#line-54" class="ident">wanted</a>[<label for="r20" class="ident">s</label>/<span class="lit-number">32</span>]
+	<label for="r21" class="ident">w</label> &amp;^= <span class="lit-number">1</span> &lt;&lt; (<label for="r20" class="ident">s</label> &amp; <span class="lit-number">31</span>)
+	<a href="../../pkg/runtime/internal/atomic.html" class="ident i0">atomic</a>.<a href="internal/atomic/atomic_amd64.go.html#line-95" class="ident">Store</a>(&amp;<a href="#line-51" class="ident">sig</a>.<a href="#line-54" class="ident">wanted</a>[<label for="r20" class="ident">s</label>/<span class="lit-number">32</span>], <label for="r21" class="ident">w</label>)
+
+	<label for="r22" class="ident">i</label> := <a href="#line-51" class="ident">sig</a>.<a href="#line-55" class="ident">ignored</a>[<label for="r20" class="ident">s</label>/<span class="lit-number">32</span>]
+	<label for="r22" class="ident">i</label> |= <span class="lit-number">1</span> &lt;&lt; (<label for="r20" class="ident">s</label> &amp; <span class="lit-number">31</span>)
+	<a href="../../pkg/runtime/internal/atomic.html" class="ident i0">atomic</a>.<a href="internal/atomic/atomic_amd64.go.html#line-95" class="ident">Store</a>(&amp;<a href="#line-51" class="ident">sig</a>.<a href="#line-55" class="ident">ignored</a>[<label for="r20" class="ident">s</label>/<span class="lit-number">32</span>], <label for="r22" class="ident">i</label>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> sigInitIgnored marks the signal as already ignored. This is called at</span><span class="comment"> program start by initsig. In a shared library initsig is called by</span><span class="comment"> libpreinit, so the runtime may not be initialized yet.</span><span class="comment">go:nosplit</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r23" class="ident"><a href="../../pkg/runtime.html#name-sigInitIgnored" class="ident">sigInitIgnored</a></label>(<label for="r24" class="ident">s</label> <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>) {
+	<label for="r25" class="ident">i</label> := <a href="#line-51" class="ident">sig</a>.<a href="#line-55" class="ident">ignored</a>[<label for="r24" class="ident">s</label>/<span class="lit-number">32</span>]
+	<label for="r25" class="ident">i</label> |= <span class="lit-number">1</span> &lt;&lt; (<label for="r24" class="ident">s</label> &amp; <span class="lit-number">31</span>)
+	<a href="../../pkg/runtime/internal/atomic.html" class="ident i0">atomic</a>.<a href="internal/atomic/atomic_amd64.go.html#line-95" class="ident">Store</a>(&amp;<a href="#line-51" class="ident">sig</a>.<a href="#line-55" class="ident">ignored</a>[<label for="r24" class="ident">s</label>/<span class="lit-number">32</span>], <label for="r25" class="ident">i</label>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Checked by signal handlers.</span><span class="comment">go:linkname signal_ignored os/signal.signal_ignored</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r26" class="ident"><a href="../../pkg/runtime.html#name-signal_ignored" class="ident">signal_ignored</a></label>(<label for="r27" class="ident">s</label> <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>) <a href="../../pkg/builtin.html#name-bool" class="ident">bool</a> {
+	<label for="r28" class="ident">i</label> := <a href="../../pkg/runtime/internal/atomic.html" class="ident i0">atomic</a>.<a href="internal/atomic/atomic_amd64.go.html#line-16" class="ident">Load</a>(&amp;<a href="#line-51" class="ident">sig</a>.<a href="#line-55" class="ident">ignored</a>[<label for="r27" class="ident">s</label>/<span class="lit-number">32</span>])
+	<span class="keyword">return</span> <label for="r28" class="ident">i</label>&amp;(<span class="lit-number">1</span>&lt;&lt;(<label for="r27" class="ident">s</label>&amp;<span class="lit-number">31</span>)) != <span class="lit-number">0</span>
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

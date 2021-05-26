@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: proc_limits.go in package github.com/prometheus/procfs</title>
+<link href="../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	proc_limits.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../pkg/github.com/prometheus/procfs.html">github.com/prometheus/procfs</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1,
+input[id=i2]:checked ~pre .i2,
+input[id=i3]:checked ~pre .i3,
+input[id=i4]:checked ~pre .i4
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<input id="i2" type="radio" name="i"/>
+<input id="i3" type="radio" name="i"/>
+<input id="i4" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2018 The Prometheus Authors</span><span class="comment"> Licensed under the Apache License, Version 2.0 (the "License");</span><span class="comment"> you may not use this file except in compliance with the License.</span><span class="comment"> You may obtain a copy of the License at</span><span class="comment"></span><span class="comment"> http://www.apache.org/licenses/LICENSE-2.0</span><span class="comment"></span><span class="comment"> Unless required by applicable law or agreed to in writing, software</span><span class="comment"> distributed under the License is distributed on an "AS IS" BASIS,</span><span class="comment"> WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span><span class="comment"> See the License for the specific language governing permissions and</span><span class="comment"> limitations under the License.</span></div>
+<div class="code"><pre><code>
+<span class="keyword">package</span> procfs
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"bufio"</span></label>
+	<label for="i1"><span class="lit-string i1">"fmt"</span></label>
+	<label for="i2"><span class="lit-string i2">"os"</span></label>
+	<label for="i3"><span class="lit-string i3">"regexp"</span></label>
+	<label for="i4"><span class="lit-string i4">"strconv"</span></label>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ProcLimits represents the soft limits for each of the process's resource</span><span class="comment"> limits. For more information see getrlimit(2):</span><span class="comment"> http://man7.org/linux/man-pages/man2/getrlimit.2.html.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> CPU time limit in seconds.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Maximum size of files that the process may create.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Maximum size of the process's data segment (initialized data,</span><span class="comment">	 uninitialized data, and heap).</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Maximum size of the process stack in bytes.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Maximum size of a core file.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Limit of the process's resident set in pages.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Maximum number of processes that can be created for the real user ID of</span><span class="comment">	 the calling process.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Value one greater than the maximum file descriptor number that can be</span><span class="comment">	 opened by this process.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Maximum number of bytes of memory that may be locked into RAM.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Maximum size of the process's virtual memory address space in bytes.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Limit on the combined number of flock(2) locks and fcntl(2) leases that</span><span class="comment">	 this process may establish.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Limit of signals that may be queued for the real user ID of the calling</span><span class="comment">	 process.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Limit on the number of bytes that can be allocated for POSIX message</span><span class="comment">	 queues for the real user ID of the calling process.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Limit of the nice priority set using setpriority(2) or nice(2).</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Limit of the real-time priority set using sched_setscheduler(2) or</span><span class="comment">	 sched_setparam(2).</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Limit (in microseconds) on the amount of CPU time that a process</span><span class="comment">	 scheduled under a real-time scheduling policy may consume without making</span><span class="comment">	 a blocking system call.</span></div>
+<div class="code"><pre><code>	<a href="../../../../use/github.com/prometheus/procfs..ProcLimits.RealtimeTimeout.html" class="ident">RealtimeTimeout</a> <a href="../../../../pkg/builtin.html#name-int64" class="ident">int64</a>
+}
+
+<span class="keyword">const</span> (
+	<a href="../../../../pkg/github.com/prometheus/procfs.html#name-limitsFields" class="ident">limitsFields</a>    = <span class="lit-number">3</span>
+	<a href="../../../../pkg/github.com/prometheus/procfs.html#name-limitsUnlimited" class="ident">limitsUnlimited</a> = <span class="lit-string">"unlimited"</span>
+)
+
+<span class="keyword">var</span> (
+	<a href="../../../../pkg/github.com/prometheus/procfs.html#name-limitsDelimiter" class="ident">limitsDelimiter</a> = <a href="../../../../pkg/regexp.html" class="ident i3">regexp</a>.<a href="../../../regexp/regexp.go.html#line-308" class="ident">MustCompile</a>(<span class="lit-string">"  +"</span>)
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> NewLimits returns the current soft limits of the process.</span><span class="comment"></span><span class="comment"> Deprecated: use p.Limits() instead</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r0" class="ident">p</label> <a href="proc.go.html#line-29" class="ident">Proc</a>) <label for="r1" class="ident"><a href="../../../../use/github.com/prometheus/procfs..Proc.NewLimits.html" class="ident">NewLimits</a></label>() (<a href="#line-27" class="ident">ProcLimits</a>, <a href="../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<span class="keyword">return</span> <label for="r0" class="ident">p</label>.<a href="#line-88" class="ident">Limits</a>()
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Limits returns the current soft limits of the process.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r2" class="ident">p</label> <a href="proc.go.html#line-29" class="ident">Proc</a>) <label for="r3" class="ident"><a href="../../../../use/github.com/prometheus/procfs..Proc.Limits.html" class="ident">Limits</a></label>() (<a href="#line-27" class="ident">ProcLimits</a>, <a href="../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<label for="r4" class="ident">f</label>, <label for="r5" class="ident">err</label> := <a href="../../../../pkg/os.html" class="ident i2">os</a>.<a href="../../../os/file.go.html#line-310" class="ident">Open</a>(<label for="r2" class="ident">p</label>.<a href="proc.go.html#line-266" class="ident">path</a>(<span class="lit-string">"limits"</span>))
+	<span class="keyword">if</span> <label for="r5" class="ident">err</label> != <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="#line-27" class="ident">ProcLimits</a>{}, <label for="r5" class="ident">err</label>
+	}
+	<span class="keyword">defer</span> <label for="r4" class="ident">f</label>.<a href="../../../os/file_posix.go.html#line-21" class="ident">Close</a>()
+
+	<span class="keyword">var</span> (
+		<label for="r6" class="ident">l</label> = <a href="#line-27" class="ident">ProcLimits</a>{}
+		<label for="r7" class="ident">s</label> = <a href="../../../../pkg/bufio.html" class="ident i0">bufio</a>.<a href="../../../bufio/scan.go.html#line-87" class="ident">NewScanner</a>(<label for="r4" class="ident">f</label>)
+	)
+	<span class="keyword">for</span> <label for="r7" class="ident">s</label>.<a href="../../../bufio/scan.go.html#line-135" class="ident">Scan</a>() {
+		<label for="r8" class="ident">fields</label> := <a href="#line-77" class="ident">limitsDelimiter</a>.<a href="../../../regexp/regexp.go.html#line-1244" class="ident">Split</a>(<label for="r7" class="ident">s</label>.<a href="../../../bufio/scan.go.html#line-112" class="ident">Text</a>(), <a href="#line-72" class="ident">limitsFields</a>)
+		<span class="keyword">if</span> <a href="../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r8" class="ident">fields</label>) != <a href="#line-72" class="ident">limitsFields</a> {
+			<span class="keyword">return</span> <a href="#line-27" class="ident">ProcLimits</a>{}, <a href="../../../../pkg/fmt.html" class="ident i1">fmt</a>.<a href="../../../fmt/errors.go.html#line-17" class="ident">Errorf</a>(
+				<span class="lit-string">"couldn't parse %s line %s"</span>, <label for="r4" class="ident">f</label>.<a href="../../../os/file.go.html#line-55" class="ident">Name</a>(), <label for="r7" class="ident">s</label>.<a href="../../../bufio/scan.go.html#line-112" class="ident">Text</a>())
+		}
+
+		<span class="keyword">switch</span> <label for="r8" class="ident">fields</label>[<span class="lit-number">0</span>] {
+		<span class="keyword">case</span> <span class="lit-string">"Max cpu time"</span>:
+			<label for="r6" class="ident">l</label>.<a href="#line-29" class="ident">CPUTime</a>, <label for="r5" class="ident">err</label> = <a href="#line-148" class="ident">parseInt</a>(<label for="r8" class="ident">fields</label>[<span class="lit-number">1</span>])
+		<span class="keyword">case</span> <span class="lit-string">"Max file size"</span>:
+			<label for="r6" class="ident">l</label>.<a href="#line-31" class="ident">FileSize</a>, <label for="r5" class="ident">err</label> = <a href="#line-148" class="ident">parseInt</a>(<label for="r8" class="ident">fields</label>[<span class="lit-number">1</span>])
+		<span class="keyword">case</span> <span class="lit-string">"Max data size"</span>:
+			<label for="r6" class="ident">l</label>.<a href="#line-34" class="ident">DataSize</a>, <label for="r5" class="ident">err</label> = <a href="#line-148" class="ident">parseInt</a>(<label for="r8" class="ident">fields</label>[<span class="lit-number">1</span>])
+		<span class="keyword">case</span> <span class="lit-string">"Max stack size"</span>:
+			<label for="r6" class="ident">l</label>.<a href="#line-36" class="ident">StackSize</a>, <label for="r5" class="ident">err</label> = <a href="#line-148" class="ident">parseInt</a>(<label for="r8" class="ident">fields</label>[<span class="lit-number">1</span>])
+		<span class="keyword">case</span> <span class="lit-string">"Max core file size"</span>:
+			<label for="r6" class="ident">l</label>.<a href="#line-38" class="ident">CoreFileSize</a>, <label for="r5" class="ident">err</label> = <a href="#line-148" class="ident">parseInt</a>(<label for="r8" class="ident">fields</label>[<span class="lit-number">1</span>])
+		<span class="keyword">case</span> <span class="lit-string">"Max resident set"</span>:
+			<label for="r6" class="ident">l</label>.<a href="#line-40" class="ident">ResidentSet</a>, <label for="r5" class="ident">err</label> = <a href="#line-148" class="ident">parseInt</a>(<label for="r8" class="ident">fields</label>[<span class="lit-number">1</span>])
+		<span class="keyword">case</span> <span class="lit-string">"Max processes"</span>:
+			<label for="r6" class="ident">l</label>.<a href="#line-43" class="ident">Processes</a>, <label for="r5" class="ident">err</label> = <a href="#line-148" class="ident">parseInt</a>(<label for="r8" class="ident">fields</label>[<span class="lit-number">1</span>])
+		<span class="keyword">case</span> <span class="lit-string">"Max open files"</span>:
+			<label for="r6" class="ident">l</label>.<a href="#line-46" class="ident">OpenFiles</a>, <label for="r5" class="ident">err</label> = <a href="#line-148" class="ident">parseInt</a>(<label for="r8" class="ident">fields</label>[<span class="lit-number">1</span>])
+		<span class="keyword">case</span> <span class="lit-string">"Max locked memory"</span>:
+			<label for="r6" class="ident">l</label>.<a href="#line-48" class="ident">LockedMemory</a>, <label for="r5" class="ident">err</label> = <a href="#line-148" class="ident">parseInt</a>(<label for="r8" class="ident">fields</label>[<span class="lit-number">1</span>])
+		<span class="keyword">case</span> <span class="lit-string">"Max address space"</span>:
+			<label for="r6" class="ident">l</label>.<a href="#line-50" class="ident">AddressSpace</a>, <label for="r5" class="ident">err</label> = <a href="#line-148" class="ident">parseInt</a>(<label for="r8" class="ident">fields</label>[<span class="lit-number">1</span>])
+		<span class="keyword">case</span> <span class="lit-string">"Max file locks"</span>:
+			<label for="r6" class="ident">l</label>.<a href="#line-53" class="ident">FileLocks</a>, <label for="r5" class="ident">err</label> = <a href="#line-148" class="ident">parseInt</a>(<label for="r8" class="ident">fields</label>[<span class="lit-number">1</span>])
+		<span class="keyword">case</span> <span class="lit-string">"Max pending signals"</span>:
+			<label for="r6" class="ident">l</label>.<a href="#line-56" class="ident">PendingSignals</a>, <label for="r5" class="ident">err</label> = <a href="#line-148" class="ident">parseInt</a>(<label for="r8" class="ident">fields</label>[<span class="lit-number">1</span>])
+		<span class="keyword">case</span> <span class="lit-string">"Max msgqueue size"</span>:
+			<label for="r6" class="ident">l</label>.<a href="#line-59" class="ident">MsqqueueSize</a>, <label for="r5" class="ident">err</label> = <a href="#line-148" class="ident">parseInt</a>(<label for="r8" class="ident">fields</label>[<span class="lit-number">1</span>])
+		<span class="keyword">case</span> <span class="lit-string">"Max nice priority"</span>:
+			<label for="r6" class="ident">l</label>.<a href="#line-61" class="ident">NicePriority</a>, <label for="r5" class="ident">err</label> = <a href="#line-148" class="ident">parseInt</a>(<label for="r8" class="ident">fields</label>[<span class="lit-number">1</span>])
+		<span class="keyword">case</span> <span class="lit-string">"Max realtime priority"</span>:
+			<label for="r6" class="ident">l</label>.<a href="#line-64" class="ident">RealtimePriority</a>, <label for="r5" class="ident">err</label> = <a href="#line-148" class="ident">parseInt</a>(<label for="r8" class="ident">fields</label>[<span class="lit-number">1</span>])
+		<span class="keyword">case</span> <span class="lit-string">"Max realtime timeout"</span>:
+			<label for="r6" class="ident">l</label>.<a href="#line-68" class="ident">RealtimeTimeout</a>, <label for="r5" class="ident">err</label> = <a href="#line-148" class="ident">parseInt</a>(<label for="r8" class="ident">fields</label>[<span class="lit-number">1</span>])
+		}
+		<span class="keyword">if</span> <label for="r5" class="ident">err</label> != <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<span class="keyword">return</span> <a href="#line-27" class="ident">ProcLimits</a>{}, <label for="r5" class="ident">err</label>
+		}
+	}
+
+	<span class="keyword">return</span> <label for="r6" class="ident">l</label>, <label for="r7" class="ident">s</label>.<a href="../../../bufio/scan.go.html#line-96" class="ident">Err</a>()
+}
+
+<span class="keyword">func</span> <label for="r9" class="ident"><a href="../../../../pkg/github.com/prometheus/procfs.html#name-parseInt" class="ident">parseInt</a></label>(<label for="r10" class="ident">s</label> <a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>) (<a href="../../../../pkg/builtin.html#name-int64" class="ident">int64</a>, <a href="../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<span class="keyword">if</span> <label for="r10" class="ident">s</label> == <a href="#line-73" class="ident">limitsUnlimited</a> {
+		<span class="keyword">return</span> -<span class="lit-number">1</span>, <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+	}
+	<label for="r11" class="ident">i</label>, <label for="r12" class="ident">err</label> := <a href="../../../../pkg/strconv.html" class="ident i4">strconv</a>.<a href="../../../strconv/atoi.go.html#line-179" class="ident">ParseInt</a>(<label for="r10" class="ident">s</label>, <span class="lit-number">10</span>, <span class="lit-number">64</span>)
+	<span class="keyword">if</span> <label for="r12" class="ident">err</label> != <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <span class="lit-number">0</span>, <a href="../../../../pkg/fmt.html" class="ident i1">fmt</a>.<a href="../../../fmt/errors.go.html#line-17" class="ident">Errorf</a>(<span class="lit-string">"couldn't parse value %s: %s"</span>, <label for="r10" class="ident">s</label>, <label for="r12" class="ident">err</label>)
+	}
+	<span class="keyword">return</span> <label for="r11" class="ident">i</label>, <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: chunkreader.go in package github.com/jackc/chunkreader/v2</title>
+<link href="../../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	chunkreader.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../../pkg/github.com/jackc/chunkreader/v2.html">github.com/jackc/chunkreader/v2</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16],
+input[id=r17]:checked ~pre label[for=r17],
+input[id=r18]:checked ~pre label[for=r18],
+input[id=r19]:checked ~pre label[for=r19],
+input[id=r20]:checked ~pre label[for=r20],
+input[id=r21]:checked ~pre label[for=r21],
+input[id=r22]:checked ~pre label[for=r22],
+input[id=r23]:checked ~pre label[for=r23],
+input[id=r24]:checked ~pre label[for=r24],
+input[id=r25]:checked ~pre label[for=r25]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="r17" type="radio" name="g"/>
+<input id="r18" type="radio" name="g"/>
+<input id="r19" type="radio" name="g"/>
+<input id="r20" type="radio" name="g"/>
+<input id="r21" type="radio" name="g"/>
+<input id="r22" type="radio" name="g"/>
+<input id="r23" type="radio" name="g"/>
+<input id="r24" type="radio" name="g"/>
+<input id="r25" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Package chunkreader provides an io.Reader wrapper that minimizes IO reads and memory allocations.</span></div>
+<div class="code"><pre><code><span class="keyword">package</span> chunkreader
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"io"</span></label>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ChunkReader is a io.Reader wrapper that minimizes IO reads and memory allocations. It allocates memory in chunks and</span><span class="comment"> will read as much as will fit in the current buffer in a single call regardless of how large a read is actually</span><span class="comment"> requested. The memory returned via Next is owned by the caller. This avoids the need for an additional copy.</span><span class="comment"></span><span class="comment"> The downside of this approach is that a large buffer can be pinned in memory even if only a small slice is</span><span class="comment"> referenced. For example, an entire 4096 byte block could be pinned in memory by even a 1 byte slice. In these rare</span><span class="comment"> cases it would be advantageous to copy the bytes to another slice.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../pkg/github.com/jackc/chunkreader/v2.html#name-ChunkReader" class="ident">ChunkReader</a> <span class="keyword">struct</span> {
+	<a href="../../../../../use/github.com/jackc/chunkreader/v2..ChunkReader.r*45434.html" class="ident">r</a> <a href="../../../../../pkg/io.html" class="ident i0">io</a>.<a href="../../../../io/io.go.html#line-83" class="ident">Reader</a>
+
+	<a href="../../../../../use/github.com/jackc/chunkreader/v2..ChunkReader.buf*3ef31.html" class="ident">buf</a>    []<a href="../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>
+	<a href="../../../../../use/github.com/jackc/chunkreader/v2..ChunkReader.rp*796e8.html" class="ident">rp</a>, <a href="../../../../../use/github.com/jackc/chunkreader/v2..ChunkReader.wp*bd2b8.html" class="ident">wp</a> <a href="../../../../../pkg/builtin.html#name-int" class="ident">int</a> <span class="comment">// buf read position and write position</span>
+
+	<a href="../../../../../use/github.com/jackc/chunkreader/v2..ChunkReader.config*b7960.html" class="ident">config</a> <a href="#line-25" class="ident">Config</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Config contains configuration parameters for ChunkReader.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../pkg/github.com/jackc/chunkreader/v2.html#name-Config" class="ident">Config</a> <span class="keyword">struct</span> {
+	<a href="../../../../../use/github.com/jackc/chunkreader/v2..Config.MinBufLen.html" class="ident">MinBufLen</a> <a href="../../../../../pkg/builtin.html#name-int" class="ident">int</a> <span class="comment">// Minimum buffer length</span>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> New creates and returns a new ChunkReader for r with default configuration.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r0" class="ident"><a href="../../../../../pkg/github.com/jackc/chunkreader/v2.html#name-New" class="ident">New</a></label>(<label for="r1" class="ident">r</label> <a href="../../../../../pkg/io.html" class="ident i0">io</a>.<a href="../../../../io/io.go.html#line-83" class="ident">Reader</a>) *<a href="#line-15" class="ident">ChunkReader</a> {
+	<label for="r2" class="ident">cr</label>, <label for="r3" class="ident">err</label> := <a href="#line-40" class="ident">NewConfig</a>(<label for="r1" class="ident">r</label>, <a href="#line-25" class="ident">Config</a>{})
+	<span class="keyword">if</span> <label for="r3" class="ident">err</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<a href="../../../../../pkg/builtin.html#name-panic" class="ident">panic</a>(<span class="lit-string">"default config can't be bad"</span>)
+	}
+
+	<span class="keyword">return</span> <label for="r2" class="ident">cr</label>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> NewConfig creates and a new ChunkReader for r configured by config.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r4" class="ident"><a href="../../../../../pkg/github.com/jackc/chunkreader/v2.html#name-NewConfig" class="ident">NewConfig</a></label>(<label for="r5" class="ident">r</label> <a href="../../../../../pkg/io.html" class="ident i0">io</a>.<a href="../../../../io/io.go.html#line-83" class="ident">Reader</a>, <label for="r6" class="ident">config</label> <a href="#line-25" class="ident">Config</a>) (*<a href="#line-15" class="ident">ChunkReader</a>, <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> By historical reasons Postgres currently has 8KB send buffer inside,</span><span class="comment">		 so here we want to have at least the same size buffer.</span><span class="comment">		 @see https://github.com/postgres/postgres/blob/249d64999615802752940e017ee5166e726bc7cd/src/backend/libpq/pqcomm.c#L134</span><span class="comment">		 @see https://www.postgresql.org/message-id/0cdc5485-cb3c-5e16-4a46-e3b2f7a41322%40ya.ru</span></div>
+<div class="code"><pre><code>		<label for="r6" class="ident">config</label>.<a href="#line-26" class="ident">MinBufLen</a> = <span class="lit-number">8192</span>
+	}
+
+	<span class="keyword">return</span> &amp;<a href="#line-15" class="ident">ChunkReader</a>{
+		<a href="#line-16" class="ident">r</a>:      <label for="r5" class="ident">r</label>,
+		<a href="#line-18" class="ident">buf</a>:    <a href="../../../../../pkg/builtin.html#name-make" class="ident">make</a>([]<a href="../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>, <label for="r6" class="ident">config</label>.<a href="#line-26" class="ident">MinBufLen</a>),
+		<a href="#line-21" class="ident">config</a>: <label for="r6" class="ident">config</label>,
+	}, <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Next returns buf filled with the next n bytes. The caller gains ownership of buf. It is not necessary to make a copy</span><span class="comment"> of buf. If an error occurs, buf will be nil.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> n bytes already in buf</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> (<label for="r7" class="ident">r</label>.<a href="#line-19" class="ident">wp</a> - <label for="r7" class="ident">r</label>.<a href="#line-19" class="ident">rp</a>) &gt;= <label for="r9" class="ident">n</label> {
+		<label for="r10" class="ident">buf</label> = <label for="r7" class="ident">r</label>.<a href="#line-18" class="ident">buf</a>[<label for="r7" class="ident">r</label>.<a href="#line-19" class="ident">rp</a> : <label for="r7" class="ident">r</label>.<a href="#line-19" class="ident">rp</a>+<label for="r9" class="ident">n</label>]
+		<label for="r7" class="ident">r</label>.<a href="#line-19" class="ident">rp</a> += <label for="r9" class="ident">n</label>
+		<span class="keyword">return</span> <label for="r10" class="ident">buf</label>, <label for="r11" class="ident">err</label>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> available space in buf is less than n</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> <a href="../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r7" class="ident">r</label>.<a href="#line-18" class="ident">buf</a>) &lt; <label for="r9" class="ident">n</label> {
+		<label for="r7" class="ident">r</label>.<a href="#line-100" class="ident">copyBufContents</a>(<label for="r7" class="ident">r</label>.<a href="#line-93" class="ident">newBuf</a>(<label for="r9" class="ident">n</label>))
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> buf is large enough, but need to shift filled area to start to make enough contiguous space</span></div>
+<div class="code"><pre><code>	<label for="r12" class="ident">minReadCount</label> := <label for="r9" class="ident">n</label> - (<label for="r7" class="ident">r</label>.<a href="#line-19" class="ident">wp</a> - <label for="r7" class="ident">r</label>.<a href="#line-19" class="ident">rp</a>)
+	<span class="keyword">if</span> (<a href="../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r7" class="ident">r</label>.<a href="#line-18" class="ident">buf</a>) - <label for="r7" class="ident">r</label>.<a href="#line-19" class="ident">wp</a>) &lt; <label for="r12" class="ident">minReadCount</label> {
+		<label for="r13" class="ident">newBuf</label> := <label for="r7" class="ident">r</label>.<a href="#line-93" class="ident">newBuf</a>(<label for="r9" class="ident">n</label>)
+		<label for="r7" class="ident">r</label>.<a href="#line-100" class="ident">copyBufContents</a>(<label for="r13" class="ident">newBuf</label>)
+	}
+
+	<span class="keyword">if</span> <label for="r14" class="ident">err</label> := <label for="r7" class="ident">r</label>.<a href="#line-87" class="ident">appendAtLeast</a>(<label for="r12" class="ident">minReadCount</label>); <label for="r14" class="ident">err</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <label for="r14" class="ident">err</label>
+	}
+
+	<label for="r10" class="ident">buf</label> = <label for="r7" class="ident">r</label>.<a href="#line-18" class="ident">buf</a>[<label for="r7" class="ident">r</label>.<a href="#line-19" class="ident">rp</a> : <label for="r7" class="ident">r</label>.<a href="#line-19" class="ident">rp</a>+<label for="r9" class="ident">n</label>]
+	<label for="r7" class="ident">r</label>.<a href="#line-19" class="ident">rp</a> += <label for="r9" class="ident">n</label>
+	<span class="keyword">return</span> <label for="r10" class="ident">buf</label>, <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+}
+
+<span class="keyword">func</span> (<label for="r15" class="ident">r</label> *<a href="#line-15" class="ident">ChunkReader</a>) <label for="r16" class="ident"><a href="../../../../../use/github.com/jackc/chunkreader/v2..ChunkReader.appendAtLeast*b5546.html" class="ident">appendAtLeast</a></label>(<label for="r17" class="ident">fillLen</label> <a href="../../../../../pkg/builtin.html#name-int" class="ident">int</a>) <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<label for="r18" class="ident">n</label>, <label for="r19" class="ident">err</label> := <a href="../../../../../pkg/io.html" class="ident i0">io</a>.<a href="../../../../io/io.go.html#line-322" class="ident">ReadAtLeast</a>(<label for="r15" class="ident">r</label>.<a href="#line-16" class="ident">r</a>, <label for="r15" class="ident">r</label>.<a href="#line-18" class="ident">buf</a>[<label for="r15" class="ident">r</label>.<a href="#line-19" class="ident">wp</a>:], <label for="r17" class="ident">fillLen</label>)
+	<label for="r15" class="ident">r</label>.<a href="#line-19" class="ident">wp</a> += <label for="r18" class="ident">n</label>
+	<span class="keyword">return</span> <label for="r19" class="ident">err</label>
+}
+
+<span class="keyword">func</span> (<label for="r20" class="ident">r</label> *<a href="#line-15" class="ident">ChunkReader</a>) <label for="r21" class="ident"><a href="../../../../../use/github.com/jackc/chunkreader/v2..ChunkReader.newBuf*16c5d.html" class="ident">newBuf</a></label>(<label for="r22" class="ident">size</label> <a href="../../../../../pkg/builtin.html#name-int" class="ident">int</a>) []<a href="../../../../../pkg/builtin.html#name-byte" class="ident">byte</a> {
+	<span class="keyword">if</span> <label for="r22" class="ident">size</label> &lt; <label for="r20" class="ident">r</label>.<a href="#line-21" class="ident">config</a>.<a href="#line-26" class="ident">MinBufLen</a> {
+		<label for="r22" class="ident">size</label> = <label for="r20" class="ident">r</label>.<a href="#line-21" class="ident">config</a>.<a href="#line-26" class="ident">MinBufLen</a>
+	}
+	<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-make" class="ident">make</a>([]<a href="../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>, <label for="r22" class="ident">size</label>)
+}
+
+<span class="keyword">func</span> (<label for="r23" class="ident">r</label> *<a href="#line-15" class="ident">ChunkReader</a>) <label for="r24" class="ident"><a href="../../../../../use/github.com/jackc/chunkreader/v2..ChunkReader.copyBufContents*4368e.html" class="ident">copyBufContents</a></label>(<label for="r25" class="ident">dest</label> []<a href="../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>) {
+	<label for="r23" class="ident">r</label>.<a href="#line-19" class="ident">wp</a> = <a href="../../../../../pkg/builtin.html#name-copy" class="ident">copy</a>(<label for="r25" class="ident">dest</label>, <label for="r23" class="ident">r</label>.<a href="#line-18" class="ident">buf</a>[<label for="r23" class="ident">r</label>.<a href="#line-19" class="ident">rp</a>:<label for="r23" class="ident">r</label>.<a href="#line-19" class="ident">wp</a>])
+	<label for="r23" class="ident">r</label>.<a href="#line-19" class="ident">rp</a> = <span class="lit-number">0</span>
+	<label for="r23" class="ident">r</label>.<a href="#line-18" class="ident">buf</a> = <label for="r25" class="ident">dest</label>
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

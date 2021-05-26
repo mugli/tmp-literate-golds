@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: tables.go in package encoding/json</title>
+<link href="../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	tables.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../pkg/encoding/json.html">encoding/json</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0
+{background: brown; color: #eed;}
+</style><input id="i0" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2016 The Go Authors. All rights reserved.</span><span class="comment"> Use of this source code is governed by a BSD-style</span><span class="comment"> license that can be found in the LICENSE file.</span></div>
+<div class="code"><pre><code>
+<span class="keyword">package</span> json
+
+<span class="keyword">import</span> <label for="i0"><span class="lit-string i0">"unicode/utf8"</span></label>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> safeSet holds the value true if the ASCII character with the given array</span><span class="comment"> position can be represented inside a JSON string without any further</span><span class="comment"> escaping.</span><span class="comment"></span><span class="comment"> All values are true except for the ASCII control characters (0-31), the</span><span class="comment"> double quote ("), and the backslash character ("\").</span></div>
+<div class="code"><pre><code><span class="keyword">var</span> <a href="../../../pkg/encoding/json.html#name-safeSet" class="ident">safeSet</a> = [<a href="../../../pkg/unicode/utf8.html" class="ident i0">utf8</a>.<a href="../../unicode/utf8/utf8.go.html#line-17" class="ident">RuneSelf</a>]<a href="../../../pkg/builtin.html#name-bool" class="ident">bool</a>{
+	<span class="lit-number">' '</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'!'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'"'</span>:      <a href="../../../pkg/builtin.html#name-false" class="ident">false</a>,
+	<span class="lit-number">'#'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'$'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'%'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'&amp;'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'\''</span>:     <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'('</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">')'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'*'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'+'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">','</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'-'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'.'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'/'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'0'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'1'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'2'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'3'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'4'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'5'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'6'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'7'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'8'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'9'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">':'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">';'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'&lt;'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'='</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'&gt;'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'?'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'@'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'A'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'B'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'C'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'D'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'E'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'F'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'G'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'H'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'I'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'J'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'K'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'L'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'M'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'N'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'O'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'P'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'Q'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'R'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'S'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'T'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'U'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'V'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'W'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'X'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'Y'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'Z'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'['</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'\\'</span>:     <a href="../../../pkg/builtin.html#name-false" class="ident">false</a>,
+	<span class="lit-number">']'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'^'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'_'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'`'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'a'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'b'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'c'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'d'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'e'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'f'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'g'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'h'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'i'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'j'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'k'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'l'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'m'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'n'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'o'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'p'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'q'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'r'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'s'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'t'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'u'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'v'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'w'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'x'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'y'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'z'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'{'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'|'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'}'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'~'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'\u007f'</span>: <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> htmlSafeSet holds the value true if the ASCII character with the given</span><span class="comment"> array position can be safely represented inside a JSON string, embedded</span><span class="comment"> inside of HTML &lt;script&gt; tags, without any additional escaping.</span><span class="comment"></span><span class="comment"> All values are true except for the ASCII control characters (0-31), the</span><span class="comment"> double quote ("), the backslash character ("\"), HTML opening and closing</span><span class="comment"> tags ("&lt;" and "&gt;"), and the ampersand ("&amp;").</span></div>
+<div class="code"><pre><code><span class="keyword">var</span> <a href="../../../pkg/encoding/json.html#name-htmlSafeSet" class="ident">htmlSafeSet</a> = [<a href="../../../pkg/unicode/utf8.html" class="ident i0">utf8</a>.<a href="../../unicode/utf8/utf8.go.html#line-17" class="ident">RuneSelf</a>]<a href="../../../pkg/builtin.html#name-bool" class="ident">bool</a>{
+	<span class="lit-number">' '</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'!'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'"'</span>:      <a href="../../../pkg/builtin.html#name-false" class="ident">false</a>,
+	<span class="lit-number">'#'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'$'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'%'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'&amp;'</span>:      <a href="../../../pkg/builtin.html#name-false" class="ident">false</a>,
+	<span class="lit-number">'\''</span>:     <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'('</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">')'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'*'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'+'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">','</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'-'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'.'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'/'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'0'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'1'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'2'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'3'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'4'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'5'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'6'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'7'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'8'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'9'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">':'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">';'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'&lt;'</span>:      <a href="../../../pkg/builtin.html#name-false" class="ident">false</a>,
+	<span class="lit-number">'='</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'&gt;'</span>:      <a href="../../../pkg/builtin.html#name-false" class="ident">false</a>,
+	<span class="lit-number">'?'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'@'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'A'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'B'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'C'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'D'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'E'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'F'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'G'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'H'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'I'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'J'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'K'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'L'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'M'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'N'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'O'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'P'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'Q'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'R'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'S'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'T'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'U'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'V'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'W'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'X'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'Y'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'Z'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'['</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'\\'</span>:     <a href="../../../pkg/builtin.html#name-false" class="ident">false</a>,
+	<span class="lit-number">']'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'^'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'_'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'`'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'a'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'b'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'c'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'d'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'e'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'f'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'g'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'h'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'i'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'j'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'k'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'l'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'m'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'n'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'o'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'p'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'q'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'r'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'s'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'t'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'u'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'v'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'w'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'x'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'y'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'z'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'{'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'|'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'}'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'~'</span>:      <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	<span class="lit-number">'\u007f'</span>: <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>,
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

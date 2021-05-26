@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: mcentral.go in package runtime</title>
+<link href="../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	mcentral.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../pkg/runtime.html">runtime</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16],
+input[id=r17]:checked ~pre label[for=r17],
+input[id=r18]:checked ~pre label[for=r18],
+input[id=r19]:checked ~pre label[for=r19],
+input[id=r20]:checked ~pre label[for=r20],
+input[id=r21]:checked ~pre label[for=r21],
+input[id=r22]:checked ~pre label[for=r22],
+input[id=r23]:checked ~pre label[for=r23],
+input[id=r24]:checked ~pre label[for=r24],
+input[id=r25]:checked ~pre label[for=r25],
+input[id=r26]:checked ~pre label[for=r26],
+input[id=r27]:checked ~pre label[for=r27],
+input[id=r28]:checked ~pre label[for=r28],
+input[id=r29]:checked ~pre label[for=r29],
+input[id=r30]:checked ~pre label[for=r30],
+input[id=r31]:checked ~pre label[for=r31],
+input[id=r32]:checked ~pre label[for=r32],
+input[id=r33]:checked ~pre label[for=r33],
+input[id=r34]:checked ~pre label[for=r34],
+input[id=r35]:checked ~pre label[for=r35],
+input[id=r36]:checked ~pre label[for=r36],
+input[id=r37]:checked ~pre label[for=r37]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="r17" type="radio" name="g"/>
+<input id="r18" type="radio" name="g"/>
+<input id="r19" type="radio" name="g"/>
+<input id="r20" type="radio" name="g"/>
+<input id="r21" type="radio" name="g"/>
+<input id="r22" type="radio" name="g"/>
+<input id="r23" type="radio" name="g"/>
+<input id="r24" type="radio" name="g"/>
+<input id="r25" type="radio" name="g"/>
+<input id="r26" type="radio" name="g"/>
+<input id="r27" type="radio" name="g"/>
+<input id="r28" type="radio" name="g"/>
+<input id="r29" type="radio" name="g"/>
+<input id="r30" type="radio" name="g"/>
+<input id="r31" type="radio" name="g"/>
+<input id="r32" type="radio" name="g"/>
+<input id="r33" type="radio" name="g"/>
+<input id="r34" type="radio" name="g"/>
+<input id="r35" type="radio" name="g"/>
+<input id="r36" type="radio" name="g"/>
+<input id="r37" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2009 The Go Authors. All rights reserved.</span><span class="comment"> Use of this source code is governed by a BSD-style</span><span class="comment"> license that can be found in the LICENSE file.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Central free lists.</span><span class="comment"></span><span class="comment"> See malloc.go for an overview.</span><span class="comment"></span><span class="comment"> The mcentral doesn't actually contain the list of free objects; the mspan does.</span><span class="comment"> Each mcentral is two lists of mspans: those with free objects (c-&gt;nonempty)</span><span class="comment"> and those that are completely allocated (c-&gt;empty).</span></div>
+<div class="code"><pre><code>
+<span class="keyword">package</span> runtime
+
+<span class="keyword">import</span> <label for="i0"><span class="lit-string i0">"runtime/internal/atomic"</span></label>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Central list of free objects of a given size.</span><span class="comment"></span><span class="comment">go:notinheap</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../pkg/runtime.html#name-mcentral" class="ident">mcentral</a> <span class="keyword">struct</span> {
+	<a href="../../use/runtime..mcentral*99cbc.spanclass*7e274.html" class="ident">spanclass</a> <a href="mheap.go.html#line-532" class="ident">spanClass</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> partial and full contain two mspan sets: one of swept in-use</span><span class="comment">	 spans, and one of unswept in-use spans. These two trade</span><span class="comment">	 roles on each GC cycle. The unswept set is drained either by</span><span class="comment">	 allocation or by the background sweeper in every GC cycle,</span><span class="comment">	 so only two roles are necessary.</span><span class="comment">	</span><span class="comment">	 sweepgen is increased by 2 on each GC cycle, so the swept</span><span class="comment">	 spans are in partial[sweepgen/2%2] and the unswept spans are in</span><span class="comment">	 partial[1-sweepgen/2%2]. Sweeping pops spans from the</span><span class="comment">	 unswept set and pushes spans that are still in-use on the</span><span class="comment">	 swept set. Likewise, allocating an in-use span pushes it</span><span class="comment">	 on the swept set.</span><span class="comment">	</span><span class="comment">	 Some parts of the sweeper can sweep arbitrary spans, and hence</span><span class="comment">	 can't remove them from the unswept set, but will add the span</span><span class="comment">	 to the appropriate swept list. As a result, the parts of the</span><span class="comment">	 sweeper and mcentral that do consume from the unswept list may</span><span class="comment">	 encounter swept spans, and these should be ignored.</span></div>
+<div class="code"><pre><code>	<a href="../../use/runtime..mcentral*99cbc.partial*9834a.html" class="ident">partial</a> [<span class="lit-number">2</span>]<a href="mspanset.go.html#line-17" class="ident">spanSet</a> <span class="comment">// list of spans with a free object</span>
+	<a href="../../use/runtime..mcentral*99cbc.full*a18b8.html" class="ident">full</a>    [<span class="lit-number">2</span>]<a href="mspanset.go.html#line-17" class="ident">spanSet</a> <span class="comment">// list of spans with no free objects</span>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Initialize a single central free list.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r0" class="ident">c</label> *<a href="#line-20" class="ident">mcentral</a>) <label for="r1" class="ident"><a href="../../use/runtime..mcentral*99cbc.init*bb540.html" class="ident">init</a></label>(<label for="r2" class="ident">spc</label> <a href="mheap.go.html#line-532" class="ident">spanClass</a>) {
+	<label for="r0" class="ident">c</label>.<a href="#line-21" class="ident">spanclass</a> = <label for="r2" class="ident">spc</label>
+	<a href="lockrank_off.go.html#line-14" class="ident">lockInit</a>(&amp;<label for="r0" class="ident">c</label>.<a href="#line-41" class="ident">partial</a>[<span class="lit-number">0</span>].<a href="mspanset.go.html#line-35" class="ident">spineLock</a>, <a href="lockrank.go.html#line-70" class="ident">lockRankSpanSetSpine</a>)
+	<a href="lockrank_off.go.html#line-14" class="ident">lockInit</a>(&amp;<label for="r0" class="ident">c</label>.<a href="#line-41" class="ident">partial</a>[<span class="lit-number">1</span>].<a href="mspanset.go.html#line-35" class="ident">spineLock</a>, <a href="lockrank.go.html#line-70" class="ident">lockRankSpanSetSpine</a>)
+	<a href="lockrank_off.go.html#line-14" class="ident">lockInit</a>(&amp;<label for="r0" class="ident">c</label>.<a href="#line-42" class="ident">full</a>[<span class="lit-number">0</span>].<a href="mspanset.go.html#line-35" class="ident">spineLock</a>, <a href="lockrank.go.html#line-70" class="ident">lockRankSpanSetSpine</a>)
+	<a href="lockrank_off.go.html#line-14" class="ident">lockInit</a>(&amp;<label for="r0" class="ident">c</label>.<a href="#line-42" class="ident">full</a>[<span class="lit-number">1</span>].<a href="mspanset.go.html#line-35" class="ident">spineLock</a>, <a href="lockrank.go.html#line-70" class="ident">lockRankSpanSetSpine</a>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> partialUnswept returns the spanSet which holds partially-filled</span><span class="comment"> unswept spans for this sweepgen.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r3" class="ident">c</label> *<a href="#line-20" class="ident">mcentral</a>) <label for="r4" class="ident"><a href="../../use/runtime..mcentral*99cbc.partialUnswept*55fcf.html" class="ident">partialUnswept</a></label>(<label for="r5" class="ident">sweepgen</label> <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>) *<a href="mspanset.go.html#line-17" class="ident">spanSet</a> {
+	<span class="keyword">return</span> &amp;<label for="r3" class="ident">c</label>.<a href="#line-41" class="ident">partial</a>[<span class="lit-number">1</span>-<label for="r5" class="ident">sweepgen</label>/<span class="lit-number">2</span>%<span class="lit-number">2</span>]
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> partialSwept returns the spanSet which holds partially-filled</span><span class="comment"> swept spans for this sweepgen.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r6" class="ident">c</label> *<a href="#line-20" class="ident">mcentral</a>) <label for="r7" class="ident"><a href="../../use/runtime..mcentral*99cbc.partialSwept*d55c8.html" class="ident">partialSwept</a></label>(<label for="r8" class="ident">sweepgen</label> <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>) *<a href="mspanset.go.html#line-17" class="ident">spanSet</a> {
+	<span class="keyword">return</span> &amp;<label for="r6" class="ident">c</label>.<a href="#line-41" class="ident">partial</a>[<label for="r8" class="ident">sweepgen</label>/<span class="lit-number">2</span>%<span class="lit-number">2</span>]
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> fullUnswept returns the spanSet which holds unswept spans without any</span><span class="comment"> free slots for this sweepgen.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r9" class="ident">c</label> *<a href="#line-20" class="ident">mcentral</a>) <label for="r10" class="ident"><a href="../../use/runtime..mcentral*99cbc.fullUnswept*b024a.html" class="ident">fullUnswept</a></label>(<label for="r11" class="ident">sweepgen</label> <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>) *<a href="mspanset.go.html#line-17" class="ident">spanSet</a> {
+	<span class="keyword">return</span> &amp;<label for="r9" class="ident">c</label>.<a href="#line-42" class="ident">full</a>[<span class="lit-number">1</span>-<label for="r11" class="ident">sweepgen</label>/<span class="lit-number">2</span>%<span class="lit-number">2</span>]
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> fullSwept returns the spanSet which holds swept spans without any</span><span class="comment"> free slots for this sweepgen.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r12" class="ident">c</label> *<a href="#line-20" class="ident">mcentral</a>) <label for="r13" class="ident"><a href="../../use/runtime..mcentral*99cbc.fullSwept*e46b7.html" class="ident">fullSwept</a></label>(<label for="r14" class="ident">sweepgen</label> <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>) *<a href="mspanset.go.html#line-17" class="ident">spanSet</a> {
+	<span class="keyword">return</span> &amp;<label for="r12" class="ident">c</label>.<a href="#line-42" class="ident">full</a>[<label for="r14" class="ident">sweepgen</label>/<span class="lit-number">2</span>%<span class="lit-number">2</span>]
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Allocate a span to use in an mcache.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Deduct credit for this span allocation and sweep if necessary.</span></div>
+<div class="code"><pre><code>	<label for="r17" class="ident">spanBytes</label> := <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<a href="sizeclasses.go.html#line-85" class="ident">class_to_allocnpages</a>[<label for="r15" class="ident">c</label>.<a href="#line-21" class="ident">spanclass</a>.<a href="mheap.go.html#line-543" class="ident">sizeclass</a>()]) * <a href="malloc.go.html#line-126" class="ident">_PageSize</a>
+	<a href="mgcsweep.go.html#line-634" class="ident">deductSweepCredit</a>(<label for="r17" class="ident">spanBytes</label>, <span class="lit-number">0</span>)
+
+	<label for="r18" class="ident">sg</label> := <a href="mheap.go.html#line-221" class="ident">mheap_</a>.<a href="mheap.go.html#line-67" class="ident">sweepgen</a>
+
+	<label for="r19" class="ident">traceDone</label> := <a href="../../pkg/builtin.html#name-false" class="ident">false</a>
+	<span class="keyword">if</span> <a href="trace.go.html#line-109" class="ident">trace</a>.<a href="trace.go.html#line-112" class="ident">enabled</a> {
+		<a href="trace.go.html#line-1012" class="ident">traceGCSweepStart</a>()
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> If we sweep spanBudget spans without finding any free</span><span class="comment">	 space, just allocate a fresh span. This limits the amount</span><span class="comment">	 of time we can spend trying to find free space and</span><span class="comment">	 amortizes the cost of small object sweeping over the</span><span class="comment">	 benefit of having a full free span to allocate from. By</span><span class="comment">	 setting this to 100, we limit the space overhead to 1%.</span><span class="comment">	</span><span class="comment">	 TODO(austin,mknyszek): This still has bad worst-case</span><span class="comment">	 throughput. For example, this could find just one free slot</span><span class="comment">	 on the 100th swept span. That limits allocation latency, but</span><span class="comment">	 still has very poor throughput. We could instead keep a</span><span class="comment">	 running free-to-used budget and switch to fresh span</span><span class="comment">	 allocation if the budget runs low.</span></div>
+<div class="code"><pre><code>	<label for="r20" class="ident">spanBudget</label> := <span class="lit-number">100</span>
+
+	<span class="keyword">var</span> <label for="r21" class="ident">s</label> *<a href="mheap.go.html#line-382" class="ident">mspan</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Try partial swept spans first.</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> <label for="r21" class="ident">s</label> = <label for="r15" class="ident">c</label>.<a href="#line-62" class="ident">partialSwept</a>(<label for="r18" class="ident">sg</label>).<a href="mspanset.go.html#line-141" class="ident">pop</a>(); <label for="r21" class="ident">s</label> != <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">goto</span> <label for="r22" class="ident">havespan</label>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Now try partial unswept spans.</span></div>
+<div class="code"><pre><code>	<span class="keyword">for</span> ; <label for="r20" class="ident">spanBudget</label> &gt;= <span class="lit-number">0</span>; <label for="r20" class="ident">spanBudget</label>-- {
+		<label for="r21" class="ident">s</label> = <label for="r15" class="ident">c</label>.<a href="#line-56" class="ident">partialUnswept</a>(<label for="r18" class="ident">sg</label>).<a href="mspanset.go.html#line-141" class="ident">pop</a>()
+		<span class="keyword">if</span> <label for="r21" class="ident">s</label> == <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<span class="keyword">break</span>
+		}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> We got ownership of the span, so let's sweep it and use it.</span></div>
+<div class="code"><pre><code>			<label for="r21" class="ident">s</label>.<a href="mgcsweep.go.html#line-320" class="ident">sweep</a>(<a href="../../pkg/builtin.html#name-true" class="ident">true</a>)
+			<span class="keyword">goto</span> <label for="r22" class="ident">havespan</label>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> We failed to get ownership of the span, which means it's being or</span><span class="comment">		 has been swept by an asynchronous sweeper that just couldn't remove it</span><span class="comment">		 from the unswept list. That sweeper took ownership of the span and</span><span class="comment">		 responsibility for either freeing it to the heap or putting it on the</span><span class="comment">		 right swept list. Either way, we should just ignore it (and it's unsafe</span><span class="comment">		 for us to do anything else).</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Now try full unswept spans, sweeping them and putting them into the</span><span class="comment">	 right list if we fail to get a span.</span></div>
+<div class="code"><pre><code>	<span class="keyword">for</span> ; <label for="r20" class="ident">spanBudget</label> &gt;= <span class="lit-number">0</span>; <label for="r20" class="ident">spanBudget</label>-- {
+		<label for="r21" class="ident">s</label> = <label for="r15" class="ident">c</label>.<a href="#line-68" class="ident">fullUnswept</a>(<label for="r18" class="ident">sg</label>).<a href="mspanset.go.html#line-141" class="ident">pop</a>()
+		<span class="keyword">if</span> <label for="r21" class="ident">s</label> == <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<span class="keyword">break</span>
+		}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> We got ownership of the span, so let's sweep it.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Check if there's any free space.</span></div>
+<div class="code"><pre><code>			<label for="r23" class="ident">freeIndex</label> := <label for="r21" class="ident">s</label>.<a href="mbitmap.go.html#line-166" class="ident">nextFreeIndex</a>()
+			<span class="keyword">if</span> <label for="r23" class="ident">freeIndex</label> != <label for="r21" class="ident">s</label>.<a href="mheap.go.html#line-410" class="ident">nelems</a> {
+				<label for="r21" class="ident">s</label>.<a href="mheap.go.html#line-407" class="ident">freeindex</a> = <label for="r23" class="ident">freeIndex</label>
+				<span class="keyword">goto</span> <label for="r22" class="ident">havespan</label>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Add it to the swept list, because sweeping didn't give us any free space.</span></div>
+<div class="code"><pre><code>			<label for="r15" class="ident">c</label>.<a href="#line-74" class="ident">fullSwept</a>(<label for="r18" class="ident">sg</label>).<a href="mspanset.go.html#line-74" class="ident">push</a>(<label for="r21" class="ident">s</label>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> See comment for partial unswept spans.</span></div>
+<div class="code"><pre><code>	}
+	<span class="keyword">if</span> <a href="trace.go.html#line-109" class="ident">trace</a>.<a href="trace.go.html#line-112" class="ident">enabled</a> {
+		<a href="trace.go.html#line-1036" class="ident">traceGCSweepDone</a>()
+		<label for="r19" class="ident">traceDone</label> = <a href="../../pkg/builtin.html#name-true" class="ident">true</a>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> We failed to get a span from the mcentral so get one from mheap.</span></div>
+<div class="code"><pre><code>	<label for="r21" class="ident">s</label> = <label for="r15" class="ident">c</label>.<a href="#line-228" class="ident">grow</a>()
+	<span class="keyword">if</span> <label for="r21" class="ident">s</label> == <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> At this point s is a span that should have free slots.</span></div>
+<div class="code"><pre><code><label for="r22" class="ident">havespan</label>:
+	<span class="keyword">if</span> <a href="trace.go.html#line-109" class="ident">trace</a>.<a href="trace.go.html#line-112" class="ident">enabled</a> &amp;&amp; !<label for="r19" class="ident">traceDone</label> {
+		<a href="trace.go.html#line-1036" class="ident">traceGCSweepDone</a>()
+	}
+	<label for="r24" class="ident">n</label> := <a href="../../pkg/builtin.html#name-int" class="ident">int</a>(<label for="r21" class="ident">s</label>.<a href="mheap.go.html#line-410" class="ident">nelems</a>) - <a href="../../pkg/builtin.html#name-int" class="ident">int</a>(<label for="r21" class="ident">s</label>.<a href="mheap.go.html#line-456" class="ident">allocCount</a>)
+	<span class="keyword">if</span> <label for="r24" class="ident">n</label> == <span class="lit-number">0</span> || <label for="r21" class="ident">s</label>.<a href="mheap.go.html#line-407" class="ident">freeindex</a> == <label for="r21" class="ident">s</label>.<a href="mheap.go.html#line-410" class="ident">nelems</a> || <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<label for="r21" class="ident">s</label>.<a href="mheap.go.html#line-456" class="ident">allocCount</a>) == <label for="r21" class="ident">s</label>.<a href="mheap.go.html#line-410" class="ident">nelems</a> {
+		<a href="panic.go.html#line-1107" class="ident">throw</a>(<span class="lit-string">"span has no free objects"</span>)
+	}
+	<label for="r25" class="ident">freeByteBase</label> := <label for="r21" class="ident">s</label>.<a href="mheap.go.html#line-407" class="ident">freeindex</a> &amp;^ (<span class="lit-number">64</span> - <span class="lit-number">1</span>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Init alloc bits cache.</span></div>
+<div class="code"><pre><code>	<label for="r21" class="ident">s</label>.<a href="mbitmap.go.html#line-148" class="ident">refillAllocCache</a>(<label for="r26" class="ident">whichByte</label>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Adjust the allocCache so that s.freeindex corresponds to the low bit in</span><span class="comment">	 s.allocCache.</span></div>
+<div class="code"><pre><code>	<label for="r21" class="ident">s</label>.<a href="mheap.go.html#line-418" class="ident">allocCache</a> &gt;&gt;= <label for="r21" class="ident">s</label>.<a href="mheap.go.html#line-407" class="ident">freeindex</a> % <span class="lit-number">64</span>
+
+	<span class="keyword">return</span> <label for="r21" class="ident">s</label>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Return span from an mcache.</span><span class="comment"></span><span class="comment"> s must have a span class corresponding to this</span><span class="comment"> mcentral and it must not be empty.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r27" class="ident">c</label> *<a href="#line-20" class="ident">mcentral</a>) <label for="r28" class="ident"><a href="../../use/runtime..mcentral*99cbc.uncacheSpan*c5cb4.html" class="ident">uncacheSpan</a></label>(<label for="r29" class="ident">s</label> *<a href="mheap.go.html#line-382" class="ident">mspan</a>) {
+	<span class="keyword">if</span> <label for="r29" class="ident">s</label>.<a href="mheap.go.html#line-456" class="ident">allocCount</a> == <span class="lit-number">0</span> {
+		<a href="panic.go.html#line-1107" class="ident">throw</a>(<span class="lit-string">"uncaching span but s.allocCount == 0"</span>)
+	}
+
+	<label for="r30" class="ident">sg</label> := <a href="mheap.go.html#line-221" class="ident">mheap_</a>.<a href="mheap.go.html#line-67" class="ident">sweepgen</a>
+	<label for="r31" class="ident">stale</label> := <label for="r29" class="ident">s</label>.<a href="mheap.go.html#line-453" class="ident">sweepgen</a> == <label for="r30" class="ident">sg</label>+<span class="lit-number">1</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Fix up sweepgen.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Span was cached before sweep began. It's our</span><span class="comment">		 responsibility to sweep it.</span><span class="comment">		</span><span class="comment">		 Set sweepgen to indicate it's not cached but needs</span><span class="comment">		 sweeping and can't be allocated from. sweep will</span><span class="comment">		 set s.sweepgen to indicate s is swept.</span></div>
+<div class="code"><pre><code>		<a href="../../pkg/runtime/internal/atomic.html" class="ident i0">atomic</a>.<a href="internal/atomic/atomic_amd64.go.html#line-95" class="ident">Store</a>(&amp;<label for="r29" class="ident">s</label>.<a href="mheap.go.html#line-453" class="ident">sweepgen</a>, <label for="r30" class="ident">sg</label>-<span class="lit-number">1</span>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Indicate that s is no longer cached.</span></div>
+<div class="code"><pre><code>		<a href="../../pkg/runtime/internal/atomic.html" class="ident i0">atomic</a>.<a href="internal/atomic/atomic_amd64.go.html#line-95" class="ident">Store</a>(&amp;<label for="r29" class="ident">s</label>.<a href="mheap.go.html#line-453" class="ident">sweepgen</a>, <label for="r30" class="ident">sg</label>)
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Put the span in the appropriate place.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> It's stale, so just sweep it. Sweeping will put it on</span><span class="comment">		 the right list.</span></div>
+<div class="code"><pre><code>		<label for="r29" class="ident">s</label>.<a href="mgcsweep.go.html#line-320" class="ident">sweep</a>(<a href="../../pkg/builtin.html#name-false" class="ident">false</a>)
+	} <span class="keyword">else</span> {
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Put it back on the partial swept list.</span></div>
+<div class="code"><pre><code>			<label for="r27" class="ident">c</label>.<a href="#line-62" class="ident">partialSwept</a>(<label for="r30" class="ident">sg</label>).<a href="mspanset.go.html#line-74" class="ident">push</a>(<label for="r29" class="ident">s</label>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> There's no free space and it's not stale, so put it on the</span><span class="comment">			 full swept list.</span></div>
+<div class="code"><pre><code>			<label for="r27" class="ident">c</label>.<a href="#line-74" class="ident">fullSwept</a>(<label for="r30" class="ident">sg</label>).<a href="mspanset.go.html#line-74" class="ident">push</a>(<label for="r29" class="ident">s</label>)
+		}
+	}
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> grow allocates a new empty span from the heap and initializes it for c's size class.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r32" class="ident">c</label> *<a href="#line-20" class="ident">mcentral</a>) <label for="r33" class="ident"><a href="../../use/runtime..mcentral*99cbc.grow*adca5.html" class="ident">grow</a></label>() *<a href="mheap.go.html#line-382" class="ident">mspan</a> {
+	<label for="r34" class="ident">npages</label> := <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<a href="sizeclasses.go.html#line-85" class="ident">class_to_allocnpages</a>[<label for="r32" class="ident">c</label>.<a href="#line-21" class="ident">spanclass</a>.<a href="mheap.go.html#line-543" class="ident">sizeclass</a>()])
+	<label for="r35" class="ident">size</label> := <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<a href="sizeclasses.go.html#line-84" class="ident">class_to_size</a>[<label for="r32" class="ident">c</label>.<a href="#line-21" class="ident">spanclass</a>.<a href="mheap.go.html#line-543" class="ident">sizeclass</a>()])
+
+	<label for="r36" class="ident">s</label> := <a href="mheap.go.html#line-221" class="ident">mheap_</a>.<a href="mheap.go.html#line-899" class="ident">alloc</a>(<label for="r34" class="ident">npages</label>, <label for="r32" class="ident">c</label>.<a href="#line-21" class="ident">spanclass</a>, <a href="../../pkg/builtin.html#name-true" class="ident">true</a>)
+	<span class="keyword">if</span> <label for="r36" class="ident">s</label> == <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Use division by multiplication and shifts to quickly compute:</span><span class="comment">	 n := (npages &lt;&lt; _PageShift) / size</span></div>
+<div class="code"><pre><code>	<label for="r37" class="ident">n</label> := (<label for="r34" class="ident">npages</label> &lt;&lt; <a href="sizeclasses.go.html#line-81" class="ident">_PageShift</a>) &gt;&gt; <label for="r36" class="ident">s</label>.<a href="mheap.go.html#line-460" class="ident">divShift</a> * <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<label for="r36" class="ident">s</label>.<a href="mheap.go.html#line-454" class="ident">divMul</a>) &gt;&gt; <label for="r36" class="ident">s</label>.<a href="mheap.go.html#line-461" class="ident">divShift2</a>
+	<label for="r36" class="ident">s</label>.<a href="mheap.go.html#line-463" class="ident">limit</a> = <label for="r36" class="ident">s</label>.<a href="mheap.go.html#line-468" class="ident">base</a>() + <label for="r35" class="ident">size</label>*<label for="r37" class="ident">n</label>
+	<a href="mbitmap.go.html#line-308" class="ident">heapBitsForAddr</a>(<label for="r36" class="ident">s</label>.<a href="mheap.go.html#line-468" class="ident">base</a>()).<a href="mbitmap.go.html#line-745" class="ident">initSpan</a>(<label for="r36" class="ident">s</label>)
+	<span class="keyword">return</span> <label for="r36" class="ident">s</label>
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

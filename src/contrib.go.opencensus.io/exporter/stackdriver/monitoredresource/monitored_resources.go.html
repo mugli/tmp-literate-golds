@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: monitored_resources.go in package contrib.go.opencensus.io/exporter/stackdriver/monitoredresource</title>
+<link href="../../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	monitored_resources.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../../pkg/contrib.go.opencensus.io/exporter/stackdriver/monitoredresource.html">contrib.go.opencensus.io/exporter/stackdriver/monitoredresource</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1,
+input[id=i2]:checked ~pre .i2
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<input id="i2" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2020, OpenCensus Authors</span><span class="comment"></span><span class="comment"> Licensed under the Apache License, Version 2.0 (the "License");</span><span class="comment"> you may not use this file except in compliance with the License.</span><span class="comment"> You may obtain a copy of the License at</span><span class="comment"></span><span class="comment">     http://www.apache.org/licenses/LICENSE-2.0</span><span class="comment"></span><span class="comment"> Unless required by applicable law or agreed to in writing, software</span><span class="comment"> distributed under the License is distributed on an "AS IS" BASIS,</span><span class="comment"> WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span><span class="comment"> See the License for the specific language governing permissions and</span><span class="comment"> limitations under the License.</span></div>
+<div class="code"><pre><code>
+<span class="keyword">package</span> monitoredresource
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"sync"</span></label>
+
+	<label for="i1"><span class="lit-string i1">"contrib.go.opencensus.io/exporter/stackdriver/monitoredresource/aws"</span></label>
+	<label for="i2"><span class="lit-string i2">"contrib.go.opencensus.io/exporter/stackdriver/monitoredresource/gcp"</span></label>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Interface is a type that represent monitor resource that satisfies monitoredresource.Interface</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> MonitoredResource returns the resource type and resource labels.</span></div>
+<div class="code"><pre><code>	MonitoredResource() (resType <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>, labels <span class="keyword">map</span>[<a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>]<a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Autodetect auto detects monitored resources based on</span><span class="comment"> the environment where the application is running.</span><span class="comment"> It supports detection of following resource types</span><span class="comment"> 1. gke_container:</span><span class="comment"> 2. gce_instance:</span><span class="comment"> 3. aws_ec2_instance:</span><span class="comment"></span><span class="comment"> Returns MonitoredResInterface which implements getLabels() and getType()</span><span class="comment"> For resource definition go to https://cloud.google.com/monitoring/api/resources</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r0" class="ident"><a href="../../../../../pkg/contrib.go.opencensus.io/exporter/stackdriver/monitoredresource.html#name-Autodetect" class="ident">Autodetect</a></label>() <a href="#line-25" class="ident">Interface</a> {
+	<span class="keyword">return</span> <span class="keyword">func</span>() <a href="#line-25" class="ident">Interface</a> {
+		<a href="#line-71" class="ident">detectOnce</a>.<a href="../../../../sync/once.go.html#line-42" class="ident">Do</a>(<span class="keyword">func</span>() {
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> First attempts to retrieve AWS Identity Doc and GCP metadata.</span><span class="comment">			 It then determines the resource type</span><span class="comment">			 In GCP and AWS environment both func finishes quickly. However,</span><span class="comment">			 in an environment other than those (e.g local laptop) it</span><span class="comment">			 takes 2 seconds for GCP and 5-6 for AWS.</span></div>
+<div class="code"><pre><code>			<span class="keyword">var</span> <label for="r3" class="ident">wg</label> <a href="../../../../../pkg/sync.html" class="ident i0">sync</a>.<a href="../../../../sync/waitgroup.go.html#line-20" class="ident">WaitGroup</a>
+			<label for="r3" class="ident">wg</label>.<a href="../../../../sync/waitgroup.go.html#line-53" class="ident">Add</a>(<span class="lit-number">2</span>)
+
+			<span class="keyword">go</span> <span class="keyword">func</span>() {
+				<span class="keyword">defer</span> <label for="r3" class="ident">wg</label>.<a href="../../../../sync/waitgroup.go.html#line-98" class="ident">Done</a>()
+				<label for="r1" class="ident">awsDetect</label> = <a href="../../../../../pkg/contrib.go.opencensus.io/exporter/stackdriver/monitoredresource/aws.html" class="ident i1">aws</a>.<a href="aws/monitored_resources.go.html#line-63" class="ident">Autodetect</a>()
+			}()
+			<span class="keyword">go</span> <span class="keyword">func</span>() {
+				<span class="keyword">defer</span> <label for="r3" class="ident">wg</label>.<a href="../../../../sync/waitgroup.go.html#line-98" class="ident">Done</a>()
+				<label for="r2" class="ident">gcpDetect</label> = <a href="../../../../../pkg/contrib.go.opencensus.io/exporter/stackdriver/monitoredresource/gcp.html" class="ident i2">gcp</a>.<a href="gcp/monitored_resources.go.html#line-115" class="ident">Autodetect</a>()
+			}()
+
+			<label for="r3" class="ident">wg</label>.<a href="../../../../sync/waitgroup.go.html#line-103" class="ident">Wait</a>()
+			<a href="#line-74" class="ident">autoDetected</a> = <label for="r1" class="ident">awsDetect</label>
+			<span class="keyword">if</span> <label for="r2" class="ident">gcpDetect</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+				<a href="#line-74" class="ident">autoDetected</a> = <label for="r2" class="ident">gcpDetect</label>
+			}
+		})
+		<span class="keyword">return</span> <a href="#line-74" class="ident">autoDetected</a>
+	}()
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> detectOnce is used to make sure GCP and AWS metadata detect function executes only once.</span></div>
+<div class="code"><pre><code><span class="keyword">var</span> <a href="../../../../../pkg/contrib.go.opencensus.io/exporter/stackdriver/monitoredresource.html#name-detectOnce" class="ident">detectOnce</a> <a href="../../../../../pkg/sync.html" class="ident i0">sync</a>.<a href="../../../../sync/once.go.html#line-14" class="ident">Once</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> autoDetected is the metadata detected after the first execution of Autodetect function.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

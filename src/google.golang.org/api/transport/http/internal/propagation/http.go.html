@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: http.go in package google.golang.org/api/transport/http/internal/propagation</title>
+<link href="../../../../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	http.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../../../../pkg/google.golang.org/api/transport/http/internal/propagation.html">google.golang.org/api/transport/http/internal/propagation</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16],
+input[id=r17]:checked ~pre label[for=r17],
+input[id=r18]:checked ~pre label[for=r18],
+input[id=r19]:checked ~pre label[for=r19]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1,
+input[id=i2]:checked ~pre .i2,
+input[id=i3]:checked ~pre .i3,
+input[id=i4]:checked ~pre .i4,
+input[id=i5]:checked ~pre .i5,
+input[id=i6]:checked ~pre .i6,
+input[id=i7]:checked ~pre .i7
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="r17" type="radio" name="g"/>
+<input id="r18" type="radio" name="g"/>
+<input id="r19" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<input id="i2" type="radio" name="i"/>
+<input id="i3" type="radio" name="i"/>
+<input id="i4" type="radio" name="i"/>
+<input id="i5" type="radio" name="i"/>
+<input id="i6" type="radio" name="i"/>
+<input id="i7" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2018 Google LLC.</span><span class="comment"> Use of this source code is governed by a BSD-style</span><span class="comment"> license that can be found in the LICENSE file.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> +build go1.8</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Package propagation implements X-Cloud-Trace-Context header propagation used</span><span class="comment"> by Google Cloud products.</span></div>
+<div class="code"><pre><code><span class="keyword">package</span> propagation
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"encoding/binary"</span></label>
+	<label for="i1"><span class="lit-string i1">"encoding/hex"</span></label>
+	<label for="i2"><span class="lit-string i2">"fmt"</span></label>
+	<label for="i3"><span class="lit-string i3">"net/http"</span></label>
+	<label for="i4"><span class="lit-string i4">"strconv"</span></label>
+	<label for="i5"><span class="lit-string i5">"strings"</span></label>
+
+	<label for="i6"><span class="lit-string i6">"go.opencensus.io/trace"</span></label>
+	<label for="i7"><span class="lit-string i7">"go.opencensus.io/trace/propagation"</span></label>
+)
+
+<span class="keyword">const</span> (
+	<a href="../../../../../../../pkg/google.golang.org/api/transport/http/internal/propagation.html#name-httpHeaderMaxSize" class="ident">httpHeaderMaxSize</a> = <span class="lit-number">200</span>
+	<a href="../../../../../../../pkg/google.golang.org/api/transport/http/internal/propagation.html#name-httpHeader" class="ident">httpHeader</a>        = <span class="lit-string">`X-Cloud-Trace-Context`</span>
+)
+
+<span class="keyword">var</span> _ <a href="../../../../../../../pkg/go.opencensus.io/trace/propagation.html" class="ident i7">propagation</a>.<a href="../../../../../../go.opencensus.io/trace/propagation/propagation.go.html#line-103" class="ident">HTTPFormat</a> = (*<a href="#line-32" class="ident">HTTPFormat</a>)(<a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> HTTPFormat implements propagation.HTTPFormat to propagate</span><span class="comment"> traces in HTTP headers for Google Cloud Platform and Stackdriver Trace.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../../../pkg/google.golang.org/api/transport/http/internal/propagation.html#name-HTTPFormat" class="ident">HTTPFormat</a> <span class="keyword">struct</span>{}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> SpanContextFromRequest extracts a Stackdriver Trace span context from incoming requests.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r0" class="ident">f</label> *<a href="#line-32" class="ident">HTTPFormat</a>) <label for="r1" class="ident"><a href="../../../../../../../use/google.golang.org/api/transport/http/internal/propagation..HTTPFormat.SpanContextFromRequest.html" class="ident">SpanContextFromRequest</a></label>(<label for="r2" class="ident">req</label> *<a href="../../../../../../../pkg/net/http.html" class="ident i3">http</a>.<a href="../../../../../../net/http/request.go.html#line-102" class="ident">Request</a>) (<label for="r3" class="ident">sc</label> <a href="../../../../../../../pkg/go.opencensus.io/trace.html" class="ident i6">trace</a>.<a href="../../../../../../go.opencensus.io/trace/trace.go.html#line-102" class="ident">SpanContext</a>, <label for="r4" class="ident">ok</label> <a href="../../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>) {
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> See https://cloud.google.com/trace/docs/faq for the header HTTPFormat.</span><span class="comment">	 Return if the header is empty or missing, or if the header is unreasonably</span><span class="comment">	 large, to avoid making unnecessary copies of a large string.</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> <label for="r5" class="ident">h</label> == <span class="lit-string">""</span> || <a href="../../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r5" class="ident">h</label>) &gt; <a href="#line-24" class="ident">httpHeaderMaxSize</a> {
+		<span class="keyword">return</span> <a href="../../../../../../../pkg/go.opencensus.io/trace.html" class="ident i6">trace</a>.<a href="../../../../../../go.opencensus.io/trace/trace.go.html#line-102" class="ident">SpanContext</a>{}, <a href="../../../../../../../pkg/builtin.html#name-false" class="ident">false</a>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Parse the trace id field.</span></div>
+<div class="code"><pre><code>	<label for="r6" class="ident">slash</label> := <a href="../../../../../../../pkg/strings.html" class="ident i5">strings</a>.<a href="../../../../../../strings/strings.go.html#line-1024" class="ident">Index</a>(<label for="r5" class="ident">h</label>, <span class="lit-string">`/`</span>)
+	<span class="keyword">if</span> <label for="r6" class="ident">slash</label> == -<span class="lit-number">1</span> {
+		<span class="keyword">return</span> <a href="../../../../../../../pkg/go.opencensus.io/trace.html" class="ident i6">trace</a>.<a href="../../../../../../go.opencensus.io/trace/trace.go.html#line-102" class="ident">SpanContext</a>{}, <a href="../../../../../../../pkg/builtin.html#name-false" class="ident">false</a>
+	}
+	<label for="r7" class="ident">tid</label>, <label for="r5" class="ident">h</label> := <label for="r5" class="ident">h</label>[:<label for="r6" class="ident">slash</label>], <label for="r5" class="ident">h</label>[<label for="r6" class="ident">slash</label>+<span class="lit-number">1</span>:]
+
+	<label for="r8" class="ident">buf</label>, <label for="r9" class="ident">err</label> := <a href="../../../../../../../pkg/encoding/hex.html" class="ident i1">hex</a>.<a href="../../../../../../encoding/hex/hex.go.html#line-110" class="ident">DecodeString</a>(<label for="r7" class="ident">tid</label>)
+	<span class="keyword">if</span> <label for="r9" class="ident">err</label> != <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../../../../../../pkg/go.opencensus.io/trace.html" class="ident i6">trace</a>.<a href="../../../../../../go.opencensus.io/trace/trace.go.html#line-102" class="ident">SpanContext</a>{}, <a href="../../../../../../../pkg/builtin.html#name-false" class="ident">false</a>
+	}
+	<a href="../../../../../../../pkg/builtin.html#name-copy" class="ident">copy</a>(<label for="r3" class="ident">sc</label>.<a href="../../../../../../go.opencensus.io/trace/trace.go.html#line-103" class="ident">TraceID</a>[:], <label for="r8" class="ident">buf</label>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Parse the span id field.</span></div>
+<div class="code"><pre><code>	<label for="r10" class="ident">spanstr</label> := <label for="r5" class="ident">h</label>
+	<label for="r11" class="ident">semicolon</label> := <a href="../../../../../../../pkg/strings.html" class="ident i5">strings</a>.<a href="../../../../../../strings/strings.go.html#line-1024" class="ident">Index</a>(<label for="r5" class="ident">h</label>, <span class="lit-string">`;`</span>)
+	<span class="keyword">if</span> <label for="r11" class="ident">semicolon</label> != -<span class="lit-number">1</span> {
+		<label for="r10" class="ident">spanstr</label>, <label for="r5" class="ident">h</label> = <label for="r5" class="ident">h</label>[:<label for="r11" class="ident">semicolon</label>], <label for="r5" class="ident">h</label>[<label for="r11" class="ident">semicolon</label>+<span class="lit-number">1</span>:]
+	}
+	<label for="r12" class="ident">sid</label>, <label for="r9" class="ident">err</label> := <a href="../../../../../../../pkg/strconv.html" class="ident i4">strconv</a>.<a href="../../../../../../strconv/atoi.go.html#line-60" class="ident">ParseUint</a>(<label for="r10" class="ident">spanstr</label>, <span class="lit-number">10</span>, <span class="lit-number">64</span>)
+	<span class="keyword">if</span> <label for="r9" class="ident">err</label> != <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../../../../../../pkg/go.opencensus.io/trace.html" class="ident i6">trace</a>.<a href="../../../../../../go.opencensus.io/trace/trace.go.html#line-102" class="ident">SpanContext</a>{}, <a href="../../../../../../../pkg/builtin.html#name-false" class="ident">false</a>
+	}
+	<a href="../../../../../../../pkg/encoding/binary.html" class="ident i0">binary</a>.<a href="../../../../../../encoding/binary/binary.go.html#line-48" class="ident">BigEndian</a>.<a href="../../../../../../encoding/binary/binary.go.html#line-130" class="ident">PutUint64</a>(<label for="r3" class="ident">sc</label>.<a href="../../../../../../go.opencensus.io/trace/trace.go.html#line-104" class="ident">SpanID</a>[:], <label for="r12" class="ident">sid</label>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Parse the options field, options field is optional.</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> !<a href="../../../../../../../pkg/strings.html" class="ident i5">strings</a>.<a href="../../../../../../strings/strings.go.html#line-444" class="ident">HasPrefix</a>(<label for="r5" class="ident">h</label>, <span class="lit-string">"o="</span>) {
+		<span class="keyword">return</span> <label for="r3" class="ident">sc</label>, <a href="../../../../../../../pkg/builtin.html#name-true" class="ident">true</a>
+	}
+	<label for="r13" class="ident">o</label>, <label for="r9" class="ident">err</label> := <a href="../../../../../../../pkg/strconv.html" class="ident i4">strconv</a>.<a href="../../../../../../strconv/atoi.go.html#line-60" class="ident">ParseUint</a>(<label for="r5" class="ident">h</label>[<span class="lit-number">2</span>:], <span class="lit-number">10</span>, <span class="lit-number">64</span>)
+	<span class="keyword">if</span> <label for="r9" class="ident">err</label> != <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../../../../../../pkg/go.opencensus.io/trace.html" class="ident i6">trace</a>.<a href="../../../../../../go.opencensus.io/trace/trace.go.html#line-102" class="ident">SpanContext</a>{}, <a href="../../../../../../../pkg/builtin.html#name-false" class="ident">false</a>
+	}
+	<label for="r3" class="ident">sc</label>.<a href="../../../../../../go.opencensus.io/trace/trace.go.html#line-105" class="ident">TraceOptions</a> = <a href="../../../../../../../pkg/go.opencensus.io/trace.html" class="ident i6">trace</a>.<a href="../../../../../../go.opencensus.io/trace/trace.go.html#line-77" class="ident">TraceOptions</a>(<label for="r13" class="ident">o</label>)
+	<span class="keyword">return</span> <label for="r3" class="ident">sc</label>, <a href="../../../../../../../pkg/builtin.html#name-true" class="ident">true</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> SpanContextToRequest modifies the given request to include a Stackdriver Trace header.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r14" class="ident">f</label> *<a href="#line-32" class="ident">HTTPFormat</a>) <label for="r15" class="ident"><a href="../../../../../../../use/google.golang.org/api/transport/http/internal/propagation..HTTPFormat.SpanContextToRequest.html" class="ident">SpanContextToRequest</a></label>(<label for="r16" class="ident">sc</label> <a href="../../../../../../../pkg/go.opencensus.io/trace.html" class="ident i6">trace</a>.<a href="../../../../../../go.opencensus.io/trace/trace.go.html#line-102" class="ident">SpanContext</a>, <label for="r17" class="ident">req</label> *<a href="../../../../../../../pkg/net/http.html" class="ident i3">http</a>.<a href="../../../../../../net/http/request.go.html#line-102" class="ident">Request</a>) {
+	<label for="r18" class="ident">sid</label> := <a href="../../../../../../../pkg/encoding/binary.html" class="ident i0">binary</a>.<a href="../../../../../../encoding/binary/binary.go.html#line-48" class="ident">BigEndian</a>.<a href="../../../../../../encoding/binary/binary.go.html#line-124" class="ident">Uint64</a>(<label for="r16" class="ident">sc</label>.<a href="../../../../../../go.opencensus.io/trace/trace.go.html#line-104" class="ident">SpanID</a>[:])
+	<label for="r19" class="ident">header</label> := <a href="../../../../../../../pkg/fmt.html" class="ident i2">fmt</a>.<a href="../../../../../../fmt/print.go.html#line-217" class="ident">Sprintf</a>(<span class="lit-string">"%s/%d;o=%d"</span>, <a href="../../../../../../../pkg/encoding/hex.html" class="ident i1">hex</a>.<a href="../../../../../../encoding/hex/hex.go.html#line-98" class="ident">EncodeToString</a>(<label for="r16" class="ident">sc</label>.<a href="../../../../../../go.opencensus.io/trace/trace.go.html#line-103" class="ident">TraceID</a>[:]), <label for="r18" class="ident">sid</label>, <a href="../../../../../../../pkg/builtin.html#name-int64" class="ident">int64</a>(<label for="r16" class="ident">sc</label>.<a href="../../../../../../go.opencensus.io/trace/trace.go.html#line-105" class="ident">TraceOptions</a>))
+	<label for="r17" class="ident">req</label>.<a href="../../../../../../net/http/request.go.html#line-165" class="ident">Header</a>.<a href="../../../../../../net/http/header.go.html#line-36" class="ident">Set</a>(<a href="#line-25" class="ident">httpHeader</a>, <label for="r19" class="ident">header</label>)
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

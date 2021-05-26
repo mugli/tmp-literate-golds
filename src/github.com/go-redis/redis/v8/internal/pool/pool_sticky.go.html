@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: pool_sticky.go in package github.com/go-redis/redis/v8/internal/pool</title>
+<link href="../../../../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	pool_sticky.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../../../../pkg/github.com/go-redis/redis/v8/internal/pool.html">github.com/go-redis/redis/v8/internal/pool</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16],
+input[id=r17]:checked ~pre label[for=r17],
+input[id=r18]:checked ~pre label[for=r18],
+input[id=r19]:checked ~pre label[for=r19],
+input[id=r20]:checked ~pre label[for=r20],
+input[id=r21]:checked ~pre label[for=r21],
+input[id=r22]:checked ~pre label[for=r22],
+input[id=r23]:checked ~pre label[for=r23],
+input[id=r24]:checked ~pre label[for=r24],
+input[id=r25]:checked ~pre label[for=r25],
+input[id=r26]:checked ~pre label[for=r26],
+input[id=r27]:checked ~pre label[for=r27],
+input[id=r28]:checked ~pre label[for=r28],
+input[id=r29]:checked ~pre label[for=r29],
+input[id=r30]:checked ~pre label[for=r30],
+input[id=r31]:checked ~pre label[for=r31],
+input[id=r32]:checked ~pre label[for=r32],
+input[id=r33]:checked ~pre label[for=r33],
+input[id=r34]:checked ~pre label[for=r34],
+input[id=r35]:checked ~pre label[for=r35],
+input[id=r36]:checked ~pre label[for=r36],
+input[id=r37]:checked ~pre label[for=r37],
+input[id=r38]:checked ~pre label[for=r38],
+input[id=r39]:checked ~pre label[for=r39],
+input[id=r40]:checked ~pre label[for=r40],
+input[id=r41]:checked ~pre label[for=r41],
+input[id=r42]:checked ~pre label[for=r42],
+input[id=r43]:checked ~pre label[for=r43],
+input[id=r44]:checked ~pre label[for=r44],
+input[id=r45]:checked ~pre label[for=r45],
+input[id=r46]:checked ~pre label[for=r46],
+input[id=r47]:checked ~pre label[for=r47],
+input[id=r48]:checked ~pre label[for=r48],
+input[id=r49]:checked ~pre label[for=r49],
+input[id=r50]:checked ~pre label[for=r50],
+input[id=r51]:checked ~pre label[for=r51],
+input[id=r52]:checked ~pre label[for=r52],
+input[id=r53]:checked ~pre label[for=r53],
+input[id=r54]:checked ~pre label[for=r54],
+input[id=r55]:checked ~pre label[for=r55],
+input[id=r56]:checked ~pre label[for=r56],
+input[id=r57]:checked ~pre label[for=r57],
+input[id=r58]:checked ~pre label[for=r58],
+input[id=r59]:checked ~pre label[for=r59],
+input[id=r60]:checked ~pre label[for=r60]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1,
+input[id=i2]:checked ~pre .i2,
+input[id=i3]:checked ~pre .i3
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="r17" type="radio" name="g"/>
+<input id="r18" type="radio" name="g"/>
+<input id="r19" type="radio" name="g"/>
+<input id="r20" type="radio" name="g"/>
+<input id="r21" type="radio" name="g"/>
+<input id="r22" type="radio" name="g"/>
+<input id="r23" type="radio" name="g"/>
+<input id="r24" type="radio" name="g"/>
+<input id="r25" type="radio" name="g"/>
+<input id="r26" type="radio" name="g"/>
+<input id="r27" type="radio" name="g"/>
+<input id="r28" type="radio" name="g"/>
+<input id="r29" type="radio" name="g"/>
+<input id="r30" type="radio" name="g"/>
+<input id="r31" type="radio" name="g"/>
+<input id="r32" type="radio" name="g"/>
+<input id="r33" type="radio" name="g"/>
+<input id="r34" type="radio" name="g"/>
+<input id="r35" type="radio" name="g"/>
+<input id="r36" type="radio" name="g"/>
+<input id="r37" type="radio" name="g"/>
+<input id="r38" type="radio" name="g"/>
+<input id="r39" type="radio" name="g"/>
+<input id="r40" type="radio" name="g"/>
+<input id="r41" type="radio" name="g"/>
+<input id="r42" type="radio" name="g"/>
+<input id="r43" type="radio" name="g"/>
+<input id="r44" type="radio" name="g"/>
+<input id="r45" type="radio" name="g"/>
+<input id="r46" type="radio" name="g"/>
+<input id="r47" type="radio" name="g"/>
+<input id="r48" type="radio" name="g"/>
+<input id="r49" type="radio" name="g"/>
+<input id="r50" type="radio" name="g"/>
+<input id="r51" type="radio" name="g"/>
+<input id="r52" type="radio" name="g"/>
+<input id="r53" type="radio" name="g"/>
+<input id="r54" type="radio" name="g"/>
+<input id="r55" type="radio" name="g"/>
+<input id="r56" type="radio" name="g"/>
+<input id="r57" type="radio" name="g"/>
+<input id="r58" type="radio" name="g"/>
+<input id="r59" type="radio" name="g"/>
+<input id="r60" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<input id="i2" type="radio" name="i"/>
+<input id="i3" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+</div>
+<div class="code"><pre><code><span class="keyword">package</span> pool
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"context"</span></label>
+	<label for="i1"><span class="lit-string i1">"errors"</span></label>
+	<label for="i2"><span class="lit-string i2">"fmt"</span></label>
+	<label for="i3"><span class="lit-string i3">"sync/atomic"</span></label>
+)
+
+<span class="keyword">const</span> (
+	<a href="../../../../../../../pkg/github.com/go-redis/redis/v8/internal/pool.html#name-stateDefault" class="ident">stateDefault</a> = <span class="lit-number">0</span>
+	<a href="../../../../../../../pkg/github.com/go-redis/redis/v8/internal/pool.html#name-stateInited" class="ident">stateInited</a>  = <span class="lit-number">1</span>
+	<a href="../../../../../../../pkg/github.com/go-redis/redis/v8/internal/pool.html#name-stateClosed" class="ident">stateClosed</a>  = <span class="lit-number">2</span>
+)
+
+<span class="keyword">type</span> <a href="../../../../../../../pkg/github.com/go-redis/redis/v8/internal/pool.html#name-BadConnError" class="ident">BadConnError</a> <span class="keyword">struct</span> {
+	<a href="../../../../../../../use/github.com/go-redis/redis/v8/internal/pool..BadConnError.wrapped*adbf4.html" class="ident">wrapped</a> <a href="../../../../../../../pkg/builtin.html#name-error" class="ident">error</a>
+}
+
+<span class="keyword">var</span> _ <a href="../../../../../../../pkg/builtin.html#name-error" class="ident">error</a> = (*<a href="#line-16" class="ident">BadConnError</a>)(<a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>)
+
+<span class="keyword">func</span> (<label for="r0" class="ident">e</label> <a href="#line-16" class="ident">BadConnError</a>) <label for="r1" class="ident"><a href="../../../../../../../use/github.com/go-redis/redis/v8/internal/pool..BadConnError.Error.html" class="ident">Error</a></label>() <a href="../../../../../../../pkg/builtin.html#name-string" class="ident">string</a> {
+	<label for="r2" class="ident">s</label> := <span class="lit-string">"redis: Conn is in a bad state"</span>
+	<span class="keyword">if</span> <label for="r0" class="ident">e</label>.<a href="#line-17" class="ident">wrapped</a> != <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<label for="r2" class="ident">s</label> += <span class="lit-string">": "</span> + <label for="r0" class="ident">e</label>.<a href="#line-17" class="ident">wrapped</a>.Error()
+	}
+	<span class="keyword">return</span> <label for="r2" class="ident">s</label>
+}
+
+<span class="keyword">func</span> (<label for="r3" class="ident">e</label> <a href="#line-16" class="ident">BadConnError</a>) <label for="r4" class="ident"><a href="../../../../../../../use/github.com/go-redis/redis/v8/internal/pool..BadConnError.Unwrap.html" class="ident">Unwrap</a></label>() <a href="../../../../../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<span class="keyword">return</span> <label for="r3" class="ident">e</label>.<a href="#line-17" class="ident">wrapped</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">------------------------------------------------------------------------------</span></div>
+<div class="code"><pre><code>
+<span class="keyword">type</span> <a href="../../../../../../../pkg/github.com/go-redis/redis/v8/internal/pool.html#name-StickyConnPool" class="ident">StickyConnPool</a> <span class="keyword">struct</span> {
+	<a href="../../../../../../../use/github.com/go-redis/redis/v8/internal/pool..StickyConnPool.pool*27cac.html" class="ident">pool</a>   <a href="pool.go.html#line-38" class="ident">Pooler</a>
+	<a href="../../../../../../../use/github.com/go-redis/redis/v8/internal/pool..StickyConnPool.shared*a4d26.html" class="ident">shared</a> <a href="../../../../../../../pkg/builtin.html#name-int32" class="ident">int32</a> <span class="comment">// atomic</span>
+
+	<a href="../../../../../../../use/github.com/go-redis/redis/v8/internal/pool..StickyConnPool.state*4ba69.html" class="ident">state</a> <a href="../../../../../../../pkg/builtin.html#name-uint32" class="ident">uint32</a> <span class="comment">// atomic</span>
+	<a href="../../../../../../../use/github.com/go-redis/redis/v8/internal/pool..StickyConnPool.ch*34367.html" class="ident">ch</a>    <span class="keyword">chan</span> *<a href="conn.go.html#line-16" class="ident">Conn</a>
+
+	<a href="../../../../../../../use/github.com/go-redis/redis/v8/internal/pool..StickyConnPool._badConnError*6107e.html" class="ident">_badConnError</a> <a href="../../../../../../../pkg/sync/atomic.html" class="ident i3">atomic</a>.<a href="../../../../../../sync/atomic/value.go.html#line-16" class="ident">Value</a>
+}
+
+<span class="keyword">var</span> _ <a href="pool.go.html#line-38" class="ident">Pooler</a> = (*<a href="#line-36" class="ident">StickyConnPool</a>)(<a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>)
+
+<span class="keyword">func</span> <label for="r5" class="ident"><a href="../../../../../../../pkg/github.com/go-redis/redis/v8/internal/pool.html#name-NewStickyConnPool" class="ident">NewStickyConnPool</a></label>(<label for="r6" class="ident">pool</label> <a href="pool.go.html#line-38" class="ident">Pooler</a>) *<a href="#line-36" class="ident">StickyConnPool</a> {
+	<label for="r7" class="ident">p</label>, <label for="r8" class="ident">ok</label> := <label for="r6" class="ident">pool</label>.(*<a href="#line-36" class="ident">StickyConnPool</a>)
+	<span class="keyword">if</span> !<label for="r8" class="ident">ok</label> {
+		<label for="r7" class="ident">p</label> = &amp;<a href="#line-36" class="ident">StickyConnPool</a>{
+			<a href="#line-37" class="ident">pool</a>: <label for="r6" class="ident">pool</label>,
+			<a href="#line-41" class="ident">ch</a>:   <a href="../../../../../../runtime/chan.go.html#line-71">make</a>(<span class="keyword">chan</span> *<a href="conn.go.html#line-16" class="ident">Conn</a>, <span class="lit-number">1</span>),
+		}
+	}
+	<a href="../../../../../../../pkg/sync/atomic.html" class="ident i3">atomic</a>.<a href="../../../../../../sync/atomic/doc.go.html#line-92" class="ident">AddInt32</a>(&amp;<label for="r7" class="ident">p</label>.<a href="#line-38" class="ident">shared</a>, <span class="lit-number">1</span>)
+	<span class="keyword">return</span> <label for="r7" class="ident">p</label>
+}
+
+<span class="keyword">func</span> (<label for="r9" class="ident">p</label> *<a href="#line-36" class="ident">StickyConnPool</a>) <label for="r10" class="ident"><a href="../../../../../../../use/github.com/go-redis/redis/v8/internal/pool..StickyConnPool.NewConn.html" class="ident">NewConn</a></label>(<label for="r11" class="ident">ctx</label> <a href="../../../../../../../pkg/context.html" class="ident i0">context</a>.<a href="../../../../../../context/context.go.html#line-62" class="ident">Context</a>) (*<a href="conn.go.html#line-16" class="ident">Conn</a>, <a href="../../../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<span class="keyword">return</span> <label for="r9" class="ident">p</label>.<a href="#line-37" class="ident">pool</a>.<a href="pool.go.html#line-39" class="ident">NewConn</a>(<label for="r11" class="ident">ctx</label>)
+}
+
+<span class="keyword">func</span> (<label for="r12" class="ident">p</label> *<a href="#line-36" class="ident">StickyConnPool</a>) <label for="r13" class="ident"><a href="../../../../../../../use/github.com/go-redis/redis/v8/internal/pool..StickyConnPool.CloseConn.html" class="ident">CloseConn</a></label>(<label for="r14" class="ident">cn</label> *<a href="conn.go.html#line-16" class="ident">Conn</a>) <a href="../../../../../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<span class="keyword">return</span> <label for="r12" class="ident">p</label>.<a href="#line-37" class="ident">pool</a>.<a href="pool.go.html#line-40" class="ident">CloseConn</a>(<label for="r14" class="ident">cn</label>)
+}
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> In worst case this races with Close which is not a very common operation.</span></div>
+<div class="code"><pre><code>	<span class="keyword">for</span> <label for="r18" class="ident">i</label> := <span class="lit-number">0</span>; <label for="r18" class="ident">i</label> &lt; <span class="lit-number">1000</span>; <label for="r18" class="ident">i</label>++ {
+		<span class="keyword">switch</span> <a href="../../../../../../../pkg/sync/atomic.html" class="ident i3">atomic</a>.<a href="../../../../../../sync/atomic/doc.go.html#line-117" class="ident">LoadUint32</a>(&amp;<label for="r15" class="ident">p</label>.<a href="#line-40" class="ident">state</a>) {
+		<span class="keyword">case</span> <a href="#line-11" class="ident">stateDefault</a>:
+			<label for="r19" class="ident">cn</label>, <label for="r20" class="ident">err</label> := <label for="r15" class="ident">p</label>.<a href="#line-37" class="ident">pool</a>.<a href="pool.go.html#line-42" class="ident">Get</a>(<label for="r17" class="ident">ctx</label>)
+			<span class="keyword">if</span> <label for="r20" class="ident">err</label> != <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+				<span class="keyword">return</span> <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <label for="r20" class="ident">err</label>
+			}
+			<span class="keyword">if</span> <a href="../../../../../../../pkg/sync/atomic.html" class="ident i3">atomic</a>.<a href="../../../../../../sync/atomic/doc.go.html#line-80" class="ident">CompareAndSwapUint32</a>(&amp;<label for="r15" class="ident">p</label>.<a href="#line-40" class="ident">state</a>, <a href="#line-11" class="ident">stateDefault</a>, <a href="#line-12" class="ident">stateInited</a>) {
+				<span class="keyword">return</span> <label for="r19" class="ident">cn</label>, <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+			}
+			<label for="r15" class="ident">p</label>.<a href="#line-37" class="ident">pool</a>.<a href="pool.go.html#line-44" class="ident">Remove</a>(<label for="r17" class="ident">ctx</label>, <label for="r19" class="ident">cn</label>, <a href="pool.go.html#line-15" class="ident">ErrClosed</a>)
+		<span class="keyword">case</span> <a href="#line-12" class="ident">stateInited</a>:
+			<span class="keyword">if</span> <label for="r21" class="ident">err</label> := <label for="r15" class="ident">p</label>.<a href="#line-173" class="ident">badConnError</a>(); <label for="r21" class="ident">err</label> != <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+				<span class="keyword">return</span> <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <label for="r21" class="ident">err</label>
+			}
+			<label for="r22" class="ident">cn</label>, <label for="r23" class="ident">ok</label> := &lt;-<label for="r15" class="ident">p</label>.<a href="#line-41" class="ident">ch</a>
+			<span class="keyword">if</span> !<label for="r23" class="ident">ok</label> {
+				<span class="keyword">return</span> <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="pool.go.html#line-15" class="ident">ErrClosed</a>
+			}
+			<span class="keyword">return</span> <label for="r22" class="ident">cn</label>, <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+		<span class="keyword">case</span> <a href="#line-13" class="ident">stateClosed</a>:
+			<span class="keyword">return</span> <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="pool.go.html#line-15" class="ident">ErrClosed</a>
+		<span class="keyword">default</span>:
+			<a href="../../../../../../../pkg/builtin.html#name-panic" class="ident">panic</a>(<span class="lit-string">"not reached"</span>)
+		}
+	}
+	<span class="keyword">return</span> <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="../../../../../../../pkg/fmt.html" class="ident i2">fmt</a>.<a href="../../../../../../fmt/errors.go.html#line-17" class="ident">Errorf</a>(<span class="lit-string">"redis: StickyConnPool.Get: infinite loop"</span>)
+}
+
+<span class="keyword">func</span> (<label for="r24" class="ident">p</label> *<a href="#line-36" class="ident">StickyConnPool</a>) <label for="r25" class="ident"><a href="../../../../../../../use/github.com/go-redis/redis/v8/internal/pool..StickyConnPool.Put.html" class="ident">Put</a></label>(<label for="r26" class="ident">ctx</label> <a href="../../../../../../../pkg/context.html" class="ident i0">context</a>.<a href="../../../../../../context/context.go.html#line-62" class="ident">Context</a>, <label for="r27" class="ident">cn</label> *<a href="conn.go.html#line-16" class="ident">Conn</a>) {
+	<span class="keyword">defer</span> <span class="keyword">func</span>() {
+		<span class="keyword">if</span> <a href="../../../../../../../pkg/builtin.html#name-recover" class="ident">recover</a>() != <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<label for="r24" class="ident">p</label>.<a href="#line-108" class="ident">freeConn</a>(<label for="r26" class="ident">ctx</label>, <label for="r27" class="ident">cn</label>)
+		}
+	}()
+	<label for="r24" class="ident">p</label>.<a href="#line-41" class="ident">ch</a> &lt;- <label for="r27" class="ident">cn</label>
+}
+
+<span class="keyword">func</span> (<label for="r28" class="ident">p</label> *<a href="#line-36" class="ident">StickyConnPool</a>) <label for="r29" class="ident"><a href="../../../../../../../use/github.com/go-redis/redis/v8/internal/pool..StickyConnPool.freeConn*5271c.html" class="ident">freeConn</a></label>(<label for="r30" class="ident">ctx</label> <a href="../../../../../../../pkg/context.html" class="ident i0">context</a>.<a href="../../../../../../context/context.go.html#line-62" class="ident">Context</a>, <label for="r31" class="ident">cn</label> *<a href="conn.go.html#line-16" class="ident">Conn</a>) {
+	<span class="keyword">if</span> <label for="r32" class="ident">err</label> := <label for="r28" class="ident">p</label>.<a href="#line-173" class="ident">badConnError</a>(); <label for="r32" class="ident">err</label> != <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<label for="r28" class="ident">p</label>.<a href="#line-37" class="ident">pool</a>.<a href="pool.go.html#line-44" class="ident">Remove</a>(<label for="r30" class="ident">ctx</label>, <label for="r31" class="ident">cn</label>, <label for="r32" class="ident">err</label>)
+	} <span class="keyword">else</span> {
+		<label for="r28" class="ident">p</label>.<a href="#line-37" class="ident">pool</a>.<a href="pool.go.html#line-43" class="ident">Put</a>(<label for="r30" class="ident">ctx</label>, <label for="r31" class="ident">cn</label>)
+	}
+}
+
+<span class="keyword">func</span> (<label for="r33" class="ident">p</label> *<a href="#line-36" class="ident">StickyConnPool</a>) <label for="r34" class="ident"><a href="../../../../../../../use/github.com/go-redis/redis/v8/internal/pool..StickyConnPool.Remove.html" class="ident">Remove</a></label>(<label for="r35" class="ident">ctx</label> <a href="../../../../../../../pkg/context.html" class="ident i0">context</a>.<a href="../../../../../../context/context.go.html#line-62" class="ident">Context</a>, <label for="r36" class="ident">cn</label> *<a href="conn.go.html#line-16" class="ident">Conn</a>, <label for="r37" class="ident">reason</label> <a href="../../../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<span class="keyword">defer</span> <span class="keyword">func</span>() {
+		<span class="keyword">if</span> <a href="../../../../../../../pkg/builtin.html#name-recover" class="ident">recover</a>() != <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<label for="r33" class="ident">p</label>.<a href="#line-37" class="ident">pool</a>.<a href="pool.go.html#line-44" class="ident">Remove</a>(<label for="r35" class="ident">ctx</label>, <label for="r36" class="ident">cn</label>, <a href="pool.go.html#line-15" class="ident">ErrClosed</a>)
+		}
+	}()
+	<label for="r33" class="ident">p</label>.<a href="#line-43" class="ident">_badConnError</a>.<a href="../../../../../../sync/atomic/value.go.html#line-45" class="ident">Store</a>(<a href="#line-16" class="ident">BadConnError</a>{<a href="#line-17" class="ident">wrapped</a>: <label for="r37" class="ident">reason</label>})
+	<label for="r33" class="ident">p</label>.<a href="#line-41" class="ident">ch</a> &lt;- <label for="r36" class="ident">cn</label>
+}
+
+<span class="keyword">func</span> (<label for="r38" class="ident">p</label> *<a href="#line-36" class="ident">StickyConnPool</a>) <label for="r39" class="ident"><a href="../../../../../../../use/github.com/go-redis/redis/v8/internal/pool..StickyConnPool.Close.html" class="ident">Close</a></label>() <a href="../../../../../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<span class="keyword">if</span> <label for="r40" class="ident">shared</label> := <a href="../../../../../../../pkg/sync/atomic.html" class="ident i3">atomic</a>.<a href="../../../../../../sync/atomic/doc.go.html#line-92" class="ident">AddInt32</a>(&amp;<label for="r38" class="ident">p</label>.<a href="#line-38" class="ident">shared</a>, -<span class="lit-number">1</span>); <label for="r40" class="ident">shared</label> &gt; <span class="lit-number">0</span> {
+		<span class="keyword">return</span> <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+	}
+
+	<span class="keyword">for</span> <label for="r41" class="ident">i</label> := <span class="lit-number">0</span>; <label for="r41" class="ident">i</label> &lt; <span class="lit-number">1000</span>; <label for="r41" class="ident">i</label>++ {
+		<label for="r42" class="ident">state</label> := <a href="../../../../../../../pkg/sync/atomic.html" class="ident i3">atomic</a>.<a href="../../../../../../sync/atomic/doc.go.html#line-117" class="ident">LoadUint32</a>(&amp;<label for="r38" class="ident">p</label>.<a href="#line-40" class="ident">state</a>)
+		<span class="keyword">if</span> <label for="r42" class="ident">state</label> == <a href="#line-13" class="ident">stateClosed</a> {
+			<span class="keyword">return</span> <a href="pool.go.html#line-15" class="ident">ErrClosed</a>
+		}
+		<span class="keyword">if</span> <a href="../../../../../../../pkg/sync/atomic.html" class="ident i3">atomic</a>.<a href="../../../../../../sync/atomic/doc.go.html#line-80" class="ident">CompareAndSwapUint32</a>(&amp;<label for="r38" class="ident">p</label>.<a href="#line-40" class="ident">state</a>, <label for="r42" class="ident">state</label>, <a href="#line-13" class="ident">stateClosed</a>) {
+			<a href="../../../../../../../pkg/builtin.html#name-close" class="ident">close</a>(<label for="r38" class="ident">p</label>.<a href="#line-41" class="ident">ch</a>)
+			<label for="r43" class="ident">cn</label>, <label for="r44" class="ident">ok</label> := &lt;-<label for="r38" class="ident">p</label>.<a href="#line-41" class="ident">ch</a>
+			<span class="keyword">if</span> <label for="r44" class="ident">ok</label> {
+				<label for="r38" class="ident">p</label>.<a href="#line-108" class="ident">freeConn</a>(<a href="../../../../../../../pkg/context.html" class="ident i0">context</a>.<a href="../../../../../../context/context.go.html#line-216" class="ident">TODO</a>(), <label for="r43" class="ident">cn</label>)
+			}
+			<span class="keyword">return</span> <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+		}
+	}
+
+	<span class="keyword">return</span> <a href="../../../../../../../pkg/errors.html" class="ident i1">errors</a>.<a href="../../../../../../errors/errors.go.html#line-58" class="ident">New</a>(<span class="lit-string">"redis: StickyConnPool.Close: infinite loop"</span>)
+}
+
+<span class="keyword">func</span> (<label for="r45" class="ident">p</label> *<a href="#line-36" class="ident">StickyConnPool</a>) <label for="r46" class="ident"><a href="../../../../../../../use/github.com/go-redis/redis/v8/internal/pool..StickyConnPool.Reset.html" class="ident">Reset</a></label>(<label for="r47" class="ident">ctx</label> <a href="../../../../../../../pkg/context.html" class="ident i0">context</a>.<a href="../../../../../../context/context.go.html#line-62" class="ident">Context</a>) <a href="../../../../../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<span class="keyword">if</span> <label for="r45" class="ident">p</label>.<a href="#line-173" class="ident">badConnError</a>() == <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+	}
+
+	<a href="../../../../../../runtime/chan.go.html#line-707"><span class="keyword">select</span></a> {
+	<span class="keyword">case</span> <label for="r48" class="ident">cn</label>, <label for="r49" class="ident">ok</label> := <a href="../../../../../../runtime/chan.go.html#line-443">&lt;-</a><label for="r45" class="ident">p</label>.<a href="#line-41" class="ident">ch</a>:
+		<span class="keyword">if</span> !<label for="r49" class="ident">ok</label> {
+			<span class="keyword">return</span> <a href="pool.go.html#line-15" class="ident">ErrClosed</a>
+		}
+		<label for="r45" class="ident">p</label>.<a href="#line-37" class="ident">pool</a>.<a href="pool.go.html#line-44" class="ident">Remove</a>(<label for="r47" class="ident">ctx</label>, <label for="r48" class="ident">cn</label>, <a href="pool.go.html#line-15" class="ident">ErrClosed</a>)
+		<label for="r45" class="ident">p</label>.<a href="#line-43" class="ident">_badConnError</a>.<a href="../../../../../../sync/atomic/value.go.html#line-45" class="ident">Store</a>(<a href="#line-16" class="ident">BadConnError</a>{<a href="#line-17" class="ident">wrapped</a>: <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>})
+	<span class="keyword">default</span>:
+		<span class="keyword">return</span> <a href="../../../../../../../pkg/errors.html" class="ident i1">errors</a>.<a href="../../../../../../errors/errors.go.html#line-58" class="ident">New</a>(<span class="lit-string">"redis: StickyConnPool does not have a Conn"</span>)
+	}
+
+	<span class="keyword">if</span> !<a href="../../../../../../../pkg/sync/atomic.html" class="ident i3">atomic</a>.<a href="../../../../../../sync/atomic/doc.go.html#line-80" class="ident">CompareAndSwapUint32</a>(&amp;<label for="r45" class="ident">p</label>.<a href="#line-40" class="ident">state</a>, <a href="#line-12" class="ident">stateInited</a>, <a href="#line-11" class="ident">stateDefault</a>) {
+		<label for="r50" class="ident">state</label> := <a href="../../../../../../../pkg/sync/atomic.html" class="ident i3">atomic</a>.<a href="../../../../../../sync/atomic/doc.go.html#line-117" class="ident">LoadUint32</a>(&amp;<label for="r45" class="ident">p</label>.<a href="#line-40" class="ident">state</a>)
+		<span class="keyword">return</span> <a href="../../../../../../../pkg/fmt.html" class="ident i2">fmt</a>.<a href="../../../../../../fmt/errors.go.html#line-17" class="ident">Errorf</a>(<span class="lit-string">"redis: invalid StickyConnPool state: %d"</span>, <label for="r50" class="ident">state</label>)
+	}
+
+	<span class="keyword">return</span> <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+}
+
+<span class="keyword">func</span> (<label for="r51" class="ident">p</label> *<a href="#line-36" class="ident">StickyConnPool</a>) <label for="r52" class="ident"><a href="../../../../../../../use/github.com/go-redis/redis/v8/internal/pool..StickyConnPool.badConnError*ac612.html" class="ident">badConnError</a></label>() <a href="../../../../../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<span class="keyword">if</span> <label for="r53" class="ident">v</label> := <label for="r51" class="ident">p</label>.<a href="#line-43" class="ident">_badConnError</a>.<a href="../../../../../../sync/atomic/value.go.html#line-28" class="ident">Load</a>(); <label for="r53" class="ident">v</label> != <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<label for="r54" class="ident">err</label> := <label for="r53" class="ident">v</label>.(<a href="#line-16" class="ident">BadConnError</a>)
+		<span class="keyword">if</span> <label for="r54" class="ident">err</label>.<a href="#line-17" class="ident">wrapped</a> != <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<span class="keyword">return</span> <label for="r54" class="ident">err</label>
+		}
+	}
+	<span class="keyword">return</span> <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+}
+
+<span class="keyword">func</span> (<label for="r55" class="ident">p</label> *<a href="#line-36" class="ident">StickyConnPool</a>) <label for="r56" class="ident"><a href="../../../../../../../use/github.com/go-redis/redis/v8/internal/pool..StickyConnPool.Len.html" class="ident">Len</a></label>() <a href="../../../../../../../pkg/builtin.html#name-int" class="ident">int</a> {
+	<span class="keyword">switch</span> <a href="../../../../../../../pkg/sync/atomic.html" class="ident i3">atomic</a>.<a href="../../../../../../sync/atomic/doc.go.html#line-117" class="ident">LoadUint32</a>(&amp;<label for="r55" class="ident">p</label>.<a href="#line-40" class="ident">state</a>) {
+	<span class="keyword">case</span> <a href="#line-11" class="ident">stateDefault</a>:
+		<span class="keyword">return</span> <span class="lit-number">0</span>
+	<span class="keyword">case</span> <a href="#line-12" class="ident">stateInited</a>:
+		<span class="keyword">return</span> <span class="lit-number">1</span>
+	<span class="keyword">case</span> <a href="#line-13" class="ident">stateClosed</a>:
+		<span class="keyword">return</span> <span class="lit-number">0</span>
+	<span class="keyword">default</span>:
+		<a href="../../../../../../../pkg/builtin.html#name-panic" class="ident">panic</a>(<span class="lit-string">"not reached"</span>)
+	}
+}
+
+<span class="keyword">func</span> (<label for="r57" class="ident">p</label> *<a href="#line-36" class="ident">StickyConnPool</a>) <label for="r58" class="ident"><a href="../../../../../../../use/github.com/go-redis/redis/v8/internal/pool..StickyConnPool.IdleLen.html" class="ident">IdleLen</a></label>() <a href="../../../../../../../pkg/builtin.html#name-int" class="ident">int</a> {
+	<span class="keyword">return</span> <a href="../../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r57" class="ident">p</label>.<a href="#line-41" class="ident">ch</a>)
+}
+
+<span class="keyword">func</span> (<label for="r59" class="ident">p</label> *<a href="#line-36" class="ident">StickyConnPool</a>) <label for="r60" class="ident"><a href="../../../../../../../use/github.com/go-redis/redis/v8/internal/pool..StickyConnPool.Stats.html" class="ident">Stats</a></label>() *<a href="pool.go.html#line-28" class="ident">Stats</a> {
+	<span class="keyword">return</span> &amp;<a href="pool.go.html#line-28" class="ident">Stats</a>{}
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

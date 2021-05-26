@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: stackdriver.go in package contrib.go.opencensus.io/exporter/stackdriver</title>
+<link href="../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	stackdriver.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../pkg/contrib.go.opencensus.io/exporter/stackdriver.html">contrib.go.opencensus.io/exporter/stackdriver</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16],
+input[id=r17]:checked ~pre label[for=r17],
+input[id=r18]:checked ~pre label[for=r18],
+input[id=r19]:checked ~pre label[for=r19],
+input[id=r20]:checked ~pre label[for=r20],
+input[id=r21]:checked ~pre label[for=r21],
+input[id=r22]:checked ~pre label[for=r22],
+input[id=r23]:checked ~pre label[for=r23],
+input[id=r24]:checked ~pre label[for=r24],
+input[id=r25]:checked ~pre label[for=r25],
+input[id=r26]:checked ~pre label[for=r26],
+input[id=r27]:checked ~pre label[for=r27],
+input[id=r28]:checked ~pre label[for=r28],
+input[id=r29]:checked ~pre label[for=r29],
+input[id=r30]:checked ~pre label[for=r30],
+input[id=r31]:checked ~pre label[for=r31],
+input[id=r32]:checked ~pre label[for=r32],
+input[id=r33]:checked ~pre label[for=r33],
+input[id=r34]:checked ~pre label[for=r34],
+input[id=r35]:checked ~pre label[for=r35],
+input[id=r36]:checked ~pre label[for=r36],
+input[id=r37]:checked ~pre label[for=r37],
+input[id=r38]:checked ~pre label[for=r38],
+input[id=r39]:checked ~pre label[for=r39],
+input[id=r40]:checked ~pre label[for=r40],
+input[id=r41]:checked ~pre label[for=r41],
+input[id=r42]:checked ~pre label[for=r42],
+input[id=r43]:checked ~pre label[for=r43],
+input[id=r44]:checked ~pre label[for=r44],
+input[id=r45]:checked ~pre label[for=r45],
+input[id=r46]:checked ~pre label[for=r46],
+input[id=r47]:checked ~pre label[for=r47],
+input[id=r48]:checked ~pre label[for=r48],
+input[id=r49]:checked ~pre label[for=r49],
+input[id=r50]:checked ~pre label[for=r50],
+input[id=r51]:checked ~pre label[for=r51],
+input[id=r52]:checked ~pre label[for=r52],
+input[id=r53]:checked ~pre label[for=r53],
+input[id=r54]:checked ~pre label[for=r54],
+input[id=r55]:checked ~pre label[for=r55],
+input[id=r56]:checked ~pre label[for=r56],
+input[id=r57]:checked ~pre label[for=r57],
+input[id=r58]:checked ~pre label[for=r58],
+input[id=r59]:checked ~pre label[for=r59],
+input[id=r60]:checked ~pre label[for=r60],
+input[id=r61]:checked ~pre label[for=r61],
+input[id=r62]:checked ~pre label[for=r62],
+input[id=r63]:checked ~pre label[for=r63],
+input[id=r64]:checked ~pre label[for=r64],
+input[id=r65]:checked ~pre label[for=r65],
+input[id=r66]:checked ~pre label[for=r66],
+input[id=r67]:checked ~pre label[for=r67]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1,
+input[id=i2]:checked ~pre .i2,
+input[id=i3]:checked ~pre .i3,
+input[id=i4]:checked ~pre .i4,
+input[id=i5]:checked ~pre .i5,
+input[id=i6]:checked ~pre .i6,
+input[id=i7]:checked ~pre .i7,
+input[id=i8]:checked ~pre .i8,
+input[id=i9]:checked ~pre .i9,
+input[id=i10]:checked ~pre .i10,
+input[id=i11]:checked ~pre .i11,
+input[id=i12]:checked ~pre .i12,
+input[id=i13]:checked ~pre .i13,
+input[id=i14]:checked ~pre .i14,
+input[id=i15]:checked ~pre .i15,
+input[id=i16]:checked ~pre .i16,
+input[id=i17]:checked ~pre .i17,
+input[id=i18]:checked ~pre .i18,
+input[id=i19]:checked ~pre .i19,
+input[id=i20]:checked ~pre .i20,
+input[id=i21]:checked ~pre .i21,
+input[id=i22]:checked ~pre .i22
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="r17" type="radio" name="g"/>
+<input id="r18" type="radio" name="g"/>
+<input id="r19" type="radio" name="g"/>
+<input id="r20" type="radio" name="g"/>
+<input id="r21" type="radio" name="g"/>
+<input id="r22" type="radio" name="g"/>
+<input id="r23" type="radio" name="g"/>
+<input id="r24" type="radio" name="g"/>
+<input id="r25" type="radio" name="g"/>
+<input id="r26" type="radio" name="g"/>
+<input id="r27" type="radio" name="g"/>
+<input id="r28" type="radio" name="g"/>
+<input id="r29" type="radio" name="g"/>
+<input id="r30" type="radio" name="g"/>
+<input id="r31" type="radio" name="g"/>
+<input id="r32" type="radio" name="g"/>
+<input id="r33" type="radio" name="g"/>
+<input id="r34" type="radio" name="g"/>
+<input id="r35" type="radio" name="g"/>
+<input id="r36" type="radio" name="g"/>
+<input id="r37" type="radio" name="g"/>
+<input id="r38" type="radio" name="g"/>
+<input id="r39" type="radio" name="g"/>
+<input id="r40" type="radio" name="g"/>
+<input id="r41" type="radio" name="g"/>
+<input id="r42" type="radio" name="g"/>
+<input id="r43" type="radio" name="g"/>
+<input id="r44" type="radio" name="g"/>
+<input id="r45" type="radio" name="g"/>
+<input id="r46" type="radio" name="g"/>
+<input id="r47" type="radio" name="g"/>
+<input id="r48" type="radio" name="g"/>
+<input id="r49" type="radio" name="g"/>
+<input id="r50" type="radio" name="g"/>
+<input id="r51" type="radio" name="g"/>
+<input id="r52" type="radio" name="g"/>
+<input id="r53" type="radio" name="g"/>
+<input id="r54" type="radio" name="g"/>
+<input id="r55" type="radio" name="g"/>
+<input id="r56" type="radio" name="g"/>
+<input id="r57" type="radio" name="g"/>
+<input id="r58" type="radio" name="g"/>
+<input id="r59" type="radio" name="g"/>
+<input id="r60" type="radio" name="g"/>
+<input id="r61" type="radio" name="g"/>
+<input id="r62" type="radio" name="g"/>
+<input id="r63" type="radio" name="g"/>
+<input id="r64" type="radio" name="g"/>
+<input id="r65" type="radio" name="g"/>
+<input id="r66" type="radio" name="g"/>
+<input id="r67" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<input id="i2" type="radio" name="i"/>
+<input id="i3" type="radio" name="i"/>
+<input id="i4" type="radio" name="i"/>
+<input id="i5" type="radio" name="i"/>
+<input id="i6" type="radio" name="i"/>
+<input id="i7" type="radio" name="i"/>
+<input id="i8" type="radio" name="i"/>
+<input id="i9" type="radio" name="i"/>
+<input id="i10" type="radio" name="i"/>
+<input id="i11" type="radio" name="i"/>
+<input id="i12" type="radio" name="i"/>
+<input id="i13" type="radio" name="i"/>
+<input id="i14" type="radio" name="i"/>
+<input id="i15" type="radio" name="i"/>
+<input id="i16" type="radio" name="i"/>
+<input id="i17" type="radio" name="i"/>
+<input id="i18" type="radio" name="i"/>
+<input id="i19" type="radio" name="i"/>
+<input id="i20" type="radio" name="i"/>
+<input id="i21" type="radio" name="i"/>
+<input id="i22" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2018, OpenCensus Authors</span><span class="comment"></span><span class="comment"> Licensed under the Apache License, Version 2.0 (the "License");</span><span class="comment"> you may not use this file except in compliance with the License.</span><span class="comment"> You may obtain a copy of the License at</span><span class="comment"></span><span class="comment">     http://www.apache.org/licenses/LICENSE-2.0</span><span class="comment"></span><span class="comment"> Unless required by applicable law or agreed to in writing, software</span><span class="comment"> distributed under the License is distributed on an "AS IS" BASIS,</span><span class="comment"> WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span><span class="comment"> See the License for the specific language governing permissions and</span><span class="comment"> limitations under the License.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Package stackdriver contains the OpenCensus exporters for</span><span class="comment"> Stackdriver Monitoring and Stackdriver Tracing.</span><span class="comment"></span><span class="comment"> This exporter can be used to send metrics to Stackdriver Monitoring and traces</span><span class="comment"> to Stackdriver trace.</span><span class="comment"></span><span class="comment"> The package uses Application Default Credentials to authenticate by default.</span><span class="comment"> See: https://developers.google.com/identity/protocols/application-default-credentials</span><span class="comment"></span><span class="comment"> Alternatively, pass the authentication options in both the MonitoringClientOptions</span><span class="comment"> and the TraceClientOptions fields of Options.</span><span class="comment"></span><span class="comment"> Stackdriver Monitoring</span><span class="comment"></span><span class="comment"> This exporter support exporting OpenCensus views to Stackdriver Monitoring.</span><span class="comment"> Each registered view becomes a metric in Stackdriver Monitoring, with the</span><span class="comment"> tags becoming labels.</span><span class="comment"></span><span class="comment"> The aggregation function determines the metric kind: LastValue aggregations</span><span class="comment"> generate Gauge metrics and all other aggregations generate Cumulative metrics.</span><span class="comment"></span><span class="comment"> In order to be able to push your stats to Stackdriver Monitoring, you must:</span><span class="comment"></span><span class="comment">   1. Create a Cloud project: https://support.google.com/cloud/answer/6251787?hl=en</span><span class="comment">   2. Enable billing: https://support.google.com/cloud/answer/6288653#new-billing</span><span class="comment">   3. Enable the Stackdriver Monitoring API: https://console.cloud.google.com/apis/dashboard</span><span class="comment"></span><span class="comment"> These steps enable the API but don't require that your app is hosted on Google Cloud Platform.</span><span class="comment"></span><span class="comment"> Stackdriver Trace</span><span class="comment"></span><span class="comment"> This exporter supports exporting Trace Spans to Stackdriver Trace. It also</span><span class="comment"> supports the Google "Cloud Trace" propagation format header.</span></div>
+<div class="code"><pre><code><span class="keyword">package</span> stackdriver <span class="comment">// import "contrib.go.opencensus.io/exporter/stackdriver"</span>
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"context"</span></label>
+	<label for="i1"><span class="lit-string i1">"errors"</span></label>
+	<label for="i2"><span class="lit-string i2">"fmt"</span></label>
+	<label for="i3"><span class="lit-string i3">"log"</span></label>
+	<label for="i4"><span class="lit-string i4">"os"</span></label>
+	<label for="i5"><span class="lit-string i5">"path"</span></label>
+	<label for="i6"><span class="lit-string i6">"strings"</span></label>
+	<label for="i7"><span class="lit-string i7">"time"</span></label>
+
+	<a href="../../../../pkg/cloud.google.com/go/compute/metadata.html" class="ident i8">metadataapi</a> <label for="i8"><span class="lit-string i8">"cloud.google.com/go/compute/metadata"</span></label>
+	<a href="../../../../pkg/cloud.google.com/go/trace/apiv2.html" class="ident i9">traceapi</a> <label for="i9"><span class="lit-string i9">"cloud.google.com/go/trace/apiv2"</span></label>
+	<label for="i10"><span class="lit-string i10">"contrib.go.opencensus.io/exporter/stackdriver/monitoredresource"</span></label>
+	<a href="../../../../pkg/go.opencensus.io.html" class="ident i11">opencensus</a> <label for="i11"><span class="lit-string i11">"go.opencensus.io"</span></label>
+	<label for="i12"><span class="lit-string i12">"go.opencensus.io/resource"</span></label>
+	<label for="i13"><span class="lit-string i13">"go.opencensus.io/resource/resourcekeys"</span></label>
+	<label for="i14"><span class="lit-string i14">"go.opencensus.io/stats/view"</span></label>
+	<label for="i15"><span class="lit-string i15">"go.opencensus.io/trace"</span></label>
+	<label for="i16"><span class="lit-string i16">"golang.org/x/oauth2/google"</span></label>
+	<label for="i17"><span class="lit-string i17">"google.golang.org/api/option"</span></label>
+	<a href="../../../../pkg/google.golang.org/genproto/googleapis/api/monitoredres.html" class="ident i18">monitoredrespb</a> <label for="i18"><span class="lit-string i18">"google.golang.org/genproto/googleapis/api/monitoredres"</span></label>
+
+	<a href="../../../../pkg/github.com/census-instrumentation/opencensus-proto/gen-go/agent/common/v1.html" class="ident i19">commonpb</a> <label for="i19"><span class="lit-string i19">"github.com/census-instrumentation/opencensus-proto/gen-go/agent/common/v1"</span></label>
+	<a href="../../../../pkg/github.com/census-instrumentation/opencensus-proto/gen-go/metrics/v1.html" class="ident i20">metricspb</a> <label for="i20"><span class="lit-string i20">"github.com/census-instrumentation/opencensus-proto/gen-go/metrics/v1"</span></label>
+	<a href="../../../../pkg/github.com/census-instrumentation/opencensus-proto/gen-go/resource/v1.html" class="ident i21">resourcepb</a> <label for="i21"><span class="lit-string i21">"github.com/census-instrumentation/opencensus-proto/gen-go/resource/v1"</span></label>
+	<label for="i22"><span class="lit-string i22">"go.opencensus.io/metric/metricdata"</span></label>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Options contains options for configuring the exporter.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ProjectID is the identifier of the Stackdriver</span><span class="comment">	 project the user is uploading the stats data to.</span><span class="comment">	 If not set, this will default to your "Application Default Credentials".</span><span class="comment">	 For details see: https://developers.google.com/accounts/docs/application-default-credentials.</span><span class="comment">	</span><span class="comment">	 It will be used in the project_id label of a Stackdriver monitored</span><span class="comment">	 resource if the resource does not inherently belong to a specific</span><span class="comment">	 project, e.g. on-premise resource like k8s_container or generic_task.</span></div>
+<div class="code"><pre><code>	<a href="../../../../use/contrib.go.opencensus.io/exporter/stackdriver..Options.ProjectID.html" class="ident">ProjectID</a> <a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Location is the identifier of the GCP or AWS cloud region/zone in which</span><span class="comment">	 the data for a resource is stored.</span><span class="comment">	 If not set, it will default to the location provided by the metadata server.</span><span class="comment">	</span><span class="comment">	 It will be used in the location label of a Stackdriver monitored resource</span><span class="comment">	 if the resource does not inherently belong to a specific project, e.g.</span><span class="comment">	 on-premise resource like k8s_container or generic_task.</span></div>
+<div class="code"><pre><code>	<a href="../../../../use/contrib.go.opencensus.io/exporter/stackdriver..Options.Location.html" class="ident">Location</a> <a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> OnError is the hook to be called when there is</span><span class="comment">	 an error uploading the stats or tracing data.</span><span class="comment">	 If no custom hook is set, errors are logged.</span><span class="comment">	 Optional.</span></div>
+<div class="code"><pre><code>	<a href="../../../../use/contrib.go.opencensus.io/exporter/stackdriver..Options.OnError*d3a73.html" class="ident">OnError</a> <span class="keyword">func</span>(err <a href="../../../../pkg/builtin.html#name-error" class="ident">error</a>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> MonitoringClientOptions are additional options to be passed</span><span class="comment">	 to the underlying Stackdriver Monitoring API client.</span><span class="comment">	 Optional.</span></div>
+<div class="code"><pre><code>	<a href="../../../../use/contrib.go.opencensus.io/exporter/stackdriver..Options.MonitoringClientOptions.html" class="ident">MonitoringClientOptions</a> []<a href="../../../../pkg/google.golang.org/api/option.html" class="ident i17">option</a>.<a href="../../../google.golang.org/api/option/option.go.html#line-19" class="ident">ClientOption</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> TraceClientOptions are additional options to be passed</span><span class="comment">	 to the underlying Stackdriver Trace API client.</span><span class="comment">	 Optional.</span></div>
+<div class="code"><pre><code>	<a href="../../../../use/contrib.go.opencensus.io/exporter/stackdriver..Options.TraceClientOptions.html" class="ident">TraceClientOptions</a> []<a href="../../../../pkg/google.golang.org/api/option.html" class="ident i17">option</a>.<a href="../../../google.golang.org/api/option/option.go.html#line-19" class="ident">ClientOption</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> BundleDelayThreshold determines the max amount of time</span><span class="comment">	 the exporter can wait before uploading view data or trace spans to</span><span class="comment">	 the backend.</span><span class="comment">	 Optional.</span></div>
+<div class="code"><pre><code>	<a href="../../../../use/contrib.go.opencensus.io/exporter/stackdriver..Options.BundleDelayThreshold.html" class="ident">BundleDelayThreshold</a> <a href="../../../../pkg/time.html" class="ident i7">time</a>.<a href="../../../time/time.go.html#line-583" class="ident">Duration</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> BundleCountThreshold determines how many view data events or trace spans</span><span class="comment">	 can be buffered before batch uploading them to the backend.</span><span class="comment">	 Optional.</span></div>
+<div class="code"><pre><code>	<a href="../../../../use/contrib.go.opencensus.io/exporter/stackdriver..Options.BundleCountThreshold.html" class="ident">BundleCountThreshold</a> <a href="../../../../pkg/builtin.html#name-int" class="ident">int</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> TraceSpansBufferMaxBytes is the maximum size (in bytes) of spans that</span><span class="comment">	 will be buffered in memory before being dropped.</span><span class="comment">	</span><span class="comment">	 If unset, a default of 8MB will be used.</span></div>
+<div class="code"><pre><code>	<a href="../../../../use/contrib.go.opencensus.io/exporter/stackdriver..Options.TraceSpansBufferMaxBytes.html" class="ident">TraceSpansBufferMaxBytes</a> <a href="../../../../pkg/builtin.html#name-int" class="ident">int</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Resource sets the MonitoredResource against which all views will be</span><span class="comment">	 recorded by this exporter.</span><span class="comment">	</span><span class="comment">	 All Stackdriver metrics created by this exporter are custom metrics,</span><span class="comment">	 so only a limited number of MonitoredResource types are supported, see:</span><span class="comment">	 https://cloud.google.com/monitoring/custom-metrics/creating-metrics#which-resource</span><span class="comment">	</span><span class="comment">	 An important consideration when setting the Resource here is that</span><span class="comment">	 Stackdriver Monitoring only allows a single writer per</span><span class="comment">	 TimeSeries, see: https://cloud.google.com/monitoring/api/v3/metrics-details#intro-time-series</span><span class="comment">	 A TimeSeries is uniquely defined by the metric type name</span><span class="comment">	 (constructed from the view name and the MetricPrefix), the Resource field,</span><span class="comment">	 and the set of label key/value pairs (in OpenCensus terminology: tag).</span><span class="comment">	</span><span class="comment">	 If no custom Resource is set, a default MonitoredResource</span><span class="comment">	 with type global and no resource labels will be used. If you explicitly</span><span class="comment">	 set this field, you may also want to set custom DefaultMonitoringLabels.</span><span class="comment">	</span><span class="comment">	 Deprecated: Use MonitoredResource instead.</span></div>
+<div class="code"><pre><code>	<a href="../../../../use/contrib.go.opencensus.io/exporter/stackdriver..Options.Resource.html" class="ident">Resource</a> *<a href="../../../../pkg/google.golang.org/genproto/googleapis/api/monitoredres.html" class="ident i18">monitoredrespb</a>.<a href="../../../google.golang.org/genproto/googleapis/api/monitoredres/monitored_resource.pb.go.html#line-208" class="ident">MonitoredResource</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> MonitoredResource sets the MonitoredResource against which all views will be</span><span class="comment">	 recorded by this exporter.</span><span class="comment">	</span><span class="comment">	 All Stackdriver metrics created by this exporter are custom metrics,</span><span class="comment">	 so only a limited number of MonitoredResource types are supported, see:</span><span class="comment">	 https://cloud.google.com/monitoring/custom-metrics/creating-metrics#which-resource</span><span class="comment">	</span><span class="comment">	 An important consideration when setting the MonitoredResource here is that</span><span class="comment">	 Stackdriver Monitoring only allows a single writer per</span><span class="comment">	 TimeSeries, see: https://cloud.google.com/monitoring/api/v3/metrics-details#intro-time-series</span><span class="comment">	 A TimeSeries is uniquely defined by the metric type name</span><span class="comment">	 (constructed from the view name and the MetricPrefix), the MonitoredResource field,</span><span class="comment">	 and the set of label key/value pairs (in OpenCensus terminology: tag).</span><span class="comment">	</span><span class="comment">	 If no custom MonitoredResource is set AND if Resource is also not set then</span><span class="comment">	 a default MonitoredResource with type global and no resource labels will be used.</span><span class="comment">	 If you explicitly set this field, you may also want to set custom DefaultMonitoringLabels.</span><span class="comment">	</span><span class="comment">	 This field replaces Resource field. If this is set then it will override the</span><span class="comment">	 Resource field.</span><span class="comment">	 Optional, but encouraged.</span></div>
+<div class="code"><pre><code>	<a href="../../../../use/contrib.go.opencensus.io/exporter/stackdriver..Options.MonitoredResource.html" class="ident">MonitoredResource</a> <a href="../../../../pkg/contrib.go.opencensus.io/exporter/stackdriver/monitoredresource.html" class="ident i10">monitoredresource</a>.<a href="monitoredresource/monitored_resources.go.html#line-25" class="ident">Interface</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ResourceDetector provides a hook to discover arbitrary resource information.</span><span class="comment">	</span><span class="comment">	 The translation function provided in MapResource must be able to conver the</span><span class="comment">	 the resource information to a Stackdriver monitored resource.</span><span class="comment">	</span><span class="comment">	 If this field is unset, resource type and tags will automatically be discovered through</span><span class="comment">	 the OC_RESOURCE_TYPE and OC_RESOURCE_LABELS environment variables.</span></div>
+<div class="code"><pre><code>	<a href="../../../../use/contrib.go.opencensus.io/exporter/stackdriver..Options.ResourceDetector.html" class="ident">ResourceDetector</a> <a href="../../../../pkg/go.opencensus.io/resource.html" class="ident i12">resource</a>.<a href="../../../go.opencensus.io/resource/resource.go.html#line-140" class="ident">Detector</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> MapResource converts a OpenCensus resource to a Stackdriver monitored resource.</span><span class="comment">	</span><span class="comment">	 If this field is unset, DefaultMapResource will be used which encodes a set of default</span><span class="comment">	 conversions from auto-detected resources to well-known Stackdriver monitored resources.</span></div>
+<div class="code"><pre><code>	<a href="../../../../use/contrib.go.opencensus.io/exporter/stackdriver..Options.MapResource.html" class="ident">MapResource</a> <span class="keyword">func</span>(*<a href="../../../../pkg/go.opencensus.io/resource.html" class="ident i12">resource</a>.<a href="../../../go.opencensus.io/resource/resource.go.html#line-37" class="ident">Resource</a>) *<a href="../../../../pkg/google.golang.org/genproto/googleapis/api/monitoredres.html" class="ident i18">monitoredrespb</a>.<a href="../../../google.golang.org/genproto/googleapis/api/monitoredres/monitored_resource.pb.go.html#line-208" class="ident">MonitoredResource</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> MetricPrefix overrides the prefix of a Stackdriver metric names.</span><span class="comment">	 Optional. If unset defaults to "custom.googleapis.com/opencensus/".</span><span class="comment">	 If GetMetricPrefix is non-nil, this option is ignored.</span></div>
+<div class="code"><pre><code>	<a href="../../../../use/contrib.go.opencensus.io/exporter/stackdriver..Options.MetricPrefix.html" class="ident">MetricPrefix</a> <a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> GetMetricDisplayName allows customizing the display name for the metric</span><span class="comment">	 associated with the given view. By default it will be:</span><span class="comment">	   MetricPrefix + view.Name</span></div>
+<div class="code"><pre><code>	<a href="../../../../use/contrib.go.opencensus.io/exporter/stackdriver..Options.GetMetricDisplayName.html" class="ident">GetMetricDisplayName</a> <span class="keyword">func</span>(view *<a href="../../../../pkg/go.opencensus.io/stats/view.html" class="ident i14">view</a>.<a href="../../../go.opencensus.io/stats/view/view.go.html#line-35" class="ident">View</a>) <a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> GetMetricType allows customizing the metric type for the given view.</span><span class="comment">	 By default, it will be:</span><span class="comment">	   "custom.googleapis.com/opencensus/" + view.Name</span><span class="comment">	</span><span class="comment">	 See: https://cloud.google.com/monitoring/api/ref_v3/rest/v3/projects.metricDescriptors#MetricDescriptor</span><span class="comment">	 Depreacted. Use GetMetricPrefix instead.</span></div>
+<div class="code"><pre><code>	<a href="../../../../use/contrib.go.opencensus.io/exporter/stackdriver..Options.GetMetricType.html" class="ident">GetMetricType</a> <span class="keyword">func</span>(view *<a href="../../../../pkg/go.opencensus.io/stats/view.html" class="ident i14">view</a>.<a href="../../../go.opencensus.io/stats/view/view.go.html#line-35" class="ident">View</a>) <a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> GetMetricPrefix allows customizing the metric prefix for the given metric name.</span><span class="comment">	 If it is not set, MetricPrefix is used. If MetricPrefix is not set, it defaults to:</span><span class="comment">	   "custom.googleapis.com/opencensus/"</span><span class="comment">	</span><span class="comment">	 See: https://cloud.google.com/monitoring/api/ref_v3/rest/v3/projects.metricDescriptors#MetricDescriptor</span></div>
+<div class="code"><pre><code>	<a href="../../../../use/contrib.go.opencensus.io/exporter/stackdriver..Options.GetMetricPrefix.html" class="ident">GetMetricPrefix</a> <span class="keyword">func</span>(name <a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>) <a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> DefaultTraceAttributes will be appended to every span that is exported to</span><span class="comment">	 Stackdriver Trace.</span></div>
+<div class="code"><pre><code>	<a href="../../../../use/contrib.go.opencensus.io/exporter/stackdriver..Options.DefaultTraceAttributes.html" class="ident">DefaultTraceAttributes</a> <span class="keyword">map</span>[<a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>]<span class="keyword">interface</span>{}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> DefaultMonitoringLabels are labels added to every metric created by this</span><span class="comment">	 exporter in Stackdriver Monitoring.</span><span class="comment">	</span><span class="comment">	 If unset, this defaults to a single label with key "opencensus_task" and</span><span class="comment">	 value "go-&lt;pid&gt;@&lt;hostname&gt;". This default ensures that the set of labels</span><span class="comment">	 together with the default Resource (global) are unique to this</span><span class="comment">	 process, as required by Stackdriver Monitoring.</span><span class="comment">	</span><span class="comment">	 If you set DefaultMonitoringLabels, make sure that the Resource field</span><span class="comment">	 together with these labels is unique to the</span><span class="comment">	 current process. This is to ensure that there is only a single writer to</span><span class="comment">	 each TimeSeries in Stackdriver.</span><span class="comment">	</span><span class="comment">	 Set this to &amp;Labels{} (a pointer to an empty Labels) to avoid getting the</span><span class="comment">	 default "opencensus_task" label. You should only do this if you know that</span><span class="comment">	 the Resource you set uniquely identifies this Go process.</span></div>
+<div class="code"><pre><code>	<a href="../../../../use/contrib.go.opencensus.io/exporter/stackdriver..Options.DefaultMonitoringLabels.html" class="ident">DefaultMonitoringLabels</a> *<a href="label.go.html#line-18" class="ident">Labels</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Context allows you to provide a custom context for API calls.</span><span class="comment">	</span><span class="comment">	 This context will be used several times: first, to create Stackdriver</span><span class="comment">	 trace and metric clients, and then every time a new batch of traces or</span><span class="comment">	 stats needs to be uploaded.</span><span class="comment">	</span><span class="comment">	 Do not set a timeout on this context. Instead, set the Timeout option.</span><span class="comment">	</span><span class="comment">	 If unset, context.Background() will be used.</span></div>
+<div class="code"><pre><code>	<a href="../../../../use/contrib.go.opencensus.io/exporter/stackdriver..Options.Context.html" class="ident">Context</a> <a href="../../../../pkg/context.html" class="ident i0">context</a>.<a href="../../../context/context.go.html#line-62" class="ident">Context</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> SkipCMD enforces to skip all the CreateMetricDescriptor calls.</span><span class="comment">	 These calls are important in order to configure the unit of the metrics,</span><span class="comment">	 but in some cases all the exported metrics are builtin (unit is configured)</span><span class="comment">	 or the unit is not important.</span></div>
+<div class="code"><pre><code>	<a href="../../../../use/contrib.go.opencensus.io/exporter/stackdriver..Options.SkipCMD.html" class="ident">SkipCMD</a> <a href="../../../../pkg/builtin.html#name-bool" class="ident">bool</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Timeout for all API calls. If not set, defaults to 5 seconds.</span></div>
+<div class="code"><pre><code>	<a href="../../../../use/contrib.go.opencensus.io/exporter/stackdriver..Options.Timeout.html" class="ident">Timeout</a> <a href="../../../../pkg/time.html" class="ident i7">time</a>.<a href="../../../time/time.go.html#line-583" class="ident">Duration</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ReportingInterval sets the interval between reporting metrics.</span><span class="comment">	 If it is set to zero then default value is used.</span></div>
+<div class="code"><pre><code>	<a href="../../../../use/contrib.go.opencensus.io/exporter/stackdriver..Options.ReportingInterval.html" class="ident">ReportingInterval</a> <a href="../../../../pkg/time.html" class="ident i7">time</a>.<a href="../../../time/time.go.html#line-583" class="ident">Duration</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> NumberOfWorkers sets the number of go rountines that send requests</span><span class="comment">	 to Stackdriver Monitoring and Trace. The minimum number of workers is 1.</span></div>
+<div class="code"><pre><code>	<a href="../../../../use/contrib.go.opencensus.io/exporter/stackdriver..Options.NumberOfWorkers.html" class="ident">NumberOfWorkers</a> <a href="../../../../pkg/builtin.html#name-int" class="ident">int</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ResourceByDescriptor may be provided to supply monitored resource dynamically</span><span class="comment">	 based on the metric Descriptor. Most users will not need to set this,</span><span class="comment">	 but should instead set ResourceDetector.</span><span class="comment">	</span><span class="comment">	 The MonitoredResource and ResourceDetector fields are ignored if this</span><span class="comment">	 field is set to a non-nil value.</span><span class="comment">	</span><span class="comment">	 The ResourceByDescriptor is called to derive monitored resources from</span><span class="comment">	 metric.Descriptor and the label map associated with the time-series.</span><span class="comment">	 If any label is used for the derived resource then it will be removed</span><span class="comment">	 from the label map. The remaining labels in the map are returned to</span><span class="comment">	 be used with the time-series.</span><span class="comment">	</span><span class="comment">	 If the func set to this field does not return valid resource even for one</span><span class="comment">	 time-series then it will result into an error for the entire CreateTimeSeries request</span><span class="comment">	 which may contain more than one time-series.</span></div>
+<div class="code"><pre><code>	<a href="../../../../use/contrib.go.opencensus.io/exporter/stackdriver..Options.ResourceByDescriptor.html" class="ident">ResourceByDescriptor</a> <span class="keyword">func</span>(*<a href="../../../../pkg/go.opencensus.io/metric/metricdata.html" class="ident i22">metricdata</a>.<a href="../../../go.opencensus.io/metric/metricdata/metric.go.html#line-24" class="ident">Descriptor</a>, <span class="keyword">map</span>[<a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>]<a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>) (<span class="keyword">map</span>[<a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>]<a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>, <a href="../../../../pkg/contrib.go.opencensus.io/exporter/stackdriver/monitoredresource.html" class="ident i10">monitoredresource</a>.<a href="monitoredresource/monitored_resources.go.html#line-25" class="ident">Interface</a>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Override the user agent value supplied to Monitoring APIs and included as an</span><span class="comment">	 attribute in trace data.</span></div>
+<div class="code"><pre><code>	<a href="../../../../use/contrib.go.opencensus.io/exporter/stackdriver..Options.UserAgent.html" class="ident">UserAgent</a> <a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>
+}
+
+<span class="keyword">const</span> <a href="../../../../pkg/contrib.go.opencensus.io/exporter/stackdriver.html#name-defaultTimeout" class="ident">defaultTimeout</a> = <span class="lit-number">5</span> * <a href="../../../../pkg/time.html" class="ident i7">time</a>.<a href="../../../time/time.go.html#line-605" class="ident">Second</a>
+
+<span class="keyword">var</span> <a href="../../../../pkg/contrib.go.opencensus.io/exporter/stackdriver.html#name-defaultDomain" class="ident">defaultDomain</a> = <a href="../../../../pkg/path.html" class="ident i5">path</a>.<a href="../../../path/path.go.html#line-162" class="ident">Join</a>(<span class="lit-string">"custom.googleapis.com"</span>, <span class="lit-string">"opencensus"</span>)
+
+<span class="keyword">var</span> <a href="../../../../pkg/contrib.go.opencensus.io/exporter/stackdriver.html#name-defaultUserAgent" class="ident">defaultUserAgent</a> = <a href="../../../../pkg/fmt.html" class="ident i2">fmt</a>.<a href="../../../fmt/print.go.html#line-217" class="ident">Sprintf</a>(<span class="lit-string">"opencensus-go %s; stackdriver-exporter %s"</span>, <a href="../../../../pkg/go.opencensus.io.html" class="ident i11">opencensus</a>.<a href="../../../go.opencensus.io/opencensus.go.html#line-19" class="ident">Version</a>(), <a href="stats.go.html#line-54" class="ident">version</a>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Exporter is a stats and trace exporter that uploads data to Stackdriver.</span><span class="comment"></span><span class="comment"> You can create a single Exporter and register it as both a trace exporter</span><span class="comment"> (to export to Stackdriver Trace) and a stats exporter (to integrate with</span><span class="comment"> Stackdriver Monitoring).</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../pkg/contrib.go.opencensus.io/exporter/stackdriver.html#name-Exporter" class="ident">Exporter</a> <span class="keyword">struct</span> {
+	<a href="../../../../use/contrib.go.opencensus.io/exporter/stackdriver..Exporter.traceExporter*a1a00.html" class="ident">traceExporter</a> *<a href="trace.go.html#line-37" class="ident">traceExporter</a>
+	<a href="../../../../use/contrib.go.opencensus.io/exporter/stackdriver..Exporter.statsExporter*35fbb.html" class="ident">statsExporter</a> *<a href="stats.go.html#line-58" class="ident">statsExporter</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> NewExporter creates a new Exporter that implements both stats.Exporter and</span><span class="comment"> trace.Exporter.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r0" class="ident"><a href="../../../../pkg/contrib.go.opencensus.io/exporter/stackdriver.html#name-NewExporter" class="ident">NewExporter</a></label>(<label for="r1" class="ident">o</label> <a href="#line-79" class="ident">Options</a>) (*<a href="#line-300" class="ident">Exporter</a>, <a href="../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<span class="keyword">if</span> <label for="r1" class="ident">o</label>.<a href="#line-88" class="ident">ProjectID</a> == <span class="lit-string">""</span> {
+		<label for="r2" class="ident">ctx</label> := <label for="r1" class="ident">o</label>.<a href="#line-247" class="ident">Context</a>
+		<span class="keyword">if</span> <label for="r2" class="ident">ctx</label> == <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<label for="r2" class="ident">ctx</label> = <a href="../../../../pkg/context.html" class="ident i0">context</a>.<a href="../../../context/context.go.html#line-208" class="ident">Background</a>()
+		}
+		<label for="r3" class="ident">creds</label>, <label for="r4" class="ident">err</label> := <a href="../../../../pkg/golang.org/x/oauth2/google.html" class="ident i16">google</a>.<a href="../../../golang.org/x/oauth2/google/default.go.html#line-76" class="ident">FindDefaultCredentials</a>(<label for="r2" class="ident">ctx</label>, <a href="../../../../pkg/cloud.google.com/go/trace/apiv2.html" class="ident i9">traceapi</a>.<a href="../../../cloud.google.com/go/trace/apiv2/doc.go.html#line-79" class="ident">DefaultAuthScopes</a>()...)
+		<span class="keyword">if</span> <label for="r4" class="ident">err</label> != <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<span class="keyword">return</span> <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="../../../../pkg/fmt.html" class="ident i2">fmt</a>.<a href="../../../fmt/errors.go.html#line-17" class="ident">Errorf</a>(<span class="lit-string">"stackdriver: %v"</span>, <label for="r4" class="ident">err</label>)
+		}
+		<span class="keyword">if</span> <label for="r3" class="ident">creds</label>.<a href="../../../golang.org/x/oauth2/google/default.go.html#line-25" class="ident">ProjectID</a> == <span class="lit-string">""</span> {
+			<span class="keyword">return</span> <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="../../../../pkg/errors.html" class="ident i1">errors</a>.<a href="../../../errors/errors.go.html#line-58" class="ident">New</a>(<span class="lit-string">"stackdriver: no project found with application default credentials"</span>)
+		}
+		<label for="r1" class="ident">o</label>.<a href="#line-88" class="ident">ProjectID</a> = <label for="r3" class="ident">creds</label>.<a href="../../../golang.org/x/oauth2/google/default.go.html#line-25" class="ident">ProjectID</a>
+	}
+	<span class="keyword">if</span> <label for="r1" class="ident">o</label>.<a href="#line-97" class="ident">Location</a> == <span class="lit-string">""</span> {
+		<span class="keyword">if</span> <a href="../../../../pkg/cloud.google.com/go/compute/metadata.html" class="ident i8">metadataapi</a>.<a href="../../../cloud.google.com/go/compute/metadata/metadata.go.html#line-108" class="ident">OnGCE</a>() {
+			<label for="r5" class="ident">zone</label>, <label for="r6" class="ident">err</label> := <a href="../../../../pkg/cloud.google.com/go/compute/metadata.html" class="ident i8">metadataapi</a>.<a href="../../../cloud.google.com/go/compute/metadata/metadata.go.html#line-236" class="ident">Zone</a>()
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> This error should be logged with a warning level.</span></div>
+<div class="code"><pre><code>				<label for="r6" class="ident">err</label> = <a href="../../../../pkg/fmt.html" class="ident i2">fmt</a>.<a href="../../../fmt/errors.go.html#line-17" class="ident">Errorf</a>(<span class="lit-string">"setting Stackdriver default location failed: %s"</span>, <label for="r6" class="ident">err</label>)
+				<span class="keyword">if</span> <label for="r1" class="ident">o</label>.<a href="#line-103" class="ident">OnError</a> != <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+					<label for="r1" class="ident">o</label>.<a href="#line-103" class="ident">OnError</a>(<label for="r6" class="ident">err</label>)
+				} <span class="keyword">else</span> {
+					<a href="../../../../pkg/log.html" class="ident i3">log</a>.<a href="../../../log/log.go.html#line-316" class="ident">Print</a>(<label for="r6" class="ident">err</label>)
+				}
+			} <span class="keyword">else</span> {
+				<label for="r1" class="ident">o</label>.<a href="#line-97" class="ident">Location</a> = <label for="r5" class="ident">zone</label>
+			}
+		}
+	}
+
+	<span class="keyword">if</span> <label for="r1" class="ident">o</label>.<a href="#line-174" class="ident">MonitoredResource</a> != <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<label for="r1" class="ident">o</label>.<a href="#line-151" class="ident">Resource</a> = <a href="#line-492" class="ident">convertMonitoredResourceToPB</a>(<label for="r1" class="ident">o</label>.<a href="#line-174" class="ident">MonitoredResource</a>)
+	}
+	<span class="keyword">if</span> <label for="r1" class="ident">o</label>.<a href="#line-189" class="ident">MapResource</a> == <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<label for="r1" class="ident">o</label>.<a href="#line-189" class="ident">MapResource</a> = <a href="resource.go.html#line-185" class="ident">DefaultMapResource</a>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> For backwards-compatibility we still respect the deprecated resource field.</span></div>
+<div class="code"><pre><code>		<span class="keyword">if</span> <label for="r1" class="ident">o</label>.<a href="#line-151" class="ident">Resource</a> != <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<span class="keyword">return</span> <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="../../../../pkg/errors.html" class="ident i1">errors</a>.<a href="../../../errors/errors.go.html#line-58" class="ident">New</a>(<span class="lit-string">"stackdriver: ResourceDetector must not be used in combination with deprecated resource fields"</span>)
+		}
+		<label for="r7" class="ident">res</label>, <label for="r8" class="ident">err</label> := <label for="r1" class="ident">o</label>.<a href="#line-183" class="ident">ResourceDetector</a>(<label for="r1" class="ident">o</label>.<a href="#line-247" class="ident">Context</a>)
+		<span class="keyword">if</span> <label for="r8" class="ident">err</label> != <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<span class="keyword">return</span> <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="../../../../pkg/fmt.html" class="ident i2">fmt</a>.<a href="../../../fmt/errors.go.html#line-17" class="ident">Errorf</a>(<span class="lit-string">"stackdriver: detect resource: %s"</span>, <label for="r8" class="ident">err</label>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Populate internal resource labels for defaulting project_id, location, and</span><span class="comment">		 generic resource labels of applicable monitored resources.</span></div>
+<div class="code"><pre><code>		<span class="keyword">if</span> <label for="r7" class="ident">res</label>.<a href="../../../go.opencensus.io/resource/resource.go.html#line-39" class="ident">Labels</a> == <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<label for="r7" class="ident">res</label>.<a href="../../../go.opencensus.io/resource/resource.go.html#line-39" class="ident">Labels</a> = <a href="../../../../pkg/builtin.html#name-make" class="ident">make</a>(<span class="keyword">map</span>[<a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>]<a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>)
+		}
+		<label for="r7" class="ident">res</label>.<a href="../../../go.opencensus.io/resource/resource.go.html#line-39" class="ident">Labels</a>[<a href="resource.go.html#line-31" class="ident">stackdriverProjectID</a>] = <label for="r1" class="ident">o</label>.<a href="#line-88" class="ident">ProjectID</a>
+		<label for="r7" class="ident">res</label>.<a href="../../../go.opencensus.io/resource/resource.go.html#line-39" class="ident">Labels</a>[<a href="../../../../pkg/go.opencensus.io/resource/resourcekeys.html" class="ident i13">resourcekeys</a>.<a href="../../../go.opencensus.io/resource/resourcekeys/const.go.html#line-49" class="ident">CloudKeyZone</a>] = <label for="r1" class="ident">o</label>.<a href="#line-97" class="ident">Location</a>
+		<label for="r7" class="ident">res</label>.<a href="../../../go.opencensus.io/resource/resource.go.html#line-39" class="ident">Labels</a>[<a href="resource.go.html#line-34" class="ident">stackdriverGenericTaskNamespace</a>] = <span class="lit-string">"default"</span>
+		<label for="r7" class="ident">res</label>.<a href="../../../go.opencensus.io/resource/resource.go.html#line-39" class="ident">Labels</a>[<a href="resource.go.html#line-35" class="ident">stackdriverGenericTaskJob</a>] = <a href="../../../../pkg/path.html" class="ident i5">path</a>.<a href="../../../path/path.go.html#line-199" class="ident">Base</a>(<a href="../../../../pkg/os.html" class="ident i4">os</a>.<a href="../../../os/proc.go.html#line-16" class="ident">Args</a>[<span class="lit-number">0</span>])
+		<label for="r7" class="ident">res</label>.<a href="../../../go.opencensus.io/resource/resource.go.html#line-39" class="ident">Labels</a>[<a href="resource.go.html#line-36" class="ident">stackdriverGenericTaskID</a>] = <a href="stats.go.html#line-182" class="ident">getTaskValue</a>()
+		<a href="../../../../pkg/log.html" class="ident i3">log</a>.<a href="../../../log/log.go.html#line-322" class="ident">Printf</a>(<span class="lit-string">"OpenCensus detected resource: %v"</span>, <label for="r7" class="ident">res</label>)
+
+		<label for="r1" class="ident">o</label>.<a href="#line-151" class="ident">Resource</a> = <label for="r1" class="ident">o</label>.<a href="#line-189" class="ident">MapResource</a>(<label for="r7" class="ident">res</label>)
+		<a href="../../../../pkg/log.html" class="ident i3">log</a>.<a href="../../../log/log.go.html#line-322" class="ident">Printf</a>(<span class="lit-string">"OpenCensus using monitored resource: %v"</span>, <label for="r1" class="ident">o</label>.<a href="#line-151" class="ident">Resource</a>)
+	}
+	<span class="keyword">if</span> <label for="r1" class="ident">o</label>.<a href="#line-194" class="ident">MetricPrefix</a> != <span class="lit-string">""</span> &amp;&amp; !<a href="../../../../pkg/strings.html" class="ident i6">strings</a>.<a href="../../../strings/strings.go.html#line-449" class="ident">HasSuffix</a>(<label for="r1" class="ident">o</label>.<a href="#line-194" class="ident">MetricPrefix</a>, <span class="lit-string">"/"</span>) {
+		<label for="r1" class="ident">o</label>.<a href="#line-194" class="ident">MetricPrefix</a> = <label for="r1" class="ident">o</label>.<a href="#line-194" class="ident">MetricPrefix</a> + <span class="lit-string">"/"</span>
+	}
+	<span class="keyword">if</span> <label for="r1" class="ident">o</label>.<a href="#line-286" class="ident">UserAgent</a> == <span class="lit-string">""</span> {
+		<label for="r1" class="ident">o</label>.<a href="#line-286" class="ident">UserAgent</a> = <a href="#line-293" class="ident">defaultUserAgent</a>
+	}
+
+	<label for="r9" class="ident">se</label>, <label for="r10" class="ident">err</label> := <a href="stats.go.html#line-84" class="ident">newStatsExporter</a>(<label for="r1" class="ident">o</label>)
+	<span class="keyword">if</span> <label for="r10" class="ident">err</label> != <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <label for="r10" class="ident">err</label>
+	}
+	<label for="r11" class="ident">te</label>, <label for="r10" class="ident">err</label> := <a href="trace.go.html#line-49" class="ident">newTraceExporter</a>(<label for="r1" class="ident">o</label>)
+	<span class="keyword">if</span> <label for="r10" class="ident">err</label> != <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <label for="r10" class="ident">err</label>
+	}
+	<span class="keyword">return</span> &amp;<a href="#line-300" class="ident">Exporter</a>{
+		<a href="#line-302" class="ident">statsExporter</a>: <label for="r9" class="ident">se</label>,
+		<a href="#line-301" class="ident">traceExporter</a>: <label for="r11" class="ident">te</label>,
+	}, <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ExportView exports to the Stackdriver Monitoring if view data</span><span class="comment"> has one or more rows.</span><span class="comment"> Deprecated: use ExportMetrics and StartMetricsExporter instead.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r12" class="ident">e</label> *<a href="#line-300" class="ident">Exporter</a>) <label for="r13" class="ident"><a href="../../../../use/contrib.go.opencensus.io/exporter/stackdriver..Exporter.ExportView.html" class="ident">ExportView</a></label>(<label for="r14" class="ident">vd</label> *<a href="../../../../pkg/go.opencensus.io/stats/view.html" class="ident i14">view</a>.<a href="../../../go.opencensus.io/stats/view/view.go.html#line-166" class="ident">Data</a>) {
+	<label for="r12" class="ident">e</label>.<a href="#line-302" class="ident">statsExporter</a>.<a href="stats.go.html#line-165" class="ident">ExportView</a>(<label for="r14" class="ident">vd</label>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ExportMetricsProto exports OpenCensus Metrics Proto to Stackdriver Monitoring synchronously,</span><span class="comment"> without de-duping or adding proto metrics to the bundler.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r15" class="ident">e</label> *<a href="#line-300" class="ident">Exporter</a>) <label for="r16" class="ident"><a href="../../../../use/contrib.go.opencensus.io/exporter/stackdriver..Exporter.ExportMetricsProto.html" class="ident">ExportMetricsProto</a></label>(<label for="r17" class="ident">ctx</label> <a href="../../../../pkg/context.html" class="ident i0">context</a>.<a href="../../../context/context.go.html#line-62" class="ident">Context</a>, <label for="r18" class="ident">node</label> *<a href="../../../../pkg/github.com/census-instrumentation/opencensus-proto/gen-go/agent/common/v1.html" class="ident i19">commonpb</a>.<a href="../../../github.com/census-instrumentation/opencensus-proto/gen-go/agent/common/v1/common.pb.go.html#line-123" class="ident">Node</a>, <label for="r19" class="ident">rsc</label> *<a href="../../../../pkg/github.com/census-instrumentation/opencensus-proto/gen-go/resource/v1.html" class="ident i21">resourcepb</a>.<a href="../../../github.com/census-instrumentation/opencensus-proto/gen-go/resource/v1/resource.pb.go.html#line-43" class="ident">Resource</a>, <label for="r20" class="ident">metrics</label> []*<a href="../../../../pkg/github.com/census-instrumentation/opencensus-proto/gen-go/metrics/v1.html" class="ident i20">metricspb</a>.<a href="../../../github.com/census-instrumentation/opencensus-proto/gen-go/metrics/v1/metrics.pb.go.html#line-143" class="ident">Metric</a>) <a href="../../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<label for="r21" class="ident">_</label>, <label for="r22" class="ident">err</label> := <label for="r15" class="ident">e</label>.<a href="#line-302" class="ident">statsExporter</a>.<a href="metrics_proto.go.html#line-52" class="ident">PushMetricsProto</a>(<label for="r17" class="ident">ctx</label>, <label for="r18" class="ident">node</label>, <label for="r19" class="ident">rsc</label>, <label for="r20" class="ident">metrics</label>)
+	<span class="keyword">return</span> <label for="r22" class="ident">err</label>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> PushMetricsProto simliar with ExportMetricsProto but returns the number of dropped timeseries.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r23" class="ident">e</label> *<a href="#line-300" class="ident">Exporter</a>) <label for="r24" class="ident"><a href="../../../../use/contrib.go.opencensus.io/exporter/stackdriver..Exporter.PushMetricsProto.html" class="ident">PushMetricsProto</a></label>(<label for="r25" class="ident">ctx</label> <a href="../../../../pkg/context.html" class="ident i0">context</a>.<a href="../../../context/context.go.html#line-62" class="ident">Context</a>, <label for="r26" class="ident">node</label> *<a href="../../../../pkg/github.com/census-instrumentation/opencensus-proto/gen-go/agent/common/v1.html" class="ident i19">commonpb</a>.<a href="../../../github.com/census-instrumentation/opencensus-proto/gen-go/agent/common/v1/common.pb.go.html#line-123" class="ident">Node</a>, <label for="r27" class="ident">rsc</label> *<a href="../../../../pkg/github.com/census-instrumentation/opencensus-proto/gen-go/resource/v1.html" class="ident i21">resourcepb</a>.<a href="../../../github.com/census-instrumentation/opencensus-proto/gen-go/resource/v1/resource.pb.go.html#line-43" class="ident">Resource</a>, <label for="r28" class="ident">metrics</label> []*<a href="../../../../pkg/github.com/census-instrumentation/opencensus-proto/gen-go/metrics/v1.html" class="ident i20">metricspb</a>.<a href="../../../github.com/census-instrumentation/opencensus-proto/gen-go/metrics/v1/metrics.pb.go.html#line-143" class="ident">Metric</a>) (<a href="../../../../pkg/builtin.html#name-int" class="ident">int</a>, <a href="../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<span class="keyword">return</span> <label for="r23" class="ident">e</label>.<a href="#line-302" class="ident">statsExporter</a>.<a href="metrics_proto.go.html#line-52" class="ident">PushMetricsProto</a>(<label for="r25" class="ident">ctx</label>, <label for="r26" class="ident">node</label>, <label for="r27" class="ident">rsc</label>, <label for="r28" class="ident">metrics</label>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ExportMetrics exports OpenCensus Metrics to Stackdriver Monitoring</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r29" class="ident">e</label> *<a href="#line-300" class="ident">Exporter</a>) <label for="r30" class="ident"><a href="../../../../use/contrib.go.opencensus.io/exporter/stackdriver..Exporter.ExportMetrics.html" class="ident">ExportMetrics</a></label>(<label for="r31" class="ident">ctx</label> <a href="../../../../pkg/context.html" class="ident i0">context</a>.<a href="../../../context/context.go.html#line-62" class="ident">Context</a>, <label for="r32" class="ident">metrics</label> []*<a href="../../../../pkg/go.opencensus.io/metric/metricdata.html" class="ident i22">metricdata</a>.<a href="../../../go.opencensus.io/metric/metricdata/metric.go.html#line-34" class="ident">Metric</a>) <a href="../../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<span class="keyword">return</span> <label for="r29" class="ident">e</label>.<a href="#line-302" class="ident">statsExporter</a>.<a href="metrics.go.html#line-52" class="ident">ExportMetrics</a>(<label for="r31" class="ident">ctx</label>, <label for="r32" class="ident">metrics</label>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> StartMetricsExporter starts exporter by creating an interval reader that reads metrics</span><span class="comment"> from all registered producers at set interval and exports them.</span><span class="comment"> Use StopMetricsExporter to stop exporting metrics.</span><span class="comment"> Previously, it required registering exporter to export stats collected by opencensus.</span><span class="comment">    exporter := stackdriver.NewExporter(stackdriver.Option{})</span><span class="comment">    view.RegisterExporter(exporter)</span><span class="comment"> Now, it requires to call StartMetricsExporter() to export stats and metrics collected by opencensus.</span><span class="comment">    exporter := stackdriver.NewExporter(stackdriver.Option{})</span><span class="comment">    exporter.StartMetricsExporter()</span><span class="comment">    defer exporter.StopMetricsExporter()</span><span class="comment"></span><span class="comment"> Both approach should not be used simultaenously. Otherwise it may result into unknown behavior.</span><span class="comment"> Previous approach continues to work as before but will not report newly define metrics such</span><span class="comment"> as gauges.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r33" class="ident">e</label> *<a href="#line-300" class="ident">Exporter</a>) <label for="r34" class="ident"><a href="../../../../use/contrib.go.opencensus.io/exporter/stackdriver..Exporter.StartMetricsExporter.html" class="ident">StartMetricsExporter</a></label>() <a href="../../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<span class="keyword">return</span> <label for="r33" class="ident">e</label>.<a href="#line-302" class="ident">statsExporter</a>.<a href="stats.go.html#line-139" class="ident">startMetricsReader</a>()
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> StopMetricsExporter stops exporter from exporting metrics.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r35" class="ident">e</label> *<a href="#line-300" class="ident">Exporter</a>) <label for="r36" class="ident"><a href="../../../../use/contrib.go.opencensus.io/exporter/stackdriver..Exporter.StopMetricsExporter.html" class="ident">StopMetricsExporter</a></label>() {
+	<label for="r35" class="ident">e</label>.<a href="#line-302" class="ident">statsExporter</a>.<a href="stats.go.html#line-147" class="ident">stopMetricsReader</a>()
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ExportSpan exports a SpanData to Stackdriver Trace.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r37" class="ident">e</label> *<a href="#line-300" class="ident">Exporter</a>) <label for="r38" class="ident"><a href="../../../../use/contrib.go.opencensus.io/exporter/stackdriver..Exporter.ExportSpan.html" class="ident">ExportSpan</a></label>(<label for="r39" class="ident">sd</label> *<a href="../../../../pkg/go.opencensus.io/trace.html" class="ident i15">trace</a>.<a href="../../../go.opencensus.io/trace/export.go.html#line-74" class="ident">SpanData</a>) {
+	<span class="keyword">if</span> <a href="../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r37" class="ident">e</label>.<a href="#line-301" class="ident">traceExporter</a>.<a href="trace.go.html#line-38" class="ident">o</a>.<a href="#line-218" class="ident">DefaultTraceAttributes</a>) &gt; <span class="lit-number">0</span> {
+		<label for="r39" class="ident">sd</label> = <label for="r37" class="ident">e</label>.<a href="#line-451" class="ident">sdWithDefaultTraceAttributes</a>(<label for="r39" class="ident">sd</label>)
+	}
+	<label for="r37" class="ident">e</label>.<a href="#line-301" class="ident">traceExporter</a>.<a href="trace.go.html#line-100" class="ident">ExportSpan</a>(<label for="r39" class="ident">sd</label>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> PushTraceSpans exports a bundle of OpenCensus Spans.</span><span class="comment"> Returns number of dropped spans.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r40" class="ident">e</label> *<a href="#line-300" class="ident">Exporter</a>) <label for="r41" class="ident"><a href="../../../../use/contrib.go.opencensus.io/exporter/stackdriver..Exporter.PushTraceSpans.html" class="ident">PushTraceSpans</a></label>(<label for="r42" class="ident">ctx</label> <a href="../../../../pkg/context.html" class="ident i0">context</a>.<a href="../../../context/context.go.html#line-62" class="ident">Context</a>, <label for="r43" class="ident">node</label> *<a href="../../../../pkg/github.com/census-instrumentation/opencensus-proto/gen-go/agent/common/v1.html" class="ident i19">commonpb</a>.<a href="../../../github.com/census-instrumentation/opencensus-proto/gen-go/agent/common/v1/common.pb.go.html#line-123" class="ident">Node</a>, <label for="r44" class="ident">rsc</label> *<a href="../../../../pkg/github.com/census-instrumentation/opencensus-proto/gen-go/resource/v1.html" class="ident i21">resourcepb</a>.<a href="../../../github.com/census-instrumentation/opencensus-proto/gen-go/resource/v1/resource.pb.go.html#line-43" class="ident">Resource</a>, <label for="r45" class="ident">spans</label> []*<a href="../../../../pkg/go.opencensus.io/trace.html" class="ident i15">trace</a>.<a href="../../../go.opencensus.io/trace/export.go.html#line-74" class="ident">SpanData</a>) (<a href="../../../../pkg/builtin.html#name-int" class="ident">int</a>, <a href="../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<span class="keyword">return</span> <label for="r40" class="ident">e</label>.<a href="#line-301" class="ident">traceExporter</a>.<a href="trace.go.html#line-123" class="ident">pushTraceSpans</a>(<label for="r42" class="ident">ctx</label>, <label for="r43" class="ident">node</label>, <label for="r44" class="ident">rsc</label>, <label for="r45" class="ident">spans</label>)
+}
+
+<span class="keyword">func</span> (<label for="r46" class="ident">e</label> *<a href="#line-300" class="ident">Exporter</a>) <label for="r47" class="ident"><a href="../../../../use/contrib.go.opencensus.io/exporter/stackdriver..Exporter.sdWithDefaultTraceAttributes*90393.html" class="ident">sdWithDefaultTraceAttributes</a></label>(<label for="r48" class="ident">sd</label> *<a href="../../../../pkg/go.opencensus.io/trace.html" class="ident i15">trace</a>.<a href="../../../go.opencensus.io/trace/export.go.html#line-74" class="ident">SpanData</a>) *<a href="../../../../pkg/go.opencensus.io/trace.html" class="ident i15">trace</a>.<a href="../../../go.opencensus.io/trace/export.go.html#line-74" class="ident">SpanData</a> {
+	<label for="r49" class="ident">newSD</label> := *<label for="r48" class="ident">sd</label>
+	<label for="r49" class="ident">newSD</label>.<a href="../../../go.opencensus.io/trace/export.go.html#line-84" class="ident">Attributes</a> = <a href="../../../../pkg/builtin.html#name-make" class="ident">make</a>(<span class="keyword">map</span>[<a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>]<span class="keyword">interface</span>{})
+	<span class="keyword">for</span> <label for="r50" class="ident">k</label>, <label for="r51" class="ident">v</label> := <span class="keyword">range</span> <label for="r46" class="ident">e</label>.<a href="#line-301" class="ident">traceExporter</a>.<a href="trace.go.html#line-38" class="ident">o</a>.<a href="#line-218" class="ident">DefaultTraceAttributes</a> {
+		<label for="r49" class="ident">newSD</label>.<a href="../../../go.opencensus.io/trace/export.go.html#line-84" class="ident">Attributes</a>[<label for="r50" class="ident">k</label>] = <label for="r51" class="ident">v</label>
+	}
+	<span class="keyword">for</span> <label for="r52" class="ident">k</label>, <label for="r53" class="ident">v</label> := <span class="keyword">range</span> <label for="r48" class="ident">sd</label>.<a href="../../../go.opencensus.io/trace/export.go.html#line-84" class="ident">Attributes</a> {
+		<label for="r49" class="ident">newSD</label>.<a href="../../../go.opencensus.io/trace/export.go.html#line-84" class="ident">Attributes</a>[<label for="r52" class="ident">k</label>] = <label for="r53" class="ident">v</label>
+	}
+	<span class="keyword">return</span> &amp;<label for="r49" class="ident">newSD</label>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Flush waits for exported data to be uploaded.</span><span class="comment"></span><span class="comment"> This is useful if your program is ending and you do not</span><span class="comment"> want to lose recent stats or spans.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r54" class="ident">e</label> *<a href="#line-300" class="ident">Exporter</a>) <label for="r55" class="ident"><a href="../../../../use/contrib.go.opencensus.io/exporter/stackdriver..Exporter.Flush.html" class="ident">Flush</a></label>() {
+	<label for="r54" class="ident">e</label>.<a href="#line-302" class="ident">statsExporter</a>.<a href="stats.go.html#line-202" class="ident">Flush</a>()
+	<label for="r54" class="ident">e</label>.<a href="#line-301" class="ident">traceExporter</a>.<a href="trace.go.html#line-119" class="ident">Flush</a>()
+}
+
+<span class="keyword">func</span> (<label for="r56" class="ident">o</label> <a href="#line-79" class="ident">Options</a>) <label for="r57" class="ident"><a href="../../../../use/contrib.go.opencensus.io/exporter/stackdriver..Options.handleError*9c80d.html" class="ident">handleError</a></label>(<label for="r58" class="ident">err</label> <a href="../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<span class="keyword">if</span> <label for="r56" class="ident">o</label>.<a href="#line-103" class="ident">OnError</a> != <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<label for="r56" class="ident">o</label>.<a href="#line-103" class="ident">OnError</a>(<label for="r58" class="ident">err</label>)
+		<span class="keyword">return</span>
+	}
+	<a href="../../../../pkg/log.html" class="ident i3">log</a>.<a href="../../../log/log.go.html#line-322" class="ident">Printf</a>(<span class="lit-string">"Failed to export to Stackdriver: %v"</span>, <label for="r58" class="ident">err</label>)
+}
+
+<span class="keyword">func</span> <label for="r59" class="ident"><a href="../../../../pkg/contrib.go.opencensus.io/exporter/stackdriver.html#name-newContextWithTimeout" class="ident">newContextWithTimeout</a></label>(<label for="r60" class="ident">ctx</label> <a href="../../../../pkg/context.html" class="ident i0">context</a>.<a href="../../../context/context.go.html#line-62" class="ident">Context</a>, <label for="r61" class="ident">timeout</label> <a href="../../../../pkg/time.html" class="ident i7">time</a>.<a href="../../../time/time.go.html#line-583" class="ident">Duration</a>) (<a href="../../../../pkg/context.html" class="ident i0">context</a>.<a href="../../../context/context.go.html#line-62" class="ident">Context</a>, <span class="keyword">func</span>()) {
+	<span class="keyword">if</span> <label for="r60" class="ident">ctx</label> == <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<label for="r60" class="ident">ctx</label> = <a href="../../../../pkg/context.html" class="ident i0">context</a>.<a href="../../../context/context.go.html#line-208" class="ident">Background</a>()
+	}
+	<span class="keyword">if</span> <label for="r61" class="ident">timeout</label> &lt;= <span class="lit-number">0</span> {
+		<label for="r61" class="ident">timeout</label> = <a href="#line-289" class="ident">defaultTimeout</a>
+	}
+	<span class="keyword">return</span> <a href="../../../../pkg/context.html" class="ident i0">context</a>.<a href="../../../context/context.go.html#line-502" class="ident">WithTimeout</a>(<label for="r60" class="ident">ctx</label>, <label for="r61" class="ident">timeout</label>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> convertMonitoredResourceToPB converts MonitoredResource data in to</span><span class="comment"> protocol buffer.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r62" class="ident"><a href="../../../../pkg/contrib.go.opencensus.io/exporter/stackdriver.html#name-convertMonitoredResourceToPB" class="ident">convertMonitoredResourceToPB</a></label>(<label for="r63" class="ident">mr</label> <a href="../../../../pkg/contrib.go.opencensus.io/exporter/stackdriver/monitoredresource.html" class="ident i10">monitoredresource</a>.<a href="monitoredresource/monitored_resources.go.html#line-25" class="ident">Interface</a>) *<a href="../../../../pkg/google.golang.org/genproto/googleapis/api/monitoredres.html" class="ident i18">monitoredrespb</a>.<a href="../../../google.golang.org/genproto/googleapis/api/monitoredres/monitored_resource.pb.go.html#line-208" class="ident">MonitoredResource</a> {
+	<label for="r64" class="ident">mrpb</label> := <a href="../../../../pkg/builtin.html#name-new" class="ident">new</a>(<a href="../../../../pkg/google.golang.org/genproto/googleapis/api/monitoredres.html" class="ident i18">monitoredrespb</a>.<a href="../../../google.golang.org/genproto/googleapis/api/monitoredres/monitored_resource.pb.go.html#line-208" class="ident">MonitoredResource</a>)
+	<span class="keyword">var</span> <label for="r65" class="ident">labels</label> <span class="keyword">map</span>[<a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>]<a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<label for="r64" class="ident">mrpb</label>.<a href="../../../google.golang.org/genproto/googleapis/api/monitoredres/monitored_resource.pb.go.html#line-216" class="ident">Type</a>, <label for="r65" class="ident">labels</label> = <label for="r63" class="ident">mr</label>.<a href="monitoredresource/monitored_resources.go.html#line-27" class="ident">MonitoredResource</a>()
+	<label for="r64" class="ident">mrpb</label>.<a href="../../../google.golang.org/genproto/googleapis/api/monitoredres/monitored_resource.pb.go.html#line-220" class="ident">Labels</a> = <a href="../../../../pkg/builtin.html#name-make" class="ident">make</a>(<span class="keyword">map</span>[<a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>]<a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>)
+	<span class="keyword">for</span> <label for="r66" class="ident">k</label>, <label for="r67" class="ident">v</label> := <span class="keyword">range</span> <label for="r65" class="ident">labels</label> {
+		<label for="r64" class="ident">mrpb</label>.<a href="../../../google.golang.org/genproto/googleapis/api/monitoredres/monitored_resource.pb.go.html#line-220" class="ident">Labels</a>[<label for="r66" class="ident">k</label>] = <label for="r67" class="ident">v</label>
+	}
+	<span class="keyword">return</span> <label for="r64" class="ident">mrpb</label>
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

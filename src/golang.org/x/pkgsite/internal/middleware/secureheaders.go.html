@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: secureheaders.go in package golang.org/x/pkgsite/internal/middleware</title>
+<link href="../../../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	secureheaders.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../../../pkg/golang.org/x/pkgsite/internal/middleware.html">golang.org/x/pkgsite/internal/middleware</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1,
+input[id=i2]:checked ~pre .i2
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<input id="i2" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2019-2020 The Go Authors. All rights reserved.</span><span class="comment"> Use of this source code is governed by a BSD-style</span><span class="comment"> license that can be found in the LICENSE file.</span></div>
+<div class="code"><pre><code>
+<span class="keyword">package</span> middleware
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"fmt"</span></label>
+	<label for="i1"><span class="lit-string i1">"net/http"</span></label>
+	<label for="i2"><span class="lit-string i2">"strings"</span></label>
+)
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> From content/static/base/base.tmpl</span></div>
+<div class="code"><pre><code>	<span class="lit-string">"'sha256-CoGrkqEM1Kjjf5b1bpcnDLl8ZZLAsVX+BoAzZ5+AOmc='"</span>,
+	<span class="lit-string">"'sha256-3YbNePu1zD/B/1vcR3xg4CvNdno3XxbHPOPB+s4Sc0U='"</span>,
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> From content/static/html/base.tmpl</span></div>
+<div class="code"><pre><code>	<span class="lit-string">"'sha256-CgM7SjnSbDyuIteS+D1CQuSnzyKwL0qtXLU6ZW2hB+g='"</span>,
+	<span class="lit-string">"'sha256-dwce5DnVX7uk6fdvvNxQyLTH/cJrTMDK6zzrdKwdwcg='"</span>,
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> From content/static/html/pages/badge.tmpl</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> From content/static/html/pages/fetch.tmpl</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> From content/static/html/worker/index.tmpl</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> From content/static/html/pages/unit.tmpl</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> From content/static/html/pages/unit_details.tmpl</span></div>
+<div class="code"><pre><code>	<span class="lit-string">"'sha256-nF5UdhqQFxB95DCaw1XdSQCEkIjoMhorTCQ+nQ4+Lq4='"</span>,
+	<span class="lit-string">"'sha256-L+G1K2BEWa+o2vPy1pwdabLjINBByPWi1NkRwvASUq8='"</span>,
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> From content/static/html/pages/unit_versions.tmpl</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> From content/static/styleguide/styleguide.tmpl</span></div>
+<div class="code"><pre><code>	<span class="lit-string">"'sha256-Z9STHpM3Fz5XojcH5dbUK50Igi6qInBbVVaqNpjL/HY='"</span>,
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> SecureHeaders adds a content-security-policy and other security-related</span><span class="comment"> headers to all responses.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r0" class="ident"><a href="../../../../../../pkg/golang.org/x/pkgsite/internal/middleware.html#name-SecureHeaders" class="ident">SecureHeaders</a></label>(<label for="r1" class="ident">enableCSP</label> <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>) <a href="middleware.go.html#line-12" class="ident">Middleware</a> {
+	<span class="keyword">return</span> <span class="keyword">func</span>(<label for="r2" class="ident">h</label> <a href="../../../../../../pkg/net/http.html" class="ident i1">http</a>.<a href="../../../../../net/http/server.go.html#line-86" class="ident">Handler</a>) <a href="../../../../../../pkg/net/http.html" class="ident i1">http</a>.<a href="../../../../../net/http/server.go.html#line-86" class="ident">Handler</a> {
+		<span class="keyword">return</span> <a href="../../../../../../pkg/net/http.html" class="ident i1">http</a>.<a href="../../../../../net/http/server.go.html#line-2065" class="ident">HandlerFunc</a>(<span class="keyword">func</span>(<label for="r3" class="ident">w</label> <a href="../../../../../../pkg/net/http.html" class="ident i1">http</a>.<a href="../../../../../net/http/server.go.html#line-95" class="ident">ResponseWriter</a>, <label for="r4" class="ident">r</label> *<a href="../../../../../../pkg/net/http.html" class="ident i1">http</a>.<a href="../../../../../net/http/request.go.html#line-102" class="ident">Request</a>) {
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Disallow plugin content: pkg.go.dev does not use it.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Disallow &lt;base&gt; URIs, which prevents attackers from changing the</span><span class="comment">				 locations of scripts loaded from relative URLs. The site doesn’t have</span><span class="comment">				 a &lt;base&gt; tag anyway.</span></div>
+<div class="code"><pre><code>				<span class="lit-string">"base-uri 'none'"</span>,
+				<a href="../../../../../../pkg/fmt.html" class="ident i0">fmt</a>.<a href="../../../../../fmt/print.go.html#line-217" class="ident">Sprintf</a>(<span class="lit-string">"script-src 'unsafe-inline' 'strict-dynamic' https: http: %s"</span>,
+					<a href="../../../../../../pkg/strings.html" class="ident i2">strings</a>.<a href="../../../../../strings/strings.go.html#line-421" class="ident">Join</a>(<a href="#line-13" class="ident">scriptHashes</a>, <span class="lit-string">" "</span>)),
+			}
+			<span class="keyword">if</span> <label for="r1" class="ident">enableCSP</label> {
+				<label for="r3" class="ident">w</label>.<a href="../../../../../net/http/server.go.html#line-116" class="ident">Header</a>().<a href="../../../../../net/http/header.go.html#line-36" class="ident">Set</a>(<span class="lit-string">"Content-Security-Policy"</span>, <a href="../../../../../../pkg/strings.html" class="ident i2">strings</a>.<a href="../../../../../strings/strings.go.html#line-421" class="ident">Join</a>(<label for="r5" class="ident">csp</label>, <span class="lit-string">"; "</span>))
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Don't allow frame embedding.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Prevent MIME sniffing.</span></div>
+<div class="code"><pre><code>			<label for="r3" class="ident">w</label>.<a href="../../../../../net/http/server.go.html#line-116" class="ident">Header</a>().<a href="../../../../../net/http/header.go.html#line-36" class="ident">Set</a>(<span class="lit-string">"X-Content-Type-Options"</span>, <span class="lit-string">"nosniff"</span>)
+
+			<label for="r2" class="ident">h</label>.<a href="../../../../../net/http/server.go.html#line-87" class="ident">ServeHTTP</a>(<label for="r3" class="ident">w</label>, <label for="r4" class="ident">r</label>)
+		})
+	}
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: debug.go in package runtime</title>
+<link href="../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	debug.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../pkg/runtime.html">runtime</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2009 The Go Authors. All rights reserved.</span><span class="comment"> Use of this source code is governed by a BSD-style</span><span class="comment"> license that can be found in the LICENSE file.</span></div>
+<div class="code"><pre><code>
+<span class="keyword">package</span> runtime
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"runtime/internal/atomic"</span></label>
+	<label for="i1"><span class="lit-string i1">"unsafe"</span></label>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> GOMAXPROCS sets the maximum number of CPUs that can be executing</span><span class="comment"> simultaneously and returns the previous setting. It defaults to</span><span class="comment"> the value of runtime.NumCPU. If n &lt; 1, it does not change the current setting.</span><span class="comment"> This call will go away when the scheduler improves.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r0" class="ident"><a href="../../pkg/runtime.html#name-GOMAXPROCS" class="ident">GOMAXPROCS</a></label>(<label for="r1" class="ident">n</label> <a href="../../pkg/builtin.html#name-int" class="ident">int</a>) <a href="../../pkg/builtin.html#name-int" class="ident">int</a> {
+	<span class="keyword">if</span> <a href="extern.go.html#line-257" class="ident">GOARCH</a> == <span class="lit-string">"wasm"</span> &amp;&amp; <label for="r1" class="ident">n</label> &gt; <span class="lit-number">1</span> {
+		<label for="r1" class="ident">n</label> = <span class="lit-number">1</span> <span class="comment">// WebAssembly has no threads yet, so only one CPU is possible.</span>
+	}
+
+	<a href="lock_sema.go.html#line-35" class="ident">lock</a>(&amp;<a href="runtime2.go.html#line-1059" class="ident">sched</a>.<a href="runtime2.go.html#line-725" class="ident">lock</a>)
+	<label for="r2" class="ident">ret</label> := <a href="../../pkg/builtin.html#name-int" class="ident">int</a>(<a href="runtime2.go.html#line-1056" class="ident">gomaxprocs</a>)
+	<a href="lock_sema.go.html#line-96" class="ident">unlock</a>(&amp;<a href="runtime2.go.html#line-1059" class="ident">sched</a>.<a href="runtime2.go.html#line-725" class="ident">lock</a>)
+	<span class="keyword">if</span> <label for="r1" class="ident">n</label> &lt;= <span class="lit-number">0</span> || <label for="r1" class="ident">n</label> == <label for="r2" class="ident">ret</label> {
+		<span class="keyword">return</span> <label for="r2" class="ident">ret</label>
+	}
+
+	<a href="proc.go.html#line-1029" class="ident">stopTheWorldGC</a>(<span class="lit-string">"GOMAXPROCS"</span>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> newprocs will be processed by startTheWorld</span></div>
+<div class="code"><pre><code>	<a href="runtime2.go.html#line-1060" class="ident">newprocs</a> = <a href="../../pkg/builtin.html#name-int32" class="ident">int32</a>(<label for="r1" class="ident">n</label>)
+
+	<a href="proc.go.html#line-1035" class="ident">startTheWorldGC</a>()
+	<span class="keyword">return</span> <label for="r2" class="ident">ret</label>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> NumCPU returns the number of logical CPUs usable by the current process.</span><span class="comment"></span><span class="comment"> The set of available CPUs is checked by querying the operating system</span><span class="comment"> at process startup. Changes to operating system CPU allocation after</span><span class="comment"> process startup are not reflected.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r3" class="ident"><a href="../../pkg/runtime.html#name-NumCPU" class="ident">NumCPU</a></label>() <a href="../../pkg/builtin.html#name-int" class="ident">int</a> {
+	<span class="keyword">return</span> <a href="../../pkg/builtin.html#name-int" class="ident">int</a>(<a href="runtime2.go.html#line-1057" class="ident">ncpu</a>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> NumCgoCall returns the number of cgo calls made by the current process.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r4" class="ident"><a href="../../pkg/runtime.html#name-NumCgoCall" class="ident">NumCgoCall</a></label>() <a href="../../pkg/builtin.html#name-int64" class="ident">int64</a> {
+	<span class="keyword">var</span> <label for="r5" class="ident">n</label> <a href="../../pkg/builtin.html#name-int64" class="ident">int64</a>
+	<span class="keyword">for</span> <label for="r6" class="ident">mp</label> := (*<a href="runtime2.go.html#line-486" class="ident">m</a>)(<a href="../../pkg/runtime/internal/atomic.html" class="ident i0">atomic</a>.<a href="internal/atomic/atomic_amd64.go.html#line-22" class="ident">Loadp</a>(<a href="../../pkg/unsafe.html" class="ident i1">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(&amp;<a href="runtime2.go.html#line-1055" class="ident">allm</a>))); <label for="r6" class="ident">mp</label> != <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a>; <label for="r6" class="ident">mp</label> = <label for="r6" class="ident">mp</label>.<a href="runtime2.go.html#line-525" class="ident">alllink</a> {
+		<label for="r5" class="ident">n</label> += <a href="../../pkg/builtin.html#name-int64" class="ident">int64</a>(<label for="r6" class="ident">mp</label>.<a href="runtime2.go.html#line-519" class="ident">ncgocall</a>)
+	}
+	<span class="keyword">return</span> <label for="r5" class="ident">n</label>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> NumGoroutine returns the number of goroutines that currently exist.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r7" class="ident"><a href="../../pkg/runtime.html#name-NumGoroutine" class="ident">NumGoroutine</a></label>() <a href="../../pkg/builtin.html#name-int" class="ident">int</a> {
+	<span class="keyword">return</span> <a href="../../pkg/builtin.html#name-int" class="ident">int</a>(<a href="proc.go.html#line-4339" class="ident">gcount</a>())
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">go:linkname debug_modinfo runtime/debug.modinfo</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r8" class="ident"><a href="../../pkg/runtime.html#name-debug_modinfo" class="ident">debug_modinfo</a></label>() <a href="../../pkg/builtin.html#name-string" class="ident">string</a> {
+	<span class="keyword">return</span> <a href="proc.go.html#line-18" class="ident">modinfo</a>
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

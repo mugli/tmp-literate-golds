@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: jwt.go in package golang.org/x/oauth2/jwt</title>
+<link href="../../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	jwt.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../../pkg/golang.org/x/oauth2/jwt.html">golang.org/x/oauth2/jwt</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16],
+input[id=r17]:checked ~pre label[for=r17],
+input[id=r18]:checked ~pre label[for=r18],
+input[id=r19]:checked ~pre label[for=r19],
+input[id=r20]:checked ~pre label[for=r20],
+input[id=r21]:checked ~pre label[for=r21],
+input[id=r22]:checked ~pre label[for=r22],
+input[id=r23]:checked ~pre label[for=r23],
+input[id=r24]:checked ~pre label[for=r24],
+input[id=r25]:checked ~pre label[for=r25],
+input[id=r26]:checked ~pre label[for=r26],
+input[id=r27]:checked ~pre label[for=r27],
+input[id=r28]:checked ~pre label[for=r28],
+input[id=r29]:checked ~pre label[for=r29],
+input[id=r30]:checked ~pre label[for=r30],
+input[id=r31]:checked ~pre label[for=r31],
+input[id=r32]:checked ~pre label[for=r32]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1,
+input[id=i2]:checked ~pre .i2,
+input[id=i3]:checked ~pre .i3,
+input[id=i4]:checked ~pre .i4,
+input[id=i5]:checked ~pre .i5,
+input[id=i6]:checked ~pre .i6,
+input[id=i7]:checked ~pre .i7,
+input[id=i8]:checked ~pre .i8,
+input[id=i9]:checked ~pre .i9,
+input[id=i10]:checked ~pre .i10,
+input[id=i11]:checked ~pre .i11
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="r17" type="radio" name="g"/>
+<input id="r18" type="radio" name="g"/>
+<input id="r19" type="radio" name="g"/>
+<input id="r20" type="radio" name="g"/>
+<input id="r21" type="radio" name="g"/>
+<input id="r22" type="radio" name="g"/>
+<input id="r23" type="radio" name="g"/>
+<input id="r24" type="radio" name="g"/>
+<input id="r25" type="radio" name="g"/>
+<input id="r26" type="radio" name="g"/>
+<input id="r27" type="radio" name="g"/>
+<input id="r28" type="radio" name="g"/>
+<input id="r29" type="radio" name="g"/>
+<input id="r30" type="radio" name="g"/>
+<input id="r31" type="radio" name="g"/>
+<input id="r32" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<input id="i2" type="radio" name="i"/>
+<input id="i3" type="radio" name="i"/>
+<input id="i4" type="radio" name="i"/>
+<input id="i5" type="radio" name="i"/>
+<input id="i6" type="radio" name="i"/>
+<input id="i7" type="radio" name="i"/>
+<input id="i8" type="radio" name="i"/>
+<input id="i9" type="radio" name="i"/>
+<input id="i10" type="radio" name="i"/>
+<input id="i11" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2014 The Go Authors. All rights reserved.</span><span class="comment"> Use of this source code is governed by a BSD-style</span><span class="comment"> license that can be found in the LICENSE file.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Package jwt implements the OAuth 2.0 JSON Web Token flow, commonly</span><span class="comment"> known as "two-legged OAuth 2.0".</span><span class="comment"></span><span class="comment"> See: https://tools.ietf.org/html/draft-ietf-oauth-jwt-bearer-12</span></div>
+<div class="code"><pre><code><span class="keyword">package</span> jwt
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"context"</span></label>
+	<label for="i1"><span class="lit-string i1">"encoding/json"</span></label>
+	<label for="i2"><span class="lit-string i2">"fmt"</span></label>
+	<label for="i3"><span class="lit-string i3">"io"</span></label>
+	<label for="i4"><span class="lit-string i4">"io/ioutil"</span></label>
+	<label for="i5"><span class="lit-string i5">"net/http"</span></label>
+	<label for="i6"><span class="lit-string i6">"net/url"</span></label>
+	<label for="i7"><span class="lit-string i7">"strings"</span></label>
+	<label for="i8"><span class="lit-string i8">"time"</span></label>
+
+	<label for="i9"><span class="lit-string i9">"golang.org/x/oauth2"</span></label>
+	<label for="i10"><span class="lit-string i10">"golang.org/x/oauth2/internal"</span></label>
+	<label for="i11"><span class="lit-string i11">"golang.org/x/oauth2/jws"</span></label>
+)
+
+<span class="keyword">var</span> (
+	<a href="../../../../../pkg/golang.org/x/oauth2/jwt.html#name-defaultGrantType" class="ident">defaultGrantType</a> = <span class="lit-string">"urn:ietf:params:oauth:grant-type:jwt-bearer"</span>
+	<a href="../../../../../pkg/golang.org/x/oauth2/jwt.html#name-defaultHeader" class="ident">defaultHeader</a>    = &amp;<a href="../../../../../pkg/golang.org/x/oauth2/jws.html" class="ident i11">jws</a>.<a href="../jws/jws.go.html#line-97" class="ident">Header</a>{<a href="../jws/jws.go.html#line-99" class="ident">Algorithm</a>: <span class="lit-string">"RS256"</span>, <a href="../jws/jws.go.html#line-102" class="ident">Typ</a>: <span class="lit-string">"JWT"</span>}
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Config is the configuration for using JWT to fetch tokens,</span><span class="comment"> commonly known as "two-legged OAuth 2.0".</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Email is the OAuth client identifier used when communicating with</span><span class="comment">	 the configured OAuth provider.</span></div>
+<div class="code"><pre><code>	<a href="../../../../../use/golang.org/x/oauth2/jwt..Config.Email.html" class="ident">Email</a> <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> PrivateKey contains the contents of an RSA private key or the</span><span class="comment">	 contents of a PEM file that contains a private key. The provided</span><span class="comment">	 private key is used to sign JWT payloads.</span><span class="comment">	 PEM containers with a passphrase are not supported.</span><span class="comment">	 Use the following command to convert a PKCS 12 file into a PEM.</span><span class="comment">	</span><span class="comment">	    $ openssl pkcs12 -in key.p12 -out key.pem -nodes</span><span class="comment">	</span></div>
+<div class="code"><pre><code>	<a href="../../../../../use/golang.org/x/oauth2/jwt..Config.PrivateKey.html" class="ident">PrivateKey</a> []<a href="../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> PrivateKeyID contains an optional hint indicating which key is being</span><span class="comment">	 used.</span></div>
+<div class="code"><pre><code>	<a href="../../../../../use/golang.org/x/oauth2/jwt..Config.PrivateKeyID.html" class="ident">PrivateKeyID</a> <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Subject is the optional user to impersonate.</span></div>
+<div class="code"><pre><code>	<a href="../../../../../use/golang.org/x/oauth2/jwt..Config.Subject.html" class="ident">Subject</a> <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Scopes optionally specifies a list of requested permission scopes.</span></div>
+<div class="code"><pre><code>	<a href="../../../../../use/golang.org/x/oauth2/jwt..Config.Scopes.html" class="ident">Scopes</a> []<a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> TokenURL is the endpoint required to complete the 2-legged JWT flow.</span></div>
+<div class="code"><pre><code>	<a href="../../../../../use/golang.org/x/oauth2/jwt..Config.TokenURL.html" class="ident">TokenURL</a> <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Expires optionally specifies how long the token is valid for.</span></div>
+<div class="code"><pre><code>	<a href="../../../../../use/golang.org/x/oauth2/jwt..Config.Expires.html" class="ident">Expires</a> <a href="../../../../../pkg/time.html" class="ident i8">time</a>.<a href="../../../../time/time.go.html#line-583" class="ident">Duration</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Audience optionally specifies the intended audience of the</span><span class="comment">	 request.  If empty, the value of TokenURL is used as the</span><span class="comment">	 intended audience.</span></div>
+<div class="code"><pre><code>	<a href="../../../../../use/golang.org/x/oauth2/jwt..Config.Audience.html" class="ident">Audience</a> <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> PrivateClaims optionally specifies custom private claims in the JWT.</span><span class="comment">	 See http://tools.ietf.org/html/draft-jones-json-web-token-10#section-4.3</span></div>
+<div class="code"><pre><code>	<a href="../../../../../use/golang.org/x/oauth2/jwt..Config.PrivateClaims.html" class="ident">PrivateClaims</a> <span class="keyword">map</span>[<a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>]<span class="keyword">interface</span>{}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> UseIDToken optionally specifies whether ID token should be used instead</span><span class="comment">	 of access token when the server returns both.</span></div>
+<div class="code"><pre><code>	<a href="../../../../../use/golang.org/x/oauth2/jwt..Config.UseIDToken.html" class="ident">UseIDToken</a> <a href="../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> TokenSource returns a JWT TokenSource using the configuration</span><span class="comment"> in c and the HTTP client from the provided context.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r0" class="ident">c</label> *<a href="#line-34" class="ident">Config</a>) <label for="r1" class="ident"><a href="../../../../../use/golang.org/x/oauth2/jwt..Config.TokenSource.html" class="ident">TokenSource</a></label>(<label for="r2" class="ident">ctx</label> <a href="../../../../../pkg/context.html" class="ident i0">context</a>.<a href="../../../../context/context.go.html#line-62" class="ident">Context</a>) <a href="../../../../../pkg/golang.org/x/oauth2.html" class="ident i9">oauth2</a>.<a href="../oauth2.go.html#line-63" class="ident">TokenSource</a> {
+	<span class="keyword">return</span> <a href="../../../../../pkg/golang.org/x/oauth2.html" class="ident i9">oauth2</a>.<a href="../oauth2.go.html#line-366" class="ident">ReuseTokenSource</a>(<a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="#line-96" class="ident">jwtSource</a>{<label for="r2" class="ident">ctx</label>, <label for="r0" class="ident">c</label>})
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Client returns an HTTP client wrapping the context's</span><span class="comment"> HTTP transport and adding Authorization headers with tokens</span><span class="comment"> obtained from c.</span><span class="comment"></span><span class="comment"> The returned client and its Transport should not be modified.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r3" class="ident">c</label> *<a href="#line-34" class="ident">Config</a>) <label for="r4" class="ident"><a href="../../../../../use/golang.org/x/oauth2/jwt..Config.Client.html" class="ident">Client</a></label>(<label for="r5" class="ident">ctx</label> <a href="../../../../../pkg/context.html" class="ident i0">context</a>.<a href="../../../../context/context.go.html#line-62" class="ident">Context</a>) *<a href="../../../../../pkg/net/http.html" class="ident i5">http</a>.<a href="../../../../net/http/client.go.html#line-57" class="ident">Client</a> {
+	<span class="keyword">return</span> <a href="../../../../../pkg/golang.org/x/oauth2.html" class="ident i9">oauth2</a>.<a href="../oauth2.go.html#line-342" class="ident">NewClient</a>(<label for="r5" class="ident">ctx</label>, <label for="r3" class="ident">c</label>.<a href="#line-81" class="ident">TokenSource</a>(<label for="r5" class="ident">ctx</label>))
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> jwtSource is a source that always does a signed JWT request for a token.</span><span class="comment"> It should typically be wrapped with a reuseTokenSource.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../pkg/golang.org/x/oauth2/jwt.html#name-jwtSource" class="ident">jwtSource</a> <span class="keyword">struct</span> {
+	<a href="../../../../../use/golang.org/x/oauth2/jwt..jwtSource*cb1a3.ctx*0230c.html" class="ident">ctx</a>  <a href="../../../../../pkg/context.html" class="ident i0">context</a>.<a href="../../../../context/context.go.html#line-62" class="ident">Context</a>
+	<a href="../../../../../use/golang.org/x/oauth2/jwt..jwtSource*cb1a3.conf*0c326.html" class="ident">conf</a> *<a href="#line-34" class="ident">Config</a>
+}
+
+<span class="keyword">func</span> (<label for="r6" class="ident">js</label> <a href="#line-96" class="ident">jwtSource</a>) <label for="r7" class="ident"><a href="../../../../../use/golang.org/x/oauth2/jwt..jwtSource*cb1a3.Token.html" class="ident">Token</a></label>() (*<a href="../../../../../pkg/golang.org/x/oauth2.html" class="ident i9">oauth2</a>.<a href="../token.go.html#line-31" class="ident">Token</a>, <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<label for="r8" class="ident">pk</label>, <label for="r9" class="ident">err</label> := <a href="../../../../../pkg/golang.org/x/oauth2/internal.html" class="ident i10">internal</a>.<a href="../internal/oauth2.go.html#line-20" class="ident">ParseKey</a>(<label for="r6" class="ident">js</label>.<a href="#line-98" class="ident">conf</a>.<a href="#line-47" class="ident">PrivateKey</a>)
+	<span class="keyword">if</span> <label for="r9" class="ident">err</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <label for="r9" class="ident">err</label>
+	}
+	<label for="r10" class="ident">hc</label> := <a href="../../../../../pkg/golang.org/x/oauth2.html" class="ident i9">oauth2</a>.<a href="../oauth2.go.html#line-342" class="ident">NewClient</a>(<label for="r6" class="ident">js</label>.<a href="#line-97" class="ident">ctx</a>, <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>)
+	<label for="r11" class="ident">claimSet</label> := &amp;<a href="../../../../../pkg/golang.org/x/oauth2/jws.html" class="ident i11">jws</a>.<a href="../jws/jws.go.html#line-34" class="ident">ClaimSet</a>{
+		<a href="../jws/jws.go.html#line-35" class="ident">Iss</a>:           <label for="r6" class="ident">js</label>.<a href="#line-98" class="ident">conf</a>.<a href="#line-37" class="ident">Email</a>,
+		<a href="../jws/jws.go.html#line-36" class="ident">Scope</a>:         <a href="../../../../../pkg/strings.html" class="ident i7">strings</a>.<a href="../../../../strings/strings.go.html#line-421" class="ident">Join</a>(<label for="r6" class="ident">js</label>.<a href="#line-98" class="ident">conf</a>.<a href="#line-57" class="ident">Scopes</a>, <span class="lit-string">" "</span>),
+		<a href="../jws/jws.go.html#line-37" class="ident">Aud</a>:           <label for="r6" class="ident">js</label>.<a href="#line-98" class="ident">conf</a>.<a href="#line-60" class="ident">TokenURL</a>,
+		<a href="../jws/jws.go.html#line-51" class="ident">PrivateClaims</a>: <label for="r6" class="ident">js</label>.<a href="#line-98" class="ident">conf</a>.<a href="#line-72" class="ident">PrivateClaims</a>,
+	}
+	<span class="keyword">if</span> <label for="r12" class="ident">subject</label> := <label for="r6" class="ident">js</label>.<a href="#line-98" class="ident">conf</a>.<a href="#line-54" class="ident">Subject</a>; <label for="r12" class="ident">subject</label> != <span class="lit-string">""</span> {
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> prn is the old name of sub. Keep setting it</span><span class="comment">		 to be compatible with legacy OAuth 2.0 providers.</span></div>
+<div class="code"><pre><code>		<label for="r11" class="ident">claimSet</label>.<a href="../jws/jws.go.html#line-47" class="ident">Prn</a> = <label for="r12" class="ident">subject</label>
+	}
+	<span class="keyword">if</span> <label for="r13" class="ident">t</label> := <label for="r6" class="ident">js</label>.<a href="#line-98" class="ident">conf</a>.<a href="#line-63" class="ident">Expires</a>; <label for="r13" class="ident">t</label> &gt; <span class="lit-number">0</span> {
+		<label for="r11" class="ident">claimSet</label>.<a href="../jws/jws.go.html#line-38" class="ident">Exp</a> = <a href="../../../../../pkg/time.html" class="ident i8">time</a>.<a href="../../../../time/time.go.html#line-1066" class="ident">Now</a>().<a href="../../../../time/time.go.html#line-813" class="ident">Add</a>(<label for="r13" class="ident">t</label>).<a href="../../../../time/time.go.html#line-1127" class="ident">Unix</a>()
+	}
+	<span class="keyword">if</span> <label for="r14" class="ident">aud</label> := <label for="r6" class="ident">js</label>.<a href="#line-98" class="ident">conf</a>.<a href="#line-68" class="ident">Audience</a>; <label for="r14" class="ident">aud</label> != <span class="lit-string">""</span> {
+		<label for="r11" class="ident">claimSet</label>.<a href="../jws/jws.go.html#line-37" class="ident">Aud</a> = <label for="r14" class="ident">aud</label>
+	}
+	<label for="r15" class="ident">h</label> := *<a href="#line-29" class="ident">defaultHeader</a>
+	<label for="r15" class="ident">h</label>.<a href="../jws/jws.go.html#line-105" class="ident">KeyID</a> = <label for="r6" class="ident">js</label>.<a href="#line-98" class="ident">conf</a>.<a href="#line-51" class="ident">PrivateKeyID</a>
+	<label for="r16" class="ident">payload</label>, <label for="r9" class="ident">err</label> := <a href="../../../../../pkg/golang.org/x/oauth2/jws.html" class="ident i11">jws</a>.<a href="../jws/jws.go.html#line-156" class="ident">Encode</a>(&amp;<label for="r15" class="ident">h</label>, <label for="r11" class="ident">claimSet</label>, <label for="r8" class="ident">pk</label>)
+	<span class="keyword">if</span> <label for="r9" class="ident">err</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <label for="r9" class="ident">err</label>
+	}
+	<label for="r17" class="ident">v</label> := <a href="../../../../../pkg/net/url.html" class="ident i6">url</a>.<a href="../../../../net/url/url.go.html#line-878" class="ident">Values</a>{}
+	<label for="r17" class="ident">v</label>.<a href="../../../../net/url/url.go.html#line-897" class="ident">Set</a>(<span class="lit-string">"grant_type"</span>, <a href="#line-28" class="ident">defaultGrantType</a>)
+	<label for="r17" class="ident">v</label>.<a href="../../../../net/url/url.go.html#line-897" class="ident">Set</a>(<span class="lit-string">"assertion"</span>, <label for="r16" class="ident">payload</label>)
+	<label for="r18" class="ident">resp</label>, <label for="r9" class="ident">err</label> := <label for="r10" class="ident">hc</label>.<a href="../../../../net/http/client.go.html#line-876" class="ident">PostForm</a>(<label for="r6" class="ident">js</label>.<a href="#line-98" class="ident">conf</a>.<a href="#line-60" class="ident">TokenURL</a>, <label for="r17" class="ident">v</label>)
+	<span class="keyword">if</span> <label for="r9" class="ident">err</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="../../../../../pkg/fmt.html" class="ident i2">fmt</a>.<a href="../../../../fmt/errors.go.html#line-17" class="ident">Errorf</a>(<span class="lit-string">"oauth2: cannot fetch token: %v"</span>, <label for="r9" class="ident">err</label>)
+	}
+	<span class="keyword">defer</span> <label for="r18" class="ident">resp</label>.<a href="../../../../net/http/response.go.html#line-72" class="ident">Body</a>.<a href="../../../../io/io.go.html#line-105" class="ident">Close</a>()
+	<label for="r19" class="ident">body</label>, <label for="r9" class="ident">err</label> := <a href="../../../../../pkg/io/ioutil.html" class="ident i4">ioutil</a>.<a href="../../../../io/ioutil/ioutil.go.html#line-26" class="ident">ReadAll</a>(<a href="../../../../../pkg/io.html" class="ident i3">io</a>.<a href="../../../../io/io.go.html#line-455" class="ident">LimitReader</a>(<label for="r18" class="ident">resp</label>.<a href="../../../../net/http/response.go.html#line-72" class="ident">Body</a>, <span class="lit-number">1</span>&lt;&lt;<span class="lit-number">20</span>))
+	<span class="keyword">if</span> <label for="r9" class="ident">err</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="../../../../../pkg/fmt.html" class="ident i2">fmt</a>.<a href="../../../../fmt/errors.go.html#line-17" class="ident">Errorf</a>(<span class="lit-string">"oauth2: cannot fetch token: %v"</span>, <label for="r9" class="ident">err</label>)
+	}
+	<span class="keyword">if</span> <label for="r20" class="ident">c</label> := <label for="r18" class="ident">resp</label>.<a href="../../../../net/http/response.go.html#line-37" class="ident">StatusCode</a>; <label for="r20" class="ident">c</label> &lt; <span class="lit-number">200</span> || <label for="r20" class="ident">c</label> &gt; <span class="lit-number">299</span> {
+		<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, &amp;<a href="../../../../../pkg/golang.org/x/oauth2.html" class="ident i9">oauth2</a>.<a href="../token.go.html#line-169" class="ident">RetrieveError</a>{
+			<a href="../token.go.html#line-170" class="ident">Response</a>: <label for="r18" class="ident">resp</label>,
+			<a href="../token.go.html#line-173" class="ident">Body</a>:     <label for="r19" class="ident">body</label>,
+		}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> tokenRes is the JSON response body.</span></div>
+<div class="code"><pre><code>	<span class="keyword">var</span> <label for="r21" class="ident">tokenRes</label> <span class="keyword">struct</span> {
+		<label for="r22" class="ident">AccessToken</label> <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a> <span class="lit-string">`json:"access_token"`</span>
+		<label for="r23" class="ident">TokenType</label>   <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a> <span class="lit-string">`json:"token_type"`</span>
+		<label for="r24" class="ident">IDToken</label>     <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a> <span class="lit-string">`json:"id_token"`</span>
+		<label for="r25" class="ident">ExpiresIn</label>   <a href="../../../../../pkg/builtin.html#name-int64" class="ident">int64</a>  <span class="lit-string">`json:"expires_in"`</span> <span class="comment">// relative seconds from now</span>
+	}
+	<span class="keyword">if</span> <label for="r26" class="ident">err</label> := <a href="../../../../../pkg/encoding/json.html" class="ident i1">json</a>.<a href="../../../../encoding/json/decode.go.html#line-96" class="ident">Unmarshal</a>(<label for="r19" class="ident">body</label>, &amp;<label for="r21" class="ident">tokenRes</label>); <label for="r26" class="ident">err</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="../../../../../pkg/fmt.html" class="ident i2">fmt</a>.<a href="../../../../fmt/errors.go.html#line-17" class="ident">Errorf</a>(<span class="lit-string">"oauth2: cannot fetch token: %v"</span>, <label for="r26" class="ident">err</label>)
+	}
+	<label for="r27" class="ident">token</label> := &amp;<a href="../../../../../pkg/golang.org/x/oauth2.html" class="ident i9">oauth2</a>.<a href="../token.go.html#line-31" class="ident">Token</a>{
+		<a href="../token.go.html#line-34" class="ident">AccessToken</a>: <label for="r21" class="ident">tokenRes</label>.<label for="r22" class="ident">AccessToken</label>,
+		<a href="../token.go.html#line-38" class="ident">TokenType</a>:   <label for="r21" class="ident">tokenRes</label>.<label for="r23" class="ident">TokenType</label>,
+	}
+	<label for="r28" class="ident">raw</label> := <a href="../../../../../pkg/builtin.html#name-make" class="ident">make</a>(<span class="keyword">map</span>[<a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>]<span class="keyword">interface</span>{})
+	<a href="../../../../../pkg/encoding/json.html" class="ident i1">json</a>.<a href="../../../../encoding/json/decode.go.html#line-96" class="ident">Unmarshal</a>(<label for="r19" class="ident">body</label>, &amp;<label for="r28" class="ident">raw</label>) <span class="comment">// no error checks for optional fields</span>
+	<label for="r27" class="ident">token</label> = <label for="r27" class="ident">token</label>.<a href="../token.go.html#line-86" class="ident">WithExtra</a>(<label for="r28" class="ident">raw</label>)
+
+	<span class="keyword">if</span> <label for="r29" class="ident">secs</label> := <label for="r21" class="ident">tokenRes</label>.<label for="r25" class="ident">ExpiresIn</label>; <label for="r29" class="ident">secs</label> &gt; <span class="lit-number">0</span> {
+		<label for="r27" class="ident">token</label>.<a href="../token.go.html#line-50" class="ident">Expiry</a> = <a href="../../../../../pkg/time.html" class="ident i8">time</a>.<a href="../../../../time/time.go.html#line-1066" class="ident">Now</a>().<a href="../../../../time/time.go.html#line-813" class="ident">Add</a>(<a href="../../../../../pkg/time.html" class="ident i8">time</a>.<a href="../../../../time/time.go.html#line-583" class="ident">Duration</a>(<label for="r29" class="ident">secs</label>) * <a href="../../../../../pkg/time.html" class="ident i8">time</a>.<a href="../../../../time/time.go.html#line-605" class="ident">Second</a>)
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> decode returned id token to get expiry</span></div>
+<div class="code"><pre><code>		<label for="r31" class="ident">claimSet</label>, <label for="r32" class="ident">err</label> := <a href="../../../../../pkg/golang.org/x/oauth2/jws.html" class="ident i11">jws</a>.<a href="../jws/jws.go.html#line-117" class="ident">Decode</a>(<label for="r30" class="ident">v</label>)
+		<span class="keyword">if</span> <label for="r32" class="ident">err</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="../../../../../pkg/fmt.html" class="ident i2">fmt</a>.<a href="../../../../fmt/errors.go.html#line-17" class="ident">Errorf</a>(<span class="lit-string">"oauth2: error decoding JWT token: %v"</span>, <label for="r32" class="ident">err</label>)
+		}
+		<label for="r27" class="ident">token</label>.<a href="../token.go.html#line-50" class="ident">Expiry</a> = <a href="../../../../../pkg/time.html" class="ident i8">time</a>.<a href="../../../../time/time.go.html#line-1292" class="ident">Unix</a>(<label for="r31" class="ident">claimSet</label>.<a href="../jws/jws.go.html#line-38" class="ident">Exp</a>, <span class="lit-number">0</span>)
+	}
+	<span class="keyword">if</span> <label for="r6" class="ident">js</label>.<a href="#line-98" class="ident">conf</a>.<a href="#line-76" class="ident">UseIDToken</a> {
+		<span class="keyword">if</span> <label for="r21" class="ident">tokenRes</label>.<label for="r24" class="ident">IDToken</label> == <span class="lit-string">""</span> {
+			<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="../../../../../pkg/fmt.html" class="ident i2">fmt</a>.<a href="../../../../fmt/errors.go.html#line-17" class="ident">Errorf</a>(<span class="lit-string">"oauth2: response doesn't have JWT token"</span>)
+		}
+		<label for="r27" class="ident">token</label>.<a href="../token.go.html#line-34" class="ident">AccessToken</a> = <label for="r21" class="ident">tokenRes</label>.<label for="r24" class="ident">IDToken</label>
+	}
+	<span class="keyword">return</span> <label for="r27" class="ident">token</label>, <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

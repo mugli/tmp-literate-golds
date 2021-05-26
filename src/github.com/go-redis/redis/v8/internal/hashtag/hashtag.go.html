@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: hashtag.go in package github.com/go-redis/redis/v8/internal/hashtag</title>
+<link href="../../../../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	hashtag.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../../../../pkg/github.com/go-redis/redis/v8/internal/hashtag.html">github.com/go-redis/redis/v8/internal/hashtag</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+</div>
+<div class="code"><pre><code><span class="keyword">package</span> hashtag
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"strings"</span></label>
+
+	<label for="i1"><span class="lit-string i1">"golang.org/x/exp/rand"</span></label>
+)
+
+<span class="keyword">const</span> <a href="../../../../../../../pkg/github.com/go-redis/redis/v8/internal/hashtag.html#name-slotNumber" class="ident">slotNumber</a> = <span class="lit-number">16384</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> CRC16 implementation according to CCITT standards.</span><span class="comment"> Copyright 2001-2010 Georges Menie (www.menie.org)</span><span class="comment"> Copyright 2013 The Go Authors. All rights reserved.</span><span class="comment"> http://redis.io/topics/cluster-spec#appendix-a-crc16-reference-implementation-in-ansi-c</span></div>
+<div class="code"><pre><code><span class="keyword">var</span> <a href="../../../../../../../pkg/github.com/go-redis/redis/v8/internal/hashtag.html#name-crc16tab" class="ident">crc16tab</a> = [<span class="lit-number">256</span>]<a href="../../../../../../../pkg/builtin.html#name-uint16" class="ident">uint16</a>{
+	<span class="lit-number">0x0000</span>, <span class="lit-number">0x1021</span>, <span class="lit-number">0x2042</span>, <span class="lit-number">0x3063</span>, <span class="lit-number">0x4084</span>, <span class="lit-number">0x50a5</span>, <span class="lit-number">0x60c6</span>, <span class="lit-number">0x70e7</span>,
+	<span class="lit-number">0x8108</span>, <span class="lit-number">0x9129</span>, <span class="lit-number">0xa14a</span>, <span class="lit-number">0xb16b</span>, <span class="lit-number">0xc18c</span>, <span class="lit-number">0xd1ad</span>, <span class="lit-number">0xe1ce</span>, <span class="lit-number">0xf1ef</span>,
+	<span class="lit-number">0x1231</span>, <span class="lit-number">0x0210</span>, <span class="lit-number">0x3273</span>, <span class="lit-number">0x2252</span>, <span class="lit-number">0x52b5</span>, <span class="lit-number">0x4294</span>, <span class="lit-number">0x72f7</span>, <span class="lit-number">0x62d6</span>,
+	<span class="lit-number">0x9339</span>, <span class="lit-number">0x8318</span>, <span class="lit-number">0xb37b</span>, <span class="lit-number">0xa35a</span>, <span class="lit-number">0xd3bd</span>, <span class="lit-number">0xc39c</span>, <span class="lit-number">0xf3ff</span>, <span class="lit-number">0xe3de</span>,
+	<span class="lit-number">0x2462</span>, <span class="lit-number">0x3443</span>, <span class="lit-number">0x0420</span>, <span class="lit-number">0x1401</span>, <span class="lit-number">0x64e6</span>, <span class="lit-number">0x74c7</span>, <span class="lit-number">0x44a4</span>, <span class="lit-number">0x5485</span>,
+	<span class="lit-number">0xa56a</span>, <span class="lit-number">0xb54b</span>, <span class="lit-number">0x8528</span>, <span class="lit-number">0x9509</span>, <span class="lit-number">0xe5ee</span>, <span class="lit-number">0xf5cf</span>, <span class="lit-number">0xc5ac</span>, <span class="lit-number">0xd58d</span>,
+	<span class="lit-number">0x3653</span>, <span class="lit-number">0x2672</span>, <span class="lit-number">0x1611</span>, <span class="lit-number">0x0630</span>, <span class="lit-number">0x76d7</span>, <span class="lit-number">0x66f6</span>, <span class="lit-number">0x5695</span>, <span class="lit-number">0x46b4</span>,
+	<span class="lit-number">0xb75b</span>, <span class="lit-number">0xa77a</span>, <span class="lit-number">0x9719</span>, <span class="lit-number">0x8738</span>, <span class="lit-number">0xf7df</span>, <span class="lit-number">0xe7fe</span>, <span class="lit-number">0xd79d</span>, <span class="lit-number">0xc7bc</span>,
+	<span class="lit-number">0x48c4</span>, <span class="lit-number">0x58e5</span>, <span class="lit-number">0x6886</span>, <span class="lit-number">0x78a7</span>, <span class="lit-number">0x0840</span>, <span class="lit-number">0x1861</span>, <span class="lit-number">0x2802</span>, <span class="lit-number">0x3823</span>,
+	<span class="lit-number">0xc9cc</span>, <span class="lit-number">0xd9ed</span>, <span class="lit-number">0xe98e</span>, <span class="lit-number">0xf9af</span>, <span class="lit-number">0x8948</span>, <span class="lit-number">0x9969</span>, <span class="lit-number">0xa90a</span>, <span class="lit-number">0xb92b</span>,
+	<span class="lit-number">0x5af5</span>, <span class="lit-number">0x4ad4</span>, <span class="lit-number">0x7ab7</span>, <span class="lit-number">0x6a96</span>, <span class="lit-number">0x1a71</span>, <span class="lit-number">0x0a50</span>, <span class="lit-number">0x3a33</span>, <span class="lit-number">0x2a12</span>,
+	<span class="lit-number">0xdbfd</span>, <span class="lit-number">0xcbdc</span>, <span class="lit-number">0xfbbf</span>, <span class="lit-number">0xeb9e</span>, <span class="lit-number">0x9b79</span>, <span class="lit-number">0x8b58</span>, <span class="lit-number">0xbb3b</span>, <span class="lit-number">0xab1a</span>,
+	<span class="lit-number">0x6ca6</span>, <span class="lit-number">0x7c87</span>, <span class="lit-number">0x4ce4</span>, <span class="lit-number">0x5cc5</span>, <span class="lit-number">0x2c22</span>, <span class="lit-number">0x3c03</span>, <span class="lit-number">0x0c60</span>, <span class="lit-number">0x1c41</span>,
+	<span class="lit-number">0xedae</span>, <span class="lit-number">0xfd8f</span>, <span class="lit-number">0xcdec</span>, <span class="lit-number">0xddcd</span>, <span class="lit-number">0xad2a</span>, <span class="lit-number">0xbd0b</span>, <span class="lit-number">0x8d68</span>, <span class="lit-number">0x9d49</span>,
+	<span class="lit-number">0x7e97</span>, <span class="lit-number">0x6eb6</span>, <span class="lit-number">0x5ed5</span>, <span class="lit-number">0x4ef4</span>, <span class="lit-number">0x3e13</span>, <span class="lit-number">0x2e32</span>, <span class="lit-number">0x1e51</span>, <span class="lit-number">0x0e70</span>,
+	<span class="lit-number">0xff9f</span>, <span class="lit-number">0xefbe</span>, <span class="lit-number">0xdfdd</span>, <span class="lit-number">0xcffc</span>, <span class="lit-number">0xbf1b</span>, <span class="lit-number">0xaf3a</span>, <span class="lit-number">0x9f59</span>, <span class="lit-number">0x8f78</span>,
+	<span class="lit-number">0x9188</span>, <span class="lit-number">0x81a9</span>, <span class="lit-number">0xb1ca</span>, <span class="lit-number">0xa1eb</span>, <span class="lit-number">0xd10c</span>, <span class="lit-number">0xc12d</span>, <span class="lit-number">0xf14e</span>, <span class="lit-number">0xe16f</span>,
+	<span class="lit-number">0x1080</span>, <span class="lit-number">0x00a1</span>, <span class="lit-number">0x30c2</span>, <span class="lit-number">0x20e3</span>, <span class="lit-number">0x5004</span>, <span class="lit-number">0x4025</span>, <span class="lit-number">0x7046</span>, <span class="lit-number">0x6067</span>,
+	<span class="lit-number">0x83b9</span>, <span class="lit-number">0x9398</span>, <span class="lit-number">0xa3fb</span>, <span class="lit-number">0xb3da</span>, <span class="lit-number">0xc33d</span>, <span class="lit-number">0xd31c</span>, <span class="lit-number">0xe37f</span>, <span class="lit-number">0xf35e</span>,
+	<span class="lit-number">0x02b1</span>, <span class="lit-number">0x1290</span>, <span class="lit-number">0x22f3</span>, <span class="lit-number">0x32d2</span>, <span class="lit-number">0x4235</span>, <span class="lit-number">0x5214</span>, <span class="lit-number">0x6277</span>, <span class="lit-number">0x7256</span>,
+	<span class="lit-number">0xb5ea</span>, <span class="lit-number">0xa5cb</span>, <span class="lit-number">0x95a8</span>, <span class="lit-number">0x8589</span>, <span class="lit-number">0xf56e</span>, <span class="lit-number">0xe54f</span>, <span class="lit-number">0xd52c</span>, <span class="lit-number">0xc50d</span>,
+	<span class="lit-number">0x34e2</span>, <span class="lit-number">0x24c3</span>, <span class="lit-number">0x14a0</span>, <span class="lit-number">0x0481</span>, <span class="lit-number">0x7466</span>, <span class="lit-number">0x6447</span>, <span class="lit-number">0x5424</span>, <span class="lit-number">0x4405</span>,
+	<span class="lit-number">0xa7db</span>, <span class="lit-number">0xb7fa</span>, <span class="lit-number">0x8799</span>, <span class="lit-number">0x97b8</span>, <span class="lit-number">0xe75f</span>, <span class="lit-number">0xf77e</span>, <span class="lit-number">0xc71d</span>, <span class="lit-number">0xd73c</span>,
+	<span class="lit-number">0x26d3</span>, <span class="lit-number">0x36f2</span>, <span class="lit-number">0x0691</span>, <span class="lit-number">0x16b0</span>, <span class="lit-number">0x6657</span>, <span class="lit-number">0x7676</span>, <span class="lit-number">0x4615</span>, <span class="lit-number">0x5634</span>,
+	<span class="lit-number">0xd94c</span>, <span class="lit-number">0xc96d</span>, <span class="lit-number">0xf90e</span>, <span class="lit-number">0xe92f</span>, <span class="lit-number">0x99c8</span>, <span class="lit-number">0x89e9</span>, <span class="lit-number">0xb98a</span>, <span class="lit-number">0xa9ab</span>,
+	<span class="lit-number">0x5844</span>, <span class="lit-number">0x4865</span>, <span class="lit-number">0x7806</span>, <span class="lit-number">0x6827</span>, <span class="lit-number">0x18c0</span>, <span class="lit-number">0x08e1</span>, <span class="lit-number">0x3882</span>, <span class="lit-number">0x28a3</span>,
+	<span class="lit-number">0xcb7d</span>, <span class="lit-number">0xdb5c</span>, <span class="lit-number">0xeb3f</span>, <span class="lit-number">0xfb1e</span>, <span class="lit-number">0x8bf9</span>, <span class="lit-number">0x9bd8</span>, <span class="lit-number">0xabbb</span>, <span class="lit-number">0xbb9a</span>,
+	<span class="lit-number">0x4a75</span>, <span class="lit-number">0x5a54</span>, <span class="lit-number">0x6a37</span>, <span class="lit-number">0x7a16</span>, <span class="lit-number">0x0af1</span>, <span class="lit-number">0x1ad0</span>, <span class="lit-number">0x2ab3</span>, <span class="lit-number">0x3a92</span>,
+	<span class="lit-number">0xfd2e</span>, <span class="lit-number">0xed0f</span>, <span class="lit-number">0xdd6c</span>, <span class="lit-number">0xcd4d</span>, <span class="lit-number">0xbdaa</span>, <span class="lit-number">0xad8b</span>, <span class="lit-number">0x9de8</span>, <span class="lit-number">0x8dc9</span>,
+	<span class="lit-number">0x7c26</span>, <span class="lit-number">0x6c07</span>, <span class="lit-number">0x5c64</span>, <span class="lit-number">0x4c45</span>, <span class="lit-number">0x3ca2</span>, <span class="lit-number">0x2c83</span>, <span class="lit-number">0x1ce0</span>, <span class="lit-number">0x0cc1</span>,
+	<span class="lit-number">0xef1f</span>, <span class="lit-number">0xff3e</span>, <span class="lit-number">0xcf5d</span>, <span class="lit-number">0xdf7c</span>, <span class="lit-number">0xaf9b</span>, <span class="lit-number">0xbfba</span>, <span class="lit-number">0x8fd9</span>, <span class="lit-number">0x9ff8</span>,
+	<span class="lit-number">0x6e17</span>, <span class="lit-number">0x7e36</span>, <span class="lit-number">0x4e55</span>, <span class="lit-number">0x5e74</span>, <span class="lit-number">0x2e93</span>, <span class="lit-number">0x3eb2</span>, <span class="lit-number">0x0ed1</span>, <span class="lit-number">0x1ef0</span>,
+}
+
+<span class="keyword">func</span> <label for="r0" class="ident"><a href="../../../../../../../pkg/github.com/go-redis/redis/v8/internal/hashtag.html#name-Key" class="ident">Key</a></label>(<label for="r1" class="ident">key</label> <a href="../../../../../../../pkg/builtin.html#name-string" class="ident">string</a>) <a href="../../../../../../../pkg/builtin.html#name-string" class="ident">string</a> {
+	<span class="keyword">if</span> <label for="r2" class="ident">s</label> := <a href="../../../../../../../pkg/strings.html" class="ident i0">strings</a>.<a href="../../../../../../strings/strings.go.html#line-113" class="ident">IndexByte</a>(<label for="r1" class="ident">key</label>, <span class="lit-number">'{'</span>); <label for="r2" class="ident">s</label> &gt; -<span class="lit-number">1</span> {
+		<span class="keyword">if</span> <label for="r3" class="ident">e</label> := <a href="../../../../../../../pkg/strings.html" class="ident i0">strings</a>.<a href="../../../../../../strings/strings.go.html#line-113" class="ident">IndexByte</a>(<label for="r1" class="ident">key</label>[<label for="r2" class="ident">s</label>+<span class="lit-number">1</span>:], <span class="lit-number">'}'</span>); <label for="r3" class="ident">e</label> &gt; <span class="lit-number">0</span> {
+			<span class="keyword">return</span> <label for="r1" class="ident">key</label>[<label for="r2" class="ident">s</label>+<span class="lit-number">1</span> : <label for="r2" class="ident">s</label>+<label for="r3" class="ident">e</label>+<span class="lit-number">1</span>]
+		}
+	}
+	<span class="keyword">return</span> <label for="r1" class="ident">key</label>
+}
+
+<span class="keyword">func</span> <label for="r4" class="ident"><a href="../../../../../../../pkg/github.com/go-redis/redis/v8/internal/hashtag.html#name-RandomSlot" class="ident">RandomSlot</a></label>() <a href="../../../../../../../pkg/builtin.html#name-int" class="ident">int</a> {
+	<span class="keyword">return</span> <a href="../../../../../../../pkg/golang.org/x/exp/rand.html" class="ident i1">rand</a>.<a href="../../../../../../golang.org/x/exp/rand/rand.go.html#line-292" class="ident">Intn</a>(<a href="#line-9" class="ident">slotNumber</a>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> hashSlot returns a consistent slot number between 0 and 16383</span><span class="comment"> for any given string key.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r5" class="ident"><a href="../../../../../../../pkg/github.com/go-redis/redis/v8/internal/hashtag.html#name-Slot" class="ident">Slot</a></label>(<label for="r6" class="ident">key</label> <a href="../../../../../../../pkg/builtin.html#name-string" class="ident">string</a>) <a href="../../../../../../../pkg/builtin.html#name-int" class="ident">int</a> {
+	<span class="keyword">if</span> <label for="r6" class="ident">key</label> == <span class="lit-string">""</span> {
+		<span class="keyword">return</span> <a href="#line-59" class="ident">RandomSlot</a>()
+	}
+	<label for="r6" class="ident">key</label> = <a href="#line-50" class="ident">Key</a>(<label for="r6" class="ident">key</label>)
+	<span class="keyword">return</span> <a href="../../../../../../../pkg/builtin.html#name-int" class="ident">int</a>(<a href="#line-73" class="ident">crc16sum</a>(<label for="r6" class="ident">key</label>)) % <a href="#line-9" class="ident">slotNumber</a>
+}
+
+<span class="keyword">func</span> <label for="r7" class="ident"><a href="../../../../../../../pkg/github.com/go-redis/redis/v8/internal/hashtag.html#name-crc16sum" class="ident">crc16sum</a></label>(<label for="r8" class="ident">key</label> <a href="../../../../../../../pkg/builtin.html#name-string" class="ident">string</a>) (<label for="r9" class="ident">crc</label> <a href="../../../../../../../pkg/builtin.html#name-uint16" class="ident">uint16</a>) {
+	<span class="keyword">for</span> <label for="r10" class="ident">i</label> := <span class="lit-number">0</span>; <label for="r10" class="ident">i</label> &lt; <a href="../../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r8" class="ident">key</label>); <label for="r10" class="ident">i</label>++ {
+		<label for="r9" class="ident">crc</label> = (<label for="r9" class="ident">crc</label> &lt;&lt; <span class="lit-number">8</span>) ^ <a href="#line-15" class="ident">crc16tab</a>[(<a href="../../../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>(<label for="r9" class="ident">crc</label>&gt;&gt;<span class="lit-number">8</span>)^<label for="r8" class="ident">key</label>[<label for="r10" class="ident">i</label>])&amp;<span class="lit-number">0x00ff</span>]
+	}
+	<span class="keyword">return</span>
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

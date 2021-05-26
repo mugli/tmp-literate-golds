@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: logging.go in package golang.org/x/pkgsite/internal/database</title>
+<link href="../../../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	logging.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../../../pkg/golang.org/x/pkgsite/internal/database.html">golang.org/x/pkgsite/internal/database</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16],
+input[id=r17]:checked ~pre label[for=r17],
+input[id=r18]:checked ~pre label[for=r18],
+input[id=r19]:checked ~pre label[for=r19],
+input[id=r20]:checked ~pre label[for=r20],
+input[id=r21]:checked ~pre label[for=r21],
+input[id=r22]:checked ~pre label[for=r22],
+input[id=r23]:checked ~pre label[for=r23],
+input[id=r24]:checked ~pre label[for=r24],
+input[id=r25]:checked ~pre label[for=r25],
+input[id=r26]:checked ~pre label[for=r26],
+input[id=r27]:checked ~pre label[for=r27],
+input[id=r28]:checked ~pre label[for=r28],
+input[id=r29]:checked ~pre label[for=r29],
+input[id=r30]:checked ~pre label[for=r30]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1,
+input[id=i2]:checked ~pre .i2,
+input[id=i3]:checked ~pre .i3,
+input[id=i4]:checked ~pre .i4,
+input[id=i5]:checked ~pre .i5,
+input[id=i6]:checked ~pre .i6,
+input[id=i7]:checked ~pre .i7,
+input[id=i8]:checked ~pre .i8
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="r17" type="radio" name="g"/>
+<input id="r18" type="radio" name="g"/>
+<input id="r19" type="radio" name="g"/>
+<input id="r20" type="radio" name="g"/>
+<input id="r21" type="radio" name="g"/>
+<input id="r22" type="radio" name="g"/>
+<input id="r23" type="radio" name="g"/>
+<input id="r24" type="radio" name="g"/>
+<input id="r25" type="radio" name="g"/>
+<input id="r26" type="radio" name="g"/>
+<input id="r27" type="radio" name="g"/>
+<input id="r28" type="radio" name="g"/>
+<input id="r29" type="radio" name="g"/>
+<input id="r30" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<input id="i2" type="radio" name="i"/>
+<input id="i3" type="radio" name="i"/>
+<input id="i4" type="radio" name="i"/>
+<input id="i5" type="radio" name="i"/>
+<input id="i6" type="radio" name="i"/>
+<input id="i7" type="radio" name="i"/>
+<input id="i8" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2019 The Go Authors. All rights reserved.</span><span class="comment"> Use of this source code is governed by a BSD-style</span><span class="comment"> license that can be found in the LICENSE file.</span></div>
+<div class="code"><pre><code>
+<span class="keyword">package</span> database
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"context"</span></label>
+	<label for="i1"><span class="lit-string i1">"errors"</span></label>
+	<label for="i2"><span class="lit-string i2">"fmt"</span></label>
+	<label for="i3"><span class="lit-string i3">"strings"</span></label>
+	<label for="i4"><span class="lit-string i4">"sync/atomic"</span></label>
+	<label for="i5"><span class="lit-string i5">"time"</span></label>
+	<label for="i6"><span class="lit-string i6">"unicode"</span></label>
+
+	<label for="i7"><span class="lit-string i7">"golang.org/x/pkgsite/internal/derrors"</span></label>
+	<label for="i8"><span class="lit-string i8">"golang.org/x/pkgsite/internal/log"</span></label>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> QueryLoggingDisabled stops logging of queries when true.</span><span class="comment"> For use in tests only: not concurrency-safe.</span></div>
+<div class="code"><pre><code><span class="keyword">var</span> <a href="../../../../../../pkg/golang.org/x/pkgsite/internal/database.html#name-QueryLoggingDisabled" class="ident">QueryLoggingDisabled</a> <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>
+
+<span class="keyword">var</span> <a href="../../../../../../pkg/golang.org/x/pkgsite/internal/database.html#name-queryCounter" class="ident">queryCounter</a> <a href="../../../../../../pkg/builtin.html#name-int64" class="ident">int64</a> <span class="comment">// atomic: per-process counter for unique query IDs</span>
+
+<span class="keyword">type</span> <a href="../../../../../../pkg/golang.org/x/pkgsite/internal/database.html#name-queryEndLogEntry" class="ident">queryEndLogEntry</a> <span class="keyword">struct</span> {
+	<a href="../../../../../../use/golang.org/x/pkgsite/internal/database..queryEndLogEntry*f64e8.ID.html" class="ident">ID</a>              <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../../use/golang.org/x/pkgsite/internal/database..queryEndLogEntry*f64e8.Query.html" class="ident">Query</a>           <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../../use/golang.org/x/pkgsite/internal/database..queryEndLogEntry*f64e8.Args.html" class="ident">Args</a>            <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../../use/golang.org/x/pkgsite/internal/database..queryEndLogEntry*f64e8.DurationSeconds.html" class="ident">DurationSeconds</a> <a href="../../../../../../pkg/builtin.html#name-float64" class="ident">float64</a>
+	<a href="../../../../../../use/golang.org/x/pkgsite/internal/database..queryEndLogEntry*f64e8.Error.html" class="ident">Error</a>           <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a> <span class="lit-string">`json:",omitempty"`</span>
+}
+
+<span class="keyword">func</span> <label for="r0" class="ident"><a href="../../../../../../pkg/golang.org/x/pkgsite/internal/database.html#name-logQuery" class="ident">logQuery</a></label>(<label for="r1" class="ident">ctx</label> <a href="../../../../../../pkg/context.html" class="ident i0">context</a>.<a href="../../../../../context/context.go.html#line-62" class="ident">Context</a>, <label for="r2" class="ident">query</label> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>, <label for="r3" class="ident">args</label> []<span class="keyword">interface</span>{}, <label for="r4" class="ident">instanceID</label> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>, <label for="r5" class="ident">retryable</label> <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>) <span class="keyword">func</span>(*<a href="../../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<span class="keyword">if</span> <a href="#line-22" class="ident">QueryLoggingDisabled</a> {
+		<span class="keyword">return</span> <span class="keyword">func</span>(*<a href="../../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {}
+	}
+	<span class="keyword">const</span> <label for="r6" class="ident">maxlen</label> = <span class="lit-number">300</span> <span class="comment">// maximum length of displayed query</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> To make the query more compact and readable, replace newlines with spaces</span><span class="comment">	 and collapse adjacent whitespace.</span></div>
+<div class="code"><pre><code>	<span class="keyword">var</span> <label for="r7" class="ident">r</label> []<a href="../../../../../../pkg/builtin.html#name-rune" class="ident">rune</a>
+	<span class="keyword">for</span> <label for="r8" class="ident">_</label>, <label for="r9" class="ident">c</label> := <span class="keyword">range</span> <label for="r2" class="ident">query</label> {
+		<span class="keyword">if</span> <label for="r9" class="ident">c</label> == <span class="lit-number">'\n'</span> {
+			<label for="r9" class="ident">c</label> = <span class="lit-number">' '</span>
+		}
+		<span class="keyword">if</span> <a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r7" class="ident">r</label>) == <span class="lit-number">0</span> || !<a href="../../../../../../pkg/unicode.html" class="ident i6">unicode</a>.<a href="../../../../../unicode/graphic.go.html#line-126" class="ident">IsSpace</a>(<label for="r7" class="ident">r</label>[<a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r7" class="ident">r</label>)-<span class="lit-number">1</span>]) || !<a href="../../../../../../pkg/unicode.html" class="ident i6">unicode</a>.<a href="../../../../../unicode/graphic.go.html#line-126" class="ident">IsSpace</a>(<label for="r9" class="ident">c</label>) {
+			<label for="r7" class="ident">r</label> = <a href="../../../../../../pkg/builtin.html#name-append" class="ident">append</a>(<label for="r7" class="ident">r</label>, <label for="r9" class="ident">c</label>)
+		}
+	}
+	<label for="r2" class="ident">query</label> = <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>(<label for="r7" class="ident">r</label>)
+	<span class="keyword">if</span> <a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r2" class="ident">query</label>) &gt; <label for="r6" class="ident">maxlen</label> {
+		<label for="r2" class="ident">query</label> = <label for="r2" class="ident">query</label>[:<label for="r6" class="ident">maxlen</label>] + <span class="lit-string">"..."</span>
+	}
+
+	<label for="r10" class="ident">uid</label> := <a href="#line-136" class="ident">generateLoggingID</a>(<label for="r4" class="ident">instanceID</label>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Construct a short string of the args.</span></div>
+<div class="code"><pre><code>	<span class="keyword">const</span> (
+		<label for="r11" class="ident">maxArgs</label>   = <span class="lit-number">20</span>
+		<label for="r12" class="ident">maxArgLen</label> = <span class="lit-number">50</span>
+	)
+	<span class="keyword">var</span> <label for="r13" class="ident">argStrings</label> []<a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<span class="keyword">for</span> <label for="r14" class="ident">i</label> := <span class="lit-number">0</span>; <label for="r14" class="ident">i</label> &lt; <a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r3" class="ident">args</label>) &amp;&amp; <label for="r14" class="ident">i</label> &lt; <label for="r11" class="ident">maxArgs</label>; <label for="r14" class="ident">i</label>++ {
+		<label for="r15" class="ident">s</label> := <a href="../../../../../../pkg/fmt.html" class="ident i2">fmt</a>.<a href="../../../../../fmt/print.go.html#line-247" class="ident">Sprint</a>(<label for="r3" class="ident">args</label>[<label for="r14" class="ident">i</label>])
+		<span class="keyword">if</span> <a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r15" class="ident">s</label>) &gt; <label for="r12" class="ident">maxArgLen</label> {
+			<label for="r15" class="ident">s</label> = <label for="r15" class="ident">s</label>[:<label for="r12" class="ident">maxArgLen</label>] + <span class="lit-string">"..."</span>
+		}
+		<label for="r13" class="ident">argStrings</label> = <a href="../../../../../../pkg/builtin.html#name-append" class="ident">append</a>(<label for="r13" class="ident">argStrings</label>, <label for="r15" class="ident">s</label>)
+	}
+	<span class="keyword">if</span> <a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r3" class="ident">args</label>) &gt; <label for="r11" class="ident">maxArgs</label> {
+		<label for="r13" class="ident">argStrings</label> = <a href="../../../../../../pkg/builtin.html#name-append" class="ident">append</a>(<label for="r13" class="ident">argStrings</label>, <span class="lit-string">"..."</span>)
+	}
+	<label for="r16" class="ident">argString</label> := <a href="../../../../../../pkg/strings.html" class="ident i3">strings</a>.<a href="../../../../../strings/strings.go.html#line-421" class="ident">Join</a>(<label for="r13" class="ident">argStrings</label>, <span class="lit-string">", "</span>)
+
+	<a href="../../../../../../pkg/golang.org/x/pkgsite/internal/log.html" class="ident i8">log</a>.<a href="../log/log.go.html#line-189" class="ident">Debugf</a>(<label for="r1" class="ident">ctx</label>, <span class="lit-string">"%s %s args=%s"</span>, <label for="r10" class="ident">uid</label>, <label for="r2" class="ident">query</label>, <label for="r16" class="ident">argString</label>)
+	<label for="r17" class="ident">start</label> := <a href="../../../../../../pkg/time.html" class="ident i5">time</a>.<a href="../../../../../time/time.go.html#line-1066" class="ident">Now</a>()
+	<span class="keyword">return</span> <span class="keyword">func</span>(<label for="r18" class="ident">errp</label> *<a href="../../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+		<label for="r19" class="ident">dur</label> := <a href="../../../../../../pkg/time.html" class="ident i5">time</a>.<a href="../../../../../time/time.go.html#line-868" class="ident">Since</a>(<label for="r17" class="ident">start</label>)
+		<span class="keyword">if</span> <label for="r18" class="ident">errp</label> == <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> { <span class="comment">// happens with queryRow</span>
+			<a href="../../../../../../pkg/golang.org/x/pkgsite/internal/log.html" class="ident i8">log</a>.<a href="../log/log.go.html#line-189" class="ident">Debugf</a>(<label for="r1" class="ident">ctx</label>, <span class="lit-string">"%s done"</span>, <label for="r10" class="ident">uid</label>)
+		} <span class="keyword">else</span> {
+			<a href="../../../../../../pkg/golang.org/x/pkgsite/internal/derrors.html" class="ident i7">derrors</a>.<a href="../derrors/derrors.go.html#line-233" class="ident">Wrap</a>(<label for="r18" class="ident">errp</label>, <span class="lit-string">"DB running query %s"</span>, <label for="r10" class="ident">uid</label>)
+			<label for="r20" class="ident">entry</label> := <a href="#line-26" class="ident">queryEndLogEntry</a>{
+				<a href="#line-27" class="ident">ID</a>:              <label for="r10" class="ident">uid</label>,
+				<a href="#line-28" class="ident">Query</a>:           <label for="r2" class="ident">query</label>,
+				<a href="#line-29" class="ident">Args</a>:            <label for="r16" class="ident">argString</label>,
+				<a href="#line-30" class="ident">DurationSeconds</a>: <label for="r19" class="ident">dur</label>.<a href="../../../../../time/time.go.html#line-747" class="ident">Seconds</a>(),
+			}
+			<span class="keyword">if</span> *<label for="r18" class="ident">errp</label> == <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+				<a href="../../../../../../pkg/golang.org/x/pkgsite/internal/log.html" class="ident i8">log</a>.<a href="../log/log.go.html#line-213" class="ident">Debug</a>(<label for="r1" class="ident">ctx</label>, <label for="r20" class="ident">entry</label>)
+			} <span class="keyword">else</span> {
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> There are many places in our logs when a query will be</span><span class="comment">				 canceled, because all unfinished search queries for a given</span><span class="comment">				 request are canceled:</span><span class="comment">				 https://github.com/golang/pkgsite/blob/03662129627796aa387a26b8f4f9251caf5d57fd/internal/postgres/search.go#L178</span><span class="comment">				</span><span class="comment">				 We don't want to log these as errors, because it makes the logs</span><span class="comment">				 very noisy. Based on</span><span class="comment">				 https://github.com/lib/pq/issues/577#issuecomment-298341053</span><span class="comment">				 it seems that ctx.Err() could return nil because this error</span><span class="comment">				 is coming from postgres. github.com/lib/pq currently handles</span><span class="comment">				 errors like these in their tests by hardcoding the string:</span><span class="comment">				 https://github.com/lib/pq/blob/e53edc9b26000fec4c4e357122d56b0f66ace6ea/go18_test.go#L89</span></div>
+<div class="code"><pre><code>				<label for="r21" class="ident">logf</label> := <a href="../../../../../../pkg/golang.org/x/pkgsite/internal/log.html" class="ident i8">log</a>.<a href="../log/log.go.html#line-210" class="ident">Error</a>
+				<span class="keyword">if</span> <a href="../../../../../../pkg/errors.html" class="ident i1">errors</a>.<a href="../../../../../errors/wrap.go.html#line-39" class="ident">Is</a>(<label for="r1" class="ident">ctx</label>.<a href="../../../../../context/context.go.html#line-106" class="ident">Err</a>(), <a href="../../../../../../pkg/context.html" class="ident i0">context</a>.<a href="../../../../../context/context.go.html#line-157" class="ident">Canceled</a>) ||
+					<a href="../../../../../../pkg/strings.html" class="ident i3">strings</a>.<a href="../../../../../strings/strings.go.html#line-61" class="ident">Contains</a>(<label for="r20" class="ident">entry</label>.<a href="#line-31" class="ident">Error</a>, <span class="lit-string">"pq: canceling statement due to user request"</span>) {
+					<label for="r21" class="ident">logf</label> = <a href="../../../../../../pkg/golang.org/x/pkgsite/internal/log.html" class="ident i8">log</a>.<a href="../log/log.go.html#line-213" class="ident">Debug</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> If the transaction is retryable and this is a serialization error,</span><span class="comment">				 then it's not really an error at all. Log it as a warning, so if</span><span class="comment">				 we get a "failed due to max retries" error, we can find these easily.</span></div>
+<div class="code"><pre><code>				<span class="keyword">if</span> <label for="r5" class="ident">retryable</label> &amp;&amp; <a href="database.go.html#line-224" class="ident">isSerializationFailure</a>(*<label for="r18" class="ident">errp</label>) {
+					<label for="r21" class="ident">logf</label> = <a href="../../../../../../pkg/golang.org/x/pkgsite/internal/log.html" class="ident i8">log</a>.<a href="../log/log.go.html#line-207" class="ident">Warning</a>
+				}
+				<label for="r21" class="ident">logf</label>(<label for="r1" class="ident">ctx</label>, <label for="r20" class="ident">entry</label>)
+			}
+		}
+	}
+}
+
+<span class="keyword">func</span> (<label for="r22" class="ident">db</label> *<a href="database.go.html#line-32" class="ident">DB</a>) <label for="r23" class="ident"><a href="../../../../../../use/golang.org/x/pkgsite/internal/database..DB.logTransaction*6899c.html" class="ident">logTransaction</a></label>(<label for="r24" class="ident">ctx</label> <a href="../../../../../../pkg/context.html" class="ident i0">context</a>.<a href="../../../../../context/context.go.html#line-62" class="ident">Context</a>) <span class="keyword">func</span>(*<a href="../../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<span class="keyword">if</span> <a href="#line-22" class="ident">QueryLoggingDisabled</a> {
+		<span class="keyword">return</span> <span class="keyword">func</span>(*<a href="../../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {}
+	}
+	<label for="r25" class="ident">uid</label> := <a href="#line-136" class="ident">generateLoggingID</a>(<label for="r22" class="ident">db</label>.<a href="database.go.html#line-34" class="ident">instanceID</a>)
+	<a href="../../../../../../pkg/golang.org/x/pkgsite/internal/log.html" class="ident i8">log</a>.<a href="../log/log.go.html#line-189" class="ident">Debugf</a>(<label for="r24" class="ident">ctx</label>, <span class="lit-string">"%s transaction (isolation %s) started"</span>, <label for="r25" class="ident">uid</label>, <label for="r22" class="ident">db</label>.<a href="database.go.html#line-37" class="ident">opts</a>.<a href="../../../../../database/sql/sql.go.html#line-166" class="ident">Isolation</a>)
+	<label for="r26" class="ident">start</label> := <a href="../../../../../../pkg/time.html" class="ident i5">time</a>.<a href="../../../../../time/time.go.html#line-1066" class="ident">Now</a>()
+	<span class="keyword">return</span> <span class="keyword">func</span>(<label for="r27" class="ident">errp</label> *<a href="../../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+		<a href="../../../../../../pkg/golang.org/x/pkgsite/internal/log.html" class="ident i8">log</a>.<a href="../log/log.go.html#line-189" class="ident">Debugf</a>(<label for="r24" class="ident">ctx</label>, <span class="lit-string">"%s transaction (isolation %s) finished in %s with error %v"</span>,
+			<label for="r25" class="ident">uid</label>, <label for="r22" class="ident">db</label>.<a href="database.go.html#line-37" class="ident">opts</a>.<a href="../../../../../database/sql/sql.go.html#line-166" class="ident">Isolation</a>, <a href="../../../../../../pkg/time.html" class="ident i5">time</a>.<a href="../../../../../time/time.go.html#line-868" class="ident">Since</a>(<label for="r26" class="ident">start</label>), *<label for="r27" class="ident">errp</label>)
+	}
+}
+
+<span class="keyword">func</span> <label for="r28" class="ident"><a href="../../../../../../pkg/golang.org/x/pkgsite/internal/database.html#name-generateLoggingID" class="ident">generateLoggingID</a></label>(<label for="r29" class="ident">instanceID</label> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>) <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a> {
+	<span class="keyword">if</span> <label for="r29" class="ident">instanceID</label> == <span class="lit-string">""</span> {
+		<label for="r29" class="ident">instanceID</label> = <span class="lit-string">"local"</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Instance IDs are long strings. The low-order part seems quite random, so</span><span class="comment">		 shortening the ID will still likely result in something unique.</span></div>
+<div class="code"><pre><code>		<label for="r29" class="ident">instanceID</label> = <label for="r29" class="ident">instanceID</label>[<a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r29" class="ident">instanceID</label>)-<span class="lit-number">4</span>:]
+	}
+	<label for="r30" class="ident">n</label> := <a href="../../../../../../pkg/sync/atomic.html" class="ident i4">atomic</a>.<a href="../../../../../sync/atomic/doc.go.html#line-100" class="ident">AddInt64</a>(&amp;<a href="#line-24" class="ident">queryCounter</a>, <span class="lit-number">1</span>)
+	<span class="keyword">return</span> <a href="../../../../../../pkg/fmt.html" class="ident i2">fmt</a>.<a href="../../../../../fmt/print.go.html#line-217" class="ident">Sprintf</a>(<span class="lit-string">"%s-%d"</span>, <label for="r29" class="ident">instanceID</label>, <label for="r30" class="ident">n</label>)
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

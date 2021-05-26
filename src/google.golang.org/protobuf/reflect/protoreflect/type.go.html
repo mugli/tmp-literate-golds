@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: type.go in package google.golang.org/protobuf/reflect/protoreflect</title>
+<link href="../../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	type.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../../pkg/google.golang.org/protobuf/reflect/protoreflect.html">google.golang.org/protobuf/reflect/protoreflect</a>
+</code></pre>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2018 The Go Authors. All rights reserved.</span><span class="comment"> Use of this source code is governed by a BSD-style</span><span class="comment"> license that can be found in the LICENSE file.</span></div>
+<div class="code"><pre><code>
+<span class="keyword">package</span> protoreflect
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Descriptor provides a set of accessors that are common to every descriptor.</span><span class="comment"> Each descriptor type wraps the equivalent google.protobuf.XXXDescriptorProto,</span><span class="comment"> but provides efficient lookup and immutability.</span><span class="comment"></span><span class="comment"> Each descriptor is comparable. Equality implies that the two types are</span><span class="comment"> exactly identical. However, it is possible for the same semantically</span><span class="comment"> identical proto type to be represented by multiple type descriptors.</span><span class="comment"></span><span class="comment"> For example, suppose we have t1 and t2 which are both MessageDescriptors.</span><span class="comment"> If t1 == t2, then the types are definitely equal and all accessors return</span><span class="comment"> the same information. However, if t1 != t2, then it is still possible that</span><span class="comment"> they still represent the same proto type (e.g., t1.FullName == t2.FullName).</span><span class="comment"> This can occur if a descriptor type is created dynamically, or multiple</span><span class="comment"> versions of the same proto type are accidentally linked into the Go binary.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ParentFile returns the parent file descriptor that this descriptor</span><span class="comment">	 is declared within. The parent file for the file descriptor is itself.</span><span class="comment">	</span><span class="comment">	 Support for this functionality is optional and may return nil.</span></div>
+<div class="code"><pre><code>	ParentFile() <a href="#line-119" class="ident">FileDescriptor</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Parent returns the parent containing this descriptor declaration.</span><span class="comment">	 The following shows the mapping from child type to possible parent types:</span><span class="comment">	</span><span class="comment">		╔═════════════════════╤═══════════════════════════════════╗</span><span class="comment">		║ Child type          │ Possible parent types             ║</span><span class="comment">		╠═════════════════════╪═══════════════════════════════════╣</span><span class="comment">		║ FileDescriptor      │ nil                               ║</span><span class="comment">		║ MessageDescriptor   │ FileDescriptor, MessageDescriptor ║</span><span class="comment">		║ FieldDescriptor     │ FileDescriptor, MessageDescriptor ║</span><span class="comment">		║ OneofDescriptor     │ MessageDescriptor                 ║</span><span class="comment">		║ EnumDescriptor      │ FileDescriptor, MessageDescriptor ║</span><span class="comment">		║ EnumValueDescriptor │ EnumDescriptor                    ║</span><span class="comment">		║ ServiceDescriptor   │ FileDescriptor                    ║</span><span class="comment">		║ MethodDescriptor    │ ServiceDescriptor                 ║</span><span class="comment">		╚═════════════════════╧═══════════════════════════════════╝</span><span class="comment">	</span><span class="comment">	 Support for this functionality is optional and may return nil.</span></div>
+<div class="code"><pre><code>	Parent() <a href="#line-21" class="ident">Descriptor</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Index returns the index of this descriptor within its parent.</span><span class="comment">	 It returns 0 if the descriptor does not have a parent or if the parent</span><span class="comment">	 is unknown.</span></div>
+<div class="code"><pre><code>	Index() <a href="../../../../../pkg/builtin.html#name-int" class="ident">int</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Syntax is the protobuf syntax.</span></div>
+<div class="code"><pre><code>	Syntax() <a href="proto.go.html#line-145" class="ident">Syntax</a> <span class="comment">// e.g., Proto2 or Proto3</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Name is the short name of the declaration (i.e., FullName.Name).</span></div>
+<div class="code"><pre><code>	Name() <a href="proto.go.html#line-412" class="ident">Name</a> <span class="comment">// e.g., "Any"</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> FullName is the fully-qualified name of the declaration.</span><span class="comment">	</span><span class="comment">	 The FullName is a concatenation of the full name of the type that this</span><span class="comment">	 type is declared within and the declaration name. For example,</span><span class="comment">	 field "foo_field" in message "proto.package.MyMessage" is</span><span class="comment">	 uniquely identified as "proto.package.MyMessage.foo_field".</span><span class="comment">	 Enum values are an exception to the rule (see EnumValueDescriptor).</span></div>
+<div class="code"><pre><code>	FullName() <a href="proto.go.html#line-438" class="ident">FullName</a> <span class="comment">// e.g., "google.protobuf.Any"</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> IsPlaceholder reports whether type information is missing since a</span><span class="comment">	 dependency is not resolved, in which case only name information is known.</span><span class="comment">	</span><span class="comment">	 Placeholder types may only be returned by the following accessors</span><span class="comment">	 as a result of unresolved dependencies or weak imports:</span><span class="comment">	</span><span class="comment">		╔═══════════════════════════════════╤═════════════════════╗</span><span class="comment">		║ Accessor                          │ Descriptor          ║</span><span class="comment">		╠═══════════════════════════════════╪═════════════════════╣</span><span class="comment">		║ FileImports.FileDescriptor        │ FileDescriptor      ║</span><span class="comment">		║ FieldDescriptor.Enum              │ EnumDescriptor      ║</span><span class="comment">		║ FieldDescriptor.Message           │ MessageDescriptor   ║</span><span class="comment">		║ FieldDescriptor.DefaultEnumValue  │ EnumValueDescriptor ║</span><span class="comment">		║ FieldDescriptor.ContainingMessage │ MessageDescriptor   ║</span><span class="comment">		║ MethodDescriptor.Input            │ MessageDescriptor   ║</span><span class="comment">		║ MethodDescriptor.Output           │ MessageDescriptor   ║</span><span class="comment">		╚═══════════════════════════════════╧═════════════════════╝</span><span class="comment">	</span><span class="comment">	 If true, only Name and FullName are valid.</span><span class="comment">	 For FileDescriptor, the Path is also valid.</span></div>
+<div class="code"><pre><code>	IsPlaceholder() <a href="../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Options returns the descriptor options. The caller must not modify</span><span class="comment">	 the returned value.</span><span class="comment">	</span><span class="comment">	 To avoid a dependency cycle, this function returns a proto.Message value.</span><span class="comment">	 The proto message type returned for each descriptor type is as follows:</span><span class="comment">		╔═════════════════════╤══════════════════════════════════════════╗</span><span class="comment">		║ Go type             │ Protobuf message type                    ║</span><span class="comment">		╠═════════════════════╪══════════════════════════════════════════╣</span><span class="comment">		║ FileDescriptor      │ google.protobuf.FileOptions              ║</span><span class="comment">		║ EnumDescriptor      │ google.protobuf.EnumOptions              ║</span><span class="comment">		║ EnumValueDescriptor │ google.protobuf.EnumValueOptions         ║</span><span class="comment">		║ MessageDescriptor   │ google.protobuf.MessageOptions           ║</span><span class="comment">		║ FieldDescriptor     │ google.protobuf.FieldOptions             ║</span><span class="comment">		║ OneofDescriptor     │ google.protobuf.OneofOptions             ║</span><span class="comment">		║ ServiceDescriptor   │ google.protobuf.ServiceOptions           ║</span><span class="comment">		║ MethodDescriptor    │ google.protobuf.MethodOptions            ║</span><span class="comment">		╚═════════════════════╧══════════════════════════════════════════╝</span><span class="comment">	</span><span class="comment">	 This method returns a typed nil-pointer if no options are present.</span><span class="comment">	 The caller must import the descriptorpb package to use this.</span></div>
+<div class="code"><pre><code>	Options() <a href="proto.go.html#line-142" class="ident">ProtoMessage</a>
+
+	<a href="proto.go.html#line-137" class="ident">doNotImplement</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> FileDescriptor describes the types in a complete proto file and</span><span class="comment"> corresponds with the google.protobuf.FileDescriptorProto message.</span><span class="comment"></span><span class="comment"> Top-level declarations:</span><span class="comment"> EnumDescriptor, MessageDescriptor, FieldDescriptor, and/or ServiceDescriptor.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../pkg/google.golang.org/protobuf/reflect/protoreflect.html#name-FileDescriptor" class="ident">FileDescriptor</a> <span class="keyword">interface</span> {
+	<a href="#line-21" class="ident">Descriptor</a> <span class="comment">// Descriptor.FullName is identical to Package</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Path returns the file name, relative to the source tree root.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Package returns the protobuf package namespace.</span></div>
+<div class="code"><pre><code>	Package() <a href="proto.go.html#line-438" class="ident">FullName</a> <span class="comment">// e.g., "google.protobuf"</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Imports is a list of imported proto files.</span></div>
+<div class="code"><pre><code>	Imports() <a href="#line-147" class="ident">FileImports</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Enums is a list of the top-level enum declarations.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Messages is a list of the top-level message declarations.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Extensions is a list of the top-level extension declarations.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Services is a list of the top-level service declarations.</span></div>
+<div class="code"><pre><code>	Services() <a href="#line-590" class="ident">ServiceDescriptors</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> SourceLocations is a list of source locations.</span></div>
+<div class="code"><pre><code>	SourceLocations() <a href="source.go.html#line-8" class="ident">SourceLocations</a>
+
+	<a href="#line-144" class="ident">isFileDescriptor</a>
+}
+<span class="keyword">type</span> <a href="../../../../../pkg/google.golang.org/protobuf/reflect/protoreflect.html#name-isFileDescriptor" class="ident">isFileDescriptor</a> <span class="keyword">interface</span>{ ProtoType(<a href="#line-119" class="ident">FileDescriptor</a>) }
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> FileImports is a list of file imports.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Len reports the number of files imported by this proto file.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Get returns the ith FileImport. It panics if out of bounds.</span></div>
+<div class="code"><pre><code>	Get(i <a href="../../../../../pkg/builtin.html#name-int" class="ident">int</a>) <a href="#line-157" class="ident">FileImport</a>
+
+	<a href="proto.go.html#line-137" class="ident">doNotImplement</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> FileImport is the declaration for a proto file import.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> FileDescriptor is the file type for the given import.</span><span class="comment">	 It is a placeholder descriptor if IsWeak is set or if a dependency has</span><span class="comment">	 not been regenerated to implement the new reflection APIs.</span></div>
+<div class="code"><pre><code>	<a href="#line-119" class="ident">FileDescriptor</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> IsPublic reports whether this is a public import, which causes this file</span><span class="comment">	 to alias declarations within the imported file. The intended use cases</span><span class="comment">	 for this feature is the ability to move proto files without breaking</span><span class="comment">	 existing dependencies.</span><span class="comment">	</span><span class="comment">	 The current file and the imported file must be within proto package.</span></div>
+<div class="code"><pre><code>	<a href="../../../../../use/google.golang.org/protobuf/reflect/protoreflect..FileImport.IsPublic.html" class="ident">IsPublic</a> <a href="../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> IsWeak reports whether this is a weak import, which does not impose</span><span class="comment">	 a direct dependency on the target file.</span><span class="comment">	</span><span class="comment">	 Weak imports are a legacy proto1 feature. Equivalent behavior is</span><span class="comment">	 achieved using proto2 extension fields or proto3 Any messages.</span></div>
+<div class="code"><pre><code>	<a href="../../../../../use/google.golang.org/protobuf/reflect/protoreflect..FileImport.IsWeak.html" class="ident">IsWeak</a> <a href="../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> MessageDescriptor describes a message and</span><span class="comment"> corresponds with the google.protobuf.DescriptorProto message.</span><span class="comment"></span><span class="comment"> Nested declarations:</span><span class="comment"> FieldDescriptor, OneofDescriptor, FieldDescriptor, EnumDescriptor,</span><span class="comment"> and/or MessageDescriptor.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../pkg/google.golang.org/protobuf/reflect/protoreflect.html#name-MessageDescriptor" class="ident">MessageDescriptor</a> <span class="keyword">interface</span> {
+	<a href="#line-21" class="ident">Descriptor</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> IsMapEntry indicates that this is an auto-generated message type to</span><span class="comment">	 represent the entry type for a map field.</span><span class="comment">	</span><span class="comment">	 Map entry messages have only two fields:</span><span class="comment">		• a "key" field with a field number of 1</span><span class="comment">		• a "value" field with a field number of 2</span><span class="comment">	 The key and value types are determined by these two fields.</span><span class="comment">	</span><span class="comment">	 If IsMapEntry is true, it implies that FieldDescriptor.IsMap is true</span><span class="comment">	 for some field with this message type.</span></div>
+<div class="code"><pre><code>	IsMapEntry() <a href="../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Fields is a list of nested field declarations.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Oneofs is a list of nested oneof declarations.</span></div>
+<div class="code"><pre><code>	Oneofs() <a href="#line-399" class="ident">OneofDescriptors</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ReservedNames is a list of reserved field names.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ReservedRanges is a list of reserved ranges of field numbers.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> RequiredNumbers is a list of required field numbers.</span><span class="comment">	 In Proto3, it is always an empty list.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ExtensionRanges is the field ranges used for extension fields.</span><span class="comment">	 In Proto3, it is always an empty ranges.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ExtensionRangeOptions returns the ith extension range options.</span><span class="comment">	</span><span class="comment">	 To avoid a dependency cycle, this method returns a proto.Message value,</span><span class="comment">	 which always contains a google.protobuf.ExtensionRangeOptions message.</span><span class="comment">	 This method returns a typed nil-pointer if no options are present.</span><span class="comment">	 The caller must import the descriptorpb package to use this.</span></div>
+<div class="code"><pre><code>	ExtensionRangeOptions(i <a href="../../../../../pkg/builtin.html#name-int" class="ident">int</a>) <a href="proto.go.html#line-142" class="ident">ProtoMessage</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Enums is a list of nested enum declarations.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Messages is a list of nested message declarations.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Extensions is a list of nested extension declarations.</span></div>
+<div class="code"><pre><code>	Extensions() <a href="#line-427" class="ident">ExtensionDescriptors</a>
+
+	<a href="#line-232" class="ident">isMessageDescriptor</a>
+}
+<span class="keyword">type</span> <a href="../../../../../pkg/google.golang.org/protobuf/reflect/protoreflect.html#name-isMessageDescriptor" class="ident">isMessageDescriptor</a> <span class="keyword">interface</span>{ ProtoType(<a href="#line-185" class="ident">MessageDescriptor</a>) }
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> MessageType encapsulates a MessageDescriptor with a concrete Go implementation.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> New returns a newly allocated empty message.</span></div>
+<div class="code"><pre><code>	New() <a href="value.go.html#line-40" class="ident">Message</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Zero returns an empty, read-only message.</span></div>
+<div class="code"><pre><code>	Zero() <a href="value.go.html#line-40" class="ident">Message</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Descriptor returns the message descriptor.</span><span class="comment">	</span><span class="comment">	 Invariant: t.Descriptor() == t.New().Descriptor()</span></div>
+<div class="code"><pre><code>	Descriptor() <a href="#line-185" class="ident">MessageDescriptor</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> MessageDescriptors is a list of message declarations.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Len reports the number of messages.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Get returns the ith MessageDescriptor. It panics if out of bounds.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ByName returns the MessageDescriptor for a message named s.</span><span class="comment">	 It returns nil if not found.</span></div>
+<div class="code"><pre><code>	ByName(s <a href="proto.go.html#line-412" class="ident">Name</a>) <a href="#line-185" class="ident">MessageDescriptor</a>
+
+	<a href="proto.go.html#line-137" class="ident">doNotImplement</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> FieldDescriptor describes a field within a message and</span><span class="comment"> corresponds with the google.protobuf.FieldDescriptorProto message.</span><span class="comment"></span><span class="comment"> It is used for both normal fields defined within the parent message</span><span class="comment"> (e.g., MessageDescriptor.Fields) and fields that extend some remote message</span><span class="comment"> (e.g., FileDescriptor.Extensions or MessageDescriptor.Extensions).</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../pkg/google.golang.org/protobuf/reflect/protoreflect.html#name-FieldDescriptor" class="ident">FieldDescriptor</a> <span class="keyword">interface</span> {
+	<a href="#line-21" class="ident">Descriptor</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Number reports the unique number for this field.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Cardinality reports the cardinality for this field.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Kind reports the basic kind for this field.</span></div>
+<div class="code"><pre><code>	Kind() <a href="proto.go.html#line-239" class="ident">Kind</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> HasJSONName reports whether this field has an explicitly set JSON name.</span></div>
+<div class="code"><pre><code>	HasJSONName() <a href="../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> JSONName reports the name used for JSON serialization.</span><span class="comment">	 It is usually the camel-cased form of the field name.</span></div>
+<div class="code"><pre><code>	JSONName() <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> HasPresence reports whether the field distinguishes between unpopulated</span><span class="comment">	 and default values.</span></div>
+<div class="code"><pre><code>	HasPresence() <a href="../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> IsExtension reports whether this is an extension field. If false,</span><span class="comment">	 then Parent and ContainingMessage refer to the same message.</span><span class="comment">	 Otherwise, ContainingMessage and Parent likely differ.</span></div>
+<div class="code"><pre><code>	IsExtension() <a href="../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> HasOptionalKeyword reports whether the "optional" keyword was explicitly</span><span class="comment">	 specified in the source .proto file.</span></div>
+<div class="code"><pre><code>	HasOptionalKeyword() <a href="../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> IsWeak reports whether this is a weak field, which does not impose a</span><span class="comment">	 direct dependency on the target type.</span><span class="comment">	 If true, then Message returns a placeholder type.</span></div>
+<div class="code"><pre><code>	IsWeak() <a href="../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> IsPacked reports whether repeated primitive numeric kinds should be</span><span class="comment">	 serialized using a packed encoding.</span><span class="comment">	 If true, then it implies Cardinality is Repeated.</span></div>
+<div class="code"><pre><code>	IsPacked() <a href="../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> IsList reports whether this field represents a list,</span><span class="comment">	 where the value type for the associated field is a List.</span><span class="comment">	 It is equivalent to checking whether Cardinality is Repeated and</span><span class="comment">	 that IsMap reports false.</span></div>
+<div class="code"><pre><code>	IsList() <a href="../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> IsMap reports whether this field represents a map,</span><span class="comment">	 where the value type for the associated field is a Map.</span><span class="comment">	 It is equivalent to checking whether Cardinality is Repeated,</span><span class="comment">	 that the Kind is MessageKind, and that Message.IsMapEntry reports true.</span></div>
+<div class="code"><pre><code>	IsMap() <a href="../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> MapKey returns the field descriptor for the key in the map entry.</span><span class="comment">	 It returns nil if IsMap reports false.</span></div>
+<div class="code"><pre><code>	MapKey() <a href="#line-267" class="ident">FieldDescriptor</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> MapValue returns the field descriptor for the value in the map entry.</span><span class="comment">	 It returns nil if IsMap reports false.</span></div>
+<div class="code"><pre><code>	MapValue() <a href="#line-267" class="ident">FieldDescriptor</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> HasDefault reports whether this field has a default value.</span></div>
+<div class="code"><pre><code>	HasDefault() <a href="../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Default returns the default value for scalar fields.</span><span class="comment">	 For proto2, it is the default value as specified in the proto file,</span><span class="comment">	 or the zero value if unspecified.</span><span class="comment">	 For proto3, it is always the zero value of the scalar.</span><span class="comment">	 The Value type is determined by the Kind.</span></div>
+<div class="code"><pre><code>	Default() <a href="value_union.go.html#line-44" class="ident">Value</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> DefaultEnumValue returns the enum value descriptor for the default value</span><span class="comment">	 of an enum field, and is nil for any other kind of field.</span></div>
+<div class="code"><pre><code>	DefaultEnumValue() <a href="#line-548" class="ident">EnumValueDescriptor</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ContainingOneof is the containing oneof that this field belongs to,</span><span class="comment">	 and is nil if this field is not part of a oneof.</span></div>
+<div class="code"><pre><code>	ContainingOneof() <a href="#line-383" class="ident">OneofDescriptor</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ContainingMessage is the containing message that this field belongs to.</span><span class="comment">	 For extension fields, this may not necessarily be the parent message</span><span class="comment">	 that the field is declared within.</span></div>
+<div class="code"><pre><code>	ContainingMessage() <a href="#line-185" class="ident">MessageDescriptor</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Enum is the enum descriptor if Kind is EnumKind.</span><span class="comment">	 It returns nil for any other Kind.</span></div>
+<div class="code"><pre><code>	Enum() <a href="#line-501" class="ident">EnumDescriptor</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Message is the message descriptor if Kind is</span><span class="comment">	 MessageKind or GroupKind. It returns nil for any other Kind.</span></div>
+<div class="code"><pre><code>	Message() <a href="#line-185" class="ident">MessageDescriptor</a>
+
+	<a href="#line-360" class="ident">isFieldDescriptor</a>
+}
+<span class="keyword">type</span> <a href="../../../../../pkg/google.golang.org/protobuf/reflect/protoreflect.html#name-isFieldDescriptor" class="ident">isFieldDescriptor</a> <span class="keyword">interface</span>{ ProtoType(<a href="#line-267" class="ident">FieldDescriptor</a>) }
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> FieldDescriptors is a list of field declarations.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Len reports the number of fields.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Get returns the ith FieldDescriptor. It panics if out of bounds.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ByName returns the FieldDescriptor for a field named s.</span><span class="comment">	 It returns nil if not found.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ByJSONName returns the FieldDescriptor for a field with s as the JSON name.</span><span class="comment">	 It returns nil if not found.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ByNumber returns the FieldDescriptor for a field numbered n.</span><span class="comment">	 It returns nil if not found.</span></div>
+<div class="code"><pre><code>	ByNumber(n <a href="proto.go.html#line-369" class="ident">FieldNumber</a>) <a href="#line-267" class="ident">FieldDescriptor</a>
+
+	<a href="proto.go.html#line-137" class="ident">doNotImplement</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> OneofDescriptor describes a oneof field set within a given message and</span><span class="comment"> corresponds with the google.protobuf.OneofDescriptorProto message.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../pkg/google.golang.org/protobuf/reflect/protoreflect.html#name-OneofDescriptor" class="ident">OneofDescriptor</a> <span class="keyword">interface</span> {
+	<a href="#line-21" class="ident">Descriptor</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> IsSynthetic reports whether this is a synthetic oneof created to support</span><span class="comment">	 proto3 optional semantics. If true, Fields contains exactly one field</span><span class="comment">	 with HasOptionalKeyword specified.</span></div>
+<div class="code"><pre><code>	IsSynthetic() <a href="../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Fields is a list of fields belonging to this oneof.</span></div>
+<div class="code"><pre><code>	Fields() <a href="#line-363" class="ident">FieldDescriptors</a>
+
+	<a href="#line-396" class="ident">isOneofDescriptor</a>
+}
+<span class="keyword">type</span> <a href="../../../../../pkg/google.golang.org/protobuf/reflect/protoreflect.html#name-isOneofDescriptor" class="ident">isOneofDescriptor</a> <span class="keyword">interface</span>{ ProtoType(<a href="#line-383" class="ident">OneofDescriptor</a>) }
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> OneofDescriptors is a list of oneof declarations.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Len reports the number of oneof fields.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Get returns the ith OneofDescriptor. It panics if out of bounds.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ByName returns the OneofDescriptor for a oneof named s.</span><span class="comment">	 It returns nil if not found.</span></div>
+<div class="code"><pre><code>	ByName(s <a href="proto.go.html#line-412" class="ident">Name</a>) <a href="#line-383" class="ident">OneofDescriptor</a>
+
+	<a href="proto.go.html#line-137" class="ident">doNotImplement</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ExtensionDescriptor is an alias of FieldDescriptor for documentation.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../pkg/google.golang.org/protobuf/reflect/protoreflect.html#name-ExtensionDescriptor" class="ident">ExtensionDescriptor</a> = <a href="#line-267" class="ident">FieldDescriptor</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ExtensionTypeDescriptor is an ExtensionDescriptor with an associated ExtensionType.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../pkg/google.golang.org/protobuf/reflect/protoreflect.html#name-ExtensionTypeDescriptor" class="ident">ExtensionTypeDescriptor</a> <span class="keyword">interface</span> {
+	<a href="#line-412" class="ident">ExtensionDescriptor</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Type returns the associated ExtensionType.</span></div>
+<div class="code"><pre><code>	Type() <a href="#line-460" class="ident">ExtensionType</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Descriptor returns the plain ExtensionDescriptor without the</span><span class="comment">	 associated ExtensionType.</span></div>
+<div class="code"><pre><code>	Descriptor() <a href="#line-412" class="ident">ExtensionDescriptor</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ExtensionDescriptors is a list of field declarations.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Len reports the number of fields.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Get returns the ith ExtensionDescriptor. It panics if out of bounds.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ByName returns the ExtensionDescriptor for a field named s.</span><span class="comment">	 It returns nil if not found.</span></div>
+<div class="code"><pre><code>	ByName(s <a href="proto.go.html#line-412" class="ident">Name</a>) <a href="#line-412" class="ident">ExtensionDescriptor</a>
+
+	<a href="proto.go.html#line-137" class="ident">doNotImplement</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ExtensionType encapsulates an ExtensionDescriptor with a concrete</span><span class="comment"> Go implementation. The nested field descriptor must be for a extension field.</span><span class="comment"></span><span class="comment"> While a normal field is a member of the parent message that it is declared</span><span class="comment"> within (see Descriptor.Parent), an extension field is a member of some other</span><span class="comment"> target message (see ExtensionDescriptor.Extendee) and may have no</span><span class="comment"> relationship with the parent. However, the full name of an extension field is</span><span class="comment"> relative to the parent that it is declared within.</span><span class="comment"></span><span class="comment"> For example:</span><span class="comment">	syntax = "proto2";</span><span class="comment">	package example;</span><span class="comment">	message FooMessage {</span><span class="comment">		extensions 100 to max;</span><span class="comment">	}</span><span class="comment">	message BarMessage {</span><span class="comment">		extends FooMessage { optional BarMessage bar_field = 100; }</span><span class="comment">	}</span><span class="comment"></span><span class="comment"> Field "bar_field" is an extension of FooMessage, but its full name is</span><span class="comment"> "example.BarMessage.bar_field" instead of "example.FooMessage.bar_field".</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> New returns a new value for the field.</span><span class="comment">	 For scalars, this returns the default value in native Go form.</span></div>
+<div class="code"><pre><code>	New() <a href="value_union.go.html#line-44" class="ident">Value</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Zero returns a new value for the field.</span><span class="comment">	 For scalars, this returns the default value in native Go form.</span><span class="comment">	 For composite types, this returns an empty, read-only message, list, or map.</span></div>
+<div class="code"><pre><code>	Zero() <a href="value_union.go.html#line-44" class="ident">Value</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> TypeDescriptor returns the extension type descriptor.</span></div>
+<div class="code"><pre><code>	TypeDescriptor() <a href="#line-415" class="ident">ExtensionTypeDescriptor</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ValueOf wraps the input and returns it as a Value.</span><span class="comment">	 ValueOf panics if the input value is invalid or not the appropriate type.</span><span class="comment">	</span><span class="comment">	 ValueOf is more extensive than protoreflect.ValueOf for a given field's</span><span class="comment">	 value as it has more type information available.</span></div>
+<div class="code"><pre><code>	ValueOf(<span class="keyword">interface</span>{}) <a href="value_union.go.html#line-44" class="ident">Value</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> InterfaceOf completely unwraps the Value to the underlying Go type.</span><span class="comment">	 InterfaceOf panics if the input is nil or does not represent the</span><span class="comment">	 appropriate underlying Go type. For composite types, it panics if the</span><span class="comment">	 value is not mutable.</span><span class="comment">	</span><span class="comment">	 InterfaceOf is able to unwrap the Value further than Value.Interface</span><span class="comment">	 as it has more type information available.</span></div>
+<div class="code"><pre><code>	InterfaceOf(<a href="value_union.go.html#line-44" class="ident">Value</a>) <span class="keyword">interface</span>{}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> IsValidValue reports whether the Value is valid to assign to the field.</span></div>
+<div class="code"><pre><code>	IsValidValue(<a href="value_union.go.html#line-44" class="ident">Value</a>) <a href="../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> IsValidInterface reports whether the input is valid to assign to the field.</span></div>
+<div class="code"><pre><code>	IsValidInterface(<span class="keyword">interface</span>{}) <a href="../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> EnumDescriptor describes an enum and</span><span class="comment"> corresponds with the google.protobuf.EnumDescriptorProto message.</span><span class="comment"></span><span class="comment"> Nested declarations:</span><span class="comment"> EnumValueDescriptor.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../pkg/google.golang.org/protobuf/reflect/protoreflect.html#name-EnumDescriptor" class="ident">EnumDescriptor</a> <span class="keyword">interface</span> {
+	<a href="#line-21" class="ident">Descriptor</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Values is a list of nested enum value declarations.</span></div>
+<div class="code"><pre><code>	Values() <a href="#line-559" class="ident">EnumValueDescriptors</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ReservedNames is a list of reserved enum names.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ReservedRanges is a list of reserved ranges of enum numbers.</span></div>
+<div class="code"><pre><code>	ReservedRanges() <a href="proto.go.html#line-399" class="ident">EnumRanges</a>
+
+	<a href="#line-514" class="ident">isEnumDescriptor</a>
+}
+<span class="keyword">type</span> <a href="../../../../../pkg/google.golang.org/protobuf/reflect/protoreflect.html#name-isEnumDescriptor" class="ident">isEnumDescriptor</a> <span class="keyword">interface</span>{ ProtoType(<a href="#line-501" class="ident">EnumDescriptor</a>) }
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> EnumType encapsulates an EnumDescriptor with a concrete Go implementation.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> New returns an instance of this enum type with its value set to n.</span></div>
+<div class="code"><pre><code>	New(n <a href="proto.go.html#line-396" class="ident">EnumNumber</a>) <a href="value.go.html#line-13" class="ident">Enum</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Descriptor returns the enum descriptor.</span><span class="comment">	</span><span class="comment">	 Invariant: t.Descriptor() == t.New(0).Descriptor()</span></div>
+<div class="code"><pre><code>	Descriptor() <a href="#line-501" class="ident">EnumDescriptor</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> EnumDescriptors is a list of enum declarations.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Len reports the number of enum types.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Get returns the ith EnumDescriptor. It panics if out of bounds.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ByName returns the EnumDescriptor for an enum named s.</span><span class="comment">	 It returns nil if not found.</span></div>
+<div class="code"><pre><code>	ByName(s <a href="proto.go.html#line-412" class="ident">Name</a>) <a href="#line-501" class="ident">EnumDescriptor</a>
+
+	<a href="proto.go.html#line-137" class="ident">doNotImplement</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> EnumValueDescriptor describes an enum value and</span><span class="comment"> corresponds with the google.protobuf.EnumValueDescriptorProto message.</span><span class="comment"></span><span class="comment"> All other proto declarations are in the namespace of the parent.</span><span class="comment"> However, enum values do not follow this rule and are within the namespace</span><span class="comment"> of the parent's parent (i.e., they are a sibling of the containing enum).</span><span class="comment"> Thus, a value named "FOO_VALUE" declared within an enum uniquely identified</span><span class="comment"> as "proto.package.MyEnum" has a full name of "proto.package.FOO_VALUE".</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../pkg/google.golang.org/protobuf/reflect/protoreflect.html#name-EnumValueDescriptor" class="ident">EnumValueDescriptor</a> <span class="keyword">interface</span> {
+	<a href="#line-21" class="ident">Descriptor</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Number returns the enum value as an integer.</span></div>
+<div class="code"><pre><code>	Number() <a href="proto.go.html#line-396" class="ident">EnumNumber</a>
+
+	<a href="#line-556" class="ident">isEnumValueDescriptor</a>
+}
+<span class="keyword">type</span> <a href="../../../../../pkg/google.golang.org/protobuf/reflect/protoreflect.html#name-isEnumValueDescriptor" class="ident">isEnumValueDescriptor</a> <span class="keyword">interface</span>{ ProtoType(<a href="#line-548" class="ident">EnumValueDescriptor</a>) }
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> EnumValueDescriptors is a list of enum value declarations.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Len reports the number of enum values.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Get returns the ith EnumValueDescriptor. It panics if out of bounds.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ByName returns the EnumValueDescriptor for the enum value named s.</span><span class="comment">	 It returns nil if not found.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ByNumber returns the EnumValueDescriptor for the enum value numbered n.</span><span class="comment">	 If multiple have the same number, the first one defined is returned</span><span class="comment">	 It returns nil if not found.</span></div>
+<div class="code"><pre><code>	ByNumber(n <a href="proto.go.html#line-396" class="ident">EnumNumber</a>) <a href="#line-548" class="ident">EnumValueDescriptor</a>
+
+	<a href="proto.go.html#line-137" class="ident">doNotImplement</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ServiceDescriptor describes a service and</span><span class="comment"> corresponds with the google.protobuf.ServiceDescriptorProto message.</span><span class="comment"></span><span class="comment"> Nested declarations: MethodDescriptor.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../pkg/google.golang.org/protobuf/reflect/protoreflect.html#name-ServiceDescriptor" class="ident">ServiceDescriptor</a> <span class="keyword">interface</span> {
+	<a href="#line-21" class="ident">Descriptor</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Methods is a list of nested message declarations.</span></div>
+<div class="code"><pre><code>	Methods() <a href="#line-621" class="ident">MethodDescriptors</a>
+
+	<a href="#line-587" class="ident">isServiceDescriptor</a>
+}
+<span class="keyword">type</span> <a href="../../../../../pkg/google.golang.org/protobuf/reflect/protoreflect.html#name-isServiceDescriptor" class="ident">isServiceDescriptor</a> <span class="keyword">interface</span>{ ProtoType(<a href="#line-579" class="ident">ServiceDescriptor</a>) }
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ServiceDescriptors is a list of service declarations.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Len reports the number of services.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Get returns the ith ServiceDescriptor. It panics if out of bounds.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ByName returns the ServiceDescriptor for a service named s.</span><span class="comment">	 It returns nil if not found.</span></div>
+<div class="code"><pre><code>	ByName(s <a href="proto.go.html#line-412" class="ident">Name</a>) <a href="#line-579" class="ident">ServiceDescriptor</a>
+
+	<a href="proto.go.html#line-137" class="ident">doNotImplement</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> MethodDescriptor describes a method and</span><span class="comment"> corresponds with the google.protobuf.MethodDescriptorProto message.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../pkg/google.golang.org/protobuf/reflect/protoreflect.html#name-MethodDescriptor" class="ident">MethodDescriptor</a> <span class="keyword">interface</span> {
+	<a href="#line-21" class="ident">Descriptor</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Input is the input message descriptor.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Output is the output message descriptor.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> IsStreamingClient reports whether the client streams multiple messages.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> IsStreamingServer reports whether the server streams multiple messages.</span></div>
+<div class="code"><pre><code>	IsStreamingServer() <a href="../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>
+
+	<a href="#line-618" class="ident">isMethodDescriptor</a>
+}
+<span class="keyword">type</span> <a href="../../../../../pkg/google.golang.org/protobuf/reflect/protoreflect.html#name-isMethodDescriptor" class="ident">isMethodDescriptor</a> <span class="keyword">interface</span>{ ProtoType(<a href="#line-604" class="ident">MethodDescriptor</a>) }
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> MethodDescriptors is a list of method declarations.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Len reports the number of methods.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Get returns the ith MethodDescriptor. It panics if out of bounds.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ByName returns the MethodDescriptor for a service method named s.</span><span class="comment">	 It returns nil if not found.</span></div>
+<div class="code"><pre><code>	ByName(s <a href="proto.go.html#line-412" class="ident">Name</a>) <a href="#line-604" class="ident">MethodDescriptor</a>
+
+	<a href="proto.go.html#line-137" class="ident">doNotImplement</a>
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

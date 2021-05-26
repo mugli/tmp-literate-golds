@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: api.go in package github.com/evanw/esbuild/pkg/api</title>
+<link href="../../../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	api.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html">github.com/evanw/esbuild/pkg/api</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7]
+{background: #226; color: #ff8;}
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> This API exposes esbuild's two main operations: building and transforming.</span><span class="comment"> It's intended for integrating esbuild into other tools as a library.</span><span class="comment"></span><span class="comment"> If you are just trying to run esbuild from Go without the overhead of</span><span class="comment"> creating a child process, there is also an API for the command-line</span><span class="comment"> interface itself: https://godoc.org/github.com/evanw/esbuild/pkg/cli.</span><span class="comment"></span><span class="comment"> Build API</span><span class="comment"></span><span class="comment"> This function runs an end-to-end build operation. It takes an array of file</span><span class="comment"> paths as entry points, parses them and all of their dependencies, and</span><span class="comment"> returns the output files to write to the file system. The available options</span><span class="comment"> roughly correspond to esbuild's command-line flags.</span><span class="comment"></span><span class="comment"> Example usage:</span><span class="comment"></span><span class="comment">     package main</span><span class="comment"></span><span class="comment">     import (</span><span class="comment">         "os"</span><span class="comment"></span><span class="comment">         "github.com/evanw/esbuild/pkg/api"</span><span class="comment">     )</span><span class="comment"></span><span class="comment">     func main() {</span><span class="comment">         result := api.Build(api.BuildOptions{</span><span class="comment">             EntryPoints: []string{"input.js"},</span><span class="comment">             Outfile:     "output.js",</span><span class="comment">             Bundle:      true,</span><span class="comment">             Write:       true,</span><span class="comment">             LogLevel:    api.LogLevelInfo,</span><span class="comment">         })</span><span class="comment"></span><span class="comment">         if len(result.Errors) &gt; 0 {</span><span class="comment">             os.Exit(1)</span><span class="comment">         }</span><span class="comment">     }</span><span class="comment"></span><span class="comment"> Transform API</span><span class="comment"></span><span class="comment"> This function transforms a string of source code into JavaScript. It can be</span><span class="comment"> used to minify JavaScript, convert TypeScript/JSX to JavaScript, or convert</span><span class="comment"> newer JavaScript to older JavaScript. The available options roughly</span><span class="comment"> correspond to esbuild's command-line flags.</span><span class="comment"></span><span class="comment"> Example usage:</span><span class="comment"></span><span class="comment">     package main</span><span class="comment"></span><span class="comment">     import (</span><span class="comment">         "fmt"</span><span class="comment">         "os"</span><span class="comment"></span><span class="comment">         "github.com/evanw/esbuild/pkg/api"</span><span class="comment">     )</span><span class="comment"></span><span class="comment">     func main() {</span><span class="comment">         jsx := `</span><span class="comment">             import * as React from 'react'</span><span class="comment">             import * as ReactDOM from 'react-dom'</span><span class="comment"></span><span class="comment">             ReactDOM.render(</span><span class="comment">                 &lt;h1&gt;Hello, world!&lt;/h1&gt;,</span><span class="comment">                 document.getElementById('root')</span><span class="comment">             );</span><span class="comment">         `</span><span class="comment"></span><span class="comment">         result := api.Transform(jsx, api.TransformOptions{</span><span class="comment">             Loader: api.LoaderJSX,</span><span class="comment">         })</span><span class="comment"></span><span class="comment">         fmt.Printf("%d errors and %d warnings\n",</span><span class="comment">             len(result.Errors), len(result.Warnings))</span><span class="comment"></span><span class="comment">         os.Stdout.Write(result.Code)</span><span class="comment">     }</span><span class="comment"></span></div>
+<div class="code"><pre><code><span class="keyword">package</span> api
+
+<span class="keyword">type</span> <a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-SourceMap" class="ident">SourceMap</a> <a href="../../../../../../pkg/builtin.html#name-uint8" class="ident">uint8</a>
+
+<span class="keyword">const</span> (
+	<a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-SourceMapNone" class="ident">SourceMapNone</a> <a href="#line-80" class="ident">SourceMap</a> = <a href="../../../../../../pkg/builtin.html#name-iota" class="ident">iota</a>
+	<a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-SourceMapInline" class="ident">SourceMapInline</a>
+	<a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-SourceMapLinked" class="ident">SourceMapLinked</a>
+	<a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-SourceMapExternal" class="ident">SourceMapExternal</a>
+	<a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-SourceMapInlineAndExternal" class="ident">SourceMapInlineAndExternal</a>
+)
+
+<span class="keyword">type</span> <a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-SourcesContent" class="ident">SourcesContent</a> <a href="../../../../../../pkg/builtin.html#name-uint8" class="ident">uint8</a>
+
+<span class="keyword">const</span> (
+	<a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-SourcesContentInclude" class="ident">SourcesContentInclude</a> <a href="#line-90" class="ident">SourcesContent</a> = <a href="../../../../../../pkg/builtin.html#name-iota" class="ident">iota</a>
+	<a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-SourcesContentExclude" class="ident">SourcesContentExclude</a>
+)
+
+<span class="keyword">type</span> <a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-Target" class="ident">Target</a> <a href="../../../../../../pkg/builtin.html#name-uint8" class="ident">uint8</a>
+
+<span class="keyword">const</span> (
+	<a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-ESNext" class="ident">ESNext</a> <a href="#line-97" class="ident">Target</a> = <a href="../../../../../../pkg/builtin.html#name-iota" class="ident">iota</a>
+	<a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-ES5" class="ident">ES5</a>
+	<a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-ES2015" class="ident">ES2015</a>
+	<a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-ES2016" class="ident">ES2016</a>
+	<a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-ES2017" class="ident">ES2017</a>
+	<a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-ES2018" class="ident">ES2018</a>
+	<a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-ES2019" class="ident">ES2019</a>
+	<a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-ES2020" class="ident">ES2020</a>
+)
+
+<span class="keyword">type</span> <a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-Loader" class="ident">Loader</a> <a href="../../../../../../pkg/builtin.html#name-uint8" class="ident">uint8</a>
+
+<span class="keyword">const</span> (
+	<a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-LoaderNone" class="ident">LoaderNone</a> <a href="#line-110" class="ident">Loader</a> = <a href="../../../../../../pkg/builtin.html#name-iota" class="ident">iota</a>
+	<a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-LoaderJS" class="ident">LoaderJS</a>
+	<a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-LoaderJSX" class="ident">LoaderJSX</a>
+	<a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-LoaderTS" class="ident">LoaderTS</a>
+	<a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-LoaderTSX" class="ident">LoaderTSX</a>
+	<a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-LoaderJSON" class="ident">LoaderJSON</a>
+	<a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-LoaderText" class="ident">LoaderText</a>
+	<a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-LoaderBase64" class="ident">LoaderBase64</a>
+	<a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-LoaderDataURL" class="ident">LoaderDataURL</a>
+	<a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-LoaderFile" class="ident">LoaderFile</a>
+	<a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-LoaderBinary" class="ident">LoaderBinary</a>
+	<a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-LoaderCSS" class="ident">LoaderCSS</a>
+	<a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-LoaderDefault" class="ident">LoaderDefault</a>
+)
+
+<span class="keyword">type</span> <a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-Platform" class="ident">Platform</a> <a href="../../../../../../pkg/builtin.html#name-uint8" class="ident">uint8</a>
+
+<span class="keyword">const</span> (
+	<a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-PlatformBrowser" class="ident">PlatformBrowser</a> <a href="#line-128" class="ident">Platform</a> = <a href="../../../../../../pkg/builtin.html#name-iota" class="ident">iota</a>
+	<a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-PlatformNode" class="ident">PlatformNode</a>
+	<a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-PlatformNeutral" class="ident">PlatformNeutral</a>
+)
+
+<span class="keyword">type</span> <a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-Format" class="ident">Format</a> <a href="../../../../../../pkg/builtin.html#name-uint8" class="ident">uint8</a>
+
+<span class="keyword">const</span> (
+	<a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-FormatDefault" class="ident">FormatDefault</a> <a href="#line-136" class="ident">Format</a> = <a href="../../../../../../pkg/builtin.html#name-iota" class="ident">iota</a>
+	<a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-FormatIIFE" class="ident">FormatIIFE</a>
+	<a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-FormatCommonJS" class="ident">FormatCommonJS</a>
+	<a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-FormatESModule" class="ident">FormatESModule</a>
+)
+
+<span class="keyword">type</span> <a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-EngineName" class="ident">EngineName</a> <a href="../../../../../../pkg/builtin.html#name-uint8" class="ident">uint8</a>
+
+<span class="keyword">const</span> (
+	<a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-EngineChrome" class="ident">EngineChrome</a> <a href="#line-145" class="ident">EngineName</a> = <a href="../../../../../../pkg/builtin.html#name-iota" class="ident">iota</a>
+	<a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-EngineEdge" class="ident">EngineEdge</a>
+	<a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-EngineFirefox" class="ident">EngineFirefox</a>
+	<a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-EngineIOS" class="ident">EngineIOS</a>
+	<a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-EngineNode" class="ident">EngineNode</a>
+	<a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-EngineSafari" class="ident">EngineSafari</a>
+)
+
+<span class="keyword">type</span> <a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-Engine" class="ident">Engine</a> <span class="keyword">struct</span> {
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..Engine.Name.html" class="ident">Name</a>    <a href="#line-145" class="ident">EngineName</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..Engine.Version.html" class="ident">Version</a> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+}
+
+<span class="keyword">type</span> <a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-Location" class="ident">Location</a> <span class="keyword">struct</span> {
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..Location.File.html" class="ident">File</a>      <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..Location.Namespace.html" class="ident">Namespace</a> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..Location.Line.html" class="ident">Line</a>      <a href="../../../../../../pkg/builtin.html#name-int" class="ident">int</a> <span class="comment">// 1-based</span>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..Location.Column.html" class="ident">Column</a>    <a href="../../../../../../pkg/builtin.html#name-int" class="ident">int</a> <span class="comment">// 0-based, in bytes</span>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..Location.Length.html" class="ident">Length</a>    <a href="../../../../../../pkg/builtin.html#name-int" class="ident">int</a> <span class="comment">// in bytes</span>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..Location.LineText.html" class="ident">LineText</a>  <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+}
+
+<span class="keyword">type</span> <a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-Message" class="ident">Message</a> <span class="keyword">struct</span> {
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..Message.Text.html" class="ident">Text</a>     <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..Message.Location.html" class="ident">Location</a> *<a href="#line-161" class="ident">Location</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..Message.Notes.html" class="ident">Notes</a>    []<a href="#line-180" class="ident">Note</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Optional user-specified data that is passed through unmodified. You can</span><span class="comment">	 use this to stash the original error, for example.</span></div>
+<div class="code"><pre><code>	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..Message.Detail.html" class="ident">Detail</a> <span class="keyword">interface</span>{}
+}
+
+<span class="keyword">type</span> <a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-Note" class="ident">Note</a> <span class="keyword">struct</span> {
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..Note.Text.html" class="ident">Text</a>     <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..Note.Location.html" class="ident">Location</a> *<a href="#line-161" class="ident">Location</a>
+}
+
+<span class="keyword">type</span> <a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-StderrColor" class="ident">StderrColor</a> <a href="../../../../../../pkg/builtin.html#name-uint8" class="ident">uint8</a>
+
+<span class="keyword">const</span> (
+	<a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-ColorIfTerminal" class="ident">ColorIfTerminal</a> <a href="#line-185" class="ident">StderrColor</a> = <a href="../../../../../../pkg/builtin.html#name-iota" class="ident">iota</a>
+	<a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-ColorNever" class="ident">ColorNever</a>
+	<a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-ColorAlways" class="ident">ColorAlways</a>
+)
+
+<span class="keyword">type</span> <a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-LogLevel" class="ident">LogLevel</a> <a href="../../../../../../pkg/builtin.html#name-uint8" class="ident">uint8</a>
+
+<span class="keyword">const</span> (
+	<a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-LogLevelSilent" class="ident">LogLevelSilent</a> <a href="#line-193" class="ident">LogLevel</a> = <a href="../../../../../../pkg/builtin.html#name-iota" class="ident">iota</a>
+	<a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-LogLevelInfo" class="ident">LogLevelInfo</a>
+	<a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-LogLevelWarning" class="ident">LogLevelWarning</a>
+	<a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-LogLevelError" class="ident">LogLevelError</a>
+)
+
+<span class="keyword">type</span> <a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-Charset" class="ident">Charset</a> <a href="../../../../../../pkg/builtin.html#name-uint8" class="ident">uint8</a>
+
+<span class="keyword">const</span> (
+	<a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-CharsetDefault" class="ident">CharsetDefault</a> <a href="#line-202" class="ident">Charset</a> = <a href="../../../../../../pkg/builtin.html#name-iota" class="ident">iota</a>
+	<a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-CharsetASCII" class="ident">CharsetASCII</a>
+	<a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-CharsetUTF8" class="ident">CharsetUTF8</a>
+)
+
+<span class="keyword">type</span> <a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-TreeShaking" class="ident">TreeShaking</a> <a href="../../../../../../pkg/builtin.html#name-uint8" class="ident">uint8</a>
+
+<span class="keyword">const</span> (
+	<a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-TreeShakingDefault" class="ident">TreeShakingDefault</a> <a href="#line-210" class="ident">TreeShaking</a> = <a href="../../../../../../pkg/builtin.html#name-iota" class="ident">iota</a>
+	<a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-TreeShakingIgnoreAnnotations" class="ident">TreeShakingIgnoreAnnotations</a>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">//////////////////////////////////////////////////////////////////////////////</span><span class="comment"> Build API</span></div>
+<div class="code"><pre><code>
+<span class="keyword">type</span> <a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-BuildOptions" class="ident">BuildOptions</a> <span class="keyword">struct</span> {
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..BuildOptions.Color.html" class="ident">Color</a>      <a href="#line-185" class="ident">StderrColor</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..BuildOptions.ErrorLimit.html" class="ident">ErrorLimit</a> <a href="../../../../../../pkg/builtin.html#name-int" class="ident">int</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..BuildOptions.LogLevel.html" class="ident">LogLevel</a>   <a href="#line-193" class="ident">LogLevel</a>
+
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..BuildOptions.Sourcemap*47881.html" class="ident">Sourcemap</a>      <a href="#line-80" class="ident">SourceMap</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..BuildOptions.SourcesContent.html" class="ident">SourcesContent</a> <a href="#line-90" class="ident">SourcesContent</a>
+
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..BuildOptions.Target.html" class="ident">Target</a>  <a href="#line-97" class="ident">Target</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..BuildOptions.Engines.html" class="ident">Engines</a> []<a href="#line-156" class="ident">Engine</a>
+
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..BuildOptions.MinifyWhitespace.html" class="ident">MinifyWhitespace</a>  <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..BuildOptions.MinifyIdentifiers.html" class="ident">MinifyIdentifiers</a> <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..BuildOptions.MinifySyntax.html" class="ident">MinifySyntax</a>      <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..BuildOptions.Charset.html" class="ident">Charset</a>           <a href="#line-202" class="ident">Charset</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..BuildOptions.TreeShaking.html" class="ident">TreeShaking</a>       <a href="#line-210" class="ident">TreeShaking</a>
+
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..BuildOptions.JSXFactory.html" class="ident">JSXFactory</a>  <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..BuildOptions.JSXFragment.html" class="ident">JSXFragment</a> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..BuildOptions.Define*73a5f.html" class="ident">Define</a>    <span class="keyword">map</span>[<a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>]<a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..BuildOptions.Pure.html" class="ident">Pure</a>      []<a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..BuildOptions.AvoidTDZ.html" class="ident">AvoidTDZ</a>  <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..BuildOptions.KeepNames.html" class="ident">KeepNames</a> <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>
+
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..BuildOptions.GlobalName.html" class="ident">GlobalName</a>        <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..BuildOptions.Bundle.html" class="ident">Bundle</a>            <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..BuildOptions.PreserveSymlinks.html" class="ident">PreserveSymlinks</a>  <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..BuildOptions.Splitting.html" class="ident">Splitting</a>         <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..BuildOptions.Outfile.html" class="ident">Outfile</a>           <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..BuildOptions.Metafile.html" class="ident">Metafile</a>          <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..BuildOptions.Outdir.html" class="ident">Outdir</a>            <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..BuildOptions.Outbase.html" class="ident">Outbase</a>           <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..BuildOptions.AbsWorkingDir.html" class="ident">AbsWorkingDir</a>     <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..BuildOptions.Platform.html" class="ident">Platform</a>          <a href="#line-128" class="ident">Platform</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..BuildOptions.Format.html" class="ident">Format</a>            <a href="#line-136" class="ident">Format</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..BuildOptions.External.html" class="ident">External</a>          []<a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..BuildOptions.MainFields.html" class="ident">MainFields</a>        []<a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..BuildOptions.Loader.html" class="ident">Loader</a>            <span class="keyword">map</span>[<a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>]<a href="#line-110" class="ident">Loader</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..BuildOptions.ResolveExtensions.html" class="ident">ResolveExtensions</a> []<a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..BuildOptions.Tsconfig.html" class="ident">Tsconfig</a>          <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..BuildOptions.OutExtensions.html" class="ident">OutExtensions</a>     <span class="keyword">map</span>[<a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>]<a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..BuildOptions.PublicPath.html" class="ident">PublicPath</a>        <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..BuildOptions.Inject.html" class="ident">Inject</a>            []<a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..BuildOptions.Banner.html" class="ident">Banner</a>            <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..BuildOptions.Footer.html" class="ident">Footer</a>            <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..BuildOptions.NodePaths.html" class="ident">NodePaths</a>         []<a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a> <span class="comment">// The "NODE_PATH" variable from Node.js</span>
+
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..BuildOptions.ChunkNames.html" class="ident">ChunkNames</a> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..BuildOptions.AssetNames.html" class="ident">AssetNames</a> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..BuildOptions.EntryPoints.html" class="ident">EntryPoints</a> []<a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..BuildOptions.Stdin.html" class="ident">Stdin</a>       *<a href="#line-286" class="ident">StdinOptions</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..BuildOptions.Write.html" class="ident">Write</a>       <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..BuildOptions.Incremental.html" class="ident">Incremental</a> <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..BuildOptions.Plugins.html" class="ident">Plugins</a>     []<a href="#line-393" class="ident">Plugin</a>
+
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..BuildOptions.Watch.html" class="ident">Watch</a> *<a href="#line-280" class="ident">WatchMode</a>
+}
+
+<span class="keyword">type</span> <a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-WatchMode" class="ident">WatchMode</a> <span class="keyword">struct</span> {
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..WatchMode.SpinnerBusy.html" class="ident">SpinnerBusy</a> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..WatchMode.SpinnerIdle.html" class="ident">SpinnerIdle</a> []<a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..WatchMode.OnRebuild.html" class="ident">OnRebuild</a>   <span class="keyword">func</span>(<a href="#line-293" class="ident">BuildResult</a>)
+}
+
+<span class="keyword">type</span> <a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-StdinOptions" class="ident">StdinOptions</a> <span class="keyword">struct</span> {
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..StdinOptions.Contents.html" class="ident">Contents</a>   <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..StdinOptions.ResolveDir.html" class="ident">ResolveDir</a> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..StdinOptions.Sourcefile*436f9.html" class="ident">Sourcefile</a> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..StdinOptions.Loader.html" class="ident">Loader</a>     <a href="#line-110" class="ident">Loader</a>
+}
+
+<span class="keyword">type</span> <a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-BuildResult" class="ident">BuildResult</a> <span class="keyword">struct</span> {
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..BuildResult.Errors.html" class="ident">Errors</a>   []<a href="#line-170" class="ident">Message</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..BuildResult.Warnings.html" class="ident">Warnings</a> []<a href="#line-170" class="ident">Message</a>
+
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..BuildResult.OutputFiles.html" class="ident">OutputFiles</a> []<a href="#line-303" class="ident">OutputFile</a>
+
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..BuildResult.Rebuild.html" class="ident">Rebuild</a> <span class="keyword">func</span>() <a href="#line-293" class="ident">BuildResult</a> <span class="comment">// Only when "Incremental: true"</span>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..BuildResult.Stop.html" class="ident">Stop</a>    <span class="keyword">func</span>()             <span class="comment">// Only when "Watch: true"</span>
+}
+
+<span class="keyword">type</span> <a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-OutputFile" class="ident">OutputFile</a> <span class="keyword">struct</span> {
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..OutputFile.Path.html" class="ident">Path</a>     <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..OutputFile.Contents.html" class="ident">Contents</a> []<a href="../../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>
+}
+
+<span class="keyword">func</span> <label for="r0" class="ident"><a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-Build" class="ident">Build</a></label>(<label for="r1" class="ident">options</label> <a href="#line-220" class="ident">BuildOptions</a>) <a href="#line-293" class="ident">BuildResult</a> {
+	<span class="keyword">return</span> <a href="api_impl.go.html#line-591" class="ident">buildImpl</a>(<label for="r1" class="ident">options</label>).<a href="api_impl.go.html#line-586" class="ident">result</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">//////////////////////////////////////////////////////////////////////////////</span><span class="comment"> Transform API</span></div>
+<div class="code"><pre><code>
+<span class="keyword">type</span> <a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-TransformOptions" class="ident">TransformOptions</a> <span class="keyword">struct</span> {
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..TransformOptions.Color.html" class="ident">Color</a>      <a href="#line-185" class="ident">StderrColor</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..TransformOptions.ErrorLimit.html" class="ident">ErrorLimit</a> <a href="../../../../../../pkg/builtin.html#name-int" class="ident">int</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..TransformOptions.LogLevel.html" class="ident">LogLevel</a>   <a href="#line-193" class="ident">LogLevel</a>
+
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..TransformOptions.Sourcemap*47881.html" class="ident">Sourcemap</a>      <a href="#line-80" class="ident">SourceMap</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..TransformOptions.SourcesContent.html" class="ident">SourcesContent</a> <a href="#line-90" class="ident">SourcesContent</a>
+
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..TransformOptions.Target.html" class="ident">Target</a>     <a href="#line-97" class="ident">Target</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..TransformOptions.Format.html" class="ident">Format</a>     <a href="#line-136" class="ident">Format</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..TransformOptions.GlobalName.html" class="ident">GlobalName</a> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..TransformOptions.Engines.html" class="ident">Engines</a>    []<a href="#line-156" class="ident">Engine</a>
+
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..TransformOptions.MinifyWhitespace.html" class="ident">MinifyWhitespace</a>  <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..TransformOptions.MinifyIdentifiers.html" class="ident">MinifyIdentifiers</a> <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..TransformOptions.MinifySyntax.html" class="ident">MinifySyntax</a>      <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..TransformOptions.Charset.html" class="ident">Charset</a>           <a href="#line-202" class="ident">Charset</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..TransformOptions.TreeShaking.html" class="ident">TreeShaking</a>       <a href="#line-210" class="ident">TreeShaking</a>
+
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..TransformOptions.JSXFactory.html" class="ident">JSXFactory</a>  <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..TransformOptions.JSXFragment.html" class="ident">JSXFragment</a> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..TransformOptions.TsconfigRaw.html" class="ident">TsconfigRaw</a> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..TransformOptions.Footer.html" class="ident">Footer</a>      <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..TransformOptions.Banner.html" class="ident">Banner</a>      <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..TransformOptions.Define*73a5f.html" class="ident">Define</a>    <span class="keyword">map</span>[<a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>]<a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..TransformOptions.Pure.html" class="ident">Pure</a>      []<a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..TransformOptions.AvoidTDZ.html" class="ident">AvoidTDZ</a>  <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..TransformOptions.KeepNames.html" class="ident">KeepNames</a> <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>
+
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..TransformOptions.Sourcefile*436f9.html" class="ident">Sourcefile</a> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..TransformOptions.Loader.html" class="ident">Loader</a>     <a href="#line-110" class="ident">Loader</a>
+}
+
+<span class="keyword">type</span> <a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-TransformResult" class="ident">TransformResult</a> <span class="keyword">struct</span> {
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..TransformResult.Errors.html" class="ident">Errors</a>   []<a href="#line-170" class="ident">Message</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..TransformResult.Warnings.html" class="ident">Warnings</a> []<a href="#line-170" class="ident">Message</a>
+
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..TransformResult.Code.html" class="ident">Code</a> []<a href="../../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..TransformResult.Map.html" class="ident">Map</a>  []<a href="../../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>
+}
+
+<span class="keyword">func</span> <label for="r2" class="ident"><a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-Transform" class="ident">Transform</a></label>(<label for="r3" class="ident">input</label> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>, <label for="r4" class="ident">options</label> <a href="#line-315" class="ident">TransformOptions</a>) <a href="#line-349" class="ident">TransformResult</a> {
+	<span class="keyword">return</span> <a href="api_impl.go.html#line-1030" class="ident">transformImpl</a>(<label for="r3" class="ident">input</label>, <label for="r4" class="ident">options</label>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">//////////////////////////////////////////////////////////////////////////////</span><span class="comment"> Serve API</span></div>
+<div class="code"><pre><code>
+<span class="keyword">type</span> <a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-ServeOptions" class="ident">ServeOptions</a> <span class="keyword">struct</span> {
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..ServeOptions.Port.html" class="ident">Port</a>      <a href="../../../../../../pkg/builtin.html#name-uint16" class="ident">uint16</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..ServeOptions.Host.html" class="ident">Host</a>      <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..ServeOptions.Servedir.html" class="ident">Servedir</a>  <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..ServeOptions.OnRequest.html" class="ident">OnRequest</a> <span class="keyword">func</span>(<a href="#line-371" class="ident">ServeOnRequestArgs</a>)
+}
+
+<span class="keyword">type</span> <a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-ServeOnRequestArgs" class="ident">ServeOnRequestArgs</a> <span class="keyword">struct</span> {
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..ServeOnRequestArgs.RemoteAddress.html" class="ident">RemoteAddress</a> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..ServeOnRequestArgs.Method.html" class="ident">Method</a>        <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..ServeOnRequestArgs.Path.html" class="ident">Path</a>          <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..ServeOnRequestArgs.Status.html" class="ident">Status</a>        <a href="../../../../../../pkg/builtin.html#name-int" class="ident">int</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..ServeOnRequestArgs.TimeInMS.html" class="ident">TimeInMS</a>      <a href="../../../../../../pkg/builtin.html#name-int" class="ident">int</a> <span class="comment">// The time to generate the response, not to send it</span>
+}
+
+<span class="keyword">type</span> <a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-ServeResult" class="ident">ServeResult</a> <span class="keyword">struct</span> {
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..ServeResult.Port.html" class="ident">Port</a> <a href="../../../../../../pkg/builtin.html#name-uint16" class="ident">uint16</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..ServeResult.Host.html" class="ident">Host</a> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..ServeResult.Wait.html" class="ident">Wait</a> <span class="keyword">func</span>() <a href="../../../../../../pkg/builtin.html#name-error" class="ident">error</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..ServeResult.Stop.html" class="ident">Stop</a> <span class="keyword">func</span>()
+}
+
+<span class="keyword">func</span> <label for="r5" class="ident"><a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-Serve" class="ident">Serve</a></label>(<label for="r6" class="ident">serveOptions</label> <a href="#line-364" class="ident">ServeOptions</a>, <label for="r7" class="ident">buildOptions</label> <a href="#line-220" class="ident">BuildOptions</a>) (<a href="#line-379" class="ident">ServeResult</a>, <a href="../../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<span class="keyword">return</span> <a href="serve_other.go.html#line-409" class="ident">serveImpl</a>(<label for="r6" class="ident">serveOptions</label>, <label for="r7" class="ident">buildOptions</label>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">//////////////////////////////////////////////////////////////////////////////</span><span class="comment"> Plugin API</span></div>
+<div class="code"><pre><code>
+<span class="keyword">type</span> <a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-Plugin" class="ident">Plugin</a> <span class="keyword">struct</span> {
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..Plugin.Name.html" class="ident">Name</a>  <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..Plugin.Setup.html" class="ident">Setup</a> <span class="keyword">func</span>(<a href="#line-398" class="ident">PluginBuild</a>)
+}
+
+<span class="keyword">type</span> <a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-PluginBuild" class="ident">PluginBuild</a> <span class="keyword">interface</span> {
+	OnResolve(options <a href="#line-403" class="ident">OnResolveOptions</a>, callback <span class="keyword">func</span>(<a href="#line-408" class="ident">OnResolveArgs</a>) (<a href="#line-417" class="ident">OnResolveResult</a>, <a href="../../../../../../pkg/builtin.html#name-error" class="ident">error</a>))
+	OnLoad(options <a href="#line-429" class="ident">OnLoadOptions</a>, callback <span class="keyword">func</span>(<a href="#line-434" class="ident">OnLoadArgs</a>) (<a href="#line-440" class="ident">OnLoadResult</a>, <a href="../../../../../../pkg/builtin.html#name-error" class="ident">error</a>))
+}
+
+<span class="keyword">type</span> <a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-OnResolveOptions" class="ident">OnResolveOptions</a> <span class="keyword">struct</span> {
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..OnResolveOptions.Filter.html" class="ident">Filter</a>    <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..OnResolveOptions.Namespace.html" class="ident">Namespace</a> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+}
+
+<span class="keyword">type</span> <a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-OnResolveArgs" class="ident">OnResolveArgs</a> <span class="keyword">struct</span> {
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..OnResolveArgs.Path.html" class="ident">Path</a>       <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..OnResolveArgs.Importer.html" class="ident">Importer</a>   <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..OnResolveArgs.Namespace.html" class="ident">Namespace</a>  <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..OnResolveArgs.ResolveDir.html" class="ident">ResolveDir</a> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..OnResolveArgs.Kind.html" class="ident">Kind</a>       <a href="#line-452" class="ident">ResolveKind</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..OnResolveArgs.PluginData.html" class="ident">PluginData</a> <span class="keyword">interface</span>{}
+}
+
+<span class="keyword">type</span> <a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-OnResolveResult" class="ident">OnResolveResult</a> <span class="keyword">struct</span> {
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..OnResolveResult.PluginName.html" class="ident">PluginName</a> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..OnResolveResult.Errors.html" class="ident">Errors</a>   []<a href="#line-170" class="ident">Message</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..OnResolveResult.Warnings.html" class="ident">Warnings</a> []<a href="#line-170" class="ident">Message</a>
+
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..OnResolveResult.Path.html" class="ident">Path</a>       <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..OnResolveResult.External.html" class="ident">External</a>   <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..OnResolveResult.Namespace.html" class="ident">Namespace</a>  <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..OnResolveResult.PluginData.html" class="ident">PluginData</a> <span class="keyword">interface</span>{}
+}
+
+<span class="keyword">type</span> <a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-OnLoadOptions" class="ident">OnLoadOptions</a> <span class="keyword">struct</span> {
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..OnLoadOptions.Filter.html" class="ident">Filter</a>    <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..OnLoadOptions.Namespace.html" class="ident">Namespace</a> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+}
+
+<span class="keyword">type</span> <a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-OnLoadArgs" class="ident">OnLoadArgs</a> <span class="keyword">struct</span> {
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..OnLoadArgs.Path.html" class="ident">Path</a>       <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..OnLoadArgs.Namespace.html" class="ident">Namespace</a>  <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..OnLoadArgs.PluginData.html" class="ident">PluginData</a> <span class="keyword">interface</span>{}
+}
+
+<span class="keyword">type</span> <a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-OnLoadResult" class="ident">OnLoadResult</a> <span class="keyword">struct</span> {
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..OnLoadResult.PluginName.html" class="ident">PluginName</a> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..OnLoadResult.Errors.html" class="ident">Errors</a>   []<a href="#line-170" class="ident">Message</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..OnLoadResult.Warnings.html" class="ident">Warnings</a> []<a href="#line-170" class="ident">Message</a>
+
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..OnLoadResult.Contents.html" class="ident">Contents</a>   *<a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..OnLoadResult.ResolveDir.html" class="ident">ResolveDir</a> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..OnLoadResult.Loader.html" class="ident">Loader</a>     <a href="#line-110" class="ident">Loader</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/pkg/api..OnLoadResult.PluginData.html" class="ident">PluginData</a> <span class="keyword">interface</span>{}
+}
+
+<span class="keyword">type</span> <a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-ResolveKind" class="ident">ResolveKind</a> <a href="../../../../../../pkg/builtin.html#name-uint8" class="ident">uint8</a>
+
+<span class="keyword">const</span> (
+	<a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-ResolveEntryPoint" class="ident">ResolveEntryPoint</a> <a href="#line-452" class="ident">ResolveKind</a> = <a href="../../../../../../pkg/builtin.html#name-iota" class="ident">iota</a>
+	<a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-ResolveJSImportStatement" class="ident">ResolveJSImportStatement</a>
+	<a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-ResolveJSRequireCall" class="ident">ResolveJSRequireCall</a>
+	<a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-ResolveJSDynamicImport" class="ident">ResolveJSDynamicImport</a>
+	<a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-ResolveJSRequireResolve" class="ident">ResolveJSRequireResolve</a>
+	<a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-ResolveCSSImportRule" class="ident">ResolveCSSImportRule</a>
+	<a href="../../../../../../pkg/github.com/evanw/esbuild/pkg/api.html#name-ResolveCSSURLToken" class="ident">ResolveCSSURLToken</a>
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

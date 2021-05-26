@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Package: github.com/go-git/gcfg</title>
+<link href="../../../css/light-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="package-details"><code><span style="font-size:xx-large;">package <b>gcfg</b></span>
+
+<span class="title">Import Path</span>
+	<a href="../../../index.html#pkg-github.com/go-git/gcfg">github.com/go-git/gcfg</a><i> (on <a href="https://pkg.go.dev/github.com/go-git/gcfg" target="_blank">go.dev</a>)</i>
+
+<span class="title">Dependency Relation</span>
+	imports <a href="../../../dep/github.com/go-git/gcfg.html">16 packages</a>, and imported by <a href="../../../dep/github.com/go-git/gcfg.html#imported-by">one package</a>
+
+<div id="files"><span class="title">Involved Source Files</span>
+
+	<input type='checkbox' checked class="fold" id="file-0-fold-content"><label for="file-0-fold-content">   <a href="../../../src/github.com/go-git/gcfg/doc.go.html#doc">d➜</a> <a href="../../../src/github.com/go-git/gcfg/doc.go.html">doc.go</a></label><span id='file-0-fold-content-items' class="fold-items">
+		Package gcfg reads "INI-style" text-based configuration files with
+		"name=value" pairs grouped into sections (gcfg files).
+
+		This package is still a work in progress; see the sections below for planned
+		changes.
+
+		Syntax
+
+		The syntax is based on that used by git config:
+		http://git-scm.com/docs/git-config#_syntax .
+		There are some (planned) differences compared to the git config format:
+		 - improve data portability:
+		   - must be encoded in UTF-8 (for now) and must not contain the 0 byte
+		   - include and "path" type is not supported
+		     (path type may be implementable as a user-defined type)
+		 - internationalization
+		   - section and variable names can contain unicode letters, unicode digits
+		     (as defined in http://golang.org/ref/spec#Characters ) and hyphens
+		     (U+002D), starting with a unicode letter
+		 - disallow potentially ambiguous or misleading definitions:
+		   - `[sec.sub]` format is not allowed (deprecated in gitconfig)
+		   - `[sec ""]` is not allowed
+		     - use `[sec]` for section name "sec" and empty subsection name
+		   - (planned) within a single file, definitions must be contiguous for each:
+		     - section: '[secA]' -&gt; '[secB]' -&gt; '[secA]' is an error
+		     - subsection: '[sec "A"]' -&gt; '[sec "B"]' -&gt; '[sec "A"]' is an error
+		     - multivalued variable: 'multi=a' -&gt; 'other=x' -&gt; 'multi=b' is an error
+
+		Data structure
+
+		The functions in this package read values into a user-defined struct.
+		Each section corresponds to a struct field in the config struct, and each
+		variable in a section corresponds to a data field in the section struct.
+		The mapping of each section or variable name to fields is done either based
+		on the "gcfg" struct tag or by matching the name of the section or variable,
+		ignoring case. In the latter case, hyphens '-' in section and variable names
+		correspond to underscores '_' in field names.
+		Fields must be exported; to use a section or variable name starting with a
+		letter that is neither upper- or lower-case, prefix the field name with 'X'.
+		(See https://code.google.com/p/go/issues/detail?id=5763#c4 .)
+
+		For sections with subsections, the corresponding field in config must be a
+		map, rather than a struct, with string keys and pointer-to-struct values.
+		Values for subsection variables are stored in the map with the subsection
+		name used as the map key.
+		(Note that unlike section and variable names, subsection names are case
+		sensitive.)
+		When using a map, and there is a section with the same section name but
+		without a subsection name, its values are stored with the empty string used
+		as the key.
+		It is possible to provide default values for subsections in the section
+		"default-&lt;sectionname&gt;" (or by setting values in the corresponding struct
+		field "Default_&lt;sectionname&gt;").
+
+		The functions in this package panic if config is not a pointer to a struct,
+		or when a field is not of a suitable type (either a struct or a map with
+		string keys and pointer-to-struct values).
+
+		Parsing of values
+
+		The section structs in the config struct may contain single-valued or
+		multi-valued variables. Variables of unnamed slice type (that is, a type
+		starting with `[]`) are treated as multi-value; all others (including named
+		slice types) are treated as single-valued variables.
+
+		Single-valued variables are handled based on the type as follows.
+		Unnamed pointer types (that is, types starting with `*`) are dereferenced,
+		and if necessary, a new instance is allocated.
+
+		For types implementing the encoding.TextUnmarshaler interface, the
+		UnmarshalText method is used to set the value. Implementing this method is
+		the recommended way for parsing user-defined types.
+
+		For fields of string kind, the value string is assigned to the field, after
+		unquoting and unescaping as needed.
+		For fields of bool kind, the field is set to true if the value is "true",
+		"yes", "on" or "1", and set to false if the value is "false", "no", "off" or
+		"0", ignoring case. In addition, single-valued bool fields can be specified
+		with a "blank" value (variable name without equals sign and value); in such
+		case the value is set to true.
+
+		Predefined integer types [u]int(|8|16|32|64) and big.Int are parsed as
+		decimal or hexadecimal (if having '0x' prefix). (This is to prevent
+		unintuitively handling zero-padded numbers as octal.) Other types having
+		[u]int* as the underlying type, such as os.FileMode and uintptr allow
+		decimal, hexadecimal, or octal values.
+		Parsing mode for integer types can be overridden using the struct tag option
+		",int=mode" where mode is a combination of the 'd', 'h', and 'o' characters
+		(each standing for decimal, hexadecimal, and octal, respectively.)
+
+		All other types are parsed using fmt.Sscanf with the "%v" verb.
+
+		For multi-valued variables, each individual value is parsed as above and
+		appended to the slice. If the first value is specified as a "blank" value
+		(variable name without equals sign and value), a new slice is allocated;
+		that is any values previously set in the slice will be ignored.
+
+		The types subpackage for provides helpers for parsing "enum-like" and integer
+		types.
+
+		Error handling
+
+		There are 3 types of errors:
+
+		 - programmer errors / panics:
+		   - invalid configuration structure
+		 - data errors:
+		   - fatal errors:
+		     - invalid configuration syntax
+		   - warnings:
+		     - data that doesn't belong to any part of the config structure
+
+		Programmer errors trigger panics. These are should be fixed by the programmer
+		before releasing code that uses gcfg.
+
+		Data errors cause gcfg to return a non-nil error value. This includes the
+		case when there are extra unknown key-value definitions in the configuration
+		data (extra data).
+		However, in some occasions it is desirable to be able to proceed in
+		situations when the only data error is that of extra data.
+		These errors are handled at a different (warning) priority and can be
+		filtered out programmatically. To ignore extra data warnings, wrap the
+		gcfg.Read*Into invocation into a call to gcfg.FatalOnly.
+
+		TODO
+
+		The following is a list of changes under consideration:
+		 - documentation
+		   - self-contained syntax documentation
+		   - more practical examples
+		   - move TODOs to issue tracker (eventually)
+		 - syntax
+		   - reconsider valid escape sequences
+		     (gitconfig doesn't support \r in value, \t in subsection name, etc.)
+		 - reading / parsing gcfg files
+		   - define internal representation structure
+		   - support multiple inputs (readers, strings, files)
+		   - support declaring encoding (?)
+		   - support varying fields sets for subsections (?)
+		 - writing gcfg files
+		 - error handling
+		   - make error context accessible programmatically?
+		   - limit input size?
+</span>
+	<span class="nodocs">      <a href="../../../src/github.com/go-git/gcfg/errors.go.html">errors.go</a></span>
+	<span class="nodocs">      <a href="../../../src/github.com/go-git/gcfg/go1_2.go.html">go1_2.go</a></span>
+	<span class="nodocs">      <a href="../../../src/github.com/go-git/gcfg/read.go.html">read.go</a></span>
+	<span class="nodocs">      <a href="../../../src/github.com/go-git/gcfg/set.go.html">set.go</a></span></div>
+<div id="examples"><span class="title">Code Examples</span>
+
+	<input type='checkbox' class="fold" id="example-0-fold-content"><label for="example-0-fold-content">ReadStringInto</label><span id='example-0-fold-content-items' class="fold-items">
+		package main
+		
+		import (
+			"fmt"
+			"github.com/go-git/gcfg"
+			"log"
+		)
+		
+		func main() {
+			cfgStr := `; Comment line
+		[section]
+		name=value # comment`
+			cfg := struct {
+				Section struct {
+					Name string
+				}
+			}{}
+			err := gcfg.ReadStringInto(&cfg, cfgStr)
+			if err != nil {
+				log.Fatalf("Failed to parse gcfg data: %s", err)
+			}
+			fmt.Println(cfg.Section.Name)
+		}
+
+</span>
+	<input type='checkbox' class="fold" id="example-1-fold-content"><label for="example-1-fold-content">ReadStringInto_bool</label><span id='example-1-fold-content-items' class="fold-items">
+		package main
+		
+		import (
+			"fmt"
+			"github.com/go-git/gcfg"
+			"log"
+		)
+		
+		func main() {
+			cfgStr := `; Comment line
+		[section]
+		switch=on`
+			cfg := struct {
+				Section struct {
+					Switch bool
+				}
+			}{}
+			err := gcfg.ReadStringInto(&cfg, cfgStr)
+			if err != nil {
+				log.Fatalf("Failed to parse gcfg data: %s", err)
+			}
+			fmt.Println(cfg.Section.Switch)
+		}
+
+</span>
+	<input type='checkbox' class="fold" id="example-2-fold-content"><label for="example-2-fold-content">ReadStringInto_hyphens</label><span id='example-2-fold-content-items' class="fold-items">
+		package main
+		
+		import (
+			"fmt"
+			"github.com/go-git/gcfg"
+			"log"
+		)
+		
+		func main() {
+			cfgStr := `; Comment line
+		[section-name]
+		variable-name=value # comment`
+			cfg := struct {
+				Section_Name struct {
+					Variable_Name string
+				}
+			}{}
+			err := gcfg.ReadStringInto(&cfg, cfgStr)
+			if err != nil {
+				log.Fatalf("Failed to parse gcfg data: %s", err)
+			}
+			fmt.Println(cfg.Section_Name.Variable_Name)
+		}
+
+</span>
+	<input type='checkbox' class="fold" id="example-3-fold-content"><label for="example-3-fold-content">ReadStringInto_multivalue</label><span id='example-3-fold-content-items' class="fold-items">
+		package main
+		
+		import (
+			"fmt"
+			"github.com/go-git/gcfg"
+			"log"
+		)
+		
+		func main() {
+			cfgStr := `; Comment line
+		[section]
+		multi=value1
+		multi=value2`
+			cfg := struct {
+				Section struct {
+					Multi []string
+				}
+			}{}
+			err := gcfg.ReadStringInto(&cfg, cfgStr)
+			if err != nil {
+				log.Fatalf("Failed to parse gcfg data: %s", err)
+			}
+			fmt.Println(cfg.Section.Multi)
+		}
+
+</span>
+	<input type='checkbox' class="fold" id="example-4-fold-content"><label for="example-4-fold-content">ReadStringInto_subsections</label><span id='example-4-fold-content-items' class="fold-items">
+		package main
+		
+		import (
+			"fmt"
+			"github.com/go-git/gcfg"
+			"log"
+		)
+		
+		func main() {
+			cfgStr := `; Comment line
+		[profile "A"]
+		color = white
+		
+		[profile "B"]
+		color = black
+		`
+			cfg := struct {
+				Profile map[string]*struct {
+					Color string
+				}
+			}{}
+			err := gcfg.ReadStringInto(&cfg, cfgStr)
+			if err != nil {
+				log.Fatalf("Failed to parse gcfg data: %s", err)
+			}
+			fmt.Printf("%s %s\n", cfg.Profile["A"].Color, cfg.Profile["B"].Color)
+		}
+
+</span>
+	<input type='checkbox' class="fold" id="example-5-fold-content"><label for="example-5-fold-content">ReadStringInto_tags</label><span id='example-5-fold-content-items' class="fold-items">
+		package main
+		
+		import (
+			"fmt"
+			"github.com/go-git/gcfg"
+			"log"
+		)
+		
+		func main() {
+			cfgStr := `; Comment line
+		[section]
+		var-name=value # comment`
+			cfg := struct {
+				Section struct {
+					FieldName string `gcfg:"var-name"`
+				}
+			}{}
+			err := gcfg.ReadStringInto(&cfg, cfgStr)
+			if err != nil {
+				log.Fatalf("Failed to parse gcfg data: %s", err)
+			}
+			fmt.Println(cfg.Section.FieldName)
+		}
+
+</span>
+	<input type='checkbox' class="fold" id="example-6-fold-content"><label for="example-6-fold-content">ReadStringInto_unicode</label><span id='example-6-fold-content-items' class="fold-items">
+		package main
+		
+		import (
+			"fmt"
+			"github.com/go-git/gcfg"
+			"log"
+		)
+		
+		func main() {
+			cfgStr := `; Comment line
+		[甲]
+		乙=丙 # comment`
+			cfg := struct {
+				X甲 struct {
+					X乙 string
+				}
+			}{}
+			err := gcfg.ReadStringInto(&cfg, cfgStr)
+			if err != nil {
+				log.Fatalf("Failed to parse gcfg data: %s", err)
+			}
+			fmt.Println(cfg.X甲.X乙)
+		}
+</span>
+</div>
+<div id="exported-types"><span class="title">Package-Level Type Names<span class="title-stat"><i> (total 4, none are exported)</i></span></span>
+
+<div id="exported-types-buttons" class="js-on">	/* sort exporteds by: <label id="sort-types-by-alphabet" class="button">alphabet</label> | <label id="sort-types-by-popularity" class="button">popularity</label> */</div></div><div>	<input type='checkbox' class="showhide" id="unexported-typenames-showhide"><i><label for="unexported-typenames-showhide" class="show-inline">/* 4 unexporteds ... */</label><label for="unexported-typenames-showhide" class="hide-inline">/* 4 unexporteds: */</label></i><div class="anchor type-res hidden" id="name-extraData" data-popularity="100">	<input type='checkbox' class="fold" id="extraData-fold-content"><label for="extraData-fold-content"> <a href="../../../use/github.com/go-git/gcfg..extraData*21fd6.html">type</a> <a href="../../../src/github.com/go-git/gcfg/errors.go.html#line-24">extraData</a> <i>(struct)</i></label><span id='extraData-fold-content-docs' class="fold-docs">
+
+		<input type='checkbox' class="fold" id="extraData-fold-fields"><label for="extraData-fold-fields">Fields (<i>total 3, none are exported</i>)</label><span id='extraData-fold-fields-items' class="fold-items">
+			<input type='checkbox' checked class="showhide" id="extraData-showhide-fields"><i><label for="extraData-showhide-fields" class="show-inline">/* 3 unexporteds ... */</label><label for="extraData-showhide-fields" class="hide-inline">/* 3 unexporteds: */</label></i><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/github.com/go-git/gcfg/errors.go.html#line-25">section</a> <i><a href="../../builtin.html#name-string">string</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/github.com/go-git/gcfg/errors.go.html#line-26">subsection</a> <i>*<a href="../../builtin.html#name-string">string</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/github.com/go-git/gcfg/errors.go.html#line-27">variable</a> <i>*<a href="../../builtin.html#name-string">string</a></i></span></i></span></span>
+		<input type='checkbox' class="fold" id="extraData-fold-methods"><label for="extraData-fold-methods">Methods (<i>only one, which is exported</i>)</label><span id='extraData-fold-methods-items' class="fold-items"><span>
+			<span class="nodocs">( T) <a href="../../../src/github.com/go-git/gcfg/errors.go.html#line-30">Error</a>() <a href="../../builtin.html#name-string">string</a></span></span></span>
+		<input type='checkbox' class="fold" id="extraData-fold-impls"><label for="extraData-fold-impls">Implements (<i>at least one exported</i>)</label><span id='extraData-fold-impls-items' class="fold-items"><span>
+			 T : <a href="../../builtin.html#name-error">error</a></span></span>
+
+</span></div><div class="anchor type-res hidden" id="name-setter" data-popularity="0">	<span class="nodocs"> <a href="../../../use/github.com/go-git/gcfg..setter*bab6f.html">type</a> <a href="../../../src/github.com/go-git/gcfg/set.go.html#line-58">setter</a> <i>(func)</i></span></div><div class="anchor type-res hidden" id="name-tag" data-popularity="395">	<input type='checkbox' class="fold" id="tag-fold-content"><label for="tag-fold-content"> <a href="../../../use/github.com/go-git/gcfg..tag*2a107.html">type</a> <a href="../../../src/github.com/go-git/gcfg/set.go.html#line-17">tag</a> <i>(struct)</i></label><span id='tag-fold-content-docs' class="fold-docs">
+
+		<input type='checkbox' class="fold" id="tag-fold-fields"><label for="tag-fold-fields">Fields (<i>total 2, neither is exported</i>)</label><span id='tag-fold-fields-items' class="fold-items">
+			<input type='checkbox' checked class="showhide" id="tag-showhide-fields"><i><label for="tag-showhide-fields" class="show-inline">/* 2 unexporteds ... */</label><label for="tag-showhide-fields" class="hide-inline">/* 2 unexporteds: */</label></i><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/github.com/go-git/gcfg/set.go.html#line-18">ident</a> <i><a href="../../builtin.html#name-string">string</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/github.com/go-git/gcfg/set.go.html#line-19">intMode</a> <i><a href="../../builtin.html#name-string">string</a></i></span></i></span></span>
+		<input type='checkbox' class="fold" id="tag-fold-results"><label for="tag-fold-results">As Outputs Of (<i>at least 2, neither is exported</i>)</label><span id='tag-fold-results-items' class="fold-items">
+			<input type='checkbox' checked class="showhide" id="tag-showhide-inputofs"><i><label for="tag-showhide-inputofs" class="show-inline">/* 2+ unexporteds ... */</label><label for="tag-showhide-inputofs" class="hide-inline">/* 2+ unexporteds: */</label></i><span class="hidden"><i>
+			func <a href="#name-fieldFold">fieldFold</a>(v <a href="../../reflect.html">reflect</a>.<a href="../../reflect.html#name-Value">Value</a>, name <a href="../../builtin.html#name-string">string</a>) (<a href="../../reflect.html">reflect</a>.<a href="../../reflect.html#name-Value">Value</a>, <b>tag</b>)</i></span><span class="hidden"><i>
+			func <a href="#name-newTag">newTag</a>(ts <a href="../../builtin.html#name-string">string</a>) <b>tag</b></i></span></span>
+		<input type='checkbox' class="fold" id="tag-fold-params"><label for="tag-fold-params">As Inputs Of (<i>at least 7, none are exported</i>)</label><span id='tag-fold-params-items' class="fold-items">
+			<input type='checkbox' checked class="showhide" id="tag-showhide-outputofs"><i><label for="tag-showhide-outputofs" class="show-inline">/* 7+ unexporteds ... */</label><label for="tag-showhide-outputofs" class="hide-inline">/* 7+ unexporteds: */</label></i><span class="hidden"><i>
+			func <a href="#name-boolSetter">boolSetter</a>(d interface{}, blank <a href="../../builtin.html#name-bool">bool</a>, val <a href="../../builtin.html#name-string">string</a>, t <b>tag</b>) <a href="../../builtin.html#name-error">error</a></i></span><span class="hidden"><i>
+			func <a href="#name-intSetter">intSetter</a>(d interface{}, blank <a href="../../builtin.html#name-bool">bool</a>, val <a href="../../builtin.html#name-string">string</a>, t <b>tag</b>) <a href="../../builtin.html#name-error">error</a></i></span><span class="hidden"><i>
+			func <a href="#name-kindSetter">kindSetter</a>(d interface{}, blank <a href="../../builtin.html#name-bool">bool</a>, val <a href="../../builtin.html#name-string">string</a>, tt <b>tag</b>) <a href="../../builtin.html#name-error">error</a></i></span><span class="hidden"><i>
+			func <a href="#name-scanSetter">scanSetter</a>(d interface{}, blank <a href="../../builtin.html#name-bool">bool</a>, val <a href="../../builtin.html#name-string">string</a>, tt <b>tag</b>) <a href="../../builtin.html#name-error">error</a></i></span><span class="hidden"><i>
+			func <a href="#name-stringSetter">stringSetter</a>(d interface{}, blank <a href="../../builtin.html#name-bool">bool</a>, val <a href="../../builtin.html#name-string">string</a>, t <b>tag</b>) <a href="../../builtin.html#name-error">error</a></i></span><span class="hidden"><i>
+			func <a href="#name-textUnmarshalerSetter">textUnmarshalerSetter</a>(d interface{}, blank <a href="../../builtin.html#name-bool">bool</a>, val <a href="../../builtin.html#name-string">string</a>, t <b>tag</b>) <a href="../../builtin.html#name-error">error</a></i></span><span class="hidden"><i>
+			func <a href="#name-typeSetter">typeSetter</a>(d interface{}, blank <a href="../../builtin.html#name-bool">bool</a>, val <a href="../../builtin.html#name-string">string</a>, tt <b>tag</b>) <a href="../../builtin.html#name-error">error</a></i></span></span>
+
+</span></div><div class="anchor type-res hidden" id="name-textUnmarshaler" data-popularity="1300">	<input type='checkbox' class="fold" id="textUnmarshaler-fold-content"><label for="textUnmarshaler-fold-content"> <a href="../../../use/github.com/go-git/gcfg..textUnmarshaler*edbc5.html">type</a> <a href="../../../src/github.com/go-git/gcfg/go1_2.go.html#line-9">textUnmarshaler</a> <a href="../../encoding.html">encoding</a>.<a href="../../encoding.html#name-TextUnmarshaler">TextUnmarshaler</a> <b><i>(interface)</i></b></label><span id='textUnmarshaler-fold-content-docs' class="fold-docs">
+
+		<input type='checkbox' class="fold" id="textUnmarshaler-fold-methods"><label for="textUnmarshaler-fold-methods">Methods (<i>only one, which is exported</i>)</label><span id='textUnmarshaler-fold-methods-items' class="fold-items"><span>
+			<span class="nodocs">( T) <a href="../../../src/encoding/encoding.go.html#line-47">UnmarshalText</a>(text []<a href="../../builtin.html#name-byte">byte</a>) <a href="../../builtin.html#name-error">error</a></span></span></span>
+		<input type='checkbox' class="fold" id="textUnmarshaler-fold-impledby"><label for="textUnmarshaler-fold-impledby">Implemented By (<i>at least 8, all are exported</i>)</label><span id='textUnmarshaler-fold-impledby-items' class="fold-items"><span>
+			 encoding.<a href="../../encoding.html#name-TextUnmarshaler">TextUnmarshaler</a> <i>(interface)</i></span><span>
+			*golang.org/x/text/internal/language.<a href="../../golang.org/x/text/internal/language.html#name-Tag">Tag</a></span><span>
+			*golang.org/x/text/language.<a href="../../golang.org/x/text/language.html#name-Tag">Tag</a></span><span>
+			*math/big.<a href="../../math/big.html#name-Float">Float</a></span><span>
+			*math/big.<a href="../../math/big.html#name-Int">Int</a></span><span>
+			*math/big.<a href="../../math/big.html#name-Rat">Rat</a></span><span>
+			*net.<a href="../../net.html#name-IP">IP</a></span><span>
+			*time.<a href="../../time.html#name-Time">Time</a></span></span>
+		<input type='checkbox' class="fold" id="textUnmarshaler-fold-impls"><label for="textUnmarshaler-fold-impls">Implements (<i>at least one exported</i>)</label><span id='textUnmarshaler-fold-impls-items' class="fold-items"><span>
+			 T : encoding.<a href="../../encoding.html#name-TextUnmarshaler">TextUnmarshaler</a></span></span>
+
+</span></div></div>
+<div id="exported-functions"><span class="title">Package-Level Functions<span class="title-stat"><i> (total 22, in which 5 are exported)</i></span></span>
+
+<div class="anchor value-res" id="name-FatalOnly">	<input type='checkbox' class="fold" id="FatalOnly-fold-content"><label for="FatalOnly-fold-content"> <a href="../../../use/github.com/go-git/gcfg..FatalOnly.html">func</a> <a href="../../../src/github.com/go-git/gcfg/errors.go.html#line-15">FatalOnly</a>(err <a href="../../builtin.html#name-error">error</a>) <a href="../../builtin.html#name-error">error</a></label><span id='FatalOnly-fold-content-docs' class="fold-docs">
+		FatalOnly filters the results of a Read*Into invocation and returns only
+		fatal errors. That is, errors (warnings) indicating data for unknown
+		sections / variables is ignored. Example invocation:
+
+		 err := gcfg.FatalOnly(gcfg.ReadFileInto(&amp;cfg, configFile))
+		 if err != nil {
+		     ...
+
+</span></div><div class="anchor value-res" id="name-ReadFileInto">	<input type='checkbox' class="fold" id="ReadFileInto-fold-content"><label for="ReadFileInto-fold-content"> <a href="../../../use/github.com/go-git/gcfg..ReadFileInto.html">func</a> <a href="../../../src/github.com/go-git/gcfg/read.go.html#line-260">ReadFileInto</a>(config interface{}, filename <a href="../../builtin.html#name-string">string</a>) <a href="../../builtin.html#name-error">error</a></label><span id='ReadFileInto-fold-content-docs' class="fold-docs">
+		ReadFileInto reads gcfg formatted data from the file filename and sets the
+		values into the corresponding fields in config.
+
+</span></div><div class="anchor value-res" id="name-ReadInto">	<input type='checkbox' class="fold" id="ReadInto-fold-content"><label for="ReadInto-fold-content"> <a href="../../../use/github.com/go-git/gcfg..ReadInto.html">func</a> <a href="../../../src/github.com/go-git/gcfg/read.go.html#line-241">ReadInto</a>(config interface{}, reader <a href="../../io.html">io</a>.<a href="../../io.html#name-Reader">Reader</a>) <a href="../../builtin.html#name-error">error</a></label><span id='ReadInto-fold-content-docs' class="fold-docs">
+		ReadInto reads gcfg formatted data from reader and sets the values into the
+		corresponding fields in config.
+
+</span></div><div class="anchor value-res" id="name-ReadStringInto">	<input type='checkbox' class="fold" id="ReadStringInto-fold-content"><label for="ReadStringInto-fold-content"> <a href="../../../use/github.com/go-git/gcfg..ReadStringInto.html">func</a> <a href="../../../src/github.com/go-git/gcfg/read.go.html#line-253">ReadStringInto</a>(config interface{}, str <a href="../../builtin.html#name-string">string</a>) <a href="../../builtin.html#name-error">error</a></label><span id='ReadStringInto-fold-content-docs' class="fold-docs">
+		ReadStringInto reads gcfg formatted data from str and sets the values into
+		the corresponding fields in config.
+
+</span></div><div class="anchor value-res" id="name-ReadWithCallback">	<input type='checkbox' class="fold" id="ReadWithCallback-fold-content"><label for="ReadWithCallback-fold-content"> <a href="../../../use/github.com/go-git/gcfg..ReadWithCallback.html">func</a> <a href="../../../src/github.com/go-git/gcfg/read.go.html#line-226">ReadWithCallback</a>(reader <a href="../../io.html">io</a>.<a href="../../io.html#name-Reader">Reader</a>, callback func(<a href="../../builtin.html#name-string">string</a>, <a href="../../builtin.html#name-string">string</a>, <a href="../../builtin.html#name-string">string</a>, <a href="../../builtin.html#name-string">string</a>, <a href="../../builtin.html#name-bool">bool</a>) <a href="../../builtin.html#name-error">error</a>) <a href="../../builtin.html#name-error">error</a></label><span id='ReadWithCallback-fold-content-docs' class="fold-docs">
+		ReadWithCallback reads gcfg formatted data from reader and calls
+		callback with each section and option found.
+
+		Callback is called with section, subsection, option key, option value
+		and blank value flag as arguments.
+
+		When a section is found, callback is called with nil subsection, option key
+		and option value.
+
+		When a subsection is found, callback is called with nil option key and
+		option value.
+
+		If blank value flag is true, it means that the value was not set for an option
+		(as opposed to set to empty string).
+
+		If callback returns an error, ReadWithCallback terminates with an error too.
+
+</span></div>	<input type='checkbox' class="showhide" id="unexported-functions-showhide"><i><label for="unexported-functions-showhide" class="show-inline">/* 17 unexporteds ... */</label><label for="unexported-functions-showhide" class="hide-inline">/* 17 unexporteds: */</label></i><div class="anchor value-res hidden" id="name-boolSetter"><i>	<span class="nodocs"> <a href="../../../use/github.com/go-git/gcfg..boolSetter*2710a.html">func</a> <a href="../../../src/github.com/go-git/gcfg/set.go.html#line-78">boolSetter</a>(d interface{}, blank <a href="../../builtin.html#name-bool">bool</a>, val <a href="../../builtin.html#name-string">string</a>, t <a href="#name-tag">tag</a>) <a href="../../builtin.html#name-error">error</a></span></i></div><div class="anchor value-res hidden" id="name-fieldFold"><i>	<span class="nodocs"> <a href="../../../use/github.com/go-git/gcfg..fieldFold*45e01.html">func</a> <a href="../../../src/github.com/go-git/gcfg/set.go.html#line-34">fieldFold</a>(v <a href="../../reflect.html">reflect</a>.<a href="../../reflect.html#name-Value">Value</a>, name <a href="../../builtin.html#name-string">string</a>) (<a href="../../reflect.html">reflect</a>.<a href="../../reflect.html#name-Value">Value</a>, <a href="#name-tag">tag</a>)</span></i></div><div class="anchor value-res hidden" id="name-intMode"><i>	<span class="nodocs"> <a href="../../../use/github.com/go-git/gcfg..intMode*4be25.html">func</a> <a href="../../../src/github.com/go-git/gcfg/set.go.html#line-90">intMode</a>(mode <a href="../../builtin.html#name-string">string</a>) <a href="gcfg/types.html">types</a>.<a href="gcfg/types.html#name-IntMode">IntMode</a></span></i></div><div class="anchor value-res hidden" id="name-intModeDefault"><i>	<span class="nodocs"> <a href="../../../use/github.com/go-git/gcfg..intModeDefault*e299b.html">func</a> <a href="../../../src/github.com/go-git/gcfg/set.go.html#line-119">intModeDefault</a>(t <a href="../../reflect.html">reflect</a>.<a href="../../reflect.html#name-Type">Type</a>) <a href="gcfg/types.html">types</a>.<a href="gcfg/types.html#name-IntMode">IntMode</a></span></i></div><div class="anchor value-res hidden" id="name-intSetter"><i>	<span class="nodocs"> <a href="../../../use/github.com/go-git/gcfg..intSetter*e09f0.html">func</a> <a href="../../../src/github.com/go-git/gcfg/set.go.html#line-127">intSetter</a>(d interface{}, blank <a href="../../builtin.html#name-bool">bool</a>, val <a href="../../builtin.html#name-string">string</a>, t <a href="#name-tag">tag</a>) <a href="../../builtin.html#name-error">error</a></span></i></div><div class="anchor value-res hidden" id="name-isFatal"><i>	<span class="nodocs"> <a href="../../../use/github.com/go-git/gcfg..isFatal*fc341.html">func</a> <a href="../../../src/github.com/go-git/gcfg/errors.go.html#line-19">isFatal</a>(err <a href="../../builtin.html#name-error">error</a>) <a href="../../builtin.html#name-bool">bool</a></span></i></div><div class="anchor value-res hidden" id="name-kindSetter"><i>	<span class="nodocs"> <a href="../../../use/github.com/go-git/gcfg..kindSetter*3308b.html">func</a> <a href="../../../src/github.com/go-git/gcfg/set.go.html#line-179">kindSetter</a>(d interface{}, blank <a href="../../builtin.html#name-bool">bool</a>, val <a href="../../builtin.html#name-string">string</a>, tt <a href="#name-tag">tag</a>) <a href="../../builtin.html#name-error">error</a></span></i></div><div class="anchor value-res hidden" id="name-newTag"><i>	<span class="nodocs"> <a href="../../../use/github.com/go-git/gcfg..newTag*dec24.html">func</a> <a href="../../../src/github.com/go-git/gcfg/set.go.html#line-22">newTag</a>(ts <a href="../../builtin.html#name-string">string</a>) <a href="#name-tag">tag</a></span></i></div><div class="anchor value-res hidden" id="name-newValue"><i>	<span class="nodocs"> <a href="../../../use/github.com/go-git/gcfg..newValue*b1445.html">func</a> <a href="../../../src/github.com/go-git/gcfg/set.go.html#line-195">newValue</a>(c *<a href="../../gopkg.in/warnings.v0.html">warnings</a>.<a href="../../gopkg.in/warnings.v0.html#name-Collector">Collector</a>, sect <a href="../../builtin.html#name-string">string</a>, vCfg <a href="../../reflect.html">reflect</a>.<a href="../../reflect.html#name-Value">Value</a>, vType <a href="../../reflect.html">reflect</a>.<a href="../../reflect.html#name-Type">Type</a>) (<a href="../../reflect.html">reflect</a>.<a href="../../reflect.html#name-Value">Value</a>, <a href="../../builtin.html#name-error">error</a>)</span></i></div><div class="anchor value-res hidden" id="name-read"><i>	<span class="nodocs"> <a href="../../../use/github.com/go-git/gcfg..read*33163.html">func</a> <a href="../../../src/github.com/go-git/gcfg/read.go.html#line-51">read</a>(c *<a href="../../gopkg.in/warnings.v0.html">warnings</a>.<a href="../../gopkg.in/warnings.v0.html#name-Collector">Collector</a>, callback func(<a href="../../builtin.html#name-string">string</a>, <a href="../../builtin.html#name-string">string</a>, <a href="../../builtin.html#name-string">string</a>, <a href="../../builtin.html#name-string">string</a>, <a href="../../builtin.html#name-bool">bool</a>) <a href="../../builtin.html#name-error">error</a>, fset *<a href="gcfg/token.html">token</a>.<a href="gcfg/token.html#name-FileSet">FileSet</a>, file *<a href="gcfg/token.html">token</a>.<a href="gcfg/token.html#name-File">File</a>, src []<a href="../../builtin.html#name-byte">byte</a>) <a href="../../builtin.html#name-error">error</a></span></i></div><div class="anchor value-res hidden" id="name-readInto"><i>	<span class="nodocs"> <a href="../../../use/github.com/go-git/gcfg..readInto*c5410.html">func</a> <a href="../../../src/github.com/go-git/gcfg/read.go.html#line-189">readInto</a>(config interface{}, fset *<a href="gcfg/token.html">token</a>.<a href="gcfg/token.html#name-FileSet">FileSet</a>, file *<a href="gcfg/token.html">token</a>.<a href="gcfg/token.html#name-File">File</a>, src []<a href="../../builtin.html#name-byte">byte</a>) <a href="../../builtin.html#name-error">error</a></span></i></div><div class="anchor value-res hidden" id="name-scanSetter"><i>	<span class="nodocs"> <a href="../../../use/github.com/go-git/gcfg..scanSetter*37b6c.html">func</a> <a href="../../../src/github.com/go-git/gcfg/set.go.html#line-188">scanSetter</a>(d interface{}, blank <a href="../../builtin.html#name-bool">bool</a>, val <a href="../../builtin.html#name-string">string</a>, tt <a href="#name-tag">tag</a>) <a href="../../builtin.html#name-error">error</a></span></i></div><div class="anchor value-res hidden" id="name-set"><i>	<span class="nodocs"> <a href="../../../use/github.com/go-git/gcfg..set*6ee0e.html">func</a> <a href="../../../src/github.com/go-git/gcfg/set.go.html#line-216">set</a>(c *<a href="../../gopkg.in/warnings.v0.html">warnings</a>.<a href="../../gopkg.in/warnings.v0.html#name-Collector">Collector</a>, cfg interface{}, sect, sub, name <a href="../../builtin.html#name-string">string</a>, value <a href="../../builtin.html#name-string">string</a>, blankValue <a href="../../builtin.html#name-bool">bool</a>, subsectPass <a href="../../builtin.html#name-bool">bool</a>) <a href="../../builtin.html#name-error">error</a></span></i></div><div class="anchor value-res hidden" id="name-stringSetter"><i>	<span class="nodocs"> <a href="../../../use/github.com/go-git/gcfg..stringSetter*315ad.html">func</a> <a href="../../../src/github.com/go-git/gcfg/set.go.html#line-138">stringSetter</a>(d interface{}, blank <a href="../../builtin.html#name-bool">bool</a>, val <a href="../../builtin.html#name-string">string</a>, t <a href="#name-tag">tag</a>) <a href="../../builtin.html#name-error">error</a></span></i></div><div class="anchor value-res hidden" id="name-textUnmarshalerSetter"><i>	<span class="nodocs"> <a href="../../../use/github.com/go-git/gcfg..textUnmarshalerSetter*f36ce.html">func</a> <a href="../../../src/github.com/go-git/gcfg/set.go.html#line-67">textUnmarshalerSetter</a>(d interface{}, blank <a href="../../builtin.html#name-bool">bool</a>, val <a href="../../builtin.html#name-string">string</a>, t <a href="#name-tag">tag</a>) <a href="../../builtin.html#name-error">error</a></span></i></div><div class="anchor value-res hidden" id="name-typeSetter"><i>	<span class="nodocs"> <a href="../../../use/github.com/go-git/gcfg..typeSetter*34fa1.html">func</a> <a href="../../../src/github.com/go-git/gcfg/set.go.html#line-170">typeSetter</a>(d interface{}, blank <a href="../../builtin.html#name-bool">bool</a>, val <a href="../../builtin.html#name-string">string</a>, tt <a href="#name-tag">tag</a>) <a href="../../builtin.html#name-error">error</a></span></i></div><div class="anchor value-res hidden" id="name-unquote"><i>	<input type='checkbox' class="fold" id="unquote-fold-content"><label for="unquote-fold-content"> <a href="../../../use/github.com/go-git/gcfg..unquote*65730.html">func</a> <a href="../../../src/github.com/go-git/gcfg/read.go.html#line-18">unquote</a>(s <a href="../../builtin.html#name-string">string</a>) <a href="../../builtin.html#name-string">string</a></label><span id='unquote-fold-content-docs' class="fold-docs">
+		no error: invalid literals should be caught by scanner
+
+</span></i></div></div>
+<div id="exported-variables"><span class="title">Package-Level Variables<span class="title-stat"><i> (total 7, none are exported)</i></span></span>
+
+	<input type='checkbox' class="showhide" id="unexported-variables-showhide"><i><label for="unexported-variables-showhide" class="show-inline">/* 7 unexporteds ... */</label><label for="unexported-variables-showhide" class="hide-inline">/* 7 unexporteds: */</label></i><div class="anchor value-res hidden" id="name-errBlankUnsupported"><i>	<span class="nodocs">  <a href="../../../use/github.com/go-git/gcfg..errBlankUnsupported*36ef3.html">var</a> <a href="../../../src/github.com/go-git/gcfg/set.go.html#line-61">errBlankUnsupported</a> <a href="../../builtin.html#name-error">error</a></span></i></div><div class="anchor value-res hidden" id="name-errUnsupportedType"><i>	<span class="nodocs">  <a href="../../../use/github.com/go-git/gcfg..errUnsupportedType*814b0.html">var</a> <a href="../../../src/github.com/go-git/gcfg/set.go.html#line-60">errUnsupportedType</a> <a href="../../builtin.html#name-error">error</a></span></i></div><div class="anchor value-res hidden" id="name-kindSetters"><i>	<span class="nodocs">  <a href="../../../use/github.com/go-git/gcfg..kindSetters*20894.html">var</a> <a href="../../../src/github.com/go-git/gcfg/set.go.html#line-150">kindSetters</a> map[<a href="../../reflect.html">reflect</a>.<a href="../../reflect.html#name-Kind">Kind</a>]<a href="#name-setter">setter</a></span></i></div><div class="anchor value-res hidden" id="name-setters"><i>	<span class="nodocs">  <a href="../../../use/github.com/go-git/gcfg..setters*c7779.html">var</a> <a href="../../../src/github.com/go-git/gcfg/set.go.html#line-63">setters</a> []<a href="#name-setter">setter</a></span></i></div><div class="anchor value-res hidden" id="name-typeModes"><i>	<span class="nodocs">  <a href="../../../use/github.com/go-git/gcfg..typeModes*6a56f.html">var</a> <a href="../../../src/github.com/go-git/gcfg/set.go.html#line-104">typeModes</a> map[<a href="../../reflect.html">reflect</a>.<a href="../../reflect.html#name-Type">Type</a>]<a href="gcfg/types.html">types</a>.<a href="gcfg/types.html#name-IntMode">IntMode</a></span></i></div><div class="anchor value-res hidden" id="name-typeSetters"><i>	<span class="nodocs">  <a href="../../../use/github.com/go-git/gcfg..typeSetters*f780c.html">var</a> <a href="../../../src/github.com/go-git/gcfg/set.go.html#line-166">typeSetters</a> map[<a href="../../reflect.html">reflect</a>.<a href="../../reflect.html#name-Type">Type</a>]<a href="#name-setter">setter</a></span></i></div><div class="anchor value-res hidden" id="name-unescape"><i>	<span class="nodocs">  <a href="../../../use/github.com/go-git/gcfg..unescape*740fb.html">var</a> <a href="../../../src/github.com/go-git/gcfg/read.go.html#line-15">unescape</a> map[<a href="../../builtin.html#name-rune">rune</a>]<a href="../../builtin.html#name-rune">rune</a></span></i></div></div></code></pre><pre id="footer">
+<table><tr><td><img src="../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

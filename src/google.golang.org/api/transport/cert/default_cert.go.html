@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: default_cert.go in package google.golang.org/api/transport/cert</title>
+<link href="../../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	default_cert.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../../pkg/google.golang.org/api/transport/cert.html">google.golang.org/api/transport/cert</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16],
+input[id=r17]:checked ~pre label[for=r17]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1,
+input[id=i2]:checked ~pre .i2,
+input[id=i3]:checked ~pre .i3,
+input[id=i4]:checked ~pre .i4,
+input[id=i5]:checked ~pre .i5,
+input[id=i6]:checked ~pre .i6,
+input[id=i7]:checked ~pre .i7,
+input[id=i8]:checked ~pre .i8,
+input[id=i9]:checked ~pre .i9
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="r17" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<input id="i2" type="radio" name="i"/>
+<input id="i3" type="radio" name="i"/>
+<input id="i4" type="radio" name="i"/>
+<input id="i5" type="radio" name="i"/>
+<input id="i6" type="radio" name="i"/>
+<input id="i7" type="radio" name="i"/>
+<input id="i8" type="radio" name="i"/>
+<input id="i9" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2020 Google LLC.</span><span class="comment"> Use of this source code is governed by a BSD-style</span><span class="comment"> license that can be found in the LICENSE file.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Package cert contains certificate tools for Google API clients.</span><span class="comment"> This package is intended to be used with crypto/tls.Config.GetClientCertificate.</span><span class="comment"></span><span class="comment"> The certificates can be used to satisfy Google's Endpoint Validation.</span><span class="comment"> See https://cloud.google.com/endpoint-verification/docs/overview</span><span class="comment"></span><span class="comment"> This package is not intended for use by end developers. Use the</span><span class="comment"> google.golang.org/api/option package to configure API clients.</span></div>
+<div class="code"><pre><code><span class="keyword">package</span> cert
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"crypto/tls"</span></label>
+	<label for="i1"><span class="lit-string i1">"encoding/json"</span></label>
+	<label for="i2"><span class="lit-string i2">"errors"</span></label>
+	<label for="i3"><span class="lit-string i3">"fmt"</span></label>
+	<label for="i4"><span class="lit-string i4">"io/ioutil"</span></label>
+	<label for="i5"><span class="lit-string i5">"os"</span></label>
+	<label for="i6"><span class="lit-string i6">"os/exec"</span></label>
+	<label for="i7"><span class="lit-string i7">"os/user"</span></label>
+	<label for="i8"><span class="lit-string i8">"path/filepath"</span></label>
+	<label for="i9"><span class="lit-string i9">"sync"</span></label>
+)
+
+<span class="keyword">const</span> (
+	<a href="../../../../../pkg/google.golang.org/api/transport/cert.html#name-metadataPath" class="ident">metadataPath</a> = <span class="lit-string">".secureConnect"</span>
+	<a href="../../../../../pkg/google.golang.org/api/transport/cert.html#name-metadataFile" class="ident">metadataFile</a> = <span class="lit-string">"context_aware_metadata.json"</span>
+)
+
+<span class="keyword">var</span> (
+	<a href="../../../../../pkg/google.golang.org/api/transport/cert.html#name-defaultSourceOnce" class="ident">defaultSourceOnce</a> <a href="../../../../../pkg/sync.html" class="ident i9">sync</a>.<a href="../../../../sync/once.go.html#line-14" class="ident">Once</a>
+	<a href="../../../../../pkg/google.golang.org/api/transport/cert.html#name-defaultSource" class="ident">defaultSource</a>     <a href="#line-40" class="ident">Source</a>
+	<a href="../../../../../pkg/google.golang.org/api/transport/cert.html#name-defaultSourceErr" class="ident">defaultSourceErr</a>  <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Source is a function that can be passed into crypto/tls.Config.GetClientCertificate.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../pkg/google.golang.org/api/transport/cert.html#name-Source" class="ident">Source</a> <span class="keyword">func</span>(*<a href="../../../../../pkg/crypto/tls.html" class="ident i0">tls</a>.<a href="../../../../crypto/tls/common.go.html#line-451" class="ident">CertificateRequestInfo</a>) (*<a href="../../../../../pkg/crypto/tls.html" class="ident i0">tls</a>.<a href="../../../../crypto/tls/common.go.html#line-1303" class="ident">Certificate</a>, <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> DefaultSource returns a certificate source that execs the command specified</span><span class="comment"> in the file at ~/.secureConnect/context_aware_metadata.json</span><span class="comment"></span><span class="comment"> If that file does not exist, a nil source is returned.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r0" class="ident"><a href="../../../../../pkg/google.golang.org/api/transport/cert.html#name-DefaultSource" class="ident">DefaultSource</a></label>() (<a href="#line-40" class="ident">Source</a>, <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<a href="#line-34" class="ident">defaultSourceOnce</a>.<a href="../../../../sync/once.go.html#line-42" class="ident">Do</a>(<span class="keyword">func</span>() {
+		<a href="#line-35" class="ident">defaultSource</a>, <a href="#line-36" class="ident">defaultSourceErr</a> = <a href="#line-62" class="ident">newSecureConnectSource</a>()
+	})
+	<span class="keyword">return</span> <a href="#line-35" class="ident">defaultSource</a>, <a href="#line-36" class="ident">defaultSourceErr</a>
+}
+
+<span class="keyword">type</span> <a href="../../../../../pkg/google.golang.org/api/transport/cert.html#name-secureConnectSource" class="ident">secureConnectSource</a> <span class="keyword">struct</span> {
+	<a href="../../../../../use/google.golang.org/api/transport/cert..secureConnectSource*8c4f7.metadata*45447.html" class="ident">metadata</a> <a href="#line-57" class="ident">secureConnectMetadata</a>
+}
+
+<span class="keyword">type</span> <a href="../../../../../pkg/google.golang.org/api/transport/cert.html#name-secureConnectMetadata" class="ident">secureConnectMetadata</a> <span class="keyword">struct</span> {
+	<a href="../../../../../use/google.golang.org/api/transport/cert..secureConnectMetadata*78abc.Cmd.html" class="ident">Cmd</a> []<a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a> <span class="lit-string">`json:"cert_provider_command"`</span>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> newSecureConnectSource creates a secureConnectSource by reading the well-known file.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r1" class="ident"><a href="../../../../../pkg/google.golang.org/api/transport/cert.html#name-newSecureConnectSource" class="ident">newSecureConnectSource</a></label>() (<a href="#line-40" class="ident">Source</a>, <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<label for="r2" class="ident">user</label>, <label for="r3" class="ident">err</label> := <a href="../../../../../pkg/os/user.html" class="ident i7">user</a>.<a href="../../../../os/user/lookup.go.html#line-14" class="ident">Current</a>()
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Ignore.</span></div>
+<div class="code"><pre><code>		<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+	}
+	<label for="r4" class="ident">filename</label> := <a href="../../../../../pkg/path/filepath.html" class="ident i8">filepath</a>.<a href="../../../../path/filepath/path.go.html#line-212" class="ident">Join</a>(<label for="r2" class="ident">user</label>.<a href="../../../../os/user/user.go.html#line-50" class="ident">HomeDir</a>, <a href="#line-29" class="ident">metadataPath</a>, <a href="#line-30" class="ident">metadataFile</a>)
+	<label for="r5" class="ident">file</label>, <label for="r3" class="ident">err</label> := <a href="../../../../../pkg/io/ioutil.html" class="ident i4">ioutil</a>.<a href="../../../../io/ioutil/ioutil.go.html#line-36" class="ident">ReadFile</a>(<label for="r4" class="ident">filename</label>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Ignore.</span></div>
+<div class="code"><pre><code>		<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+	}
+	<span class="keyword">if</span> <label for="r3" class="ident">err</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <label for="r3" class="ident">err</label>
+	}
+
+	<span class="keyword">var</span> <label for="r6" class="ident">metadata</label> <a href="#line-57" class="ident">secureConnectMetadata</a>
+	<span class="keyword">if</span> <label for="r7" class="ident">err</label> := <a href="../../../../../pkg/encoding/json.html" class="ident i1">json</a>.<a href="../../../../encoding/json/decode.go.html#line-96" class="ident">Unmarshal</a>(<label for="r5" class="ident">file</label>, &amp;<label for="r6" class="ident">metadata</label>); <label for="r7" class="ident">err</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="../../../../../pkg/fmt.html" class="ident i3">fmt</a>.<a href="../../../../fmt/errors.go.html#line-17" class="ident">Errorf</a>(<span class="lit-string">"cert: could not parse JSON in %q: %v"</span>, <label for="r4" class="ident">filename</label>, <label for="r7" class="ident">err</label>)
+	}
+	<span class="keyword">if</span> <label for="r8" class="ident">err</label> := <a href="#line-90" class="ident">validateMetadata</a>(<label for="r6" class="ident">metadata</label>); <label for="r8" class="ident">err</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="../../../../../pkg/fmt.html" class="ident i3">fmt</a>.<a href="../../../../fmt/errors.go.html#line-17" class="ident">Errorf</a>(<span class="lit-string">"cert: invalid config in %q: %v"</span>, <label for="r4" class="ident">filename</label>, <label for="r8" class="ident">err</label>)
+	}
+	<span class="keyword">return</span> (&amp;<a href="#line-53" class="ident">secureConnectSource</a>{
+		<a href="#line-54" class="ident">metadata</a>: <label for="r6" class="ident">metadata</label>,
+	}).<a href="#line-97" class="ident">getClientCertificate</a>, <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+}
+
+<span class="keyword">func</span> <label for="r9" class="ident"><a href="../../../../../pkg/google.golang.org/api/transport/cert.html#name-validateMetadata" class="ident">validateMetadata</a></label>(<label for="r10" class="ident">metadata</label> <a href="#line-57" class="ident">secureConnectMetadata</a>) <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<span class="keyword">if</span> <a href="../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r10" class="ident">metadata</label>.<a href="#line-58" class="ident">Cmd</a>) == <span class="lit-number">0</span> {
+		<span class="keyword">return</span> <a href="../../../../../pkg/errors.html" class="ident i2">errors</a>.<a href="../../../../errors/errors.go.html#line-58" class="ident">New</a>(<span class="lit-string">"empty cert_provider_command"</span>)
+	}
+	<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+}
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> TODO(cbro): consider caching valid certificates rather than exec'ing every time.</span></div>
+<div class="code"><pre><code>	<label for="r14" class="ident">command</label> := <label for="r11" class="ident">s</label>.<a href="#line-54" class="ident">metadata</a>.<a href="#line-58" class="ident">Cmd</a>
+	<label for="r15" class="ident">data</label>, <label for="r16" class="ident">err</label> := <a href="../../../../../pkg/os/exec.html" class="ident i6">exec</a>.<a href="../../../../os/exec/exec.go.html#line-169" class="ident">Command</a>(<label for="r14" class="ident">command</label>[<span class="lit-number">0</span>], <label for="r14" class="ident">command</label>[<span class="lit-number">1</span>:]...).<a href="../../../../os/exec/exec.go.html#line-534" class="ident">Output</a>()
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> TODO(cbro): read stderr for error message? Might contain sensitive info.</span></div>
+<div class="code"><pre><code>		<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <label for="r16" class="ident">err</label>
+	}
+	<label for="r17" class="ident">cert</label>, <label for="r16" class="ident">err</label> := <a href="../../../../../pkg/crypto/tls.html" class="ident i0">tls</a>.<a href="../../../../crypto/tls/tls.go.html#line-276" class="ident">X509KeyPair</a>(<label for="r15" class="ident">data</label>, <label for="r15" class="ident">data</label>)
+	<span class="keyword">if</span> <label for="r16" class="ident">err</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <label for="r16" class="ident">err</label>
+	}
+	<span class="keyword">return</span> &amp;<label for="r17" class="ident">cert</label>, <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

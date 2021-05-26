@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: xxhash_unsafe.go in package github.com/cespare/xxhash/v2</title>
+<link href="../../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	xxhash_unsafe.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../../pkg/github.com/cespare/xxhash/v2.html">github.com/cespare/xxhash/v2</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> +build !appengine</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> This file encapsulates usage of unsafe.</span><span class="comment"> xxhash_safe.go contains the safe implementations.</span></div>
+<div class="code"><pre><code>
+<span class="keyword">package</span> xxhash
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"reflect"</span></label>
+	<label for="i1"><span class="lit-string i1">"unsafe"</span></label>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Notes:</span><span class="comment"></span><span class="comment"> See https://groups.google.com/d/msg/golang-nuts/dcjzJy-bSpw/tcZYBzQqAQAJ</span><span class="comment"> for some discussion about these unsafe conversions.</span><span class="comment"></span><span class="comment"> In the future it's possible that compiler optimizations will make these</span><span class="comment"> unsafe operations unnecessary: https://golang.org/issue/2205.</span><span class="comment"></span><span class="comment"> Both of these wrapper functions still incur function call overhead since they</span><span class="comment"> will not be inlined. We could write Go/asm copies of Sum64 and Digest.Write</span><span class="comment"> for strings to squeeze out a bit more speed. Mid-stack inlining should</span><span class="comment"> eventually fix this.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Sum64String computes the 64-bit xxHash digest of s.</span><span class="comment"> It may be faster than Sum64([]byte(s)) by avoiding a copy.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r0" class="ident"><a href="../../../../../pkg/github.com/cespare/xxhash/v2.html#name-Sum64String" class="ident">Sum64String</a></label>(<label for="r1" class="ident">s</label> <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>) <a href="../../../../../pkg/builtin.html#name-uint64" class="ident">uint64</a> {
+	<span class="keyword">var</span> <label for="r2" class="ident">b</label> []<a href="../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>
+	<label for="r3" class="ident">bh</label> := (*<a href="../../../../../pkg/reflect.html" class="ident i0">reflect</a>.<a href="../../../../reflect/value.go.html#line-1994" class="ident">SliceHeader</a>)(<a href="../../../../../pkg/unsafe.html" class="ident i1">unsafe</a>.<a href="../../../../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(&amp;<label for="r2" class="ident">b</label>))
+	<label for="r3" class="ident">bh</label>.<a href="../../../../reflect/value.go.html#line-1995" class="ident">Data</a> = (*<a href="../../../../../pkg/reflect.html" class="ident i0">reflect</a>.<a href="../../../../reflect/value.go.html#line-1983" class="ident">StringHeader</a>)(<a href="../../../../../pkg/unsafe.html" class="ident i1">unsafe</a>.<a href="../../../../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(&amp;<label for="r1" class="ident">s</label>)).<a href="../../../../reflect/value.go.html#line-1984" class="ident">Data</a>
+	<label for="r3" class="ident">bh</label>.<a href="../../../../reflect/value.go.html#line-1996" class="ident">Len</a> = <a href="../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r1" class="ident">s</label>)
+	<label for="r3" class="ident">bh</label>.<a href="../../../../reflect/value.go.html#line-1997" class="ident">Cap</a> = <a href="../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r1" class="ident">s</label>)
+	<span class="keyword">return</span> <a href="xxhash_amd64.go.html#line-10" class="ident">Sum64</a>(<label for="r2" class="ident">b</label>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> WriteString adds more data to d. It always returns len(s), nil.</span><span class="comment"> It may be faster than Write([]byte(s)) by avoiding a copy.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r4" class="ident">d</label> *<a href="xxhash.go.html#line-34" class="ident">Digest</a>) <label for="r5" class="ident"><a href="../../../../../use/github.com/cespare/xxhash/v2..Digest.WriteString.html" class="ident">WriteString</a></label>(<label for="r6" class="ident">s</label> <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>) (<label for="r7" class="ident">n</label> <a href="../../../../../pkg/builtin.html#name-int" class="ident">int</a>, <label for="r8" class="ident">err</label> <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<span class="keyword">var</span> <label for="r9" class="ident">b</label> []<a href="../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>
+	<label for="r10" class="ident">bh</label> := (*<a href="../../../../../pkg/reflect.html" class="ident i0">reflect</a>.<a href="../../../../reflect/value.go.html#line-1994" class="ident">SliceHeader</a>)(<a href="../../../../../pkg/unsafe.html" class="ident i1">unsafe</a>.<a href="../../../../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(&amp;<label for="r9" class="ident">b</label>))
+	<label for="r10" class="ident">bh</label>.<a href="../../../../reflect/value.go.html#line-1995" class="ident">Data</a> = (*<a href="../../../../../pkg/reflect.html" class="ident i0">reflect</a>.<a href="../../../../reflect/value.go.html#line-1983" class="ident">StringHeader</a>)(<a href="../../../../../pkg/unsafe.html" class="ident i1">unsafe</a>.<a href="../../../../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(&amp;<label for="r6" class="ident">s</label>)).<a href="../../../../reflect/value.go.html#line-1984" class="ident">Data</a>
+	<label for="r10" class="ident">bh</label>.<a href="../../../../reflect/value.go.html#line-1996" class="ident">Len</a> = <a href="../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r6" class="ident">s</label>)
+	<label for="r10" class="ident">bh</label>.<a href="../../../../reflect/value.go.html#line-1997" class="ident">Cap</a> = <a href="../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r6" class="ident">s</label>)
+	<span class="keyword">return</span> <label for="r4" class="ident">d</label>.<a href="xxhash.go.html#line-68" class="ident">Write</a>(<label for="r9" class="ident">b</label>)
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

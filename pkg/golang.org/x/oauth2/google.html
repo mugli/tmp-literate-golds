@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Package: golang.org/x/oauth2/google</title>
+<link href="../../../../css/light-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="package-details"><code><span style="font-size:xx-large;">package <b>google</b></span>
+
+<span class="title">Import Path</span>
+	<a href="../../../../index.html#pkg-golang.org/x/oauth2/google">golang.org/x/oauth2/google</a><i> (on <a href="https://pkg.go.dev/golang.org/x/oauth2/google" target="_blank">go.dev</a>)</i>
+
+<span class="title">Dependency Relation</span>
+	imports <a href="../../../../dep/golang.org/x/oauth2/google.html">23 packages</a>, and imported by <a href="../../../../dep/golang.org/x/oauth2/google.html#imported-by">6 packages</a>
+
+<div id="files"><span class="title">Involved Source Files</span>
+
+	<span class="nodocs">      <a href="../../../../src/golang.org/x/oauth2/google/appengine.go.html">appengine.go</a></span>
+	<span class="nodocs">      <a href="../../../../src/golang.org/x/oauth2/google/appengine_gen2_flex.go.html">appengine_gen2_flex.go</a></span>
+	<span class="nodocs">      <a href="../../../../src/golang.org/x/oauth2/google/default.go.html">default.go</a></span>
+	<input type='checkbox' checked class="fold" id="file-3-fold-content"><label for="file-3-fold-content">   <a href="../../../../src/golang.org/x/oauth2/google/doc.go.html#doc">d➜</a> <a href="../../../../src/golang.org/x/oauth2/google/doc.go.html">doc.go</a></label><span id='file-3-fold-content-items' class="fold-items">
+		Package google provides support for making OAuth2 authorized and authenticated
+		HTTP requests to Google APIs. It supports the Web server flow, client-side
+		credentials, service accounts, Google Compute Engine service accounts, and Google
+		App Engine service accounts.
+
+		A brief overview of the package follows. For more information, please read
+		https://developers.google.com/accounts/docs/OAuth2
+		and
+		https://developers.google.com/accounts/docs/application-default-credentials.
+
+		OAuth2 Configs
+
+		Two functions in this package return golang.org/x/oauth2.Config values from Google credential
+		data. Google supports two JSON formats for OAuth2 credentials: one is handled by ConfigFromJSON,
+		the other by JWTConfigFromJSON. The returned Config can be used to obtain a TokenSource or
+		create an http.Client.
+
+		Credentials
+
+		The Credentials type represents Google credentials, including Application Default
+		Credentials.
+
+		Use FindDefaultCredentials to obtain Application Default Credentials.
+		FindDefaultCredentials looks in some well-known places for a credentials file, and
+		will call AppEngineTokenSource or ComputeTokenSource as needed.
+
+		DefaultClient and DefaultTokenSource are convenience methods. They first call FindDefaultCredentials,
+		then use the credentials to construct an http.Client or an oauth2.TokenSource.
+
+		Use CredentialsFromJSON to obtain credentials from either of the two JSON formats
+		described in OAuth2 Configs, above. The TokenSource in the returned value is the
+		same as the one obtained from the oauth2.Config returned from ConfigFromJSON or
+		JWTConfigFromJSON, but the Credentials may contain additional information
+		that is useful is some circumstances.
+</span>
+	<span class="nodocs">      <a href="../../../../src/golang.org/x/oauth2/google/google.go.html">google.go</a></span>
+	<span class="nodocs">      <a href="../../../../src/golang.org/x/oauth2/google/jwt.go.html">jwt.go</a></span>
+	<span class="nodocs">      <a href="../../../../src/golang.org/x/oauth2/google/sdk.go.html">sdk.go</a></span></div>
+<div id="examples"><span class="title">Code Examples</span>
+
+	<input type='checkbox' class="fold" id="example-0-fold-content"><label for="example-0-fold-content">ComputeTokenSource</label><span id='example-0-fold-content-items' class="fold-items">
+		package main
+		
+		import (
+			"golang.org/x/oauth2"
+			"golang.org/x/oauth2/google"
+			"net/http"
+		)
+		
+		func main() {
+			client := &http.Client{
+				Transport: &oauth2.Transport{
+					// Fetch from Google Compute Engine's metadata server to retrieve
+					// an access token for the provided account.
+					// If no account is specified, "default" is used.
+					// If no scopes are specified, a set of default scopes
+					// are automatically granted.
+					Source: google.ComputeTokenSource("", "https://www.googleapis.com/auth/bigquery"),
+				},
+			}
+			client.Get("...")
+		}
+
+</span>
+	<input type='checkbox' class="fold" id="example-1-fold-content"><label for="example-1-fold-content">CredentialsFromJSON</label><span id='example-1-fold-content-items' class="fold-items">
+		package main
+		
+		import (
+			"context"
+			"golang.org/x/oauth2/google"
+			"io/ioutil"
+			"log"
+		)
+		
+		func main() {
+			ctx := context.Background()
+			data, err := ioutil.ReadFile("/path/to/key-file.json")
+			if err != nil {
+				log.Fatal(err)
+			}
+			creds, err := google.CredentialsFromJSON(ctx, data, "https://www.googleapis.com/auth/bigquery")
+			if err != nil {
+				log.Fatal(err)
+			}
+			_ = creds // TODO: Use creds.
+		}
+
+</span>
+	<input type='checkbox' class="fold" id="example-2-fold-content"><label for="example-2-fold-content">DefaultClient</label><span id='example-2-fold-content-items' class="fold-items">
+		package main
+		
+		import (
+			"golang.org/x/oauth2"
+			"golang.org/x/oauth2/google"
+			"log"
+		)
+		
+		func main() {
+			client, err := google.DefaultClient(oauth2.NoContext,
+				"https://www.googleapis.com/auth/devstorage.full_control")
+			if err != nil {
+				log.Fatal(err)
+			}
+			client.Get("...")
+		}
+
+</span>
+	<input type='checkbox' class="fold" id="example-3-fold-content"><label for="example-3-fold-content">JWTConfigFromJSON</label><span id='example-3-fold-content-items' class="fold-items">
+		package main
+		
+		import (
+			"golang.org/x/oauth2"
+			"golang.org/x/oauth2/google"
+			"io/ioutil"
+			"log"
+		)
+		
+		func main() {
+			// Your credentials should be obtained from the Google
+			// Developer Console (https://console.developers.google.com).
+			// Navigate to your project, then see the "Credentials" page
+			// under "APIs & Auth".
+			// To create a service account client, click "Create new Client ID",
+			// select "Service Account", and click "Create Client ID". A JSON
+			// key file will then be downloaded to your computer.
+			data, err := ioutil.ReadFile("/path/to/your-project-key.json")
+			if err != nil {
+				log.Fatal(err)
+			}
+			conf, err := google.JWTConfigFromJSON(data, "https://www.googleapis.com/auth/bigquery")
+			if err != nil {
+				log.Fatal(err)
+			}
+			// Initiate an http.Client. The following GET request will be
+			// authorized and authenticated on the behalf of
+			// your service account.
+			client := conf.Client(oauth2.NoContext)
+			client.Get("...")
+		}
+
+</span>
+	<input type='checkbox' class="fold" id="example-4-fold-content"><label for="example-4-fold-content">SDKConfig</label><span id='example-4-fold-content-items' class="fold-items">
+		package main
+		
+		import (
+			"golang.org/x/oauth2"
+			"golang.org/x/oauth2/google"
+			"log"
+		)
+		
+		func main() {
+			// The credentials will be obtained from the first account that
+			// has been authorized with `gcloud auth login`.
+			conf, err := google.NewSDKConfig("")
+			if err != nil {
+				log.Fatal(err)
+			}
+			// Initiate an http.Client. The following GET request will be
+			// authorized and authenticated on the behalf of the SDK user.
+			client := conf.Client(oauth2.NoContext)
+			client.Get("...")
+		}
+
+</span>
+	<input type='checkbox' class="fold" id="example-5-fold-content"><label for="example-5-fold-content">_serviceAccount</label><span id='example-5-fold-content-items' class="fold-items">
+		package main
+		
+		import (
+			"golang.org/x/oauth2"
+			"golang.org/x/oauth2/google"
+			"golang.org/x/oauth2/jwt"
+		)
+		
+		func main() {
+			// Your credentials should be obtained from the Google
+			// Developer Console (https://console.developers.google.com).
+			conf := &jwt.Config{
+				Email: "xxx@developer.gserviceaccount.com",
+				// The contents of your RSA private key or your PEM file
+				// that contains a private key.
+				// If you have a p12 file instead, you
+				// can use `openssl` to export the private key into a pem file.
+				//
+				//    $ openssl pkcs12 -in key.p12 -passin pass:notasecret -out key.pem -nodes
+				//
+				// The field only supports PEM containers with no passphrase.
+				// The openssl command will convert p12 keys to passphrase-less PEM containers.
+				PrivateKey: []byte("-----BEGIN RSA PRIVATE KEY-----..."),
+				Scopes: []string{
+					"https://www.googleapis.com/auth/bigquery",
+					"https://www.googleapis.com/auth/blogger",
+				},
+				TokenURL: google.JWTTokenURL,
+				// If you would like to impersonate a user, you can
+				// create a transport with a subject. The following GET
+				// request will be made on the behalf of user@example.com.
+				// Optional.
+				Subject: "user@example.com",
+			}
+			// Initiate an http.Client, the following GET request will be
+			// authorized and authenticated on the behalf of user@example.com.
+			client := conf.Client(oauth2.NoContext)
+			client.Get("...")
+		}
+
+</span>
+	<input type='checkbox' class="fold" id="example-6-fold-content"><label for="example-6-fold-content">_webServer</label><span id='example-6-fold-content-items' class="fold-items">
+		package main
+		
+		import (
+			"fmt"
+			"golang.org/x/oauth2"
+			"golang.org/x/oauth2/google"
+			"log"
+		)
+		
+		func main() {
+			// Your credentials should be obtained from the Google
+			// Developer Console (https://console.developers.google.com).
+			conf := &oauth2.Config{
+				ClientID:     "YOUR_CLIENT_ID",
+				ClientSecret: "YOUR_CLIENT_SECRET",
+				RedirectURL:  "YOUR_REDIRECT_URL",
+				Scopes: []string{
+					"https://www.googleapis.com/auth/bigquery",
+					"https://www.googleapis.com/auth/blogger",
+				},
+				Endpoint: google.Endpoint,
+			}
+			// Redirect user to Google's consent page to ask for permission
+			// for the scopes specified above.
+			url := conf.AuthCodeURL("state")
+			fmt.Printf("Visit the URL for the auth dialog: %v", url)
+		
+			// Handle the exchange code to initiate a transport.
+			tok, err := conf.Exchange(oauth2.NoContext, "authorization-code")
+			if err != nil {
+				log.Fatal(err)
+			}
+			client := conf.Client(oauth2.NoContext, tok)
+			client.Get("...")
+		}
+</span>
+</div>
+<div id="exported-types"><span class="title">Package-Level Type Names<span class="title-stat"><i> (total 7, in which 3 are exported)</i></span></span>
+
+<div id="exported-types-buttons" class="js-on">	/* sort exporteds by: <label id="sort-types-by-alphabet" class="button">alphabet</label> | <label id="sort-types-by-popularity" class="button">popularity</label> */</div><div class="anchor type-res" id="name-Credentials" data-popularity="705">	<input type='checkbox' class="fold" id="Credentials-fold-content"><label for="Credentials-fold-content"> <a href="../../../../use/golang.org/x/oauth2/google..Credentials.html">type</a> <a href="../../../../src/golang.org/x/oauth2/google/default.go.html#line-24">Credentials</a> <i>(struct)</i></label><span id='Credentials-fold-content-docs' class="fold-docs">
+		Credentials holds Google credentials, including "Application Default Credentials".
+		For more details, see:
+		https://developers.google.com/accounts/docs/application-default-credentials
+
+		<input type='checkbox' class="fold" id="Credentials-fold-fields"><label for="Credentials-fold-fields">Fields (<i>total 3, all are exported</i>)</label><span id='Credentials-fold-fields-items' class="fold-items"><span>
+			<input type='checkbox' class="fold" id="Credentials-fold-field-JSON"><label for="Credentials-fold-field-JSON"><a href="../../../../src/golang.org/x/oauth2/google/default.go.html#line-32">JSON</a> <i>[]<a href="../../../builtin.html#name-byte">byte</a></i></label><span id='Credentials-fold-field-JSON-docs' class="fold-docs">
+				JSON contains the raw bytes from a JSON credentials file.
+				This field may be nil if authentication is provided by the
+				environment and not with a credentials file, e.g. when code is
+				running on Google Cloud Platform.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Credentials-fold-field-ProjectID"><label for="Credentials-fold-field-ProjectID"><a href="../../../../src/golang.org/x/oauth2/google/default.go.html#line-25">ProjectID</a> <i><a href="../../../builtin.html#name-string">string</a></i></label><span id='Credentials-fold-field-ProjectID-docs' class="fold-docs">
+				// may be empty
+</span></span><span>
+			<span class="nodocs"><a href="../../../../src/golang.org/x/oauth2/google/default.go.html#line-26">TokenSource</a> <i><a href="../oauth2.html">oauth2</a>.<a href="../oauth2.html#name-TokenSource">TokenSource</a></i></span></span></span>
+		<input type='checkbox' class="fold" id="Credentials-fold-results"><label for="Credentials-fold-results">As Outputs Of (<i>at least 8, in which 4 are exported</i>)</label><span id='Credentials-fold-results-items' class="fold-items"><span>
+			func <a href="#name-CredentialsFromJSON">CredentialsFromJSON</a>(ctx <a href="../../../context.html">context</a>.<a href="../../../context.html#name-Context">Context</a>, jsonData []<a href="../../../builtin.html#name-byte">byte</a>, scopes ...<a href="../../../builtin.html#name-string">string</a>) (*<b>Credentials</b>, <a href="../../../builtin.html#name-error">error</a>)</span><span>
+			func <a href="#name-FindDefaultCredentials">FindDefaultCredentials</a>(ctx <a href="../../../context.html">context</a>.<a href="../../../context.html#name-Context">Context</a>, scopes ...<a href="../../../builtin.html#name-string">string</a>) (*<b>Credentials</b>, <a href="../../../builtin.html#name-error">error</a>)</span><span>
+			func google.golang.org/api/internal.<a href="../../../google.golang.org/api/internal.html#name-Creds">Creds</a>(ctx <a href="../../../context.html">context</a>.<a href="../../../context.html#name-Context">Context</a>, ds *<a href="../../../google.golang.org/api/internal.html">internal</a>.<a href="../../../google.golang.org/api/internal.html#name-DialSettings">DialSettings</a>) (*<b>Credentials</b>, <a href="../../../builtin.html#name-error">error</a>)</span><span>
+			func google.golang.org/api/transport.<a href="../../../google.golang.org/api/transport.html#name-Creds">Creds</a>(ctx <a href="../../../context.html">context</a>.<a href="../../../context.html#name-Context">Context</a>, opts ...<a href="../../../google.golang.org/api/option.html">option</a>.<a href="../../../google.golang.org/api/option.html#name-ClientOption">ClientOption</a>) (*<b>Credentials</b>, <a href="../../../builtin.html#name-error">error</a>)</span>
+			<input type='checkbox' class="showhide" id="Credentials-showhide-inputofs"><i><label for="Credentials-showhide-inputofs" class="show-inline">/* 4+ unexporteds ... */</label><label for="Credentials-showhide-inputofs" class="hide-inline">/* 4+ unexporteds: */</label></i><span class="hidden"><i>
+			func <a href="#name-readCredentialsFile">readCredentialsFile</a>(ctx <a href="../../../context.html">context</a>.<a href="../../../context.html#name-Context">Context</a>, filename <a href="../../../builtin.html#name-string">string</a>, scopes []<a href="../../../builtin.html#name-string">string</a>) (*<b><a href="#name-DefaultCredentials">DefaultCredentials</a></b>, <a href="../../../builtin.html#name-error">error</a>)</i></span><span class="hidden"><i>
+			func google.golang.org/api/internal.<a href="../../../google.golang.org/api/internal.html#name-baseCreds">baseCreds</a>(ctx <a href="../../../context.html">context</a>.<a href="../../../context.html#name-Context">Context</a>, ds *<a href="../../../google.golang.org/api/internal.html">internal</a>.<a href="../../../google.golang.org/api/internal.html#name-DialSettings">DialSettings</a>) (*<b>Credentials</b>, <a href="../../../builtin.html#name-error">error</a>)</i></span><span class="hidden"><i>
+			func google.golang.org/api/internal.<a href="../../../google.golang.org/api/internal.html#name-credentialsFromJSON">credentialsFromJSON</a>(ctx <a href="../../../context.html">context</a>.<a href="../../../context.html#name-Context">Context</a>, data []<a href="../../../builtin.html#name-byte">byte</a>, endpoint <a href="../../../builtin.html#name-string">string</a>, scopes []<a href="../../../builtin.html#name-string">string</a>, audiences []<a href="../../../builtin.html#name-string">string</a>) (*<b>Credentials</b>, <a href="../../../builtin.html#name-error">error</a>)</i></span><span class="hidden"><i>
+			func google.golang.org/api/internal.<a href="../../../google.golang.org/api/internal.html#name-impersonateCredentials">impersonateCredentials</a>(ctx <a href="../../../context.html">context</a>.<a href="../../../context.html#name-Context">Context</a>, creds *<b>Credentials</b>, ds *<a href="../../../google.golang.org/api/internal.html">internal</a>.<a href="../../../google.golang.org/api/internal.html#name-DialSettings">DialSettings</a>) (*<b>Credentials</b>, <a href="../../../builtin.html#name-error">error</a>)</i></span></span>
+		<input type='checkbox' class="fold" id="Credentials-fold-params"><label for="Credentials-fold-params">As Inputs Of (<i>at least 3, in which 2 are exported</i>)</label><span id='Credentials-fold-params-items' class="fold-items"><span>
+			func google.golang.org/api/internal.<a href="../../../google.golang.org/api/internal.html#name-QuotaProjectFromCreds">QuotaProjectFromCreds</a>(cred *<b>Credentials</b>) <a href="../../../builtin.html#name-string">string</a></span><span>
+			func google.golang.org/api/option.<a href="../../../google.golang.org/api/option.html#name-WithCredentials">WithCredentials</a>(creds *<b>Credentials</b>) <a href="../../../google.golang.org/api/option.html">option</a>.<a href="../../../google.golang.org/api/option.html#name-ClientOption">ClientOption</a></span>
+			<input type='checkbox' class="showhide" id="Credentials-showhide-outputofs"><i><label for="Credentials-showhide-outputofs" class="show-inline">/* at least one unexported ... */</label><label for="Credentials-showhide-outputofs" class="hide-inline">/* at least one unexported: */</label></i><span class="hidden"><i>
+			func google.golang.org/api/internal.<a href="../../../google.golang.org/api/internal.html#name-impersonateCredentials">impersonateCredentials</a>(ctx <a href="../../../context.html">context</a>.<a href="../../../context.html#name-Context">Context</a>, creds *<b>Credentials</b>, ds *<a href="../../../google.golang.org/api/internal.html">internal</a>.<a href="../../../google.golang.org/api/internal.html#name-DialSettings">DialSettings</a>) (*<b>Credentials</b>, <a href="../../../builtin.html#name-error">error</a>)</i></span></span>
+
+</span></div><div class="anchor type-res" id="name-DefaultCredentials" data-popularity="0">	<input type='checkbox' class="fold" id="DefaultCredentials-fold-content"><label for="DefaultCredentials-fold-content"> <a href="../../../../use/golang.org/x/oauth2/google..DefaultCredentials.html">type</a> <a href="../../../../src/golang.org/x/oauth2/google/default.go.html#line-38">DefaultCredentials</a> = <a href="#name-Credentials">Credentials</a> <i>(struct)</i></label><span id='DefaultCredentials-fold-content-docs' class="fold-docs">
+		DefaultCredentials is the old name of Credentials.
+
+		Deprecated: use Credentials instead.
+
+
+</span></div><div class="anchor type-res" id="name-SDKConfig" data-popularity="225">	<input type='checkbox' class="fold" id="SDKConfig-fold-content"><label for="SDKConfig-fold-content"> <a href="../../../../use/golang.org/x/oauth2/google..SDKConfig.html">type</a> <a href="../../../../src/golang.org/x/oauth2/google/sdk.go.html#line-43">SDKConfig</a> <i>(struct)</i></label><span id='SDKConfig-fold-content-docs' class="fold-docs">
+		An SDKConfig provides access to tokens from an account already
+		authorized via the Google Cloud SDK.
+
+		<input type='checkbox' class="fold" id="SDKConfig-fold-fields"><label for="SDKConfig-fold-fields">Fields (<i>total 2, neither is exported</i>)</label><span id='SDKConfig-fold-fields-items' class="fold-items">
+			<input type='checkbox' class="showhide" id="SDKConfig-showhide-fields"><i><label for="SDKConfig-showhide-fields" class="show-inline">/* 2 unexporteds ... */</label><label for="SDKConfig-showhide-fields" class="hide-inline">/* 2 unexporteds: */</label></i><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../../src/golang.org/x/oauth2/google/sdk.go.html#line-44">conf</a> <i><a href="../oauth2.html">oauth2</a>.<a href="../oauth2.html#name-Config">Config</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../../src/golang.org/x/oauth2/google/sdk.go.html#line-45">initialToken</a> <i>*<a href="../oauth2.html">oauth2</a>.<a href="../oauth2.html#name-Token">Token</a></i></span></i></span></span>
+		<input type='checkbox' class="fold" id="SDKConfig-fold-methods"><label for="SDKConfig-fold-methods">Methods (<i>total 3, all are exported</i>)</label><span id='SDKConfig-fold-methods-items' class="fold-items"><span>
+			<input type='checkbox' class="fold" id="SDKConfig-fold-method-Client"><label for="SDKConfig-fold-method-Client">(*T) <a href="../../../../src/golang.org/x/oauth2/google/sdk.go.html#line-128">Client</a>(ctx <a href="../../../context.html">context</a>.<a href="../../../context.html#name-Context">Context</a>) *<a href="../../../net/http.html">http</a>.<a href="../../../net/http.html#name-Client">Client</a></label><span id='SDKConfig-fold-method-Client-docs' class="fold-docs">
+				Client returns an HTTP client using Google Cloud SDK credentials to
+				authorize requests. The token will auto-refresh as necessary. The
+				underlying http.RoundTripper will be obtained using the provided
+				context. The returned client and its Transport should not be
+				modified.
+</span></span><span>
+			<input type='checkbox' class="fold" id="SDKConfig-fold-method-Scopes"><label for="SDKConfig-fold-method-Scopes">(*T) <a href="../../../../src/golang.org/x/oauth2/google/sdk.go.html#line-146">Scopes</a>() []<a href="../../../builtin.html#name-string">string</a></label><span id='SDKConfig-fold-method-Scopes-docs' class="fold-docs">
+				Scopes are the OAuth 2.0 scopes the current account is authorized for.
+</span></span><span>
+			<input type='checkbox' class="fold" id="SDKConfig-fold-method-TokenSource"><label for="SDKConfig-fold-method-TokenSource">(*T) <a href="../../../../src/golang.org/x/oauth2/google/sdk.go.html#line-141">TokenSource</a>(ctx <a href="../../../context.html">context</a>.<a href="../../../context.html#name-Context">Context</a>) <a href="../oauth2.html">oauth2</a>.<a href="../oauth2.html#name-TokenSource">TokenSource</a></label><span id='SDKConfig-fold-method-TokenSource-docs' class="fold-docs">
+				TokenSource returns an oauth2.TokenSource that retrieve tokens from
+				Google Cloud SDK credentials using the provided context.
+				It will returns the current access token stored in the credentials,
+				and refresh it when it expires, but it won't update the credentials
+				with the new access token.
+</span></span></span>
+		<input type='checkbox' class="fold" id="SDKConfig-fold-results"><label for="SDKConfig-fold-results">As Outputs Of (<i>at least one exported</i>)</label><span id='SDKConfig-fold-results-items' class="fold-items"><span>
+			func <a href="#name-NewSDKConfig">NewSDKConfig</a>(account <a href="../../../builtin.html#name-string">string</a>) (*<b>SDKConfig</b>, <a href="../../../builtin.html#name-error">error</a>)</span></span>
+
+</span></div></div><div>	<input type='checkbox' class="showhide" id="unexported-typenames-showhide"><i><label for="unexported-typenames-showhide" class="show-inline">/* 4 unexporteds ... */</label><label for="unexported-typenames-showhide" class="hide-inline">/* 4 unexporteds: */</label></i><div class="anchor type-res hidden" id="name-computeSource" data-popularity="100">	<input type='checkbox' class="fold" id="computeSource-fold-content"><label for="computeSource-fold-content"> <a href="../../../../use/golang.org/x/oauth2/google..computeSource*9e622.html">type</a> <a href="../../../../src/golang.org/x/oauth2/google/google.go.html#line-162">computeSource</a> <i>(struct)</i></label><span id='computeSource-fold-content-docs' class="fold-docs">
+
+		<input type='checkbox' class="fold" id="computeSource-fold-fields"><label for="computeSource-fold-fields">Fields (<i>total 2, neither is exported</i>)</label><span id='computeSource-fold-fields-items' class="fold-items">
+			<input type='checkbox' checked class="showhide" id="computeSource-showhide-fields"><i><label for="computeSource-showhide-fields" class="show-inline">/* 2 unexporteds ... */</label><label for="computeSource-showhide-fields" class="hide-inline">/* 2 unexporteds: */</label></i><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../../src/golang.org/x/oauth2/google/google.go.html#line-163">account</a> <i><a href="../../../builtin.html#name-string">string</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../../src/golang.org/x/oauth2/google/google.go.html#line-164">scopes</a> <i>[]<a href="../../../builtin.html#name-string">string</a></i></span></i></span></span>
+		<input type='checkbox' class="fold" id="computeSource-fold-methods"><label for="computeSource-fold-methods">Methods (<i>only one, which is exported</i>)</label><span id='computeSource-fold-methods-items' class="fold-items"><span>
+			<span class="nodocs">( T) <a href="../../../../src/golang.org/x/oauth2/google/google.go.html#line-167">Token</a>() (*<a href="../oauth2.html">oauth2</a>.<a href="../oauth2.html#name-Token">Token</a>, <a href="../../../builtin.html#name-error">error</a>)</span></span></span>
+		<input type='checkbox' class="fold" id="computeSource-fold-impls"><label for="computeSource-fold-impls">Implements (<i>at least one exported</i>)</label><span id='computeSource-fold-impls-items' class="fold-items"><span>
+			 T : golang.org/x/oauth2.<a href="../oauth2.html#name-TokenSource">TokenSource</a></span></span>
+
+</span></div><div class="anchor type-res hidden" id="name-credentialsFile" data-popularity="100">	<input type='checkbox' class="fold" id="credentialsFile-fold-content"><label for="credentialsFile-fold-content"> <a href="../../../../use/golang.org/x/oauth2/google..credentialsFile*49961.html">type</a> <a href="../../../../src/golang.org/x/oauth2/google/google.go.html#line-99">credentialsFile</a> <i>(struct)</i></label><span id='credentialsFile-fold-content-docs' class="fold-docs">
+		credentialsFile is the unmarshalled representation of a credentials file.
+
+		<input type='checkbox' class="fold" id="credentialsFile-fold-fields"><label for="credentialsFile-fold-fields">Fields (<i>total 9, all are exported</i>)</label><span id='credentialsFile-fold-fields-items' class="fold-items"><span>
+			<input type='checkbox' class="fold" id="credentialsFile-fold-field-ClientEmail"><label for="credentialsFile-fold-field-ClientEmail"><a href="../../../../src/golang.org/x/oauth2/google/google.go.html#line-103">ClientEmail</a> <i><a href="../../../builtin.html#name-string">string</a></i></label><span id='credentialsFile-fold-field-ClientEmail-docs' class="fold-docs">
+				Service Account fields
+</span></span><span>
+			<span class="nodocs"><a href="../../../../src/golang.org/x/oauth2/google/google.go.html#line-112">ClientID</a> <i><a href="../../../builtin.html#name-string">string</a></i></span></span><span>
+			<input type='checkbox' class="fold" id="credentialsFile-fold-field-ClientSecret"><label for="credentialsFile-fold-field-ClientSecret"><a href="../../../../src/golang.org/x/oauth2/google/google.go.html#line-111">ClientSecret</a> <i><a href="../../../builtin.html#name-string">string</a></i></label><span id='credentialsFile-fold-field-ClientSecret-docs' class="fold-docs">
+				User Credential fields
+				(These typically come from gcloud auth.)
+</span></span><span>
+			<span class="nodocs"><a href="../../../../src/golang.org/x/oauth2/google/google.go.html#line-105">PrivateKey</a> <i><a href="../../../builtin.html#name-string">string</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../src/golang.org/x/oauth2/google/google.go.html#line-104">PrivateKeyID</a> <i><a href="../../../builtin.html#name-string">string</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../src/golang.org/x/oauth2/google/google.go.html#line-107">ProjectID</a> <i><a href="../../../builtin.html#name-string">string</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../src/golang.org/x/oauth2/google/google.go.html#line-113">RefreshToken</a> <i><a href="../../../builtin.html#name-string">string</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../src/golang.org/x/oauth2/google/google.go.html#line-106">TokenURL</a> <i><a href="../../../builtin.html#name-string">string</a></i></span></span><span>
+			<input type='checkbox' class="fold" id="credentialsFile-fold-field-Type"><label for="credentialsFile-fold-field-Type"><a href="../../../../src/golang.org/x/oauth2/google/google.go.html#line-100">Type</a> <i><a href="../../../builtin.html#name-string">string</a></i></label><span id='credentialsFile-fold-field-Type-docs' class="fold-docs">
+				// serviceAccountKey or userCredentialsKey
+</span></span></span>
+		<input type='checkbox' class="fold" id="credentialsFile-fold-methods"><label for="credentialsFile-fold-methods">Methods (<i>total 2, neither is exported</i>)</label><span id='credentialsFile-fold-methods-items' class="fold-items">
+			<input type='checkbox' checked class="showhide" id="credentialsFile-showhide-methods"><i><label for="credentialsFile-showhide-methods" class="show-inline">/* 2 unexporteds ... */</label><label for="credentialsFile-showhide-methods" class="hide-inline">/* 2 unexporteds: */</label></i><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../../src/golang.org/x/oauth2/google/google.go.html#line-116">jwtConfig</a>(scopes []<a href="../../../builtin.html#name-string">string</a>) *<a href="jwt.html">jwt</a>.<a href="jwt.html#name-Config">Config</a></span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../../src/golang.org/x/oauth2/google/google.go.html#line-130">tokenSource</a>(ctx <a href="../../../context.html">context</a>.<a href="../../../context.html#name-Context">Context</a>, scopes []<a href="../../../builtin.html#name-string">string</a>) (<a href="../oauth2.html">oauth2</a>.<a href="../oauth2.html#name-TokenSource">TokenSource</a>, <a href="../../../builtin.html#name-error">error</a>)</span></i></span></span>
+
+</span></div><div class="anchor type-res hidden" id="name-jwtAccessTokenSource" data-popularity="100">	<input type='checkbox' class="fold" id="jwtAccessTokenSource-fold-content"><label for="jwtAccessTokenSource-fold-content"> <a href="../../../../use/golang.org/x/oauth2/google..jwtAccessTokenSource*fc787.html">type</a> <a href="../../../../src/golang.org/x/oauth2/google/jwt.go.html#line-48">jwtAccessTokenSource</a> <i>(struct)</i></label><span id='jwtAccessTokenSource-fold-content-docs' class="fold-docs">
+
+		<input type='checkbox' class="fold" id="jwtAccessTokenSource-fold-fields"><label for="jwtAccessTokenSource-fold-fields">Fields (<i>total 4, none are exported</i>)</label><span id='jwtAccessTokenSource-fold-fields-items' class="fold-items">
+			<input type='checkbox' checked class="showhide" id="jwtAccessTokenSource-showhide-fields"><i><label for="jwtAccessTokenSource-showhide-fields" class="show-inline">/* 4 unexporteds ... */</label><label for="jwtAccessTokenSource-showhide-fields" class="hide-inline">/* 4 unexporteds: */</label></i><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../../src/golang.org/x/oauth2/google/jwt.go.html#line-49">audience</a> <i><a href="../../../builtin.html#name-string">string</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../../src/golang.org/x/oauth2/google/jwt.go.html#line-49">email</a> <i><a href="../../../builtin.html#name-string">string</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../../src/golang.org/x/oauth2/google/jwt.go.html#line-50">pk</a> <i>*<a href="../../../crypto/rsa.html">rsa</a>.<a href="../../../crypto/rsa.html#name-PrivateKey">PrivateKey</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../../src/golang.org/x/oauth2/google/jwt.go.html#line-51">pkID</a> <i><a href="../../../builtin.html#name-string">string</a></i></span></i></span></span>
+		<input type='checkbox' class="fold" id="jwtAccessTokenSource-fold-methods"><label for="jwtAccessTokenSource-fold-methods">Methods (<i>only one, which is exported</i>)</label><span id='jwtAccessTokenSource-fold-methods-items' class="fold-items"><span>
+			<span class="nodocs">(*T) <a href="../../../../src/golang.org/x/oauth2/google/jwt.go.html#line-54">Token</a>() (*<a href="../oauth2.html">oauth2</a>.<a href="../oauth2.html#name-Token">Token</a>, <a href="../../../builtin.html#name-error">error</a>)</span></span></span>
+		<input type='checkbox' class="fold" id="jwtAccessTokenSource-fold-impls"><label for="jwtAccessTokenSource-fold-impls">Implements (<i>at least one exported</i>)</label><span id='jwtAccessTokenSource-fold-impls-items' class="fold-items"><span>
+			*T : golang.org/x/oauth2.<a href="../oauth2.html#name-TokenSource">TokenSource</a></span></span>
+
+</span></div><div class="anchor type-res hidden" id="name-sdkCredentials" data-popularity="0">	<input type='checkbox' class="fold" id="sdkCredentials-fold-content"><label for="sdkCredentials-fold-content"> <a href="../../../../use/golang.org/x/oauth2/google..sdkCredentials*ba7a4.html">type</a> <a href="../../../../src/golang.org/x/oauth2/google/sdk.go.html#line-25">sdkCredentials</a> <i>(struct)</i></label><span id='sdkCredentials-fold-content-docs' class="fold-docs">
+
+		<input type='checkbox' class="fold" id="sdkCredentials-fold-fields"><label for="sdkCredentials-fold-fields">Fields (<i>only one, which is exported</i>)</label><span id='sdkCredentials-fold-fields-items' class="fold-items"><span>
+			<span class="nodocs"><a href="../../../../src/golang.org/x/oauth2/google/sdk.go.html#line-26">Data</a> <i>[]struct{Credential struct{ClientID <a href="../../../builtin.html#name-string">string</a>; ClientSecret <a href="../../../builtin.html#name-string">string</a>; AccessToken <a href="../../../builtin.html#name-string">string</a>; RefreshToken <a href="../../../builtin.html#name-string">string</a>; TokenExpiry *<a href="../../../time.html">time</a>.<a href="../../../time.html#name-Time">Time</a>}; Key struct{Account <a href="../../../builtin.html#name-string">string</a>; Scope <a href="../../../builtin.html#name-string">string</a>}}</i></span></span></span>
+
+</span></div></div>
+<div id="exported-functions"><span class="title">Package-Level Functions<span class="title-stat"><i> (total 15, in which 10 are exported)</i></span></span>
+
+<div class="anchor value-res" id="name-AppEngineTokenSource">	<input type='checkbox' class="fold" id="AppEngineTokenSource-fold-content"><label for="AppEngineTokenSource-fold-content"> <a href="../../../../use/golang.org/x/oauth2/google..AppEngineTokenSource.html">func</a> <a href="../../../../src/golang.org/x/oauth2/google/appengine.go.html#line-36">AppEngineTokenSource</a>(ctx <a href="../../../context.html">context</a>.<a href="../../../context.html#name-Context">Context</a>, scope ...<a href="../../../builtin.html#name-string">string</a>) <a href="../oauth2.html">oauth2</a>.<a href="../oauth2.html#name-TokenSource">TokenSource</a></label><span id='AppEngineTokenSource-fold-content-docs' class="fold-docs">
+		AppEngineTokenSource returns a token source that fetches tokens from either
+		the current application's service account or from the metadata server,
+		depending on the App Engine environment. See below for environment-specific
+		details. If you are implementing a 3-legged OAuth 2.0 flow on App Engine that
+		involves user accounts, see oauth2.Config instead.
+
+		First generation App Engine runtimes (&lt;= Go 1.9):
+		AppEngineTokenSource returns a token source that fetches tokens issued to the
+		current App Engine application's service account. The provided context must have
+		come from appengine.NewContext.
+
+		Second generation App Engine runtimes (&gt;= Go 1.11) and App Engine flexible:
+		AppEngineTokenSource is DEPRECATED on second generation runtimes and on the
+		flexible environment. It delegates to ComputeTokenSource, and the provided
+		context and scopes are not used. Please use DefaultTokenSource (or ComputeTokenSource,
+		which DefaultTokenSource will use in this case) instead.
+
+</span></div><div class="anchor value-res" id="name-ComputeTokenSource">	<input type='checkbox' class="fold" id="ComputeTokenSource-fold-content"><label for="ComputeTokenSource-fold-content"> <a href="../../../../use/golang.org/x/oauth2/google..ComputeTokenSource.html">func</a> <a href="../../../../src/golang.org/x/oauth2/google/google.go.html#line-158">ComputeTokenSource</a>(account <a href="../../../builtin.html#name-string">string</a>, scope ...<a href="../../../builtin.html#name-string">string</a>) <a href="../oauth2.html">oauth2</a>.<a href="../oauth2.html#name-TokenSource">TokenSource</a></label><span id='ComputeTokenSource-fold-content-docs' class="fold-docs">
+		ComputeTokenSource returns a token source that fetches access tokens
+		from Google Compute Engine (GCE)'s metadata server. It's only valid to use
+		this token source if your program is running on a GCE instance.
+		If no account is specified, "default" is used.
+		If no scopes are specified, a set of default scopes are automatically granted.
+		Further information about retrieving access tokens from the GCE metadata
+		server can be found at https://cloud.google.com/compute/docs/authentication.
+
+</span></div><div class="anchor value-res" id="name-ConfigFromJSON">	<input type='checkbox' class="fold" id="ConfigFromJSON-fold-content"><label for="ConfigFromJSON-fold-content"> <a href="../../../../use/golang.org/x/oauth2/google..ConfigFromJSON.html">func</a> <a href="../../../../src/golang.org/x/oauth2/google/google.go.html#line-37">ConfigFromJSON</a>(jsonKey []<a href="../../../builtin.html#name-byte">byte</a>, scope ...<a href="../../../builtin.html#name-string">string</a>) (*<a href="../oauth2.html">oauth2</a>.<a href="../oauth2.html#name-Config">Config</a>, <a href="../../../builtin.html#name-error">error</a>)</label><span id='ConfigFromJSON-fold-content-docs' class="fold-docs">
+		ConfigFromJSON uses a Google Developers Console client_credentials.json
+		file to construct a config.
+		client_credentials.json can be downloaded from
+		https://console.developers.google.com, under "Credentials". Download the Web
+		application credentials in the JSON format and provide the contents of the
+		file as jsonKey.
+
+</span></div><div class="anchor value-res" id="name-CredentialsFromJSON">	<input type='checkbox' class="fold" id="CredentialsFromJSON-fold-content"><label for="CredentialsFromJSON-fold-content"> <a href="../../../../use/golang.org/x/oauth2/google..CredentialsFromJSON.html">func</a> <a href="../../../../src/golang.org/x/oauth2/google/default.go.html#line-124">CredentialsFromJSON</a>(ctx <a href="../../../context.html">context</a>.<a href="../../../context.html#name-Context">Context</a>, jsonData []<a href="../../../builtin.html#name-byte">byte</a>, scopes ...<a href="../../../builtin.html#name-string">string</a>) (*<a href="#name-Credentials">Credentials</a>, <a href="../../../builtin.html#name-error">error</a>)</label><span id='CredentialsFromJSON-fold-content-docs' class="fold-docs">
+		CredentialsFromJSON obtains Google credentials from a JSON value. The JSON can
+		represent either a Google Developers Console client_credentials.json file (as in
+		ConfigFromJSON) or a Google Developers service account key file (as in
+		JWTConfigFromJSON).
+
+</span></div><div class="anchor value-res" id="name-DefaultClient">	<input type='checkbox' class="fold" id="DefaultClient-fold-content"><label for="DefaultClient-fold-content"> <a href="../../../../use/golang.org/x/oauth2/google..DefaultClient.html">func</a> <a href="../../../../src/golang.org/x/oauth2/google/default.go.html#line-42">DefaultClient</a>(ctx <a href="../../../context.html">context</a>.<a href="../../../context.html#name-Context">Context</a>, scope ...<a href="../../../builtin.html#name-string">string</a>) (*<a href="../../../net/http.html">http</a>.<a href="../../../net/http.html#name-Client">Client</a>, <a href="../../../builtin.html#name-error">error</a>)</label><span id='DefaultClient-fold-content-docs' class="fold-docs">
+		DefaultClient returns an HTTP Client that uses the
+		DefaultTokenSource to obtain authentication credentials.
+
+</span></div><div class="anchor value-res" id="name-DefaultTokenSource">	<input type='checkbox' class="fold" id="DefaultTokenSource-fold-content"><label for="DefaultTokenSource-fold-content"> <a href="../../../../use/golang.org/x/oauth2/google..DefaultTokenSource.html">func</a> <a href="../../../../src/golang.org/x/oauth2/google/default.go.html#line-53">DefaultTokenSource</a>(ctx <a href="../../../context.html">context</a>.<a href="../../../context.html#name-Context">Context</a>, scope ...<a href="../../../builtin.html#name-string">string</a>) (<a href="../oauth2.html">oauth2</a>.<a href="../oauth2.html#name-TokenSource">TokenSource</a>, <a href="../../../builtin.html#name-error">error</a>)</label><span id='DefaultTokenSource-fold-content-docs' class="fold-docs">
+		DefaultTokenSource returns the token source for
+		"Application Default Credentials".
+		It is a shortcut for FindDefaultCredentials(ctx, scope).TokenSource.
+
+</span></div><div class="anchor value-res" id="name-FindDefaultCredentials">	<input type='checkbox' class="fold" id="FindDefaultCredentials-fold-content"><label for="FindDefaultCredentials-fold-content"> <a href="../../../../use/golang.org/x/oauth2/google..FindDefaultCredentials.html">func</a> <a href="../../../../src/golang.org/x/oauth2/google/default.go.html#line-76">FindDefaultCredentials</a>(ctx <a href="../../../context.html">context</a>.<a href="../../../context.html#name-Context">Context</a>, scopes ...<a href="../../../builtin.html#name-string">string</a>) (*<a href="#name-Credentials">Credentials</a>, <a href="../../../builtin.html#name-error">error</a>)</label><span id='FindDefaultCredentials-fold-content-docs' class="fold-docs">
+		FindDefaultCredentials searches for "Application Default Credentials".
+
+		It looks for credentials in the following places,
+		preferring the first location found:
+
+		  1. A JSON file whose path is specified by the
+		     GOOGLE_APPLICATION_CREDENTIALS environment variable.
+		  2. A JSON file in a location known to the gcloud command-line tool.
+		     On Windows, this is %APPDATA%/gcloud/application_default_credentials.json.
+		     On other systems, $HOME/.config/gcloud/application_default_credentials.json.
+		  3. On Google App Engine standard first generation runtimes (&lt;= Go 1.9) it uses
+		     the appengine.AccessToken function.
+		  4. On Google Compute Engine, Google App Engine standard second generation runtimes
+		     (&gt;= Go 1.11), and Google App Engine flexible environment, it fetches
+		     credentials from the metadata server.
+
+</span></div><div class="anchor value-res" id="name-JWTAccessTokenSourceFromJSON">	<input type='checkbox' class="fold" id="JWTAccessTokenSourceFromJSON-fold-content"><label for="JWTAccessTokenSourceFromJSON-fold-content"> <a href="../../../../use/golang.org/x/oauth2/google..JWTAccessTokenSourceFromJSON.html">func</a> <a href="../../../../src/golang.org/x/oauth2/google/jwt.go.html#line-26">JWTAccessTokenSourceFromJSON</a>(jsonKey []<a href="../../../builtin.html#name-byte">byte</a>, audience <a href="../../../builtin.html#name-string">string</a>) (<a href="../oauth2.html">oauth2</a>.<a href="../oauth2.html#name-TokenSource">TokenSource</a>, <a href="../../../builtin.html#name-error">error</a>)</label><span id='JWTAccessTokenSourceFromJSON-fold-content-docs' class="fold-docs">
+		JWTAccessTokenSourceFromJSON uses a Google Developers service account JSON
+		key file to read the credentials that authorize and authenticate the
+		requests, and returns a TokenSource that does not use any OAuth2 flow but
+		instead creates a JWT and sends that as the access token.
+		The audience is typically a URL that specifies the scope of the credentials.
+
+		Note that this is not a standard OAuth flow, but rather an
+		optimization supported by a few Google services.
+		Unless you know otherwise, you should use JWTConfigFromJSON instead.
+
+</span></div><div class="anchor value-res" id="name-JWTConfigFromJSON">	<input type='checkbox' class="fold" id="JWTConfigFromJSON-fold-content"><label for="JWTConfigFromJSON-fold-content"> <a href="../../../../use/golang.org/x/oauth2/google..JWTConfigFromJSON.html">func</a> <a href="../../../../src/golang.org/x/oauth2/google/google.go.html#line-80">JWTConfigFromJSON</a>(jsonKey []<a href="../../../builtin.html#name-byte">byte</a>, scope ...<a href="../../../builtin.html#name-string">string</a>) (*<a href="jwt.html">jwt</a>.<a href="jwt.html#name-Config">Config</a>, <a href="../../../builtin.html#name-error">error</a>)</label><span id='JWTConfigFromJSON-fold-content-docs' class="fold-docs">
+		JWTConfigFromJSON uses a Google Developers service account JSON key file to read
+		the credentials that authorize and authenticate the requests.
+		Create a service account on "Credentials" for your project at
+		https://console.developers.google.com to download a JSON key file.
+
+</span></div><div class="anchor value-res" id="name-NewSDKConfig">	<input type='checkbox' class="fold" id="NewSDKConfig-fold-content"><label for="NewSDKConfig-fold-content"> <a href="../../../../use/golang.org/x/oauth2/google..NewSDKConfig.html">func</a> <a href="../../../../src/golang.org/x/oauth2/google/sdk.go.html#line-54">NewSDKConfig</a>(account <a href="../../../builtin.html#name-string">string</a>) (*<a href="#name-SDKConfig">SDKConfig</a>, <a href="../../../builtin.html#name-error">error</a>)</label><span id='NewSDKConfig-fold-content-docs' class="fold-docs">
+		NewSDKConfig creates an SDKConfig for the given Google Cloud SDK
+		account. If account is empty, the account currently active in
+		Google Cloud SDK properties is used.
+		Google Cloud SDK credentials must be created by running `gcloud auth`
+		before using this function.
+		The Google Cloud SDK is available at https://cloud.google.com/sdk/.
+
+</span></div>	<input type='checkbox' class="showhide" id="unexported-functions-showhide"><i><label for="unexported-functions-showhide" class="show-inline">/* 5 unexporteds ... */</label><label for="unexported-functions-showhide" class="hide-inline">/* 5 unexporteds: */</label></i><div class="anchor value-res hidden" id="name-appEngineTokenSource"><i>	<input type='checkbox' class="fold" id="appEngineTokenSource-fold-content"><label for="appEngineTokenSource-fold-content"> <a href="../../../../use/golang.org/x/oauth2/google..appEngineTokenSource*09e1e.html">func</a> <a href="../../../../src/golang.org/x/oauth2/google/appengine_gen2_flex.go.html#line-22">appEngineTokenSource</a>(ctx <a href="../../../context.html">context</a>.<a href="../../../context.html#name-Context">Context</a>, scope ...<a href="../../../builtin.html#name-string">string</a>) <a href="../oauth2.html">oauth2</a>.<a href="../oauth2.html#name-TokenSource">TokenSource</a></label><span id='appEngineTokenSource-fold-content-docs' class="fold-docs">
+		See comment on AppEngineTokenSource in appengine.go.
+
+</span></i></div><div class="anchor value-res hidden" id="name-guessUnixHomeDir"><i>	<span class="nodocs"> <a href="../../../../use/golang.org/x/oauth2/google..guessUnixHomeDir*fadf7.html">func</a> <a href="../../../../src/golang.org/x/oauth2/google/sdk.go.html#line-191">guessUnixHomeDir</a>() <a href="../../../builtin.html#name-string">string</a></span></i></div><div class="anchor value-res hidden" id="name-parseINI"><i>	<span class="nodocs"> <a href="../../../../use/golang.org/x/oauth2/google..parseINI*28429.html">func</a> <a href="../../../../src/golang.org/x/oauth2/google/sdk.go.html#line-150">parseINI</a>(ini <a href="../../../io.html">io</a>.<a href="../../../io.html#name-Reader">Reader</a>) (map[<a href="../../../builtin.html#name-string">string</a>]map[<a href="../../../builtin.html#name-string">string</a>]<a href="../../../builtin.html#name-string">string</a>, <a href="../../../builtin.html#name-error">error</a>)</span></i></div><div class="anchor value-res hidden" id="name-readCredentialsFile"><i>	<span class="nodocs"> <a href="../../../../use/golang.org/x/oauth2/google..readCredentialsFile*9cf82.html">func</a> <a href="../../../../src/golang.org/x/oauth2/google/default.go.html#line-148">readCredentialsFile</a>(ctx <a href="../../../context.html">context</a>.<a href="../../../context.html#name-Context">Context</a>, filename <a href="../../../builtin.html#name-string">string</a>, scopes []<a href="../../../builtin.html#name-string">string</a>) (*<a href="#name-DefaultCredentials">DefaultCredentials</a>, <a href="../../../builtin.html#name-error">error</a>)</span></i></div><div class="anchor value-res hidden" id="name-wellKnownFile"><i>	<span class="nodocs"> <a href="../../../../use/golang.org/x/oauth2/google..wellKnownFile*dd957.html">func</a> <a href="../../../../src/golang.org/x/oauth2/google/default.go.html#line-140">wellKnownFile</a>() <a href="../../../builtin.html#name-string">string</a></span></i></div></div>
+<div id="exported-variables"><span class="title">Package-Level Variables<span class="title-stat"><i> (total 5, in which 1 are exported)</i></span></span>
+
+<div class="anchor value-res" id="name-Endpoint">	<input type='checkbox' class="fold" id="Endpoint-fold-content"><label for="Endpoint-fold-content">  <a href="../../../../use/golang.org/x/oauth2/google..Endpoint.html">var</a> <a href="../../../../src/golang.org/x/oauth2/google/google.go.html#line-22">Endpoint</a> <a href="../oauth2.html">oauth2</a>.<a href="../oauth2.html#name-Endpoint">Endpoint</a></label><span id='Endpoint-fold-content-docs' class="fold-docs">
+		Endpoint is Google's OAuth 2.0 endpoint.
+
+</span></div>	<input type='checkbox' class="showhide" id="unexported-variables-showhide"><i><label for="unexported-variables-showhide" class="show-inline">/* 4 unexporteds ... */</label><label for="unexported-variables-showhide" class="hide-inline">/* 4 unexporteds: */</label></i><div class="anchor value-res hidden" id="name-appengineAppIDFunc"><i>	<input type='checkbox' class="fold" id="appengineAppIDFunc-fold-content"><label for="appengineAppIDFunc-fold-content">  <a href="../../../../use/golang.org/x/oauth2/google..appengineAppIDFunc*2021f.html">var</a> <a href="../../../../src/golang.org/x/oauth2/google/appengine.go.html#line-18">appengineAppIDFunc</a> (c <a href="../../../context.html">context</a>.<a href="../../../context.html#name-Context">Context</a>) <a href="../../../builtin.html#name-string">string</a></label><span id='appengineAppIDFunc-fold-content-docs' class="fold-docs">
+		Set at init time by appengine_gen1.go. If nil, we're not on App Engine standard first generation (&lt;= Go 1.9) or App Engine flexible.
+
+</span></i></div><div class="anchor value-res hidden" id="name-appengineTokenFunc"><i>	<input type='checkbox' class="fold" id="appengineTokenFunc-fold-content"><label for="appengineTokenFunc-fold-content">  <a href="../../../../use/golang.org/x/oauth2/google..appengineTokenFunc*3b295.html">var</a> <a href="../../../../src/golang.org/x/oauth2/google/appengine.go.html#line-15">appengineTokenFunc</a> (c <a href="../../../context.html">context</a>.<a href="../../../context.html#name-Context">Context</a>, scopes ...<a href="../../../builtin.html#name-string">string</a>) (token <a href="../../../builtin.html#name-string">string</a>, expiry <a href="../../../time.html">time</a>.<a href="../../../time.html#name-Time">Time</a>, err <a href="../../../builtin.html#name-error">error</a>)</label><span id='appengineTokenFunc-fold-content-docs' class="fold-docs">
+		Set at init time by appengine_gen1.go. If nil, we're not on App Engine standard first generation (&lt;= Go 1.9) or App Engine flexible.
+
+</span></i></div><div class="anchor value-res hidden" id="name-logOnce"><i>	<span class="nodocs">  <a href="../../../../use/golang.org/x/oauth2/google..logOnce*23a1d.html">var</a> <a href="../../../../src/golang.org/x/oauth2/google/appengine_gen2_flex.go.html#line-19">logOnce</a> <a href="../../../sync.html">sync</a>.<a href="../../../sync.html#name-Once">Once</a> // only spam about deprecation once</span></i></div><div class="anchor value-res hidden" id="name-sdkConfigPath"><i>	<input type='checkbox' class="fold" id="sdkConfigPath-fold-content"><label for="sdkConfigPath-fold-content">  <a href="../../../../use/golang.org/x/oauth2/google..sdkConfigPath*ba5ce.html">var</a> <a href="../../../../src/golang.org/x/oauth2/google/sdk.go.html#line-180">sdkConfigPath</a> func() (<a href="../../../builtin.html#name-string">string</a>, <a href="../../../builtin.html#name-error">error</a>)</label><span id='sdkConfigPath-fold-content-docs' class="fold-docs">
+		sdkConfigPath tries to guess where the gcloud config is located.
+		It can be overridden during tests.
+
+</span></i></div></div>
+<div id="exported-constants"><span class="title">Package-Level Constants<span class="title-stat"><i> (total 3, in which 1 are exported)</i></span></span>
+
+<div class="anchor value-res" id="name-JWTTokenURL">	<input type='checkbox' class="fold" id="JWTTokenURL-fold-content"><label for="JWTTokenURL-fold-content"><a href="../../../../use/golang.org/x/oauth2/google..JWTTokenURL.html">const</a> <a href="../../../../src/golang.org/x/oauth2/google/google.go.html#line-29">JWTTokenURL</a> = "https://oauth2.googleapis.com/token"</label><span id='JWTTokenURL-fold-content-docs' class="fold-docs">
+		JWTTokenURL is Google's OAuth 2.0 token URL to use with the JWT flow.
+
+</span></div>	<input type='checkbox' class="showhide" id="unexported-constants-showhide"><i><label for="unexported-constants-showhide" class="show-inline">/* 2 unexporteds ... */</label><label for="unexported-constants-showhide" class="hide-inline">/* 2 unexporteds: */</label></i><div class="anchor value-res hidden" id="name-serviceAccountKey"><i>	<input type='checkbox' class="fold" id="serviceAccountKey-fold-content"><label for="serviceAccountKey-fold-content"><a href="../../../../use/golang.org/x/oauth2/google..serviceAccountKey*a67a8.html">const</a> <a href="../../../../src/golang.org/x/oauth2/google/google.go.html#line-94">serviceAccountKey</a> = "service_account"</label><span id='serviceAccountKey-fold-content-docs' class="fold-docs">
+		JSON key file types.
+
+</span></i></div><div class="anchor value-res hidden" id="name-userCredentialsKey"><i>	<input type='checkbox' class="fold" id="userCredentialsKey-fold-content"><label for="userCredentialsKey-fold-content"><a href="../../../../use/golang.org/x/oauth2/google..userCredentialsKey*2d892.html">const</a> <a href="../../../../src/golang.org/x/oauth2/google/google.go.html#line-95">userCredentialsKey</a> = "authorized_user"</label><span id='userCredentialsKey-fold-content-docs' class="fold-docs">
+		JSON key file types.
+
+</span></i></div></div></code></pre><pre id="footer">
+<table><tr><td><img src="../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

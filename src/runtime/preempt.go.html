@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: preempt.go in package runtime</title>
+<link href="../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	preempt.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../pkg/runtime.html">runtime</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16],
+input[id=r17]:checked ~pre label[for=r17],
+input[id=r18]:checked ~pre label[for=r18],
+input[id=r19]:checked ~pre label[for=r19],
+input[id=r20]:checked ~pre label[for=r20],
+input[id=r21]:checked ~pre label[for=r21],
+input[id=r22]:checked ~pre label[for=r22],
+input[id=r23]:checked ~pre label[for=r23],
+input[id=r24]:checked ~pre label[for=r24],
+input[id=r25]:checked ~pre label[for=r25],
+input[id=r26]:checked ~pre label[for=r26],
+input[id=r27]:checked ~pre label[for=r27],
+input[id=r28]:checked ~pre label[for=r28],
+input[id=r29]:checked ~pre label[for=r29],
+input[id=r30]:checked ~pre label[for=r30],
+input[id=r31]:checked ~pre label[for=r31],
+input[id=r32]:checked ~pre label[for=r32],
+input[id=r33]:checked ~pre label[for=r33],
+input[id=r34]:checked ~pre label[for=r34],
+input[id=r35]:checked ~pre label[for=r35],
+input[id=r36]:checked ~pre label[for=r36],
+input[id=r37]:checked ~pre label[for=r37],
+input[id=r38]:checked ~pre label[for=r38],
+input[id=r39]:checked ~pre label[for=r39],
+input[id=r40]:checked ~pre label[for=r40],
+input[id=r41]:checked ~pre label[for=r41],
+input[id=r42]:checked ~pre label[for=r42]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1,
+input[id=i2]:checked ~pre .i2
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="r17" type="radio" name="g"/>
+<input id="r18" type="radio" name="g"/>
+<input id="r19" type="radio" name="g"/>
+<input id="r20" type="radio" name="g"/>
+<input id="r21" type="radio" name="g"/>
+<input id="r22" type="radio" name="g"/>
+<input id="r23" type="radio" name="g"/>
+<input id="r24" type="radio" name="g"/>
+<input id="r25" type="radio" name="g"/>
+<input id="r26" type="radio" name="g"/>
+<input id="r27" type="radio" name="g"/>
+<input id="r28" type="radio" name="g"/>
+<input id="r29" type="radio" name="g"/>
+<input id="r30" type="radio" name="g"/>
+<input id="r31" type="radio" name="g"/>
+<input id="r32" type="radio" name="g"/>
+<input id="r33" type="radio" name="g"/>
+<input id="r34" type="radio" name="g"/>
+<input id="r35" type="radio" name="g"/>
+<input id="r36" type="radio" name="g"/>
+<input id="r37" type="radio" name="g"/>
+<input id="r38" type="radio" name="g"/>
+<input id="r39" type="radio" name="g"/>
+<input id="r40" type="radio" name="g"/>
+<input id="r41" type="radio" name="g"/>
+<input id="r42" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<input id="i2" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2019 The Go Authors. All rights reserved.</span><span class="comment"> Use of this source code is governed by a BSD-style</span><span class="comment"> license that can be found in the LICENSE file.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Goroutine preemption</span><span class="comment"></span><span class="comment"> A goroutine can be preempted at any safe-point. Currently, there</span><span class="comment"> are a few categories of safe-points:</span><span class="comment"></span><span class="comment"> 1. A blocked safe-point occurs for the duration that a goroutine is</span><span class="comment">    descheduled, blocked on synchronization, or in a system call.</span><span class="comment"></span><span class="comment"> 2. Synchronous safe-points occur when a running goroutine checks</span><span class="comment">    for a preemption request.</span><span class="comment"></span><span class="comment"> 3. Asynchronous safe-points occur at any instruction in user code</span><span class="comment">    where the goroutine can be safely paused and a conservative</span><span class="comment">    stack and register scan can find stack roots. The runtime can</span><span class="comment">    stop a goroutine at an async safe-point using a signal.</span><span class="comment"></span><span class="comment"> At both blocked and synchronous safe-points, a goroutine's CPU</span><span class="comment"> state is minimal and the garbage collector has complete information</span><span class="comment"> about its entire stack. This makes it possible to deschedule a</span><span class="comment"> goroutine with minimal space, and to precisely scan a goroutine's</span><span class="comment"> stack.</span><span class="comment"></span><span class="comment"> Synchronous safe-points are implemented by overloading the stack</span><span class="comment"> bound check in function prologues. To preempt a goroutine at the</span><span class="comment"> next synchronous safe-point, the runtime poisons the goroutine's</span><span class="comment"> stack bound to a value that will cause the next stack bound check</span><span class="comment"> to fail and enter the stack growth implementation, which will</span><span class="comment"> detect that it was actually a preemption and redirect to preemption</span><span class="comment"> handling.</span><span class="comment"></span><span class="comment"> Preemption at asynchronous safe-points is implemented by suspending</span><span class="comment"> the thread using an OS mechanism (e.g., signals) and inspecting its</span><span class="comment"> state to determine if the goroutine was at an asynchronous</span><span class="comment"> safe-point. Since the thread suspension itself is generally</span><span class="comment"> asynchronous, it also checks if the running goroutine wants to be</span><span class="comment"> preempted, since this could have changed. If all conditions are</span><span class="comment"> satisfied, it adjusts the signal context to make it look like the</span><span class="comment"> signaled thread just called asyncPreempt and resumes the thread.</span><span class="comment"> asyncPreempt spills all registers and enters the scheduler.</span><span class="comment"></span><span class="comment"> (An alternative would be to preempt in the signal handler itself.</span><span class="comment"> This would let the OS save and restore the register state and the</span><span class="comment"> runtime would only need to know how to extract potentially</span><span class="comment"> pointer-containing registers from the signal context. However, this</span><span class="comment"> would consume an M for every preempted G, and the scheduler itself</span><span class="comment"> is not designed to run from a signal handler, as it tends to</span><span class="comment"> allocate memory and start threads in the preemption path.)</span></div>
+<div class="code"><pre><code>
+<span class="keyword">package</span> runtime
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"runtime/internal/atomic"</span></label>
+	<label for="i1"><span class="lit-string i1">"runtime/internal/sys"</span></label>
+	<label for="i2"><span class="lit-string i2">"unsafe"</span></label>
+)
+
+<span class="keyword">type</span> <a href="../../pkg/runtime.html#name-suspendGState" class="ident">suspendGState</a> <span class="keyword">struct</span> {
+	<a href="../../use/runtime..suspendGState*7aed1.g*cd0aa.html" class="ident">g</a> *<a href="runtime2.go.html#line-404" class="ident">g</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> dead indicates the goroutine was not suspended because it</span><span class="comment">	 is dead. This goroutine could be reused after the dead</span><span class="comment">	 state was observed, so the caller must not assume that it</span><span class="comment">	 remains dead.</span></div>
+<div class="code"><pre><code>	<a href="../../use/runtime..suspendGState*7aed1.dead*28a3a.html" class="ident">dead</a> <a href="../../pkg/builtin.html#name-bool" class="ident">bool</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> stopped indicates that this suspendG transitioned the G to</span><span class="comment">	 _Gwaiting via g.preemptStop and thus is responsible for</span><span class="comment">	 readying it when done.</span></div>
+<div class="code"><pre><code>	<a href="../../use/runtime..suspendGState*7aed1.stopped*8322e.html" class="ident">stopped</a> <a href="../../pkg/builtin.html#name-bool" class="ident">bool</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> suspendG suspends goroutine gp at a safe-point and returns the</span><span class="comment"> state of the suspended goroutine. The caller gets read access to</span><span class="comment"> the goroutine until it calls resumeG.</span><span class="comment"></span><span class="comment"> It is safe for multiple callers to attempt to suspend the same</span><span class="comment"> goroutine at the same time. The goroutine may execute between</span><span class="comment"> subsequent successful suspend operations. The current</span><span class="comment"> implementation grants exclusive access to the goroutine, and hence</span><span class="comment"> multiple callers will serialize. However, the intent is to grant</span><span class="comment"> shared read access, so please don't depend on exclusive access.</span><span class="comment"></span><span class="comment"> This must be called from the system stack and the user goroutine on</span><span class="comment"> the current M (if any) must be in a preemptible state. This</span><span class="comment"> prevents deadlocks where two goroutines attempt to suspend each</span><span class="comment"> other and both are in non-preemptible states. There are other ways</span><span class="comment"> to resolve this deadlock, but this seems simplest.</span><span class="comment"></span><span class="comment"> TODO(austin): What if we instead required this to be called from a</span><span class="comment"> user goroutine? Then we could deschedule the goroutine while</span><span class="comment"> waiting instead of blocking the thread. If two goroutines tried to</span><span class="comment"> suspend each other, one of them would win and the other wouldn't</span><span class="comment"> complete the suspend until it was resumed. We would have to be</span><span class="comment"> careful that they couldn't actually queue up suspend for each other</span><span class="comment"> and then both be suspended. This would also avoid the need for a</span><span class="comment"> kernel context switch in the synchronous case because we could just</span><span class="comment"> directly schedule the waiter. The context switch is unavoidable in</span><span class="comment"> the signal case.</span><span class="comment"></span><span class="comment">go:systemstack</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r0" class="ident"><a href="../../pkg/runtime.html#name-suspendG" class="ident">suspendG</a></label>(<label for="r1" class="ident">gp</label> *<a href="runtime2.go.html#line-404" class="ident">g</a>) <a href="#line-61" class="ident">suspendGState</a> {
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Since we're on the system stack of this M, the user</span><span class="comment">		 G is stuck at an unsafe point. If another goroutine</span><span class="comment">		 were to try to preempt m.curg, it could deadlock.</span></div>
+<div class="code"><pre><code>		<a href="panic.go.html#line-1107" class="ident">throw</a>(<span class="lit-string">"suspendG from non-preemptible goroutine"</span>)
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> See https://golang.org/cl/21503 for justification of the yield delay.</span></div>
+<div class="code"><pre><code>	<span class="keyword">const</span> <label for="r3" class="ident">yieldDelay</label> = <span class="lit-number">10</span> * <span class="lit-number">1000</span>
+	<span class="keyword">var</span> <label for="r4" class="ident">nextYield</label> <a href="../../pkg/builtin.html#name-int64" class="ident">int64</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Drive the goroutine to a preemption point.</span></div>
+<div class="code"><pre><code>	<label for="r5" class="ident">stopped</label> := <a href="../../pkg/builtin.html#name-false" class="ident">false</a>
+	<span class="keyword">var</span> <label for="r6" class="ident">asyncM</label> *<a href="runtime2.go.html#line-486" class="ident">m</a>
+	<span class="keyword">var</span> <label for="r7" class="ident">asyncGen</label> <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>
+	<span class="keyword">var</span> <label for="r8" class="ident">nextPreemptM</label> <a href="../../pkg/builtin.html#name-int64" class="ident">int64</a>
+	<span class="keyword">for</span> <label for="r9" class="ident">i</label> := <span class="lit-number">0</span>; ; <label for="r9" class="ident">i</label>++ {
+		<span class="keyword">switch</span> <label for="r10" class="ident">s</label> := <a href="proc.go.html#line-829" class="ident">readgstatus</a>(<label for="r1" class="ident">gp</label>); <label for="r10" class="ident">s</label> {
+		<span class="keyword">default</span>:
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Someone else is suspending it. Wait</span><span class="comment">				 for them to finish.</span><span class="comment">				</span><span class="comment">				 TODO: It would be nicer if we could</span><span class="comment">				 coalesce suspends.</span></div>
+<div class="code"><pre><code>				<span class="keyword">break</span>
+			}
+
+			<a href="proc.go.html#line-689" class="ident">dumpgstatus</a>(<label for="r1" class="ident">gp</label>)
+			<a href="panic.go.html#line-1107" class="ident">throw</a>(<span class="lit-string">"invalid g status"</span>)
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Nothing to suspend.</span><span class="comment">			</span><span class="comment">			 preemptStop may need to be cleared, but</span><span class="comment">			 doing that here could race with goroutine</span><span class="comment">			 reuse. Instead, goexit0 clears it.</span></div>
+<div class="code"><pre><code>			<span class="keyword">return</span> <a href="#line-61" class="ident">suspendGState</a>{<a href="#line-68" class="ident">dead</a>: <a href="../../pkg/builtin.html#name-true" class="ident">true</a>}
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> The stack is being copied. We need to wait</span><span class="comment">			 until this is done.</span></div>
+<div class="code"><pre><code>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> We (or someone else) suspended the G. Claim</span><span class="comment">			 ownership of it by transitioning it to</span><span class="comment">			 _Gwaiting.</span></div>
+<div class="code"><pre><code>			<span class="keyword">if</span> !<a href="proc.go.html#line-959" class="ident">casGFromPreempted</a>(<label for="r1" class="ident">gp</label>, <a href="runtime2.go.html#line-86" class="ident">_Gpreempted</a>, <a href="runtime2.go.html#line-59" class="ident">_Gwaiting</a>) {
+				<span class="keyword">break</span>
+			}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> We stopped the G, so we have to ready it later.</span></div>
+<div class="code"><pre><code>			<label for="r5" class="ident">stopped</label> = <a href="../../pkg/builtin.html#name-true" class="ident">true</a>
+
+			<label for="r10" class="ident">s</label> = <a href="runtime2.go.html#line-59" class="ident">_Gwaiting</a>
+			<span class="keyword">fallthrough</span>
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Claim goroutine by setting scan bit.</span><span class="comment">			 This may race with execution or readying of gp.</span><span class="comment">			 The scan bit keeps it from transition state.</span></div>
+<div class="code"><pre><code>			<span class="keyword">if</span> !<a href="proc.go.html#line-865" class="ident">castogscanstatus</a>(<label for="r1" class="ident">gp</label>, <label for="r10" class="ident">s</label>, <label for="r10" class="ident">s</label>|<a href="runtime2.go.html#line-99" class="ident">_Gscan</a>) {
+				<span class="keyword">break</span>
+			}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Clear the preemption request. It's safe to</span><span class="comment">			 reset the stack guard because we hold the</span><span class="comment">			 _Gscan bit and thus own the stack.</span></div>
+<div class="code"><pre><code>			<label for="r1" class="ident">gp</label>.<a href="runtime2.go.html#line-432" class="ident">preemptStop</a> = <a href="../../pkg/builtin.html#name-false" class="ident">false</a>
+			<label for="r1" class="ident">gp</label>.<a href="runtime2.go.html#line-431" class="ident">preempt</a> = <a href="../../pkg/builtin.html#name-false" class="ident">false</a>
+			<label for="r1" class="ident">gp</label>.<a href="runtime2.go.html#line-413" class="ident">stackguard0</a> = <label for="r1" class="ident">gp</label>.<a href="runtime2.go.html#line-412" class="ident">stack</a>.<a href="runtime2.go.html#line-394" class="ident">lo</a> + <a href="stack.go.html#line-94" class="ident">_StackGuard</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> The goroutine was already at a safe-point</span><span class="comment">			 and we've now locked that in.</span><span class="comment">			</span><span class="comment">			 TODO: It would be much better if we didn't</span><span class="comment">			 leave it in _Gscan, but instead gently</span><span class="comment">			 prevented its scheduling until resumption.</span><span class="comment">			 Maybe we only use this to bump a suspended</span><span class="comment">			 count and the scheduler skips suspended</span><span class="comment">			 goroutines? That wouldn't be enough for</span><span class="comment">			 {_Gsyscall,_Gwaiting} -&gt; _Grunning. Maybe</span><span class="comment">			 for all those transitions we need to check</span><span class="comment">			 suspended and deschedule?</span></div>
+<div class="code"><pre><code>			<span class="keyword">return</span> <a href="#line-61" class="ident">suspendGState</a>{<a href="#line-62" class="ident">g</a>: <label for="r1" class="ident">gp</label>, <a href="#line-73" class="ident">stopped</a>: <label for="r5" class="ident">stopped</label>}
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Optimization: if there is already a pending preemption request</span><span class="comment">			 (from the previous loop iteration), don't bother with the atomics.</span></div>
+<div class="code"><pre><code>			<span class="keyword">if</span> <label for="r1" class="ident">gp</label>.<a href="runtime2.go.html#line-432" class="ident">preemptStop</a> &amp;&amp; <label for="r1" class="ident">gp</label>.<a href="runtime2.go.html#line-431" class="ident">preempt</a> &amp;&amp; <label for="r1" class="ident">gp</label>.<a href="runtime2.go.html#line-413" class="ident">stackguard0</a> == <a href="stack.go.html#line-129" class="ident">stackPreempt</a> &amp;&amp; <label for="r6" class="ident">asyncM</label> == <label for="r1" class="ident">gp</label>.<a href="runtime2.go.html#line-418" class="ident">m</a> &amp;&amp; <a href="../../pkg/runtime/internal/atomic.html" class="ident i0">atomic</a>.<a href="internal/atomic/atomic_amd64.go.html#line-16" class="ident">Load</a>(&amp;<label for="r6" class="ident">asyncM</label>.<a href="runtime2.go.html#line-561" class="ident">preemptGen</a>) == <label for="r7" class="ident">asyncGen</label> {
+				<span class="keyword">break</span>
+			}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Temporarily block state transitions.</span></div>
+<div class="code"><pre><code>			<span class="keyword">if</span> !<a href="proc.go.html#line-865" class="ident">castogscanstatus</a>(<label for="r1" class="ident">gp</label>, <a href="runtime2.go.html#line-44" class="ident">_Grunning</a>, <a href="runtime2.go.html#line-101" class="ident">_Gscanrunning</a>) {
+				<span class="keyword">break</span>
+			}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Request synchronous preemption.</span></div>
+<div class="code"><pre><code>			<label for="r1" class="ident">gp</label>.<a href="runtime2.go.html#line-432" class="ident">preemptStop</a> = <a href="../../pkg/builtin.html#name-true" class="ident">true</a>
+			<label for="r1" class="ident">gp</label>.<a href="runtime2.go.html#line-431" class="ident">preempt</a> = <a href="../../pkg/builtin.html#name-true" class="ident">true</a>
+			<label for="r1" class="ident">gp</label>.<a href="runtime2.go.html#line-413" class="ident">stackguard0</a> = <a href="stack.go.html#line-129" class="ident">stackPreempt</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Prepare for asynchronous preemption.</span></div>
+<div class="code"><pre><code>			<label for="r11" class="ident">asyncM2</label> := <label for="r1" class="ident">gp</label>.<a href="runtime2.go.html#line-418" class="ident">m</a>
+			<label for="r12" class="ident">asyncGen2</label> := <a href="../../pkg/runtime/internal/atomic.html" class="ident i0">atomic</a>.<a href="internal/atomic/atomic_amd64.go.html#line-16" class="ident">Load</a>(&amp;<label for="r11" class="ident">asyncM2</label>.<a href="runtime2.go.html#line-561" class="ident">preemptGen</a>)
+			<label for="r13" class="ident">needAsync</label> := <label for="r6" class="ident">asyncM</label> != <label for="r11" class="ident">asyncM2</label> || <label for="r7" class="ident">asyncGen</label> != <label for="r12" class="ident">asyncGen2</label>
+			<label for="r6" class="ident">asyncM</label> = <label for="r11" class="ident">asyncM2</label>
+			<label for="r7" class="ident">asyncGen</label> = <label for="r12" class="ident">asyncGen2</label>
+
+			<a href="proc.go.html#line-837" class="ident">casfrom_Gscanstatus</a>(<label for="r1" class="ident">gp</label>, <a href="runtime2.go.html#line-101" class="ident">_Gscanrunning</a>, <a href="runtime2.go.html#line-44" class="ident">_Grunning</a>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Send asynchronous preemption. We do this</span><span class="comment">			 after CASing the G back to _Grunning</span><span class="comment">			 because preemptM may be synchronous and we</span><span class="comment">			 don't want to catch the G just spinning on</span><span class="comment">			 its status.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Rate limit preemptM calls. This is</span><span class="comment">				 particularly important on Windows</span><span class="comment">				 where preemptM is actually</span><span class="comment">				 synchronous and the spin loop here</span><span class="comment">				 can lead to live-lock.</span></div>
+<div class="code"><pre><code>				<label for="r14" class="ident">now</label> := <a href="time_nofake.go.html#line-18" class="ident">nanotime</a>()
+				<span class="keyword">if</span> <label for="r14" class="ident">now</label> &gt;= <label for="r8" class="ident">nextPreemptM</label> {
+					<label for="r8" class="ident">nextPreemptM</label> = <label for="r14" class="ident">now</label> + <label for="r3" class="ident">yieldDelay</label>/<span class="lit-number">2</span>
+					<a href="signal_unix.go.html#line-352" class="ident">preemptM</a>(<label for="r6" class="ident">asyncM</label>)
+				}
+			}
+		}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> TODO: Don't busy wait. This loop should really only</span><span class="comment">		 be a simple read/decide/CAS loop that only fails if</span><span class="comment">		 there's an active race. Once the CAS succeeds, we</span><span class="comment">		 should queue up the preemption (which will require</span><span class="comment">		 it to be reliable in the _Grunning case, not</span><span class="comment">		 best-effort) and then sleep until we're notified</span><span class="comment">		 that the goroutine is suspended.</span></div>
+<div class="code"><pre><code>		<span class="keyword">if</span> <label for="r9" class="ident">i</label> == <span class="lit-number">0</span> {
+			<label for="r4" class="ident">nextYield</label> = <a href="time_nofake.go.html#line-18" class="ident">nanotime</a>() + <label for="r3" class="ident">yieldDelay</label>
+		}
+		<span class="keyword">if</span> <a href="time_nofake.go.html#line-18" class="ident">nanotime</a>() &lt; <label for="r4" class="ident">nextYield</label> {
+			<a href="stubs.go.html#line-192" class="ident">procyield</a>(<span class="lit-number">10</span>)
+		} <span class="keyword">else</span> {
+			<a href="os_darwin.go.html#line-334" class="ident">osyield</a>()
+			<label for="r4" class="ident">nextYield</label> = <a href="time_nofake.go.html#line-18" class="ident">nanotime</a>() + <label for="r3" class="ident">yieldDelay</label>/<span class="lit-number">2</span>
+		}
+	}
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> resumeG undoes the effects of suspendG, allowing the suspended</span><span class="comment"> goroutine to continue from its current safe-point.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r15" class="ident"><a href="../../pkg/runtime.html#name-resumeG" class="ident">resumeG</a></label>(<label for="r16" class="ident">state</label> <a href="#line-61" class="ident">suspendGState</a>) {
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> We didn't actually stop anything.</span></div>
+<div class="code"><pre><code>		<span class="keyword">return</span>
+	}
+
+	<label for="r17" class="ident">gp</label> := <label for="r16" class="ident">state</label>.<a href="#line-62" class="ident">g</a>
+	<span class="keyword">switch</span> <label for="r18" class="ident">s</label> := <a href="proc.go.html#line-829" class="ident">readgstatus</a>(<label for="r17" class="ident">gp</label>); <label for="r18" class="ident">s</label> {
+	<span class="keyword">default</span>:
+		<a href="proc.go.html#line-689" class="ident">dumpgstatus</a>(<label for="r17" class="ident">gp</label>)
+		<a href="panic.go.html#line-1107" class="ident">throw</a>(<span class="lit-string">"unexpected g status"</span>)
+
+	<span class="keyword">case</span> <a href="runtime2.go.html#line-39" class="ident">_Grunnable</a> | <a href="runtime2.go.html#line-99" class="ident">_Gscan</a>,
+		<a href="runtime2.go.html#line-59" class="ident">_Gwaiting</a> | <a href="runtime2.go.html#line-99" class="ident">_Gscan</a>,
+		<a href="runtime2.go.html#line-49" class="ident">_Gsyscall</a> | <a href="runtime2.go.html#line-99" class="ident">_Gscan</a>:
+		<a href="proc.go.html#line-837" class="ident">casfrom_Gscanstatus</a>(<label for="r17" class="ident">gp</label>, <label for="r18" class="ident">s</label>, <label for="r18" class="ident">s</label>&amp;^<a href="runtime2.go.html#line-99" class="ident">_Gscan</a>)
+	}
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> We stopped it, so we need to re-schedule it.</span></div>
+<div class="code"><pre><code>		<a href="proc.go.html#line-772" class="ident">ready</a>(<label for="r17" class="ident">gp</label>, <span class="lit-number">0</span>, <a href="../../pkg/builtin.html#name-true" class="ident">true</a>)
+	}
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> canPreemptM reports whether mp is in a state that is safe to preempt.</span><span class="comment"></span><span class="comment"> It is nosplit because it has nosplit callers.</span><span class="comment"></span><span class="comment">go:nosplit</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r19" class="ident"><a href="../../pkg/runtime.html#name-canPreemptM" class="ident">canPreemptM</a></label>(<label for="r20" class="ident">mp</label> *<a href="runtime2.go.html#line-486" class="ident">m</a>) <a href="../../pkg/builtin.html#name-bool" class="ident">bool</a> {
+	<span class="keyword">return</span> <label for="r20" class="ident">mp</label>.<a href="runtime2.go.html#line-507" class="ident">locks</a> == <span class="lit-number">0</span> &amp;&amp; <label for="r20" class="ident">mp</label>.<a href="runtime2.go.html#line-504" class="ident">mallocing</a> == <span class="lit-number">0</span> &amp;&amp; <label for="r20" class="ident">mp</label>.<a href="runtime2.go.html#line-506" class="ident">preemptoff</a> == <span class="lit-string">""</span> &amp;&amp; <label for="r20" class="ident">mp</label>.<a href="runtime2.go.html#line-500" class="ident">p</a>.<a href="runtime2.go.html#line-283" class="ident">ptr</a>().<a href="runtime2.go.html#line-578" class="ident">status</a> == <a href="runtime2.go.html#line-126" class="ident">_Prunning</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">go:generate go run mkpreempt.go</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> asyncPreempt saves all user registers and calls asyncPreempt2.</span><span class="comment"></span><span class="comment"> When stack scanning encounters an asyncPreempt frame, it scans that</span><span class="comment"> frame and its parent frame conservatively.</span><span class="comment"></span><span class="comment"> asyncPreempt is implemented in assembly.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r21" class="ident"><a href="../../pkg/runtime.html#name-asyncPreempt" class="ident">asyncPreempt</a></label>()
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">go:nosplit</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r22" class="ident"><a href="../../pkg/runtime.html#name-asyncPreempt2" class="ident">asyncPreempt2</a></label>() {
+	<label for="r23" class="ident">gp</label> := <a href="stubs.go.html#line-18" class="ident">getg</a>()
+	<label for="r23" class="ident">gp</label>.<a href="runtime2.go.html#line-438" class="ident">asyncSafePoint</a> = <a href="../../pkg/builtin.html#name-true" class="ident">true</a>
+	<span class="keyword">if</span> <label for="r23" class="ident">gp</label>.<a href="runtime2.go.html#line-432" class="ident">preemptStop</a> {
+		<a href="stubs.go.html#line-34" class="ident">mcall</a>(<a href="proc.go.html#line-3323" class="ident">preemptPark</a>)
+	} <span class="keyword">else</span> {
+		<a href="stubs.go.html#line-34" class="ident">mcall</a>(<a href="proc.go.html#line-3313" class="ident">gopreempt_m</a>)
+	}
+	<label for="r23" class="ident">gp</label>.<a href="runtime2.go.html#line-438" class="ident">asyncSafePoint</a> = <a href="../../pkg/builtin.html#name-false" class="ident">false</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> asyncPreemptStack is the bytes of stack space required to inject an</span><span class="comment"> asyncPreempt call.</span></div>
+<div class="code"><pre><code><span class="keyword">var</span> <a href="../../pkg/runtime.html#name-asyncPreemptStack" class="ident">asyncPreemptStack</a> = ^<a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<span class="lit-number">0</span>)
+
+<span class="keyword">func</span> <label for="r24" class="ident"><a href="../../pkg/runtime.html#name-init" class="ident">init</a></label>() {
+	<label for="r25" class="ident">f</label> := <a href="symtab.go.html#line-671" class="ident">findfunc</a>(<a href="proc.go.html#line-447" class="ident">funcPC</a>(<a href="#line-299" class="ident">asyncPreempt</a>))
+	<label for="r26" class="ident">total</label> := <a href="symtab.go.html#line-912" class="ident">funcMaxSPDelta</a>(<label for="r25" class="ident">f</label>)
+	<label for="r25" class="ident">f</label> = <a href="symtab.go.html#line-671" class="ident">findfunc</a>(<a href="proc.go.html#line-447" class="ident">funcPC</a>(<a href="#line-302" class="ident">asyncPreempt2</a>))
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Add some overhead for return PCs, etc.</span></div>
+<div class="code"><pre><code>	<a href="#line-315" class="ident">asyncPreemptStack</a> = <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<label for="r26" class="ident">total</label>) + <span class="lit-number">8</span>*<a href="../../pkg/runtime/internal/sys.html" class="ident i1">sys</a>.<a href="internal/sys/stubs.go.html#line-9" class="ident">PtrSize</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> We need more than the nosplit limit. This isn't</span><span class="comment">		 unsafe, but it may limit asynchronous preemption.</span><span class="comment">		</span><span class="comment">		 This may be a problem if we start using more</span><span class="comment">		 registers. In that case, we should store registers</span><span class="comment">		 in a context object. If we pre-allocate one per P,</span><span class="comment">		 asyncPreempt can spill just a few registers to the</span><span class="comment">		 stack, then grab its context object and spill into</span><span class="comment">		 it. When it enters the runtime, it would allocate a</span><span class="comment">		 new context for the P.</span></div>
+<div class="code"><pre><code>		<a href="../../pkg/builtin.html#name-print" class="ident">print</a>(<span class="lit-string">"runtime: asyncPreemptStack="</span>, <a href="#line-315" class="ident">asyncPreemptStack</a>, <span class="lit-string">"\n"</span>)
+		<a href="panic.go.html#line-1107" class="ident">throw</a>(<span class="lit-string">"async stack too large"</span>)
+	}
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> wantAsyncPreempt returns whether an asynchronous preemption is</span><span class="comment"> queued for gp.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Check both the G and the P.</span></div>
+<div class="code"><pre><code>	<span class="keyword">return</span> (<label for="r28" class="ident">gp</label>.<a href="runtime2.go.html#line-431" class="ident">preempt</a> || <label for="r28" class="ident">gp</label>.<a href="runtime2.go.html#line-418" class="ident">m</a>.<a href="runtime2.go.html#line-500" class="ident">p</a> != <span class="lit-number">0</span> &amp;&amp; <label for="r28" class="ident">gp</label>.<a href="runtime2.go.html#line-418" class="ident">m</a>.<a href="runtime2.go.html#line-500" class="ident">p</a>.<a href="runtime2.go.html#line-283" class="ident">ptr</a>().<a href="runtime2.go.html#line-714" class="ident">preempt</a>) &amp;&amp; <a href="proc.go.html#line-829" class="ident">readgstatus</a>(<label for="r28" class="ident">gp</label>)&amp;^<a href="runtime2.go.html#line-99" class="ident">_Gscan</a> == <a href="runtime2.go.html#line-44" class="ident">_Grunning</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> isAsyncSafePoint reports whether gp at instruction PC is an</span><span class="comment"> asynchronous safe point. This indicates that:</span><span class="comment"></span><span class="comment"> 1. It's safe to suspend gp and conservatively scan its stack and</span><span class="comment"> registers. There are no potentially hidden pointer values and it's</span><span class="comment"> not in the middle of an atomic sequence like a write barrier.</span><span class="comment"></span><span class="comment"> 2. gp has enough stack space to inject the asyncPreempt call.</span><span class="comment"></span><span class="comment"> 3. It's generally safe to interact with the runtime, even if we're</span><span class="comment"> in a signal handler stopped here. For example, there are no runtime</span><span class="comment"> locks held, so acquiring a runtime lock won't self-deadlock.</span><span class="comment"></span><span class="comment"> In some cases the PC is safe for asynchronous preemption but it</span><span class="comment"> also needs to adjust the resumption PC. The new PC is returned in</span><span class="comment"> the second result.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r29" class="ident"><a href="../../pkg/runtime.html#name-isAsyncSafePoint" class="ident">isAsyncSafePoint</a></label>(<label for="r30" class="ident">gp</label> *<a href="runtime2.go.html#line-404" class="ident">g</a>, <label for="r31" class="ident">pc</label>, <label for="r32" class="ident">sp</label>, <label for="r33" class="ident">lr</label> <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>) (<a href="../../pkg/builtin.html#name-bool" class="ident">bool</a>, <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>) {
+	<label for="r34" class="ident">mp</label> := <label for="r30" class="ident">gp</label>.<a href="runtime2.go.html#line-418" class="ident">m</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Only user Gs can have safe-points. We check this first</span><span class="comment">	 because it's extremely common that we'll catch mp in the</span><span class="comment">	 scheduler processing this G preemption.</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> <label for="r34" class="ident">mp</label>.<a href="runtime2.go.html#line-498" class="ident">curg</a> != <label for="r30" class="ident">gp</label> {
+		<span class="keyword">return</span> <a href="../../pkg/builtin.html#name-false" class="ident">false</a>, <span class="lit-number">0</span>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Check M state.</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> <label for="r34" class="ident">mp</label>.<a href="runtime2.go.html#line-500" class="ident">p</a> == <span class="lit-number">0</span> || !<a href="#line-287" class="ident">canPreemptM</a>(<label for="r34" class="ident">mp</label>) {
+		<span class="keyword">return</span> <a href="../../pkg/builtin.html#name-false" class="ident">false</a>, <span class="lit-number">0</span>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Check stack space.</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> <label for="r32" class="ident">sp</label> &lt; <label for="r30" class="ident">gp</label>.<a href="runtime2.go.html#line-412" class="ident">stack</a>.<a href="runtime2.go.html#line-394" class="ident">lo</a> || <label for="r32" class="ident">sp</label>-<label for="r30" class="ident">gp</label>.<a href="runtime2.go.html#line-412" class="ident">stack</a>.<a href="runtime2.go.html#line-394" class="ident">lo</a> &lt; <a href="#line-315" class="ident">asyncPreemptStack</a> {
+		<span class="keyword">return</span> <a href="../../pkg/builtin.html#name-false" class="ident">false</a>, <span class="lit-number">0</span>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Check if PC is an unsafe-point.</span></div>
+<div class="code"><pre><code>	<label for="r35" class="ident">f</label> := <a href="symtab.go.html#line-671" class="ident">findfunc</a>(<label for="r31" class="ident">pc</label>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Not Go code.</span></div>
+<div class="code"><pre><code>		<span class="keyword">return</span> <a href="../../pkg/builtin.html#name-false" class="ident">false</a>, <span class="lit-number">0</span>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> We probably stopped at a half-executed CALL instruction,</span><span class="comment">		 where the LR is updated but the PC has not. If we preempt</span><span class="comment">		 here we'll see a seemingly self-recursive call, which is in</span><span class="comment">		 fact not.</span><span class="comment">		 This is normally ok, as we use the return address saved on</span><span class="comment">		 stack for unwinding, not the LR value. But if this is a</span><span class="comment">		 call to morestack, we haven't created the frame, and we'll</span><span class="comment">		 use the LR for unwinding, which will be bad.</span></div>
+<div class="code"><pre><code>		<span class="keyword">return</span> <a href="../../pkg/builtin.html#name-false" class="ident">false</a>, <span class="lit-number">0</span>
+	}
+	<label for="r36" class="ident">up</label>, <label for="r37" class="ident">startpc</label> := <a href="symtab.go.html#line-952" class="ident">pcdatavalue2</a>(<label for="r35" class="ident">f</label>, <a href="symtab.go.html#line-273" class="ident">_PCDATA_UnsafePoint</a>, <label for="r31" class="ident">pc</label>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Unsafe-point marked by compiler. This includes</span><span class="comment">		 atomic sequences (e.g., write barrier) and nosplit</span><span class="comment">		 functions (except at calls).</span></div>
+<div class="code"><pre><code>		<span class="keyword">return</span> <a href="../../pkg/builtin.html#name-false" class="ident">false</a>, <span class="lit-number">0</span>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> This is assembly code. Don't assume it's</span><span class="comment">		 well-formed. We identify assembly code by</span><span class="comment">		 checking that it has either no stack map, or</span><span class="comment">		 no_pointers_stackmap, which is the stack map</span><span class="comment">		 for ones marked as NO_LOCAL_POINTERS.</span><span class="comment">		</span><span class="comment">		 TODO: Are there cases that are safe but don't have a</span><span class="comment">		 locals pointer map, like empty frame functions?</span></div>
+<div class="code"><pre><code>		<span class="keyword">return</span> <a href="../../pkg/builtin.html#name-false" class="ident">false</a>, <span class="lit-number">0</span>
+	}
+	<label for="r39" class="ident">name</label> := <a href="symtab.go.html#line-840" class="ident">funcname</a>(<label for="r35" class="ident">f</label>)
+	<span class="keyword">if</span> <label for="r40" class="ident">inldata</label> := <a href="symtab.go.html#line-959" class="ident">funcdata</a>(<label for="r35" class="ident">f</label>, <a href="symtab.go.html#line-280" class="ident">_FUNCDATA_InlTree</a>); <label for="r40" class="ident">inldata</label> != <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<label for="r41" class="ident">inltree</label> := (*[<span class="lit-number">1</span> &lt;&lt; <span class="lit-number">20</span>]<a href="symtab.go.html#line-1031" class="ident">inlinedCall</a>)(<label for="r40" class="ident">inldata</label>)
+		<label for="r42" class="ident">ix</label> := <a href="symtab.go.html#line-934" class="ident">pcdatavalue</a>(<label for="r35" class="ident">f</label>, <a href="symtab.go.html#line-275" class="ident">_PCDATA_InlTreeIndex</a>, <label for="r31" class="ident">pc</label>, <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a>)
+		<span class="keyword">if</span> <label for="r42" class="ident">ix</label> &gt;= <span class="lit-number">0</span> {
+			<label for="r39" class="ident">name</label> = <a href="symtab.go.html#line-867" class="ident">funcnameFromNameoff</a>(<label for="r35" class="ident">f</label>, <label for="r41" class="ident">inltree</label>[<label for="r42" class="ident">ix</label>].<a href="symtab.go.html#line-1037" class="ident">func_</a>)
+		}
+	}
+	<span class="keyword">if</span> <a href="string.go.html#line-338" class="ident">hasPrefix</a>(<label for="r39" class="ident">name</label>, <span class="lit-string">"runtime."</span>) ||
+		<a href="string.go.html#line-338" class="ident">hasPrefix</a>(<label for="r39" class="ident">name</label>, <span class="lit-string">"runtime/internal/"</span>) ||
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> For now we never async preempt the runtime or</span><span class="comment">		 anything closely tied to the runtime. Known issues</span><span class="comment">		 include: various points in the scheduler ("don't</span><span class="comment">		 preempt between here and here"), much of the defer</span><span class="comment">		 implementation (untyped info on stack), bulk write</span><span class="comment">		 barriers (write barrier check),</span><span class="comment">		 reflect.{makeFuncStub,methodValueCall}.</span><span class="comment">		</span><span class="comment">		 TODO(austin): We should improve this, or opt things</span><span class="comment">		 in incrementally.</span></div>
+<div class="code"><pre><code>		<span class="keyword">return</span> <a href="../../pkg/builtin.html#name-false" class="ident">false</a>, <span class="lit-number">0</span>
+	}
+	<span class="keyword">switch</span> <label for="r36" class="ident">up</label> {
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Restartable instruction sequence. Back off PC to</span><span class="comment">		 the start PC.</span></div>
+<div class="code"><pre><code>		<span class="keyword">if</span> <label for="r37" class="ident">startpc</label> == <span class="lit-number">0</span> || <label for="r37" class="ident">startpc</label> &gt; <label for="r31" class="ident">pc</label> || <label for="r31" class="ident">pc</label>-<label for="r37" class="ident">startpc</label> &gt; <span class="lit-number">20</span> {
+			<a href="panic.go.html#line-1107" class="ident">throw</a>(<span class="lit-string">"bad restart PC"</span>)
+		}
+		<span class="keyword">return</span> <a href="../../pkg/builtin.html#name-true" class="ident">true</a>, <label for="r37" class="ident">startpc</label>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Restart from the function entry at resumption.</span></div>
+<div class="code"><pre><code>		<span class="keyword">return</span> <a href="../../pkg/builtin.html#name-true" class="ident">true</a>, <label for="r35" class="ident">f</label>.<a href="runtime2.go.html#line-826" class="ident">entry</a>
+	}
+	<span class="keyword">return</span> <a href="../../pkg/builtin.html#name-true" class="ident">true</a>, <label for="r31" class="ident">pc</label>
+}
+
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

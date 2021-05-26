@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: syscall.go in package golang.org/x/sys/unix</title>
+<link href="../../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	syscall.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../../pkg/golang.org/x/sys/unix.html">golang.org/x/sys/unix</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1,
+input[id=i2]:checked ~pre .i2,
+input[id=i3]:checked ~pre .i3
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<input id="i2" type="radio" name="i"/>
+<input id="i3" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2009 The Go Authors. All rights reserved.</span><span class="comment"> Use of this source code is governed by a BSD-style</span><span class="comment"> license that can be found in the LICENSE file.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> +build aix darwin dragonfly freebsd linux netbsd openbsd solaris</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Package unix contains an interface to the low-level operating system</span><span class="comment"> primitives. OS details vary depending on the underlying system, and</span><span class="comment"> by default, godoc will display OS-specific documentation for the current</span><span class="comment"> system. If you want godoc to display OS documentation for another</span><span class="comment"> system, set $GOOS and $GOARCH to the desired system. For example, if</span><span class="comment"> you want to view documentation for freebsd/arm on linux/amd64, set $GOOS</span><span class="comment"> to freebsd and $GOARCH to arm.</span><span class="comment"></span><span class="comment"> The primary use of this package is inside other packages that provide a more</span><span class="comment"> portable interface to the system, such as "os", "time" and "net".  Use</span><span class="comment"> those packages rather than this one if you can.</span><span class="comment"></span><span class="comment"> For details of the functions and data types in this package consult</span><span class="comment"> the manuals for the appropriate operating system.</span><span class="comment"></span><span class="comment"> These calls return err == nil to indicate success; otherwise</span><span class="comment"> err represents an operating system error describing the failure and</span><span class="comment"> holds a value of type syscall.Errno.</span></div>
+<div class="code"><pre><code><span class="keyword">package</span> unix <span class="comment">// import "golang.org/x/sys/unix"</span>
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"bytes"</span></label>
+	<label for="i1"><span class="lit-string i1">"strings"</span></label>
+	<label for="i2"><span class="lit-string i2">"unsafe"</span></label>
+
+	<label for="i3"><span class="lit-string i3">"golang.org/x/sys/internal/unsafeheader"</span></label>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ByteSliceFromString returns a NUL-terminated slice of bytes</span><span class="comment"> containing the text of s. If s contains a NUL byte at any</span><span class="comment"> location, it returns (nil, EINVAL).</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r0" class="ident"><a href="../../../../../pkg/golang.org/x/sys/unix.html#name-ByteSliceFromString" class="ident">ByteSliceFromString</a></label>(<label for="r1" class="ident">s</label> <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>) ([]<a href="../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>, <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<span class="keyword">if</span> <a href="../../../../../pkg/strings.html" class="ident i1">strings</a>.<a href="../../../../strings/strings.go.html#line-113" class="ident">IndexByte</a>(<label for="r1" class="ident">s</label>, <span class="lit-number">0</span>) != -<span class="lit-number">1</span> {
+		<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="zerrors_darwin_amd64.go.html#line-1526" class="ident">EINVAL</a>
+	}
+	<label for="r2" class="ident">a</label> := <a href="../../../../../pkg/builtin.html#name-make" class="ident">make</a>([]<a href="../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>, <a href="../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r1" class="ident">s</label>)+<span class="lit-number">1</span>)
+	<a href="../../../../../pkg/builtin.html#name-copy" class="ident">copy</a>(<label for="r2" class="ident">a</label>, <label for="r1" class="ident">s</label>)
+	<span class="keyword">return</span> <label for="r2" class="ident">a</label>, <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> BytePtrFromString returns a pointer to a NUL-terminated array of</span><span class="comment"> bytes containing the text of s. If s contains a NUL byte at any</span><span class="comment"> location, it returns (nil, EINVAL).</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r3" class="ident"><a href="../../../../../pkg/golang.org/x/sys/unix.html#name-BytePtrFromString" class="ident">BytePtrFromString</a></label>(<label for="r4" class="ident">s</label> <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>) (*<a href="../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>, <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<label for="r5" class="ident">a</label>, <label for="r6" class="ident">err</label> := <a href="#line-38" class="ident">ByteSliceFromString</a>(<label for="r4" class="ident">s</label>)
+	<span class="keyword">if</span> <label for="r6" class="ident">err</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <label for="r6" class="ident">err</label>
+	}
+	<span class="keyword">return</span> &amp;<label for="r5" class="ident">a</label>[<span class="lit-number">0</span>], <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ByteSliceToString returns a string form of the text represented by the slice s, with a terminating NUL and any</span><span class="comment"> bytes after the NUL removed.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r7" class="ident"><a href="../../../../../pkg/golang.org/x/sys/unix.html#name-ByteSliceToString" class="ident">ByteSliceToString</a></label>(<label for="r8" class="ident">s</label> []<a href="../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>) <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a> {
+	<span class="keyword">if</span> <label for="r9" class="ident">i</label> := <a href="../../../../../pkg/bytes.html" class="ident i0">bytes</a>.<a href="../../../../bytes/bytes.go.html#line-90" class="ident">IndexByte</a>(<label for="r8" class="ident">s</label>, <span class="lit-number">0</span>); <label for="r9" class="ident">i</label> != -<span class="lit-number">1</span> {
+		<label for="r8" class="ident">s</label> = <label for="r8" class="ident">s</label>[:<label for="r9" class="ident">i</label>]
+	}
+	<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>(<label for="r8" class="ident">s</label>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> BytePtrToString takes a pointer to a sequence of text and returns the corresponding string.</span><span class="comment"> If the pointer is nil, it returns the empty string. It assumes that the text sequence is terminated</span><span class="comment"> at a zero byte; if the zero byte is not present, the program may crash.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r10" class="ident"><a href="../../../../../pkg/golang.org/x/sys/unix.html#name-BytePtrToString" class="ident">BytePtrToString</a></label>(<label for="r11" class="ident">p</label> *<a href="../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>) <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a> {
+	<span class="keyword">if</span> <label for="r11" class="ident">p</label> == <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <span class="lit-string">""</span>
+	}
+	<span class="keyword">if</span> *<label for="r11" class="ident">p</label> == <span class="lit-number">0</span> {
+		<span class="keyword">return</span> <span class="lit-string">""</span>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Find NUL terminator.</span></div>
+<div class="code"><pre><code>	<label for="r12" class="ident">n</label> := <span class="lit-number">0</span>
+	<span class="keyword">for</span> <label for="r13" class="ident">ptr</label> := <a href="../../../../../pkg/unsafe.html" class="ident i2">unsafe</a>.<a href="../../../../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(<label for="r11" class="ident">p</label>); *(*<a href="../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>)(<label for="r13" class="ident">ptr</label>) != <span class="lit-number">0</span>; <label for="r12" class="ident">n</label>++ {
+		<label for="r13" class="ident">ptr</label> = <a href="../../../../../pkg/unsafe.html" class="ident i2">unsafe</a>.<a href="../../../../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(<a href="../../../../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<label for="r13" class="ident">ptr</label>) + <span class="lit-number">1</span>)
+	}
+
+	<span class="keyword">var</span> <label for="r14" class="ident">s</label> []<a href="../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>
+	<label for="r15" class="ident">h</label> := (*<a href="../../../../../pkg/golang.org/x/sys/internal/unsafeheader.html" class="ident i3">unsafeheader</a>.<a href="../internal/unsafeheader/unsafeheader.go.html#line-19" class="ident">Slice</a>)(<a href="../../../../../pkg/unsafe.html" class="ident i2">unsafe</a>.<a href="../../../../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(&amp;<label for="r14" class="ident">s</label>))
+	<label for="r15" class="ident">h</label>.<a href="../internal/unsafeheader/unsafeheader.go.html#line-20" class="ident">Data</a> = <a href="../../../../../pkg/unsafe.html" class="ident i2">unsafe</a>.<a href="../../../../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(<label for="r11" class="ident">p</label>)
+	<label for="r15" class="ident">h</label>.<a href="../internal/unsafeheader/unsafeheader.go.html#line-21" class="ident">Len</a> = <label for="r12" class="ident">n</label>
+	<label for="r15" class="ident">h</label>.<a href="../internal/unsafeheader/unsafeheader.go.html#line-22" class="ident">Cap</a> = <label for="r12" class="ident">n</label>
+
+	<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>(<label for="r14" class="ident">s</label>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Single-word zero for use when we need a valid pointer to 0 bytes.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

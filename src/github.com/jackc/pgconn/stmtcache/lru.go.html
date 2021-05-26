@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: lru.go in package github.com/jackc/pgconn/stmtcache</title>
+<link href="../../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	lru.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../../pkg/github.com/jackc/pgconn/stmtcache.html">github.com/jackc/pgconn/stmtcache</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16],
+input[id=r17]:checked ~pre label[for=r17],
+input[id=r18]:checked ~pre label[for=r18],
+input[id=r19]:checked ~pre label[for=r19],
+input[id=r20]:checked ~pre label[for=r20],
+input[id=r21]:checked ~pre label[for=r21],
+input[id=r22]:checked ~pre label[for=r22],
+input[id=r23]:checked ~pre label[for=r23],
+input[id=r24]:checked ~pre label[for=r24],
+input[id=r25]:checked ~pre label[for=r25],
+input[id=r26]:checked ~pre label[for=r26],
+input[id=r27]:checked ~pre label[for=r27],
+input[id=r28]:checked ~pre label[for=r28],
+input[id=r29]:checked ~pre label[for=r29],
+input[id=r30]:checked ~pre label[for=r30],
+input[id=r31]:checked ~pre label[for=r31],
+input[id=r32]:checked ~pre label[for=r32],
+input[id=r33]:checked ~pre label[for=r33],
+input[id=r34]:checked ~pre label[for=r34],
+input[id=r35]:checked ~pre label[for=r35],
+input[id=r36]:checked ~pre label[for=r36],
+input[id=r37]:checked ~pre label[for=r37],
+input[id=r38]:checked ~pre label[for=r38],
+input[id=r39]:checked ~pre label[for=r39],
+input[id=r40]:checked ~pre label[for=r40],
+input[id=r41]:checked ~pre label[for=r41],
+input[id=r42]:checked ~pre label[for=r42],
+input[id=r43]:checked ~pre label[for=r43],
+input[id=r44]:checked ~pre label[for=r44],
+input[id=r45]:checked ~pre label[for=r45],
+input[id=r46]:checked ~pre label[for=r46],
+input[id=r47]:checked ~pre label[for=r47],
+input[id=r48]:checked ~pre label[for=r48],
+input[id=r49]:checked ~pre label[for=r49],
+input[id=r50]:checked ~pre label[for=r50],
+input[id=r51]:checked ~pre label[for=r51],
+input[id=r52]:checked ~pre label[for=r52]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1,
+input[id=i2]:checked ~pre .i2,
+input[id=i3]:checked ~pre .i3,
+input[id=i4]:checked ~pre .i4
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="r17" type="radio" name="g"/>
+<input id="r18" type="radio" name="g"/>
+<input id="r19" type="radio" name="g"/>
+<input id="r20" type="radio" name="g"/>
+<input id="r21" type="radio" name="g"/>
+<input id="r22" type="radio" name="g"/>
+<input id="r23" type="radio" name="g"/>
+<input id="r24" type="radio" name="g"/>
+<input id="r25" type="radio" name="g"/>
+<input id="r26" type="radio" name="g"/>
+<input id="r27" type="radio" name="g"/>
+<input id="r28" type="radio" name="g"/>
+<input id="r29" type="radio" name="g"/>
+<input id="r30" type="radio" name="g"/>
+<input id="r31" type="radio" name="g"/>
+<input id="r32" type="radio" name="g"/>
+<input id="r33" type="radio" name="g"/>
+<input id="r34" type="radio" name="g"/>
+<input id="r35" type="radio" name="g"/>
+<input id="r36" type="radio" name="g"/>
+<input id="r37" type="radio" name="g"/>
+<input id="r38" type="radio" name="g"/>
+<input id="r39" type="radio" name="g"/>
+<input id="r40" type="radio" name="g"/>
+<input id="r41" type="radio" name="g"/>
+<input id="r42" type="radio" name="g"/>
+<input id="r43" type="radio" name="g"/>
+<input id="r44" type="radio" name="g"/>
+<input id="r45" type="radio" name="g"/>
+<input id="r46" type="radio" name="g"/>
+<input id="r47" type="radio" name="g"/>
+<input id="r48" type="radio" name="g"/>
+<input id="r49" type="radio" name="g"/>
+<input id="r50" type="radio" name="g"/>
+<input id="r51" type="radio" name="g"/>
+<input id="r52" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<input id="i2" type="radio" name="i"/>
+<input id="i3" type="radio" name="i"/>
+<input id="i4" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+</div>
+<div class="code"><pre><code><span class="keyword">package</span> stmtcache
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"container/list"</span></label>
+	<label for="i1"><span class="lit-string i1">"context"</span></label>
+	<label for="i2"><span class="lit-string i2">"fmt"</span></label>
+	<label for="i3"><span class="lit-string i3">"sync/atomic"</span></label>
+
+	<label for="i4"><span class="lit-string i4">"github.com/jackc/pgconn"</span></label>
+)
+
+<span class="keyword">var</span> <a href="../../../../../pkg/github.com/jackc/pgconn/stmtcache.html#name-lruCount" class="ident">lruCount</a> <a href="../../../../../pkg/builtin.html#name-uint64" class="ident">uint64</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> LRU implements Cache with a Least Recently Used (LRU) cache.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../pkg/github.com/jackc/pgconn/stmtcache.html#name-LRU" class="ident">LRU</a> <span class="keyword">struct</span> {
+	<a href="../../../../../use/github.com/jackc/pgconn/stmtcache..LRU.conn*08041.html" class="ident">conn</a>         *<a href="../../../../../pkg/github.com/jackc/pgconn.html" class="ident i4">pgconn</a>.<a href="../pgconn.go.html#line-71" class="ident">PgConn</a>
+	<a href="../../../../../use/github.com/jackc/pgconn/stmtcache..LRU.mode*e642b.html" class="ident">mode</a>         <a href="../../../../../pkg/builtin.html#name-int" class="ident">int</a>
+	<a href="../../../../../use/github.com/jackc/pgconn/stmtcache..LRU.cap*45e84.html" class="ident">cap</a>          <a href="../../../../../pkg/builtin.html#name-int" class="ident">int</a>
+	<a href="../../../../../use/github.com/jackc/pgconn/stmtcache..LRU.prepareCount*ea2a6.html" class="ident">prepareCount</a> <a href="../../../../../pkg/builtin.html#name-int" class="ident">int</a>
+	<a href="../../../../../use/github.com/jackc/pgconn/stmtcache..LRU.m*62c66.html" class="ident">m</a>            <span class="keyword">map</span>[<a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>]*<a href="../../../../../pkg/container/list.html" class="ident i0">list</a>.<a href="../../../../container/list/list.go.html#line-15" class="ident">Element</a>
+	<a href="../../../../../use/github.com/jackc/pgconn/stmtcache..LRU.l*acac8.html" class="ident">l</a>            *<a href="../../../../../pkg/container/list.html" class="ident i0">list</a>.<a href="../../../../container/list/list.go.html#line-48" class="ident">List</a>
+	<a href="../../../../../use/github.com/jackc/pgconn/stmtcache..LRU.psNamePrefix*25127.html" class="ident">psNamePrefix</a> <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../use/github.com/jackc/pgconn/stmtcache..LRU.stmtsToClear*19625.html" class="ident">stmtsToClear</a> []<a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> NewLRU creates a new LRU. mode is either ModePrepare or ModeDescribe. cap is the maximum size of the cache.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r0" class="ident"><a href="../../../../../pkg/github.com/jackc/pgconn/stmtcache.html#name-NewLRU" class="ident">NewLRU</a></label>(<label for="r1" class="ident">conn</label> *<a href="../../../../../pkg/github.com/jackc/pgconn.html" class="ident i4">pgconn</a>.<a href="../pgconn.go.html#line-71" class="ident">PgConn</a>, <label for="r2" class="ident">mode</label> <a href="../../../../../pkg/builtin.html#name-int" class="ident">int</a>, <label for="r3" class="ident">cap</label> <a href="../../../../../pkg/builtin.html#name-int" class="ident">int</a>) *<a href="#line-15" class="ident">LRU</a> {
+	<a href="stmtcache.go.html#line-48" class="ident">mustBeValidMode</a>(<label for="r2" class="ident">mode</label>)
+	<a href="stmtcache.go.html#line-54" class="ident">mustBeValidCap</a>(<label for="r3" class="ident">cap</label>)
+
+	<label for="r4" class="ident">n</label> := <a href="../../../../../pkg/sync/atomic.html" class="ident i3">atomic</a>.<a href="../../../../sync/atomic/doc.go.html#line-105" class="ident">AddUint64</a>(&amp;<a href="#line-12" class="ident">lruCount</a>, <span class="lit-number">1</span>)
+
+	<span class="keyword">return</span> &amp;<a href="#line-15" class="ident">LRU</a>{
+		<a href="#line-16" class="ident">conn</a>:         <label for="r1" class="ident">conn</label>,
+		<a href="#line-17" class="ident">mode</a>:         <label for="r2" class="ident">mode</label>,
+		<a href="#line-18" class="ident">cap</a>:          <label for="r3" class="ident">cap</label>,
+		<a href="#line-20" class="ident">m</a>:            <a href="../../../../../pkg/builtin.html#name-make" class="ident">make</a>(<span class="keyword">map</span>[<a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>]*<a href="../../../../../pkg/container/list.html" class="ident i0">list</a>.<a href="../../../../container/list/list.go.html#line-15" class="ident">Element</a>),
+		<a href="#line-21" class="ident">l</a>:            <a href="../../../../../pkg/container/list.html" class="ident i0">list</a>.<a href="../../../../container/list/list.go.html#line-62" class="ident">New</a>(),
+		<a href="#line-22" class="ident">psNamePrefix</a>: <a href="../../../../../pkg/fmt.html" class="ident i2">fmt</a>.<a href="../../../../fmt/print.go.html#line-217" class="ident">Sprintf</a>(<span class="lit-string">"lrupsc_%d"</span>, <label for="r4" class="ident">n</label>),
+	}
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Get returns the prepared statement description for sql preparing or describing the sql on the server as needed.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> flush an outstanding bad statements</span></div>
+<div class="code"><pre><code>	<label for="r9" class="ident">txStatus</label> := <label for="r5" class="ident">c</label>.<a href="#line-16" class="ident">conn</a>.<a href="../pgconn.go.html#line-530" class="ident">TxStatus</a>()
+	<span class="keyword">if</span> (<label for="r9" class="ident">txStatus</label> == <span class="lit-number">'I'</span> || <label for="r9" class="ident">txStatus</label> == <span class="lit-number">'T'</span>) &amp;&amp; <a href="../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r5" class="ident">c</label>.<a href="#line-23" class="ident">stmtsToClear</a>) &gt; <span class="lit-number">0</span> {
+		<span class="keyword">for</span> <label for="r10" class="ident">_</label>, <label for="r11" class="ident">stmt</label> := <span class="keyword">range</span> <label for="r5" class="ident">c</label>.<a href="#line-23" class="ident">stmtsToClear</a> {
+			<label for="r12" class="ident">err</label> := <label for="r5" class="ident">c</label>.<a href="#line-105" class="ident">clearStmt</a>(<label for="r7" class="ident">ctx</label>, <label for="r11" class="ident">stmt</label>)
+			<span class="keyword">if</span> <label for="r12" class="ident">err</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+				<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <label for="r12" class="ident">err</label>
+			}
+		}
+	}
+
+	<span class="keyword">if</span> <label for="r13" class="ident">el</label>, <label for="r14" class="ident">ok</label> := <label for="r5" class="ident">c</label>.<a href="#line-20" class="ident">m</a>[<label for="r8" class="ident">sql</label>]; <label for="r14" class="ident">ok</label> {
+		<label for="r5" class="ident">c</label>.<a href="#line-21" class="ident">l</a>.<a href="../../../../container/list/list.go.html#line-183" class="ident">MoveToFront</a>(<label for="r13" class="ident">el</label>)
+		<span class="keyword">return</span> <label for="r13" class="ident">el</label>.<a href="../../../../container/list/list.go.html#line-27" class="ident">Value</a>.(*<a href="../../../../../pkg/github.com/jackc/pgconn.html" class="ident i4">pgconn</a>.<a href="../pgconn.go.html#line-730" class="ident">StatementDescription</a>), <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+	}
+
+	<span class="keyword">if</span> <label for="r5" class="ident">c</label>.<a href="#line-21" class="ident">l</a>.<a href="../../../../container/list/list.go.html#line-66" class="ident">Len</a>() == <label for="r5" class="ident">c</label>.<a href="#line-18" class="ident">cap</a> {
+		<label for="r15" class="ident">err</label> := <label for="r5" class="ident">c</label>.<a href="#line-148" class="ident">removeOldest</a>(<label for="r7" class="ident">ctx</label>)
+		<span class="keyword">if</span> <label for="r15" class="ident">err</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <label for="r15" class="ident">err</label>
+		}
+	}
+
+	<label for="r16" class="ident">psd</label>, <label for="r17" class="ident">err</label> := <label for="r5" class="ident">c</label>.<a href="#line-138" class="ident">prepare</a>(<label for="r7" class="ident">ctx</label>, <label for="r8" class="ident">sql</label>)
+	<span class="keyword">if</span> <label for="r17" class="ident">err</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <label for="r17" class="ident">err</label>
+	}
+
+	<label for="r18" class="ident">el</label> := <label for="r5" class="ident">c</label>.<a href="#line-21" class="ident">l</a>.<a href="../../../../container/list/list.go.html#line-147" class="ident">PushFront</a>(<label for="r16" class="ident">psd</label>)
+	<label for="r5" class="ident">c</label>.<a href="#line-20" class="ident">m</a>[<label for="r8" class="ident">sql</label>] = <label for="r18" class="ident">el</label>
+
+	<span class="keyword">return</span> <label for="r16" class="ident">psd</label>, <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Clear removes all entries in the cache. Any prepared statements will be deallocated from the PostgreSQL session.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r19" class="ident">c</label> *<a href="#line-15" class="ident">LRU</a>) <label for="r20" class="ident"><a href="../../../../../use/github.com/jackc/pgconn/stmtcache..LRU.Clear.html" class="ident">Clear</a></label>(<label for="r21" class="ident">ctx</label> <a href="../../../../../pkg/context.html" class="ident i1">context</a>.<a href="../../../../context/context.go.html#line-62" class="ident">Context</a>) <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<span class="keyword">for</span> <label for="r19" class="ident">c</label>.<a href="#line-21" class="ident">l</a>.<a href="../../../../container/list/list.go.html#line-66" class="ident">Len</a>() &gt; <span class="lit-number">0</span> {
+		<label for="r22" class="ident">err</label> := <label for="r19" class="ident">c</label>.<a href="#line-148" class="ident">removeOldest</a>(<label for="r21" class="ident">ctx</label>)
+		<span class="keyword">if</span> <label for="r22" class="ident">err</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<span class="keyword">return</span> <label for="r22" class="ident">err</label>
+		}
+	}
+
+	<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+}
+
+<span class="keyword">func</span> (<label for="r23" class="ident">c</label> *<a href="#line-15" class="ident">LRU</a>) <label for="r24" class="ident"><a href="../../../../../use/github.com/jackc/pgconn/stmtcache..LRU.StatementErrored.html" class="ident">StatementErrored</a></label>(<label for="r25" class="ident">sql</label> <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>, <label for="r26" class="ident">err</label> <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<label for="r27" class="ident">pgErr</label>, <label for="r28" class="ident">ok</label> := <label for="r26" class="ident">err</label>.(*<a href="../../../../../pkg/github.com/jackc/pgconn.html" class="ident i4">pgconn</a>.<a href="../errors.go.html#line-35" class="ident">PgError</a>)
+	<span class="keyword">if</span> !<label for="r28" class="ident">ok</label> {
+		<span class="keyword">return</span>
+	}
+
+	<label for="r29" class="ident">isInvalidCachedPlanError</label> := <label for="r27" class="ident">pgErr</label>.<a href="../errors.go.html#line-36" class="ident">Severity</a> == <span class="lit-string">"ERROR"</span> &amp;&amp;
+		<label for="r27" class="ident">pgErr</label>.<a href="../errors.go.html#line-37" class="ident">Code</a> == <span class="lit-string">"0A000"</span> &amp;&amp;
+		<label for="r27" class="ident">pgErr</label>.<a href="../errors.go.html#line-38" class="ident">Message</a> == <span class="lit-string">"cached plan must not change result type"</span>
+	<span class="keyword">if</span> <label for="r29" class="ident">isInvalidCachedPlanError</label> {
+		<label for="r23" class="ident">c</label>.<a href="#line-23" class="ident">stmtsToClear</a> = <a href="../../../../../pkg/builtin.html#name-append" class="ident">append</a>(<label for="r23" class="ident">c</label>.<a href="#line-23" class="ident">stmtsToClear</a>, <label for="r25" class="ident">sql</label>)
+	}
+}
+
+<span class="keyword">func</span> (<label for="r30" class="ident">c</label> *<a href="#line-15" class="ident">LRU</a>) <label for="r31" class="ident"><a href="../../../../../use/github.com/jackc/pgconn/stmtcache..LRU.clearStmt*8cf60.html" class="ident">clearStmt</a></label>(<label for="r32" class="ident">ctx</label> <a href="../../../../../pkg/context.html" class="ident i1">context</a>.<a href="../../../../context/context.go.html#line-62" class="ident">Context</a>, <label for="r33" class="ident">sql</label> <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>) <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<label for="r34" class="ident">elem</label>, <label for="r35" class="ident">inMap</label> := <label for="r30" class="ident">c</label>.<a href="#line-20" class="ident">m</a>[<label for="r33" class="ident">sql</label>]
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> The statement probably fell off the back of the list. In that case, we've</span><span class="comment">		 ensured that it isn't in the cache, so we can declare victory.</span></div>
+<div class="code"><pre><code>		<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+	}
+
+	<label for="r30" class="ident">c</label>.<a href="#line-21" class="ident">l</a>.<a href="../../../../container/list/list.go.html#line-137" class="ident">Remove</a>(<label for="r34" class="ident">elem</label>)
+
+	<label for="r36" class="ident">psd</label> := <label for="r34" class="ident">elem</label>.<a href="../../../../container/list/list.go.html#line-27" class="ident">Value</a>.(*<a href="../../../../../pkg/github.com/jackc/pgconn.html" class="ident i4">pgconn</a>.<a href="../pgconn.go.html#line-730" class="ident">StatementDescription</a>)
+	<a href="../../../../../pkg/builtin.html#name-delete" class="ident">delete</a>(<label for="r30" class="ident">c</label>.<a href="#line-20" class="ident">m</a>, <label for="r36" class="ident">psd</label>.<a href="../pgconn.go.html#line-732" class="ident">SQL</a>)
+	<span class="keyword">if</span> <label for="r30" class="ident">c</label>.<a href="#line-17" class="ident">mode</a> == <a href="stmtcache.go.html#line-11" class="ident">ModePrepare</a> {
+		<span class="keyword">return</span> <label for="r30" class="ident">c</label>.<a href="#line-16" class="ident">conn</a>.<a href="../pgconn.go.html#line-904" class="ident">Exec</a>(<label for="r32" class="ident">ctx</label>, <a href="../../../../../pkg/fmt.html" class="ident i2">fmt</a>.<a href="../../../../fmt/print.go.html#line-217" class="ident">Sprintf</a>(<span class="lit-string">"deallocate %s"</span>, <label for="r36" class="ident">psd</label>.<a href="../pgconn.go.html#line-731" class="ident">Name</a>)).<a href="../pgconn.go.html#line-1377" class="ident">Close</a>()
+	}
+	<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Len returns the number of cached prepared statement descriptions.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r37" class="ident">c</label> *<a href="#line-15" class="ident">LRU</a>) <label for="r38" class="ident"><a href="../../../../../use/github.com/jackc/pgconn/stmtcache..LRU.Len.html" class="ident">Len</a></label>() <a href="../../../../../pkg/builtin.html#name-int" class="ident">int</a> {
+	<span class="keyword">return</span> <label for="r37" class="ident">c</label>.<a href="#line-21" class="ident">l</a>.<a href="../../../../container/list/list.go.html#line-66" class="ident">Len</a>()
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Cap returns the maximum number of cached prepared statement descriptions.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r39" class="ident">c</label> *<a href="#line-15" class="ident">LRU</a>) <label for="r40" class="ident"><a href="../../../../../use/github.com/jackc/pgconn/stmtcache..LRU.Cap.html" class="ident">Cap</a></label>() <a href="../../../../../pkg/builtin.html#name-int" class="ident">int</a> {
+	<span class="keyword">return</span> <label for="r39" class="ident">c</label>.<a href="#line-18" class="ident">cap</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Mode returns the mode of the cache (ModePrepare or ModeDescribe)</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r41" class="ident">c</label> *<a href="#line-15" class="ident">LRU</a>) <label for="r42" class="ident"><a href="../../../../../use/github.com/jackc/pgconn/stmtcache..LRU.Mode.html" class="ident">Mode</a></label>() <a href="../../../../../pkg/builtin.html#name-int" class="ident">int</a> {
+	<span class="keyword">return</span> <label for="r41" class="ident">c</label>.<a href="#line-17" class="ident">mode</a>
+}
+
+<span class="keyword">func</span> (<label for="r43" class="ident">c</label> *<a href="#line-15" class="ident">LRU</a>) <label for="r44" class="ident"><a href="../../../../../use/github.com/jackc/pgconn/stmtcache..LRU.prepare*45666.html" class="ident">prepare</a></label>(<label for="r45" class="ident">ctx</label> <a href="../../../../../pkg/context.html" class="ident i1">context</a>.<a href="../../../../context/context.go.html#line-62" class="ident">Context</a>, <label for="r46" class="ident">sql</label> <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>) (*<a href="../../../../../pkg/github.com/jackc/pgconn.html" class="ident i4">pgconn</a>.<a href="../pgconn.go.html#line-730" class="ident">StatementDescription</a>, <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<span class="keyword">var</span> <label for="r47" class="ident">name</label> <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<span class="keyword">if</span> <label for="r43" class="ident">c</label>.<a href="#line-17" class="ident">mode</a> == <a href="stmtcache.go.html#line-11" class="ident">ModePrepare</a> {
+		<label for="r47" class="ident">name</label> = <a href="../../../../../pkg/fmt.html" class="ident i2">fmt</a>.<a href="../../../../fmt/print.go.html#line-217" class="ident">Sprintf</a>(<span class="lit-string">"%s_%d"</span>, <label for="r43" class="ident">c</label>.<a href="#line-22" class="ident">psNamePrefix</a>, <label for="r43" class="ident">c</label>.<a href="#line-19" class="ident">prepareCount</a>)
+		<label for="r43" class="ident">c</label>.<a href="#line-19" class="ident">prepareCount</a> += <span class="lit-number">1</span>
+	}
+
+	<span class="keyword">return</span> <label for="r43" class="ident">c</label>.<a href="#line-16" class="ident">conn</a>.<a href="../pgconn.go.html#line-739" class="ident">Prepare</a>(<label for="r45" class="ident">ctx</label>, <label for="r47" class="ident">name</label>, <label for="r46" class="ident">sql</label>, <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>)
+}
+
+<span class="keyword">func</span> (<label for="r48" class="ident">c</label> *<a href="#line-15" class="ident">LRU</a>) <label for="r49" class="ident"><a href="../../../../../use/github.com/jackc/pgconn/stmtcache..LRU.removeOldest*4fadf.html" class="ident">removeOldest</a></label>(<label for="r50" class="ident">ctx</label> <a href="../../../../../pkg/context.html" class="ident i1">context</a>.<a href="../../../../context/context.go.html#line-62" class="ident">Context</a>) <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<label for="r51" class="ident">oldest</label> := <label for="r48" class="ident">c</label>.<a href="#line-21" class="ident">l</a>.<a href="../../../../container/list/list.go.html#line-77" class="ident">Back</a>()
+	<label for="r48" class="ident">c</label>.<a href="#line-21" class="ident">l</a>.<a href="../../../../container/list/list.go.html#line-137" class="ident">Remove</a>(<label for="r51" class="ident">oldest</label>)
+	<label for="r52" class="ident">psd</label> := <label for="r51" class="ident">oldest</label>.<a href="../../../../container/list/list.go.html#line-27" class="ident">Value</a>.(*<a href="../../../../../pkg/github.com/jackc/pgconn.html" class="ident i4">pgconn</a>.<a href="../pgconn.go.html#line-730" class="ident">StatementDescription</a>)
+	<a href="../../../../../pkg/builtin.html#name-delete" class="ident">delete</a>(<label for="r48" class="ident">c</label>.<a href="#line-20" class="ident">m</a>, <label for="r52" class="ident">psd</label>.<a href="../pgconn.go.html#line-732" class="ident">SQL</a>)
+	<span class="keyword">if</span> <label for="r48" class="ident">c</label>.<a href="#line-17" class="ident">mode</a> == <a href="stmtcache.go.html#line-11" class="ident">ModePrepare</a> {
+		<span class="keyword">return</span> <label for="r48" class="ident">c</label>.<a href="#line-16" class="ident">conn</a>.<a href="../pgconn.go.html#line-904" class="ident">Exec</a>(<label for="r50" class="ident">ctx</label>, <a href="../../../../../pkg/fmt.html" class="ident i2">fmt</a>.<a href="../../../../fmt/print.go.html#line-217" class="ident">Sprintf</a>(<span class="lit-string">"deallocate %s"</span>, <label for="r52" class="ident">psd</label>.<a href="../pgconn.go.html#line-731" class="ident">Name</a>)).<a href="../pgconn.go.html#line-1377" class="ident">Close</a>()
+	}
+	<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

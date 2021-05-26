@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: grpclb_remote_balancer.go in package google.golang.org/grpc/balancer/grpclb</title>
+<link href="../../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	grpclb_remote_balancer.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../../pkg/google.golang.org/grpc/balancer/grpclb.html">google.golang.org/grpc/balancer/grpclb</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16],
+input[id=r17]:checked ~pre label[for=r17],
+input[id=r18]:checked ~pre label[for=r18],
+input[id=r19]:checked ~pre label[for=r19],
+input[id=r20]:checked ~pre label[for=r20],
+input[id=r21]:checked ~pre label[for=r21],
+input[id=r22]:checked ~pre label[for=r22],
+input[id=r23]:checked ~pre label[for=r23],
+input[id=r24]:checked ~pre label[for=r24],
+input[id=r25]:checked ~pre label[for=r25],
+input[id=r26]:checked ~pre label[for=r26],
+input[id=r27]:checked ~pre label[for=r27],
+input[id=r28]:checked ~pre label[for=r28],
+input[id=r29]:checked ~pre label[for=r29],
+input[id=r30]:checked ~pre label[for=r30],
+input[id=r31]:checked ~pre label[for=r31],
+input[id=r32]:checked ~pre label[for=r32],
+input[id=r33]:checked ~pre label[for=r33],
+input[id=r34]:checked ~pre label[for=r34],
+input[id=r35]:checked ~pre label[for=r35],
+input[id=r36]:checked ~pre label[for=r36],
+input[id=r37]:checked ~pre label[for=r37],
+input[id=r38]:checked ~pre label[for=r38],
+input[id=r39]:checked ~pre label[for=r39],
+input[id=r40]:checked ~pre label[for=r40],
+input[id=r41]:checked ~pre label[for=r41],
+input[id=r42]:checked ~pre label[for=r42],
+input[id=r43]:checked ~pre label[for=r43],
+input[id=r44]:checked ~pre label[for=r44],
+input[id=r45]:checked ~pre label[for=r45],
+input[id=r46]:checked ~pre label[for=r46],
+input[id=r47]:checked ~pre label[for=r47],
+input[id=r48]:checked ~pre label[for=r48],
+input[id=r49]:checked ~pre label[for=r49],
+input[id=r50]:checked ~pre label[for=r50],
+input[id=r51]:checked ~pre label[for=r51],
+input[id=r52]:checked ~pre label[for=r52],
+input[id=r53]:checked ~pre label[for=r53],
+input[id=r54]:checked ~pre label[for=r54],
+input[id=r55]:checked ~pre label[for=r55],
+input[id=r56]:checked ~pre label[for=r56],
+input[id=r57]:checked ~pre label[for=r57],
+input[id=r58]:checked ~pre label[for=r58],
+input[id=r59]:checked ~pre label[for=r59],
+input[id=r60]:checked ~pre label[for=r60],
+input[id=r61]:checked ~pre label[for=r61],
+input[id=r62]:checked ~pre label[for=r62],
+input[id=r63]:checked ~pre label[for=r63],
+input[id=r64]:checked ~pre label[for=r64],
+input[id=r65]:checked ~pre label[for=r65],
+input[id=r66]:checked ~pre label[for=r66],
+input[id=r67]:checked ~pre label[for=r67],
+input[id=r68]:checked ~pre label[for=r68],
+input[id=r69]:checked ~pre label[for=r69],
+input[id=r70]:checked ~pre label[for=r70],
+input[id=r71]:checked ~pre label[for=r71],
+input[id=r72]:checked ~pre label[for=r72],
+input[id=r73]:checked ~pre label[for=r73],
+input[id=r74]:checked ~pre label[for=r74],
+input[id=r75]:checked ~pre label[for=r75],
+input[id=r76]:checked ~pre label[for=r76],
+input[id=r77]:checked ~pre label[for=r77],
+input[id=r78]:checked ~pre label[for=r78],
+input[id=r79]:checked ~pre label[for=r79],
+input[id=r80]:checked ~pre label[for=r80],
+input[id=r81]:checked ~pre label[for=r81],
+input[id=r82]:checked ~pre label[for=r82]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1,
+input[id=i2]:checked ~pre .i2,
+input[id=i3]:checked ~pre .i3,
+input[id=i4]:checked ~pre .i4,
+input[id=i5]:checked ~pre .i5,
+input[id=i6]:checked ~pre .i6,
+input[id=i7]:checked ~pre .i7,
+input[id=i8]:checked ~pre .i8,
+input[id=i9]:checked ~pre .i9,
+input[id=i10]:checked ~pre .i10,
+input[id=i11]:checked ~pre .i11,
+input[id=i12]:checked ~pre .i12,
+input[id=i13]:checked ~pre .i13,
+input[id=i14]:checked ~pre .i14,
+input[id=i15]:checked ~pre .i15,
+input[id=i16]:checked ~pre .i16,
+input[id=i17]:checked ~pre .i17
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="r17" type="radio" name="g"/>
+<input id="r18" type="radio" name="g"/>
+<input id="r19" type="radio" name="g"/>
+<input id="r20" type="radio" name="g"/>
+<input id="r21" type="radio" name="g"/>
+<input id="r22" type="radio" name="g"/>
+<input id="r23" type="radio" name="g"/>
+<input id="r24" type="radio" name="g"/>
+<input id="r25" type="radio" name="g"/>
+<input id="r26" type="radio" name="g"/>
+<input id="r27" type="radio" name="g"/>
+<input id="r28" type="radio" name="g"/>
+<input id="r29" type="radio" name="g"/>
+<input id="r30" type="radio" name="g"/>
+<input id="r31" type="radio" name="g"/>
+<input id="r32" type="radio" name="g"/>
+<input id="r33" type="radio" name="g"/>
+<input id="r34" type="radio" name="g"/>
+<input id="r35" type="radio" name="g"/>
+<input id="r36" type="radio" name="g"/>
+<input id="r37" type="radio" name="g"/>
+<input id="r38" type="radio" name="g"/>
+<input id="r39" type="radio" name="g"/>
+<input id="r40" type="radio" name="g"/>
+<input id="r41" type="radio" name="g"/>
+<input id="r42" type="radio" name="g"/>
+<input id="r43" type="radio" name="g"/>
+<input id="r44" type="radio" name="g"/>
+<input id="r45" type="radio" name="g"/>
+<input id="r46" type="radio" name="g"/>
+<input id="r47" type="radio" name="g"/>
+<input id="r48" type="radio" name="g"/>
+<input id="r49" type="radio" name="g"/>
+<input id="r50" type="radio" name="g"/>
+<input id="r51" type="radio" name="g"/>
+<input id="r52" type="radio" name="g"/>
+<input id="r53" type="radio" name="g"/>
+<input id="r54" type="radio" name="g"/>
+<input id="r55" type="radio" name="g"/>
+<input id="r56" type="radio" name="g"/>
+<input id="r57" type="radio" name="g"/>
+<input id="r58" type="radio" name="g"/>
+<input id="r59" type="radio" name="g"/>
+<input id="r60" type="radio" name="g"/>
+<input id="r61" type="radio" name="g"/>
+<input id="r62" type="radio" name="g"/>
+<input id="r63" type="radio" name="g"/>
+<input id="r64" type="radio" name="g"/>
+<input id="r65" type="radio" name="g"/>
+<input id="r66" type="radio" name="g"/>
+<input id="r67" type="radio" name="g"/>
+<input id="r68" type="radio" name="g"/>
+<input id="r69" type="radio" name="g"/>
+<input id="r70" type="radio" name="g"/>
+<input id="r71" type="radio" name="g"/>
+<input id="r72" type="radio" name="g"/>
+<input id="r73" type="radio" name="g"/>
+<input id="r74" type="radio" name="g"/>
+<input id="r75" type="radio" name="g"/>
+<input id="r76" type="radio" name="g"/>
+<input id="r77" type="radio" name="g"/>
+<input id="r78" type="radio" name="g"/>
+<input id="r79" type="radio" name="g"/>
+<input id="r80" type="radio" name="g"/>
+<input id="r81" type="radio" name="g"/>
+<input id="r82" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<input id="i2" type="radio" name="i"/>
+<input id="i3" type="radio" name="i"/>
+<input id="i4" type="radio" name="i"/>
+<input id="i5" type="radio" name="i"/>
+<input id="i6" type="radio" name="i"/>
+<input id="i7" type="radio" name="i"/>
+<input id="i8" type="radio" name="i"/>
+<input id="i9" type="radio" name="i"/>
+<input id="i10" type="radio" name="i"/>
+<input id="i11" type="radio" name="i"/>
+<input id="i12" type="radio" name="i"/>
+<input id="i13" type="radio" name="i"/>
+<input id="i14" type="radio" name="i"/>
+<input id="i15" type="radio" name="i"/>
+<input id="i16" type="radio" name="i"/>
+<input id="i17" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"></span><span class="comment"> *</span><span class="comment"> * Copyright 2017 gRPC authors.</span><span class="comment"> *</span><span class="comment"> * Licensed under the Apache License, Version 2.0 (the "License");</span><span class="comment"> * you may not use this file except in compliance with the License.</span><span class="comment"> * You may obtain a copy of the License at</span><span class="comment"> *</span><span class="comment"> *     http:www.apache.org/licenses/LICENSE-2.0</span><span class="comment"> *</span><span class="comment"> * Unless required by applicable law or agreed to in writing, software</span><span class="comment"> * distributed under the License is distributed on an "AS IS" BASIS,</span><span class="comment"> * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span><span class="comment"> * See the License for the specific language governing permissions and</span><span class="comment"> * limitations under the License.</span><span class="comment"> *</span><span class="comment"> </span></div>
+<div class="code"><pre><code>
+<span class="keyword">package</span> grpclb
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"context"</span></label>
+	<label for="i1"><span class="lit-string i1">"fmt"</span></label>
+	<label for="i2"><span class="lit-string i2">"io"</span></label>
+	<label for="i3"><span class="lit-string i3">"net"</span></label>
+	<label for="i4"><span class="lit-string i4">"sync"</span></label>
+	<label for="i5"><span class="lit-string i5">"time"</span></label>
+
+	<label for="i6"><span class="lit-string i6">"github.com/golang/protobuf/proto"</span></label>
+	<a href="../../../../../pkg/github.com/golang/protobuf/ptypes/timestamp.html" class="ident i7">timestamppb</a> <label for="i7"><span class="lit-string i7">"github.com/golang/protobuf/ptypes/timestamp"</span></label>
+	<label for="i8"><span class="lit-string i8">"github.com/google/go-cmp/cmp"</span></label>
+	<label for="i9"><span class="lit-string i9">"google.golang.org/grpc"</span></label>
+	<label for="i10"><span class="lit-string i10">"google.golang.org/grpc/balancer"</span></label>
+	<a href="../../../../../pkg/google.golang.org/grpc/balancer/grpclb/grpc_lb_v1.html" class="ident i11">lbpb</a> <label for="i11"><span class="lit-string i11">"google.golang.org/grpc/balancer/grpclb/grpc_lb_v1"</span></label>
+	<label for="i12"><span class="lit-string i12">"google.golang.org/grpc/connectivity"</span></label>
+	<label for="i13"><span class="lit-string i13">"google.golang.org/grpc/internal/backoff"</span></label>
+	<label for="i14"><span class="lit-string i14">"google.golang.org/grpc/internal/channelz"</span></label>
+	<label for="i15"><span class="lit-string i15">"google.golang.org/grpc/keepalive"</span></label>
+	<label for="i16"><span class="lit-string i16">"google.golang.org/grpc/metadata"</span></label>
+	<label for="i17"><span class="lit-string i17">"google.golang.org/grpc/resolver"</span></label>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> processServerList updates balancer's internal state, create/remove SubConns</span><span class="comment"> and regenerates picker using the received serverList.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r0" class="ident">lb</label> *<a href="grpclb.go.html#line-165" class="ident">lbBalancer</a>) <label for="r1" class="ident"><a href="../../../../../use/google.golang.org/grpc/balancer/grpclb..lbBalancer*3f54c.processServerList*9b66c.html" class="ident">processServerList</a></label>(<label for="r2" class="ident">l</label> *<a href="../../../../../pkg/google.golang.org/grpc/balancer/grpclb/grpc_lb_v1.html" class="ident i11">lbpb</a>.<a href="grpc_lb_v1/load_balancer.pb.go.html#line-458" class="ident">ServerList</a>) {
+	<span class="keyword">if</span> <a href="grpclb.go.html#line-53" class="ident">logger</a>.<a href="../../grpclog/loggerv2.go.html#line-64" class="ident">V</a>(<span class="lit-number">2</span>) {
+		<a href="grpclb.go.html#line-53" class="ident">logger</a>.<a href="../../grpclog/loggerv2.go.html#line-38" class="ident">Infof</a>(<span class="lit-string">"lbBalancer: processing server list: %+v"</span>, <label for="r2" class="ident">l</label>)
+	}
+	<label for="r0" class="ident">lb</label>.<a href="grpclb.go.html#line-197" class="ident">mu</a>.<a href="../../../../sync/mutex.go.html#line-72" class="ident">Lock</a>()
+	<span class="keyword">defer</span> <label for="r0" class="ident">lb</label>.<a href="grpclb.go.html#line-197" class="ident">mu</a>.<a href="../../../../sync/mutex.go.html#line-179" class="ident">Unlock</a>()
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Set serverListReceived to true so fallback will not take effect if it has</span><span class="comment">	 not hit timeout.</span></div>
+<div class="code"><pre><code>	<label for="r0" class="ident">lb</label>.<a href="grpclb.go.html#line-218" class="ident">serverListReceived</a> = <a href="../../../../../pkg/builtin.html#name-true" class="ident">true</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> If the new server list == old server list, do nothing.</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> <a href="../../../../../pkg/github.com/google/go-cmp/cmp.html" class="ident i8">cmp</a>.<a href="../../../../github.com/google/go-cmp/cmp/compare.go.html#line-92" class="ident">Equal</a>(<label for="r0" class="ident">lb</label>.<a href="grpclb.go.html#line-201" class="ident">fullServerList</a>, <label for="r2" class="ident">l</label>.<a href="grpc_lb_v1/load_balancer.pb.go.html#line-463" class="ident">Servers</a>, <a href="../../../../../pkg/github.com/google/go-cmp/cmp.html" class="ident i8">cmp</a>.<a href="../../../../github.com/google/go-cmp/cmp/options.go.html#line-342" class="ident">Comparer</a>(<a href="../../../../../pkg/github.com/golang/protobuf/proto.html" class="ident i6">proto</a>.<a href="../../../../github.com/golang/protobuf/proto/proto.go.html#line-160" class="ident">Equal</a>)) {
+		<span class="keyword">if</span> <a href="grpclb.go.html#line-53" class="ident">logger</a>.<a href="../../grpclog/loggerv2.go.html#line-64" class="ident">V</a>(<span class="lit-number">2</span>) {
+			<a href="grpclb.go.html#line-53" class="ident">logger</a>.<a href="../../grpclog/loggerv2.go.html#line-38" class="ident">Infof</a>(<span class="lit-string">"lbBalancer: new serverlist same as the previous one, ignoring"</span>)
+		}
+		<span class="keyword">return</span>
+	}
+	<label for="r0" class="ident">lb</label>.<a href="grpclb.go.html#line-201" class="ident">fullServerList</a> = <label for="r2" class="ident">l</label>.<a href="grpc_lb_v1/load_balancer.pb.go.html#line-463" class="ident">Servers</a>
+
+	<span class="keyword">var</span> <label for="r3" class="ident">backendAddrs</label> []<a href="../../../../../pkg/google.golang.org/grpc/resolver.html" class="ident i17">resolver</a>.<a href="../../resolver/resolver.go.html#line-97" class="ident">Address</a>
+	<span class="keyword">for</span> <label for="r4" class="ident">i</label>, <label for="r5" class="ident">s</label> := <span class="keyword">range</span> <label for="r2" class="ident">l</label>.<a href="grpc_lb_v1/load_balancer.pb.go.html#line-463" class="ident">Servers</a> {
+		<span class="keyword">if</span> <label for="r5" class="ident">s</label>.<a href="grpc_lb_v1/load_balancer.pb.go.html#line-520" class="ident">Drop</a> {
+			<span class="keyword">continue</span>
+		}
+
+		<label for="r6" class="ident">md</label> := <a href="../../../../../pkg/google.golang.org/grpc/metadata.html" class="ident i16">metadata</a>.<a href="../../metadata/metadata.go.html#line-73" class="ident">Pairs</a>(<a href="grpclb.go.html#line-47" class="ident">lbTokenKey</a>, <label for="r5" class="ident">s</label>.<a href="grpc_lb_v1/load_balancer.pb.go.html#line-516" class="ident">LoadBalanceToken</a>)
+		<label for="r7" class="ident">ip</label> := <a href="../../../../../pkg/net.html" class="ident i3">net</a>.<a href="../../../../net/ip.go.html#line-32" class="ident">IP</a>(<label for="r5" class="ident">s</label>.<a href="grpc_lb_v1/load_balancer.pb.go.html#line-506" class="ident">IpAddress</a>)
+		<label for="r8" class="ident">ipStr</label> := <label for="r7" class="ident">ip</label>.<a href="../../../../net/ip.go.html#line-291" class="ident">String</a>()
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Add square brackets to ipv6 addresses, otherwise net.Dial() and</span><span class="comment">			 net.SplitHostPort() will return too many colons error.</span></div>
+<div class="code"><pre><code>			<label for="r8" class="ident">ipStr</label> = <a href="../../../../../pkg/fmt.html" class="ident i1">fmt</a>.<a href="../../../../fmt/print.go.html#line-217" class="ident">Sprintf</a>(<span class="lit-string">"[%s]"</span>, <label for="r8" class="ident">ipStr</label>)
+		}
+		<label for="r9" class="ident">addr</label> := <a href="../../../../../pkg/google.golang.org/grpc/resolver.html" class="ident i17">resolver</a>.<a href="../../resolver/resolver.go.html#line-97" class="ident">Address</a>{
+			<a href="../../resolver/resolver.go.html#line-99" class="ident">Addr</a>:     <a href="../../../../../pkg/fmt.html" class="ident i1">fmt</a>.<a href="../../../../fmt/print.go.html#line-217" class="ident">Sprintf</a>(<span class="lit-string">"%s:%d"</span>, <label for="r8" class="ident">ipStr</label>, <label for="r5" class="ident">s</label>.<a href="grpc_lb_v1/load_balancer.pb.go.html#line-508" class="ident">Port</a>),
+			<a href="../../resolver/resolver.go.html#line-127" class="ident">Metadata</a>: &amp;<label for="r6" class="ident">md</label>,
+		}
+		<span class="keyword">if</span> <a href="grpclb.go.html#line-53" class="ident">logger</a>.<a href="../../grpclog/loggerv2.go.html#line-64" class="ident">V</a>(<span class="lit-number">2</span>) {
+			<a href="grpclb.go.html#line-53" class="ident">logger</a>.<a href="../../grpclog/loggerv2.go.html#line-38" class="ident">Infof</a>(<span class="lit-string">"lbBalancer: server list entry[%d]: ipStr:|%s|, port:|%d|, load balancer token:|%v|"</span>,
+				<label for="r4" class="ident">i</label>, <label for="r8" class="ident">ipStr</label>, <label for="r5" class="ident">s</label>.<a href="grpc_lb_v1/load_balancer.pb.go.html#line-508" class="ident">Port</a>, <label for="r5" class="ident">s</label>.<a href="grpc_lb_v1/load_balancer.pb.go.html#line-516" class="ident">LoadBalanceToken</a>)
+		}
+		<label for="r3" class="ident">backendAddrs</label> = <a href="../../../../../pkg/builtin.html#name-append" class="ident">append</a>(<label for="r3" class="ident">backendAddrs</label>, <label for="r9" class="ident">addr</label>)
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Call refreshSubConns to create/remove SubConns.  If we are in fallback,</span><span class="comment">	 this is also exiting fallback.</span></div>
+<div class="code"><pre><code>	<label for="r0" class="ident">lb</label>.<a href="#line-99" class="ident">refreshSubConns</a>(<label for="r3" class="ident">backendAddrs</label>, <a href="../../../../../pkg/builtin.html#name-false" class="ident">false</a>, <label for="r0" class="ident">lb</label>.<a href="grpclb.go.html#line-170" class="ident">usePickFirst</a>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> refreshSubConns creates/removes SubConns with backendAddrs, and refreshes</span><span class="comment"> balancer state and picker.</span><span class="comment"></span><span class="comment"> Caller must hold lb.mu.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r10" class="ident">lb</label> *<a href="grpclb.go.html#line-165" class="ident">lbBalancer</a>) <label for="r11" class="ident"><a href="../../../../../use/google.golang.org/grpc/balancer/grpclb..lbBalancer*3f54c.refreshSubConns*2d76c.html" class="ident">refreshSubConns</a></label>(<label for="r12" class="ident">backendAddrs</label> []<a href="../../../../../pkg/google.golang.org/grpc/resolver.html" class="ident i17">resolver</a>.<a href="../../resolver/resolver.go.html#line-97" class="ident">Address</a>, <label for="r13" class="ident">fallback</label> <a href="../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>, <label for="r14" class="ident">pickFirst</label> <a href="../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>) {
+	<label for="r15" class="ident">opts</label> := <a href="../../../../../pkg/google.golang.org/grpc/balancer.html" class="ident i10">balancer</a>.<a href="../balancer.go.html#line-110" class="ident">NewSubConnOptions</a>{}
+	<span class="keyword">if</span> !<label for="r13" class="ident">fallback</label> {
+		<label for="r15" class="ident">opts</label>.<a href="../balancer.go.html#line-117" class="ident">CredsBundle</a> = <label for="r10" class="ident">lb</label>.<a href="grpclb.go.html#line-179" class="ident">grpclbBackendCreds</a>
+	}
+
+	<label for="r10" class="ident">lb</label>.<a href="grpclb.go.html#line-204" class="ident">backendAddrs</a> = <label for="r12" class="ident">backendAddrs</label>
+	<label for="r10" class="ident">lb</label>.<a href="grpclb.go.html#line-209" class="ident">backendAddrsWithoutMetadata</a> = <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+
+	<label for="r16" class="ident">fallbackModeChanged</label> := <label for="r10" class="ident">lb</label>.<a href="grpclb.go.html#line-219" class="ident">inFallback</a> != <label for="r13" class="ident">fallback</label>
+	<label for="r10" class="ident">lb</label>.<a href="grpclb.go.html#line-219" class="ident">inFallback</a> = <label for="r13" class="ident">fallback</label>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Clear previous received list when entering fallback, so if the server</span><span class="comment">		 comes back and sends the same list again, the new addresses will be</span><span class="comment">		 used.</span></div>
+<div class="code"><pre><code>		<label for="r10" class="ident">lb</label>.<a href="grpclb.go.html#line-201" class="ident">fullServerList</a> = <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+	}
+
+	<label for="r17" class="ident">balancingPolicyChanged</label> := <label for="r10" class="ident">lb</label>.<a href="grpclb.go.html#line-170" class="ident">usePickFirst</a> != <label for="r14" class="ident">pickFirst</label>
+	<label for="r18" class="ident">oldUsePickFirst</label> := <label for="r10" class="ident">lb</label>.<a href="grpclb.go.html#line-170" class="ident">usePickFirst</a>
+	<label for="r10" class="ident">lb</label>.<a href="grpclb.go.html#line-170" class="ident">usePickFirst</a> = <label for="r14" class="ident">pickFirst</label>
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Remove all SubConns when switching balancing policy or switching</span><span class="comment">		 fallback mode.</span><span class="comment">		</span><span class="comment">		 For fallback mode switching with pickfirst, we want to recreate the</span><span class="comment">		 SubConn because the creds could be different.</span></div>
+<div class="code"><pre><code>		<span class="keyword">for</span> <label for="r19" class="ident">a</label>, <label for="r20" class="ident">sc</label> := <span class="keyword">range</span> <label for="r10" class="ident">lb</label>.<a href="grpclb.go.html#line-212" class="ident">subConns</a> {
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> If old SubConn were created for pickfirst, bypass cache and</span><span class="comment">				 remove directly.</span></div>
+<div class="code"><pre><code>				<label for="r10" class="ident">lb</label>.<a href="grpclb.go.html#line-166" class="ident">cc</a>.<a href="grpclb_util.go.html#line-98" class="ident">cc</a>.<a href="../balancer.go.html#line-145" class="ident">RemoveSubConn</a>(<label for="r20" class="ident">sc</label>)
+			} <span class="keyword">else</span> {
+				<label for="r10" class="ident">lb</label>.<a href="grpclb.go.html#line-166" class="ident">cc</a>.<a href="grpclb_util.go.html#line-149" class="ident">RemoveSubConn</a>(<label for="r20" class="ident">sc</label>)
+			}
+			<a href="../../../../../pkg/builtin.html#name-delete" class="ident">delete</a>(<label for="r10" class="ident">lb</label>.<a href="grpclb.go.html#line-212" class="ident">subConns</a>, <label for="r19" class="ident">a</label>)
+		}
+	}
+
+	<span class="keyword">if</span> <label for="r10" class="ident">lb</label>.<a href="grpclb.go.html#line-170" class="ident">usePickFirst</a> {
+		<span class="keyword">var</span> <label for="r21" class="ident">sc</label> <a href="../../../../../pkg/google.golang.org/grpc/balancer.html" class="ident i10">balancer</a>.<a href="../balancer.go.html#line-96" class="ident">SubConn</a>
+		<span class="keyword">for</span> _, <label for="r21" class="ident">sc</label> = <span class="keyword">range</span> <label for="r10" class="ident">lb</label>.<a href="grpclb.go.html#line-212" class="ident">subConns</a> {
+			<span class="keyword">break</span>
+		}
+		<span class="keyword">if</span> <label for="r21" class="ident">sc</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<label for="r21" class="ident">sc</label>.<a href="../balancer.go.html#line-104" class="ident">UpdateAddresses</a>(<label for="r12" class="ident">backendAddrs</label>)
+			<label for="r21" class="ident">sc</label>.<a href="../balancer.go.html#line-106" class="ident">Connect</a>()
+			<span class="keyword">return</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> This bypasses the cc wrapper with SubConn cache.</span></div>
+<div class="code"><pre><code>		<label for="r21" class="ident">sc</label>, <label for="r22" class="ident">err</label> := <label for="r10" class="ident">lb</label>.<a href="grpclb.go.html#line-166" class="ident">cc</a>.<a href="grpclb_util.go.html#line-98" class="ident">cc</a>.<a href="../balancer.go.html#line-142" class="ident">NewSubConn</a>(<label for="r12" class="ident">backendAddrs</label>, <label for="r15" class="ident">opts</label>)
+		<span class="keyword">if</span> <label for="r22" class="ident">err</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<a href="grpclb.go.html#line-53" class="ident">logger</a>.<a href="../../grpclog/loggerv2.go.html#line-44" class="ident">Warningf</a>(<span class="lit-string">"grpclb: failed to create new SubConn: %v"</span>, <label for="r22" class="ident">err</label>)
+			<span class="keyword">return</span>
+		}
+		<label for="r21" class="ident">sc</label>.<a href="../balancer.go.html#line-106" class="ident">Connect</a>()
+		<label for="r10" class="ident">lb</label>.<a href="grpclb.go.html#line-212" class="ident">subConns</a>[<label for="r12" class="ident">backendAddrs</label>[<span class="lit-number">0</span>]] = <label for="r21" class="ident">sc</label>
+		<label for="r10" class="ident">lb</label>.<a href="grpclb.go.html#line-213" class="ident">scStates</a>[<label for="r21" class="ident">sc</label>] = <a href="../../../../../pkg/google.golang.org/grpc/connectivity.html" class="ident i12">connectivity</a>.<a href="../../connectivity/connectivity.go.html#line-56" class="ident">Idle</a>
+		<span class="keyword">return</span>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> addrsSet is the set converted from backendAddrsWithoutMetadata, it's used to quick</span><span class="comment">	 lookup for an address.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Create new SubConns.</span></div>
+<div class="code"><pre><code>	<span class="keyword">for</span> <label for="r24" class="ident">_</label>, <label for="r25" class="ident">addr</label> := <span class="keyword">range</span> <label for="r12" class="ident">backendAddrs</label> {
+		<label for="r26" class="ident">addrWithoutMD</label> := <label for="r25" class="ident">addr</label>
+		<label for="r26" class="ident">addrWithoutMD</label>.<a href="../../resolver/resolver.go.html#line-127" class="ident">Metadata</a> = <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+		<label for="r23" class="ident">addrsSet</label>[<label for="r26" class="ident">addrWithoutMD</label>] = <span class="keyword">struct</span>{}{}
+		<label for="r10" class="ident">lb</label>.<a href="grpclb.go.html#line-209" class="ident">backendAddrsWithoutMetadata</a> = <a href="../../../../../pkg/builtin.html#name-append" class="ident">append</a>(<label for="r10" class="ident">lb</label>.<a href="grpclb.go.html#line-209" class="ident">backendAddrsWithoutMetadata</a>, <label for="r26" class="ident">addrWithoutMD</label>)
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Use addrWithMD to create the SubConn.</span></div>
+<div class="code"><pre><code>			<label for="r29" class="ident">sc</label>, <label for="r30" class="ident">err</label> := <label for="r10" class="ident">lb</label>.<a href="grpclb.go.html#line-166" class="ident">cc</a>.<a href="grpclb_util.go.html#line-123" class="ident">NewSubConn</a>([]<a href="../../../../../pkg/google.golang.org/grpc/resolver.html" class="ident i17">resolver</a>.<a href="../../resolver/resolver.go.html#line-97" class="ident">Address</a>{<label for="r25" class="ident">addr</label>}, <label for="r15" class="ident">opts</label>)
+			<span class="keyword">if</span> <label for="r30" class="ident">err</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+				<a href="grpclb.go.html#line-53" class="ident">logger</a>.<a href="../../grpclog/loggerv2.go.html#line-44" class="ident">Warningf</a>(<span class="lit-string">"grpclb: failed to create new SubConn: %v"</span>, <label for="r30" class="ident">err</label>)
+				<span class="keyword">continue</span>
+			}
+			<label for="r10" class="ident">lb</label>.<a href="grpclb.go.html#line-212" class="ident">subConns</a>[<label for="r26" class="ident">addrWithoutMD</label>] = <label for="r29" class="ident">sc</label> <span class="comment">// Use the addr without MD as key for the map.</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Only set state of new sc to IDLE. The state could already be</span><span class="comment">				 READY for cached SubConns.</span></div>
+<div class="code"><pre><code>				<label for="r10" class="ident">lb</label>.<a href="grpclb.go.html#line-213" class="ident">scStates</a>[<label for="r29" class="ident">sc</label>] = <a href="../../../../../pkg/google.golang.org/grpc/connectivity.html" class="ident i12">connectivity</a>.<a href="../../connectivity/connectivity.go.html#line-56" class="ident">Idle</a>
+			}
+			<label for="r29" class="ident">sc</label>.<a href="../balancer.go.html#line-106" class="ident">Connect</a>()
+		}
+	}
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> a was removed by resolver.</span></div>
+<div class="code"><pre><code>		<span class="keyword">if</span> <label for="r35" class="ident">_</label>, <label for="r36" class="ident">ok</label> := <label for="r23" class="ident">addrsSet</label>[<label for="r33" class="ident">a</label>]; !<label for="r36" class="ident">ok</label> {
+			<label for="r10" class="ident">lb</label>.<a href="grpclb.go.html#line-166" class="ident">cc</a>.<a href="grpclb_util.go.html#line-149" class="ident">RemoveSubConn</a>(<label for="r34" class="ident">sc</label>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Keep the state of this sc in b.scStates until sc's state becomes Shutdown.</span><span class="comment">			 The entry will be deleted in UpdateSubConnState.</span></div>
+<div class="code"><pre><code>		}
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Regenerate and update picker after refreshing subconns because with</span><span class="comment">	 cache, even if SubConn was newed/removed, there might be no state</span><span class="comment">	 changes (the subconn will be kept in cache, not actually</span><span class="comment">	 newed/removed).</span></div>
+<div class="code"><pre><code>	<label for="r10" class="ident">lb</label>.<a href="grpclb.go.html#line-355" class="ident">updateStateAndPicker</a>(<a href="../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <a href="../../../../../pkg/builtin.html#name-true" class="ident">true</a>)
+}
+
+<span class="keyword">type</span> <a href="../../../../../pkg/google.golang.org/grpc/balancer/grpclb.html#name-remoteBalancerCCWrapper" class="ident">remoteBalancerCCWrapper</a> <span class="keyword">struct</span> {
+	<a href="../../../../../use/google.golang.org/grpc/balancer/grpclb..remoteBalancerCCWrapper*135bf.cc*355b1.html" class="ident">cc</a>      *<a href="../../../../../pkg/google.golang.org/grpc.html" class="ident i9">grpc</a>.<a href="../../clientconn.go.html#line-477" class="ident">ClientConn</a>
+	<a href="../../../../../use/google.golang.org/grpc/balancer/grpclb..remoteBalancerCCWrapper*135bf.lb*fd26d.html" class="ident">lb</a>      *<a href="grpclb.go.html#line-165" class="ident">lbBalancer</a>
+	<a href="../../../../../use/google.golang.org/grpc/balancer/grpclb..remoteBalancerCCWrapper*135bf.backoff*42b6c.html" class="ident">backoff</a> <a href="../../../../../pkg/google.golang.org/grpc/internal/backoff.html" class="ident i13">backoff</a>.<a href="../../internal/backoff/backoff.go.html#line-34" class="ident">Strategy</a>
+	<a href="../../../../../use/google.golang.org/grpc/balancer/grpclb..remoteBalancerCCWrapper*135bf.done*a4c3e.html" class="ident">done</a>    <span class="keyword">chan</span> <span class="keyword">struct</span>{}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> waitgroup to wait for all goroutines to exit.</span></div>
+<div class="code"><pre><code>	<a href="../../../../../use/google.golang.org/grpc/balancer/grpclb..remoteBalancerCCWrapper*135bf.wg*99d38.html" class="ident">wg</a> <a href="../../../../../pkg/sync.html" class="ident i4">sync</a>.<a href="../../../../sync/waitgroup.go.html#line-20" class="ident">WaitGroup</a>
+}
+
+<span class="keyword">func</span> (<label for="r37" class="ident">lb</label> *<a href="grpclb.go.html#line-165" class="ident">lbBalancer</a>) <label for="r38" class="ident"><a href="../../../../../use/google.golang.org/grpc/balancer/grpclb..lbBalancer*3f54c.newRemoteBalancerCCWrapper*67e41.html" class="ident">newRemoteBalancerCCWrapper</a></label>() {
+	<span class="keyword">var</span> <label for="r39" class="ident">dopts</label> []<a href="../../../../../pkg/google.golang.org/grpc.html" class="ident i9">grpc</a>.<a href="../../dialoptions.go.html#line-78" class="ident">DialOption</a>
+	<span class="keyword">if</span> <label for="r40" class="ident">creds</label> := <label for="r37" class="ident">lb</label>.<a href="grpclb.go.html#line-168" class="ident">opt</a>.<a href="../balancer.go.html#line-168" class="ident">DialCreds</a>; <label for="r40" class="ident">creds</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<label for="r39" class="ident">dopts</label> = <a href="../../../../../pkg/builtin.html#name-append" class="ident">append</a>(<label for="r39" class="ident">dopts</label>, <a href="../../../../../pkg/google.golang.org/grpc.html" class="ident i9">grpc</a>.<a href="../../dialoptions.go.html#line-323" class="ident">WithTransportCredentials</a>(<label for="r40" class="ident">creds</label>))
+	} <span class="keyword">else</span> <span class="keyword">if</span> <label for="r41" class="ident">bundle</label> := <label for="r37" class="ident">lb</label>.<a href="grpclb.go.html#line-175" class="ident">grpclbClientConnCreds</a>; <label for="r41" class="ident">bundle</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<label for="r39" class="ident">dopts</label> = <a href="../../../../../pkg/builtin.html#name-append" class="ident">append</a>(<label for="r39" class="ident">dopts</label>, <a href="../../../../../pkg/google.golang.org/grpc.html" class="ident i9">grpc</a>.<a href="../../dialoptions.go.html#line-342" class="ident">WithCredentialsBundle</a>(<label for="r41" class="ident">bundle</label>))
+	} <span class="keyword">else</span> {
+		<label for="r39" class="ident">dopts</label> = <a href="../../../../../pkg/builtin.html#name-append" class="ident">append</a>(<label for="r39" class="ident">dopts</label>, <a href="../../../../../pkg/google.golang.org/grpc.html" class="ident i9">grpc</a>.<a href="../../dialoptions.go.html#line-304" class="ident">WithInsecure</a>())
+	}
+	<span class="keyword">if</span> <label for="r37" class="ident">lb</label>.<a href="grpclb.go.html#line-168" class="ident">opt</a>.<a href="../balancer.go.html#line-174" class="ident">Dialer</a> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<label for="r39" class="ident">dopts</label> = <a href="../../../../../pkg/builtin.html#name-append" class="ident">append</a>(<label for="r39" class="ident">dopts</label>, <a href="../../../../../pkg/google.golang.org/grpc.html" class="ident i9">grpc</a>.<a href="../../dialoptions.go.html#line-363" class="ident">WithContextDialer</a>(<label for="r37" class="ident">lb</label>.<a href="grpclb.go.html#line-168" class="ident">opt</a>.<a href="../balancer.go.html#line-174" class="ident">Dialer</a>))
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Explicitly set pickfirst as the balancer.</span></div>
+<div class="code"><pre><code>	<label for="r39" class="ident">dopts</label> = <a href="../../../../../pkg/builtin.html#name-append" class="ident">append</a>(<label for="r39" class="ident">dopts</label>, <a href="../../../../../pkg/google.golang.org/grpc.html" class="ident i9">grpc</a>.<a href="../../dialoptions.go.html#line-511" class="ident">WithDefaultServiceConfig</a>(<span class="lit-string">`{"loadBalancingPolicy":"pick_first"}`</span>))
+	<label for="r39" class="ident">dopts</label> = <a href="../../../../../pkg/builtin.html#name-append" class="ident">append</a>(<label for="r39" class="ident">dopts</label>, <a href="../../../../../pkg/google.golang.org/grpc.html" class="ident i9">grpc</a>.<a href="../../dialoptions.go.html#line-601" class="ident">WithResolvers</a>(<label for="r37" class="ident">lb</label>.<a href="grpclb.go.html#line-187" class="ident">manualResolver</a>))
+	<span class="keyword">if</span> <a href="../../../../../pkg/google.golang.org/grpc/internal/channelz.html" class="ident i14">channelz</a>.<a href="../../internal/channelz/funcs.go.html#line-58" class="ident">IsOn</a>() {
+		<label for="r39" class="ident">dopts</label> = <a href="../../../../../pkg/builtin.html#name-append" class="ident">append</a>(<label for="r39" class="ident">dopts</label>, <a href="../../../../../pkg/google.golang.org/grpc.html" class="ident i9">grpc</a>.<a href="../../dialoptions.go.html#line-485" class="ident">WithChannelzParentID</a>(<label for="r37" class="ident">lb</label>.<a href="grpclb.go.html#line-168" class="ident">opt</a>.<a href="../balancer.go.html#line-176" class="ident">ChannelzParentID</a>))
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Enable Keepalive for grpclb client.</span></div>
+<div class="code"><pre><code>	<label for="r39" class="ident">dopts</label> = <a href="../../../../../pkg/builtin.html#name-append" class="ident">append</a>(<label for="r39" class="ident">dopts</label>, <a href="../../../../../pkg/google.golang.org/grpc.html" class="ident i9">grpc</a>.<a href="../../dialoptions.go.html#line-423" class="ident">WithKeepaliveParams</a>(<a href="../../../../../pkg/google.golang.org/grpc/keepalive.html" class="ident i15">keepalive</a>.<a href="../../keepalive/keepalive.go.html#line-33" class="ident">ClientParameters</a>{
+		<a href="../../keepalive/keepalive.go.html#line-37" class="ident">Time</a>:                <span class="lit-number">20</span> * <a href="../../../../../pkg/time.html" class="ident i5">time</a>.<a href="../../../../time/time.go.html#line-605" class="ident">Second</a>,
+		<a href="../../keepalive/keepalive.go.html#line-41" class="ident">Timeout</a>:             <span class="lit-number">10</span> * <a href="../../../../../pkg/time.html" class="ident i5">time</a>.<a href="../../../../time/time.go.html#line-605" class="ident">Second</a>,
+		<a href="../../keepalive/keepalive.go.html#line-45" class="ident">PermitWithoutStream</a>: <a href="../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	}))
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> The dial target is not important.</span><span class="comment">	</span><span class="comment">	 The grpclb server addresses will set field ServerName, and creds will</span><span class="comment">	 receive ServerName as authority.</span></div>
+<div class="code"><pre><code>	<label for="r42" class="ident">cc</label>, <label for="r43" class="ident">err</label> := <a href="../../../../../pkg/google.golang.org/grpc.html" class="ident i9">grpc</a>.<a href="../../clientconn.go.html#line-123" class="ident">DialContext</a>(<a href="../../../../../pkg/context.html" class="ident i0">context</a>.<a href="../../../../context/context.go.html#line-208" class="ident">Background</a>(), <label for="r37" class="ident">lb</label>.<a href="grpclb.go.html#line-187" class="ident">manualResolver</a>.<a href="grpclb_util.go.html#line-74" class="ident">Scheme</a>()+<span class="lit-string">":///grpclb.subClientConn"</span>, <label for="r39" class="ident">dopts</label>...)
+	<span class="keyword">if</span> <label for="r43" class="ident">err</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<a href="grpclb.go.html#line-53" class="ident">logger</a>.<a href="../../grpclog/loggerv2.go.html#line-62" class="ident">Fatalf</a>(<span class="lit-string">"failed to dial: %v"</span>, <label for="r43" class="ident">err</label>)
+	}
+	<label for="r44" class="ident">ccw</label> := &amp;<a href="#line-205" class="ident">remoteBalancerCCWrapper</a>{
+		<a href="#line-206" class="ident">cc</a>:      <label for="r42" class="ident">cc</label>,
+		<a href="#line-207" class="ident">lb</a>:      <label for="r37" class="ident">lb</label>,
+		<a href="#line-208" class="ident">backoff</a>: <label for="r37" class="ident">lb</label>.<a href="grpclb.go.html#line-191" class="ident">backoff</a>,
+		<a href="#line-209" class="ident">done</a>:    <a href="../../../../runtime/chan.go.html#line-71">make</a>(<span class="keyword">chan</span> <span class="keyword">struct</span>{}),
+	}
+	<label for="r37" class="ident">lb</label>.<a href="grpclb.go.html#line-189" class="ident">ccRemoteLB</a> = <label for="r44" class="ident">ccw</label>
+	<label for="r44" class="ident">ccw</label>.<a href="#line-212" class="ident">wg</a>.<a href="../../../../sync/waitgroup.go.html#line-53" class="ident">Add</a>(<span class="lit-number">1</span>)
+	<span class="keyword">go</span> <label for="r44" class="ident">ccw</label>.<a href="#line-364" class="ident">watchRemoteBalancer</a>()
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> close closed the ClientConn to remote balancer, and waits until all</span><span class="comment"> goroutines to finish.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r45" class="ident">ccw</label> *<a href="#line-205" class="ident">remoteBalancerCCWrapper</a>) <label for="r46" class="ident"><a href="../../../../../use/google.golang.org/grpc/balancer/grpclb..remoteBalancerCCWrapper*135bf.close*310ff.html" class="ident">close</a></label>() {
+	<a href="../../../../../pkg/builtin.html#name-close" class="ident">close</a>(<label for="r45" class="ident">ccw</label>.<a href="#line-209" class="ident">done</a>)
+	<label for="r45" class="ident">ccw</label>.<a href="#line-206" class="ident">cc</a>.<a href="../../clientconn.go.html#line-988" class="ident">Close</a>()
+	<label for="r45" class="ident">ccw</label>.<a href="#line-212" class="ident">wg</a>.<a href="../../../../sync/waitgroup.go.html#line-103" class="ident">Wait</a>()
+}
+
+<span class="keyword">func</span> (<label for="r47" class="ident">ccw</label> *<a href="#line-205" class="ident">remoteBalancerCCWrapper</a>) <label for="r48" class="ident"><a href="../../../../../use/google.golang.org/grpc/balancer/grpclb..remoteBalancerCCWrapper*135bf.readServerList*e12d1.html" class="ident">readServerList</a></label>(<label for="r49" class="ident">s</label> *<a href="grpclb.go.html#line-83" class="ident">balanceLoadClientStream</a>) <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<span class="keyword">for</span> {
+		<label for="r50" class="ident">reply</label>, <label for="r51" class="ident">err</label> := <label for="r49" class="ident">s</label>.<a href="grpclb.go.html#line-91" class="ident">Recv</a>()
+		<span class="keyword">if</span> <label for="r51" class="ident">err</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<span class="keyword">if</span> <label for="r51" class="ident">err</label> == <a href="../../../../../pkg/io.html" class="ident i2">io</a>.<a href="../../../../io/io.go.html#line-44" class="ident">EOF</a> {
+				<span class="keyword">return</span> <a href="grpclb.go.html#line-52" class="ident">errServerTerminatedConnection</a>
+			}
+			<span class="keyword">return</span> <a href="../../../../../pkg/fmt.html" class="ident i1">fmt</a>.<a href="../../../../fmt/errors.go.html#line-17" class="ident">Errorf</a>(<span class="lit-string">"grpclb: failed to recv server list: %v"</span>, <label for="r51" class="ident">err</label>)
+		}
+		<span class="keyword">if</span> <label for="r52" class="ident">serverList</label> := <label for="r50" class="ident">reply</label>.<a href="grpc_lb_v1/load_balancer.pb.go.html#line-362" class="ident">GetServerList</a>(); <label for="r52" class="ident">serverList</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<label for="r47" class="ident">ccw</label>.<a href="#line-207" class="ident">lb</a>.<a href="#line-45" class="ident">processServerList</a>(<label for="r52" class="ident">serverList</label>)
+		}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Eagerly enter fallback</span></div>
+<div class="code"><pre><code>			<label for="r47" class="ident">ccw</label>.<a href="#line-207" class="ident">lb</a>.<a href="grpclb.go.html#line-197" class="ident">mu</a>.<a href="../../../../sync/mutex.go.html#line-72" class="ident">Lock</a>()
+			<label for="r47" class="ident">ccw</label>.<a href="#line-207" class="ident">lb</a>.<a href="#line-99" class="ident">refreshSubConns</a>(<label for="r47" class="ident">ccw</label>.<a href="#line-207" class="ident">lb</a>.<a href="grpclb.go.html#line-223" class="ident">resolvedBackendAddrs</a>, <a href="../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <label for="r47" class="ident">ccw</label>.<a href="#line-207" class="ident">lb</a>.<a href="grpclb.go.html#line-170" class="ident">usePickFirst</a>)
+			<label for="r47" class="ident">ccw</label>.<a href="#line-207" class="ident">lb</a>.<a href="grpclb.go.html#line-197" class="ident">mu</a>.<a href="../../../../sync/mutex.go.html#line-179" class="ident">Unlock</a>()
+		}
+	}
+}
+
+<span class="keyword">func</span> (<label for="r53" class="ident">ccw</label> *<a href="#line-205" class="ident">remoteBalancerCCWrapper</a>) <label for="r54" class="ident"><a href="../../../../../use/google.golang.org/grpc/balancer/grpclb..remoteBalancerCCWrapper*135bf.sendLoadReport*f40dc.html" class="ident">sendLoadReport</a></label>(<label for="r55" class="ident">s</label> *<a href="grpclb.go.html#line-83" class="ident">balanceLoadClientStream</a>, <label for="r56" class="ident">interval</label> <a href="../../../../../pkg/time.html" class="ident i5">time</a>.<a href="../../../../time/time.go.html#line-583" class="ident">Duration</a>) {
+	<label for="r57" class="ident">ticker</label> := <a href="../../../../../pkg/time.html" class="ident i5">time</a>.<a href="../../../../time/tick.go.html#line-22" class="ident">NewTicker</a>(<label for="r56" class="ident">interval</label>)
+	<span class="keyword">defer</span> <label for="r57" class="ident">ticker</label>.<a href="../../../../time/tick.go.html#line-46" class="ident">Stop</a>()
+	<label for="r58" class="ident">lastZero</label> := <a href="../../../../../pkg/builtin.html#name-false" class="ident">false</a>
+	<span class="keyword">for</span> {
+		<a href="../../../../runtime/select.go.html#line-121"><span class="keyword">select</span></a> {
+		<span class="keyword">case</span> <a href="../../../../runtime/chan.go.html#line-438">&lt;-</a><label for="r57" class="ident">ticker</label>.<a href="../../../../time/tick.go.html#line-12" class="ident">C</a>:
+		<span class="keyword">case</span> <a href="../../../../runtime/chan.go.html#line-438">&lt;-</a><label for="r55" class="ident">s</label>.<a href="../../stream.go.html#line-95" class="ident">Context</a>().<a href="../../../../context/context.go.html#line-99" class="ident">Done</a>():
+			<span class="keyword">return</span>
+		}
+		<label for="r59" class="ident">stats</label> := <label for="r53" class="ident">ccw</label>.<a href="#line-207" class="ident">lb</a>.<a href="grpclb.go.html#line-195" class="ident">clientStats</a>.<a href="grpclb_picker.go.html#line-61" class="ident">toClientStats</a>()
+		<label for="r60" class="ident">zero</label> := <a href="grpclb_picker.go.html#line-52" class="ident">isZeroStats</a>(<label for="r59" class="ident">stats</label>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Quash redundant empty load reports.</span></div>
+<div class="code"><pre><code>			<span class="keyword">continue</span>
+		}
+		<label for="r58" class="ident">lastZero</label> = <label for="r60" class="ident">zero</label>
+		<label for="r61" class="ident">t</label> := <a href="../../../../../pkg/time.html" class="ident i5">time</a>.<a href="../../../../time/time.go.html#line-1066" class="ident">Now</a>()
+		<label for="r59" class="ident">stats</label>.<a href="grpc_lb_v1/load_balancer.pb.go.html#line-206" class="ident">Timestamp</a> = &amp;<a href="../../../../../pkg/github.com/golang/protobuf/ptypes/timestamp.html" class="ident i7">timestamppb</a>.<a href="../../../../github.com/golang/protobuf/ptypes/timestamp/timestamp.pb.go.html#line-15" class="ident">Timestamp</a>{
+			<a href="../../../protobuf/types/known/timestamppb/timestamp.pb.go.html#line-178" class="ident">Seconds</a>: <label for="r61" class="ident">t</label>.<a href="../../../../time/time.go.html#line-1127" class="ident">Unix</a>(),
+			<a href="../../../protobuf/types/known/timestamppb/timestamp.pb.go.html#line-183" class="ident">Nanos</a>:   <a href="../../../../../pkg/builtin.html#name-int32" class="ident">int32</a>(<label for="r61" class="ident">t</label>.<a href="../../../../time/time.go.html#line-569" class="ident">Nanosecond</a>()),
+		}
+		<span class="keyword">if</span> <label for="r62" class="ident">err</label> := <label for="r55" class="ident">s</label>.<a href="grpclb.go.html#line-87" class="ident">Send</a>(&amp;<a href="../../../../../pkg/google.golang.org/grpc/balancer/grpclb/grpc_lb_v1.html" class="ident i11">lbpb</a>.<a href="grpc_lb_v1/load_balancer.pb.go.html#line-29" class="ident">LoadBalanceRequest</a>{
+			<a href="grpc_lb_v1/load_balancer.pb.go.html#line-33" class="ident">LoadBalanceRequestType</a>: &amp;<a href="../../../../../pkg/google.golang.org/grpc/balancer/grpclb/grpc_lb_v1.html" class="ident i11">lbpb</a>.<a href="grpc_lb_v1/load_balancer.pb.go.html#line-72" class="ident">LoadBalanceRequest_ClientStats</a>{
+				<a href="grpc_lb_v1/load_balancer.pb.go.html#line-73" class="ident">ClientStats</a>: <label for="r59" class="ident">stats</label>,
+			},
+		}); <label for="r62" class="ident">err</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<span class="keyword">return</span>
+		}
+	}
+}
+
+<span class="keyword">func</span> (<label for="r63" class="ident">ccw</label> *<a href="#line-205" class="ident">remoteBalancerCCWrapper</a>) <label for="r64" class="ident"><a href="../../../../../use/google.golang.org/grpc/balancer/grpclb..remoteBalancerCCWrapper*135bf.callRemoteBalancer*f05c3.html" class="ident">callRemoteBalancer</a></label>() (<label for="r65" class="ident">backoff</label> <a href="../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>, <label for="r66" class="ident">_</label> <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<label for="r67" class="ident">lbClient</label> := &amp;<a href="grpclb.go.html#line-65" class="ident">loadBalancerClient</a>{<a href="grpclb.go.html#line-66" class="ident">cc</a>: <label for="r63" class="ident">ccw</label>.<a href="#line-206" class="ident">cc</a>}
+	<label for="r68" class="ident">ctx</label>, <label for="r69" class="ident">cancel</label> := <a href="../../../../../pkg/context.html" class="ident i0">context</a>.<a href="../../../../context/context.go.html#line-232" class="ident">WithCancel</a>(<a href="../../../../../pkg/context.html" class="ident i0">context</a>.<a href="../../../../context/context.go.html#line-208" class="ident">Background</a>())
+	<span class="keyword">defer</span> <label for="r69" class="ident">cancel</label>()
+	<label for="r70" class="ident">stream</label>, <label for="r71" class="ident">err</label> := <label for="r67" class="ident">lbClient</label>.<a href="grpclb.go.html#line-69" class="ident">BalanceLoad</a>(<label for="r68" class="ident">ctx</label>, <a href="../../../../../pkg/google.golang.org/grpc.html" class="ident i9">grpc</a>.<a href="../../rpc_util.go.html#line-259" class="ident">WaitForReady</a>(<a href="../../../../../pkg/builtin.html#name-true" class="ident">true</a>))
+	<span class="keyword">if</span> <label for="r71" class="ident">err</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <a href="../../../../../pkg/fmt.html" class="ident i1">fmt</a>.<a href="../../../../fmt/errors.go.html#line-17" class="ident">Errorf</a>(<span class="lit-string">"grpclb: failed to perform RPC to the remote balancer %v"</span>, <label for="r71" class="ident">err</label>)
+	}
+	<label for="r63" class="ident">ccw</label>.<a href="#line-207" class="ident">lb</a>.<a href="grpclb.go.html#line-197" class="ident">mu</a>.<a href="../../../../sync/mutex.go.html#line-72" class="ident">Lock</a>()
+	<label for="r63" class="ident">ccw</label>.<a href="#line-207" class="ident">lb</a>.<a href="grpclb.go.html#line-217" class="ident">remoteBalancerConnected</a> = <a href="../../../../../pkg/builtin.html#name-true" class="ident">true</a>
+	<label for="r63" class="ident">ccw</label>.<a href="#line-207" class="ident">lb</a>.<a href="grpclb.go.html#line-197" class="ident">mu</a>.<a href="../../../../sync/mutex.go.html#line-179" class="ident">Unlock</a>()
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> grpclb handshake on the stream.</span></div>
+<div class="code"><pre><code>	<label for="r72" class="ident">initReq</label> := &amp;<a href="../../../../../pkg/google.golang.org/grpc/balancer/grpclb/grpc_lb_v1.html" class="ident i11">lbpb</a>.<a href="grpc_lb_v1/load_balancer.pb.go.html#line-29" class="ident">LoadBalanceRequest</a>{
+		<a href="grpc_lb_v1/load_balancer.pb.go.html#line-33" class="ident">LoadBalanceRequestType</a>: &amp;<a href="../../../../../pkg/google.golang.org/grpc/balancer/grpclb/grpc_lb_v1.html" class="ident i11">lbpb</a>.<a href="grpc_lb_v1/load_balancer.pb.go.html#line-68" class="ident">LoadBalanceRequest_InitialRequest</a>{
+			<a href="grpc_lb_v1/load_balancer.pb.go.html#line-69" class="ident">InitialRequest</a>: &amp;<a href="../../../../../pkg/google.golang.org/grpc/balancer/grpclb/grpc_lb_v1.html" class="ident i11">lbpb</a>.<a href="grpc_lb_v1/load_balancer.pb.go.html#line-109" class="ident">InitialLoadBalanceRequest</a>{
+				<a href="grpc_lb_v1/load_balancer.pb.go.html#line-114" class="ident">Name</a>: <label for="r63" class="ident">ccw</label>.<a href="#line-207" class="ident">lb</a>.<a href="grpclb.go.html#line-167" class="ident">target</a>,
+			},
+		},
+	}
+	<span class="keyword">if</span> <label for="r73" class="ident">err</label> := <label for="r70" class="ident">stream</label>.<a href="grpclb.go.html#line-87" class="ident">Send</a>(<label for="r72" class="ident">initReq</label>); <label for="r73" class="ident">err</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <a href="../../../../../pkg/fmt.html" class="ident i1">fmt</a>.<a href="../../../../fmt/errors.go.html#line-17" class="ident">Errorf</a>(<span class="lit-string">"grpclb: failed to send init request: %v"</span>, <label for="r73" class="ident">err</label>)
+	}
+	<label for="r74" class="ident">reply</label>, <label for="r71" class="ident">err</label> := <label for="r70" class="ident">stream</label>.<a href="grpclb.go.html#line-91" class="ident">Recv</a>()
+	<span class="keyword">if</span> <label for="r71" class="ident">err</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <a href="../../../../../pkg/fmt.html" class="ident i1">fmt</a>.<a href="../../../../fmt/errors.go.html#line-17" class="ident">Errorf</a>(<span class="lit-string">"grpclb: failed to recv init response: %v"</span>, <label for="r71" class="ident">err</label>)
+	}
+	<label for="r75" class="ident">initResp</label> := <label for="r74" class="ident">reply</label>.<a href="grpc_lb_v1/load_balancer.pb.go.html#line-355" class="ident">GetInitialResponse</a>()
+	<span class="keyword">if</span> <label for="r75" class="ident">initResp</label> == <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <a href="../../../../../pkg/fmt.html" class="ident i1">fmt</a>.<a href="../../../../fmt/errors.go.html#line-17" class="ident">Errorf</a>(<span class="lit-string">"grpclb: reply from remote balancer did not include initial response"</span>)
+	}
+
+	<label for="r63" class="ident">ccw</label>.<a href="#line-212" class="ident">wg</a>.<a href="../../../../sync/waitgroup.go.html#line-53" class="ident">Add</a>(<span class="lit-number">1</span>)
+	<span class="keyword">go</span> <span class="keyword">func</span>() {
+		<span class="keyword">defer</span> <label for="r63" class="ident">ccw</label>.<a href="#line-212" class="ident">wg</a>.<a href="../../../../sync/waitgroup.go.html#line-98" class="ident">Done</a>()
+		<span class="keyword">if</span> <label for="r76" class="ident">d</label> := <a href="grpclb.go.html#line-55" class="ident">convertDuration</a>(<label for="r75" class="ident">initResp</label>.<a href="grpc_lb_v1/load_balancer.pb.go.html#line-420" class="ident">ClientStatsReportInterval</a>); <label for="r76" class="ident">d</label> &gt; <span class="lit-number">0</span> {
+			<label for="r63" class="ident">ccw</label>.<a href="#line-289" class="ident">sendLoadReport</a>(<label for="r70" class="ident">stream</label>, <label for="r76" class="ident">d</label>)
+		}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> No backoff if init req/resp handshake was successful.</span></div>
+<div class="code"><pre><code>	<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-false" class="ident">false</a>, <label for="r63" class="ident">ccw</label>.<a href="#line-268" class="ident">readServerList</a>(<label for="r70" class="ident">stream</label>)
+}
+
+<span class="keyword">func</span> (<label for="r77" class="ident">ccw</label> *<a href="#line-205" class="ident">remoteBalancerCCWrapper</a>) <label for="r78" class="ident"><a href="../../../../../use/google.golang.org/grpc/balancer/grpclb..remoteBalancerCCWrapper*135bf.watchRemoteBalancer*8f54c.html" class="ident">watchRemoteBalancer</a></label>() {
+	<span class="keyword">defer</span> <label for="r77" class="ident">ccw</label>.<a href="#line-212" class="ident">wg</a>.<a href="../../../../sync/waitgroup.go.html#line-98" class="ident">Done</a>()
+	<span class="keyword">var</span> <label for="r79" class="ident">retryCount</label> <a href="../../../../../pkg/builtin.html#name-int" class="ident">int</a>
+	<span class="keyword">for</span> {
+		<label for="r80" class="ident">doBackoff</label>, <label for="r81" class="ident">err</label> := <label for="r77" class="ident">ccw</label>.<a href="#line-321" class="ident">callRemoteBalancer</a>()
+		<a href="../../../../runtime/chan.go.html#line-707"><span class="keyword">select</span></a> {
+		<span class="keyword">case</span> <a href="../../../../runtime/chan.go.html#line-438">&lt;-</a><label for="r77" class="ident">ccw</label>.<a href="#line-209" class="ident">done</a>:
+			<span class="keyword">return</span>
+		<span class="keyword">default</span>:
+			<span class="keyword">if</span> <label for="r81" class="ident">err</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+				<span class="keyword">if</span> <label for="r81" class="ident">err</label> == <a href="grpclb.go.html#line-52" class="ident">errServerTerminatedConnection</a> {
+					<a href="grpclb.go.html#line-53" class="ident">logger</a>.<a href="../../grpclog/loggerv2.go.html#line-34" class="ident">Info</a>(<label for="r81" class="ident">err</label>)
+				} <span class="keyword">else</span> {
+					<a href="grpclb.go.html#line-53" class="ident">logger</a>.<a href="../../grpclog/loggerv2.go.html#line-40" class="ident">Warning</a>(<label for="r81" class="ident">err</label>)
+				}
+			}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Trigger a re-resolve when the stream errors.</span></div>
+<div class="code"><pre><code>		<label for="r77" class="ident">ccw</label>.<a href="#line-207" class="ident">lb</a>.<a href="grpclb.go.html#line-166" class="ident">cc</a>.<a href="grpclb_util.go.html#line-98" class="ident">cc</a>.<a href="../balancer.go.html#line-155" class="ident">ResolveNow</a>(<a href="../../../../../pkg/google.golang.org/grpc/resolver.html" class="ident i17">resolver</a>.<a href="../../resolver/resolver.go.html#line-237" class="ident">ResolveNowOptions</a>{})
+
+		<label for="r77" class="ident">ccw</label>.<a href="#line-207" class="ident">lb</a>.<a href="grpclb.go.html#line-197" class="ident">mu</a>.<a href="../../../../sync/mutex.go.html#line-72" class="ident">Lock</a>()
+		<label for="r77" class="ident">ccw</label>.<a href="#line-207" class="ident">lb</a>.<a href="grpclb.go.html#line-217" class="ident">remoteBalancerConnected</a> = <a href="../../../../../pkg/builtin.html#name-false" class="ident">false</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Enter fallback when connection to remote balancer is lost, and the</span><span class="comment">		 aggregated state is not Ready.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Entering fallback.</span></div>
+<div class="code"><pre><code>			<label for="r77" class="ident">ccw</label>.<a href="#line-207" class="ident">lb</a>.<a href="#line-99" class="ident">refreshSubConns</a>(<label for="r77" class="ident">ccw</label>.<a href="#line-207" class="ident">lb</a>.<a href="grpclb.go.html#line-223" class="ident">resolvedBackendAddrs</a>, <a href="../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <label for="r77" class="ident">ccw</label>.<a href="#line-207" class="ident">lb</a>.<a href="grpclb.go.html#line-170" class="ident">usePickFirst</a>)
+		}
+		<label for="r77" class="ident">ccw</label>.<a href="#line-207" class="ident">lb</a>.<a href="grpclb.go.html#line-197" class="ident">mu</a>.<a href="../../../../sync/mutex.go.html#line-179" class="ident">Unlock</a>()
+
+		<span class="keyword">if</span> !<label for="r80" class="ident">doBackoff</label> {
+			<label for="r79" class="ident">retryCount</label> = <span class="lit-number">0</span>
+			<span class="keyword">continue</span>
+		}
+
+		<label for="r82" class="ident">timer</label> := <a href="../../../../../pkg/time.html" class="ident i5">time</a>.<a href="../../../../time/sleep.go.html#line-86" class="ident">NewTimer</a>(<label for="r77" class="ident">ccw</label>.<a href="#line-208" class="ident">backoff</a>.<a href="../../internal/backoff/backoff.go.html#line-37" class="ident">Backoff</a>(<label for="r79" class="ident">retryCount</label>)) <span class="comment">// Copy backoff</span>
+		<a href="../../../../runtime/select.go.html#line-121"><span class="keyword">select</span></a> {
+		<span class="keyword">case</span> <a href="../../../../runtime/chan.go.html#line-438">&lt;-</a><label for="r82" class="ident">timer</label>.<a href="../../../../time/sleep.go.html#line-51" class="ident">C</a>:
+		<span class="keyword">case</span> <a href="../../../../runtime/chan.go.html#line-438">&lt;-</a><label for="r77" class="ident">ccw</label>.<a href="#line-209" class="ident">done</a>:
+			<label for="r82" class="ident">timer</label>.<a href="../../../../time/sleep.go.html#line-77" class="ident">Stop</a>()
+			<span class="keyword">return</span>
+		}
+		<label for="r79" class="ident">retryCount</label>++
+	}
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

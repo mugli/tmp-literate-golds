@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: gcc_util.c in package runtime/cgo</title>
+<link href="../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	gcc_util.c
+
+<span class="title">Belonging Package</span>
+	<a href="../../../pkg/runtime/cgo.html">runtime/cgo</a>
+</code></pre>
+<div id="container"><div class="section">
+<div class="doc">
+</div>
+<div class="code"><pre><code>// Copyright 2009 The Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+#include "libcgo.h"
+
+/* Stub for creating a new thread */
+void
+x_cgo_thread_start(ThreadStart *arg)
+{
+	ThreadStart *ts;
+
+	/* Make our own copy that can persist after we return. */
+	_cgo_tsan_acquire();
+	ts = malloc(sizeof *ts);
+	_cgo_tsan_release();
+	if(ts == nil) {
+		fprintf(stderr, "runtime/cgo: out of memory in thread_start\n");
+		abort();
+	}
+	*ts = *arg;
+
+	_cgo_sys_thread_start(ts);	/* OS-dependent half */
+}
+
+#ifndef CGO_TSAN
+void(* const _cgo_yield)() = NULL;
+#else
+
+#include &lt;string.h&gt;
+
+char x_cgo_yield_strncpy_src = 0;
+char x_cgo_yield_strncpy_dst = 0;
+size_t x_cgo_yield_strncpy_n = 0;
+
+/*
+Stub for allowing libc interceptors to execute.
+
+_cgo_yield is set to NULL if we do not expect libc interceptors to exist.
+*/
+static void
+x_cgo_yield()
+{
+	/*
+	The libc function(s) we call here must form a no-op and include at least one
+	call that triggers TSAN to process pending asynchronous signals.
+
+	sleep(0) would be fine, but it's not portable C (so it would need more header
+	guards).
+	free(NULL) has a fast-path special case in TSAN, so it doesn't
+	trigger signal delivery.
+	free(malloc(0)) would work (triggering the interceptors in malloc), but
+	it also runs a bunch of user-supplied malloc hooks.
+
+	So we choose strncpy(_, _, 0): it requires an extra header,
+	but it's standard and should be very efficient.
+
+	GCC 7 has an unfortunate habit of optimizing out strncpy calls (see
+	https://golang.org/issue/21196), so the arguments here need to be global
+	variables with external linkage in order to ensure that the call traps all the
+	way down into libc.
+	*/
+	strncpy(&amp;x_cgo_yield_strncpy_dst, &amp;x_cgo_yield_strncpy_src,
+	        x_cgo_yield_strncpy_n);
+}
+
+void(* const _cgo_yield)() = &amp;x_cgo_yield;
+
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

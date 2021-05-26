@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: write.go in package golang.org/x/net/http2</title>
+<link href="../../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	write.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../../pkg/golang.org/x/net/http2.html">golang.org/x/net/http2</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16],
+input[id=r17]:checked ~pre label[for=r17],
+input[id=r18]:checked ~pre label[for=r18],
+input[id=r19]:checked ~pre label[for=r19],
+input[id=r20]:checked ~pre label[for=r20],
+input[id=r21]:checked ~pre label[for=r21],
+input[id=r22]:checked ~pre label[for=r22],
+input[id=r23]:checked ~pre label[for=r23],
+input[id=r24]:checked ~pre label[for=r24],
+input[id=r25]:checked ~pre label[for=r25],
+input[id=r26]:checked ~pre label[for=r26],
+input[id=r27]:checked ~pre label[for=r27],
+input[id=r28]:checked ~pre label[for=r28],
+input[id=r29]:checked ~pre label[for=r29],
+input[id=r30]:checked ~pre label[for=r30],
+input[id=r31]:checked ~pre label[for=r31],
+input[id=r32]:checked ~pre label[for=r32],
+input[id=r33]:checked ~pre label[for=r33],
+input[id=r34]:checked ~pre label[for=r34],
+input[id=r35]:checked ~pre label[for=r35],
+input[id=r36]:checked ~pre label[for=r36],
+input[id=r37]:checked ~pre label[for=r37],
+input[id=r38]:checked ~pre label[for=r38],
+input[id=r39]:checked ~pre label[for=r39],
+input[id=r40]:checked ~pre label[for=r40],
+input[id=r41]:checked ~pre label[for=r41],
+input[id=r42]:checked ~pre label[for=r42],
+input[id=r43]:checked ~pre label[for=r43],
+input[id=r44]:checked ~pre label[for=r44],
+input[id=r45]:checked ~pre label[for=r45],
+input[id=r46]:checked ~pre label[for=r46],
+input[id=r47]:checked ~pre label[for=r47],
+input[id=r48]:checked ~pre label[for=r48],
+input[id=r49]:checked ~pre label[for=r49],
+input[id=r50]:checked ~pre label[for=r50],
+input[id=r51]:checked ~pre label[for=r51],
+input[id=r52]:checked ~pre label[for=r52],
+input[id=r53]:checked ~pre label[for=r53],
+input[id=r54]:checked ~pre label[for=r54],
+input[id=r55]:checked ~pre label[for=r55],
+input[id=r56]:checked ~pre label[for=r56],
+input[id=r57]:checked ~pre label[for=r57],
+input[id=r58]:checked ~pre label[for=r58],
+input[id=r59]:checked ~pre label[for=r59],
+input[id=r60]:checked ~pre label[for=r60],
+input[id=r61]:checked ~pre label[for=r61],
+input[id=r62]:checked ~pre label[for=r62],
+input[id=r63]:checked ~pre label[for=r63],
+input[id=r64]:checked ~pre label[for=r64],
+input[id=r65]:checked ~pre label[for=r65],
+input[id=r66]:checked ~pre label[for=r66],
+input[id=r67]:checked ~pre label[for=r67],
+input[id=r68]:checked ~pre label[for=r68],
+input[id=r69]:checked ~pre label[for=r69],
+input[id=r70]:checked ~pre label[for=r70],
+input[id=r71]:checked ~pre label[for=r71],
+input[id=r72]:checked ~pre label[for=r72],
+input[id=r73]:checked ~pre label[for=r73],
+input[id=r74]:checked ~pre label[for=r74],
+input[id=r75]:checked ~pre label[for=r75],
+input[id=r76]:checked ~pre label[for=r76],
+input[id=r77]:checked ~pre label[for=r77],
+input[id=r78]:checked ~pre label[for=r78],
+input[id=r79]:checked ~pre label[for=r79],
+input[id=r80]:checked ~pre label[for=r80],
+input[id=r81]:checked ~pre label[for=r81],
+input[id=r82]:checked ~pre label[for=r82],
+input[id=r83]:checked ~pre label[for=r83],
+input[id=r84]:checked ~pre label[for=r84],
+input[id=r85]:checked ~pre label[for=r85],
+input[id=r86]:checked ~pre label[for=r86],
+input[id=r87]:checked ~pre label[for=r87],
+input[id=r88]:checked ~pre label[for=r88],
+input[id=r89]:checked ~pre label[for=r89],
+input[id=r90]:checked ~pre label[for=r90],
+input[id=r91]:checked ~pre label[for=r91],
+input[id=r92]:checked ~pre label[for=r92],
+input[id=r93]:checked ~pre label[for=r93],
+input[id=r94]:checked ~pre label[for=r94],
+input[id=r95]:checked ~pre label[for=r95],
+input[id=r96]:checked ~pre label[for=r96],
+input[id=r97]:checked ~pre label[for=r97],
+input[id=r98]:checked ~pre label[for=r98],
+input[id=r99]:checked ~pre label[for=r99],
+input[id=r100]:checked ~pre label[for=r100],
+input[id=r101]:checked ~pre label[for=r101],
+input[id=r102]:checked ~pre label[for=r102],
+input[id=r103]:checked ~pre label[for=r103],
+input[id=r104]:checked ~pre label[for=r104],
+input[id=r105]:checked ~pre label[for=r105],
+input[id=r106]:checked ~pre label[for=r106],
+input[id=r107]:checked ~pre label[for=r107],
+input[id=r108]:checked ~pre label[for=r108],
+input[id=r109]:checked ~pre label[for=r109],
+input[id=r110]:checked ~pre label[for=r110],
+input[id=r111]:checked ~pre label[for=r111],
+input[id=r112]:checked ~pre label[for=r112],
+input[id=r113]:checked ~pre label[for=r113],
+input[id=r114]:checked ~pre label[for=r114],
+input[id=r115]:checked ~pre label[for=r115],
+input[id=r116]:checked ~pre label[for=r116],
+input[id=r117]:checked ~pre label[for=r117],
+input[id=r118]:checked ~pre label[for=r118],
+input[id=r119]:checked ~pre label[for=r119],
+input[id=r120]:checked ~pre label[for=r120],
+input[id=r121]:checked ~pre label[for=r121]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1,
+input[id=i2]:checked ~pre .i2,
+input[id=i3]:checked ~pre .i3,
+input[id=i4]:checked ~pre .i4,
+input[id=i5]:checked ~pre .i5,
+input[id=i6]:checked ~pre .i6
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="r17" type="radio" name="g"/>
+<input id="r18" type="radio" name="g"/>
+<input id="r19" type="radio" name="g"/>
+<input id="r20" type="radio" name="g"/>
+<input id="r21" type="radio" name="g"/>
+<input id="r22" type="radio" name="g"/>
+<input id="r23" type="radio" name="g"/>
+<input id="r24" type="radio" name="g"/>
+<input id="r25" type="radio" name="g"/>
+<input id="r26" type="radio" name="g"/>
+<input id="r27" type="radio" name="g"/>
+<input id="r28" type="radio" name="g"/>
+<input id="r29" type="radio" name="g"/>
+<input id="r30" type="radio" name="g"/>
+<input id="r31" type="radio" name="g"/>
+<input id="r32" type="radio" name="g"/>
+<input id="r33" type="radio" name="g"/>
+<input id="r34" type="radio" name="g"/>
+<input id="r35" type="radio" name="g"/>
+<input id="r36" type="radio" name="g"/>
+<input id="r37" type="radio" name="g"/>
+<input id="r38" type="radio" name="g"/>
+<input id="r39" type="radio" name="g"/>
+<input id="r40" type="radio" name="g"/>
+<input id="r41" type="radio" name="g"/>
+<input id="r42" type="radio" name="g"/>
+<input id="r43" type="radio" name="g"/>
+<input id="r44" type="radio" name="g"/>
+<input id="r45" type="radio" name="g"/>
+<input id="r46" type="radio" name="g"/>
+<input id="r47" type="radio" name="g"/>
+<input id="r48" type="radio" name="g"/>
+<input id="r49" type="radio" name="g"/>
+<input id="r50" type="radio" name="g"/>
+<input id="r51" type="radio" name="g"/>
+<input id="r52" type="radio" name="g"/>
+<input id="r53" type="radio" name="g"/>
+<input id="r54" type="radio" name="g"/>
+<input id="r55" type="radio" name="g"/>
+<input id="r56" type="radio" name="g"/>
+<input id="r57" type="radio" name="g"/>
+<input id="r58" type="radio" name="g"/>
+<input id="r59" type="radio" name="g"/>
+<input id="r60" type="radio" name="g"/>
+<input id="r61" type="radio" name="g"/>
+<input id="r62" type="radio" name="g"/>
+<input id="r63" type="radio" name="g"/>
+<input id="r64" type="radio" name="g"/>
+<input id="r65" type="radio" name="g"/>
+<input id="r66" type="radio" name="g"/>
+<input id="r67" type="radio" name="g"/>
+<input id="r68" type="radio" name="g"/>
+<input id="r69" type="radio" name="g"/>
+<input id="r70" type="radio" name="g"/>
+<input id="r71" type="radio" name="g"/>
+<input id="r72" type="radio" name="g"/>
+<input id="r73" type="radio" name="g"/>
+<input id="r74" type="radio" name="g"/>
+<input id="r75" type="radio" name="g"/>
+<input id="r76" type="radio" name="g"/>
+<input id="r77" type="radio" name="g"/>
+<input id="r78" type="radio" name="g"/>
+<input id="r79" type="radio" name="g"/>
+<input id="r80" type="radio" name="g"/>
+<input id="r81" type="radio" name="g"/>
+<input id="r82" type="radio" name="g"/>
+<input id="r83" type="radio" name="g"/>
+<input id="r84" type="radio" name="g"/>
+<input id="r85" type="radio" name="g"/>
+<input id="r86" type="radio" name="g"/>
+<input id="r87" type="radio" name="g"/>
+<input id="r88" type="radio" name="g"/>
+<input id="r89" type="radio" name="g"/>
+<input id="r90" type="radio" name="g"/>
+<input id="r91" type="radio" name="g"/>
+<input id="r92" type="radio" name="g"/>
+<input id="r93" type="radio" name="g"/>
+<input id="r94" type="radio" name="g"/>
+<input id="r95" type="radio" name="g"/>
+<input id="r96" type="radio" name="g"/>
+<input id="r97" type="radio" name="g"/>
+<input id="r98" type="radio" name="g"/>
+<input id="r99" type="radio" name="g"/>
+<input id="r100" type="radio" name="g"/>
+<input id="r101" type="radio" name="g"/>
+<input id="r102" type="radio" name="g"/>
+<input id="r103" type="radio" name="g"/>
+<input id="r104" type="radio" name="g"/>
+<input id="r105" type="radio" name="g"/>
+<input id="r106" type="radio" name="g"/>
+<input id="r107" type="radio" name="g"/>
+<input id="r108" type="radio" name="g"/>
+<input id="r109" type="radio" name="g"/>
+<input id="r110" type="radio" name="g"/>
+<input id="r111" type="radio" name="g"/>
+<input id="r112" type="radio" name="g"/>
+<input id="r113" type="radio" name="g"/>
+<input id="r114" type="radio" name="g"/>
+<input id="r115" type="radio" name="g"/>
+<input id="r116" type="radio" name="g"/>
+<input id="r117" type="radio" name="g"/>
+<input id="r118" type="radio" name="g"/>
+<input id="r119" type="radio" name="g"/>
+<input id="r120" type="radio" name="g"/>
+<input id="r121" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<input id="i2" type="radio" name="i"/>
+<input id="i3" type="radio" name="i"/>
+<input id="i4" type="radio" name="i"/>
+<input id="i5" type="radio" name="i"/>
+<input id="i6" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2014 The Go Authors. All rights reserved.</span><span class="comment"> Use of this source code is governed by a BSD-style</span><span class="comment"> license that can be found in the LICENSE file.</span></div>
+<div class="code"><pre><code>
+<span class="keyword">package</span> http2
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"bytes"</span></label>
+	<label for="i1"><span class="lit-string i1">"fmt"</span></label>
+	<label for="i2"><span class="lit-string i2">"log"</span></label>
+	<label for="i3"><span class="lit-string i3">"net/http"</span></label>
+	<label for="i4"><span class="lit-string i4">"net/url"</span></label>
+
+	<label for="i5"><span class="lit-string i5">"golang.org/x/net/http/httpguts"</span></label>
+	<label for="i6"><span class="lit-string i6">"golang.org/x/net/http2/hpack"</span></label>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> writeFramer is implemented by any type that is used to write frames.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../pkg/golang.org/x/net/http2.html#name-writeFramer" class="ident">writeFramer</a> <span class="keyword">interface</span> {
+	writeFrame(<a href="#line-38" class="ident">writeContext</a>) <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> staysWithinBuffer reports whether this writer promises that</span><span class="comment">	 it will only write less than or equal to size bytes, and it</span><span class="comment">	 won't Flush the write context.</span></div>
+<div class="code"><pre><code>	staysWithinBuffer(size <a href="../../../../../pkg/builtin.html#name-int" class="ident">int</a>) <a href="../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> writeContext is the interface needed by the various frame writer</span><span class="comment"> types below. All the writeFrame methods below are scheduled via the</span><span class="comment"> frame writing scheduler (see writeScheduler in writesched.go).</span><span class="comment"></span><span class="comment"> This interface is implemented by *serverConn.</span><span class="comment"></span><span class="comment"> TODO: decide whether to a) use this in the client code (which didn't</span><span class="comment"> end up using this yet, because it has a simpler design, not</span><span class="comment"> currently implementing priorities), or b) delete this and</span><span class="comment"> make the server code a bit more concrete.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../pkg/golang.org/x/net/http2.html#name-writeContext" class="ident">writeContext</a> <span class="keyword">interface</span> {
+	Framer() *<a href="frame.go.html#line-265" class="ident">Framer</a>
+	Flush() <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> HeaderEncoder returns an HPACK encoder that writes to the</span><span class="comment">	 returned buffer.</span></div>
+<div class="code"><pre><code>	HeaderEncoder() (*<a href="../../../../../pkg/golang.org/x/net/http2/hpack.html" class="ident i6">hpack</a>.<a href="hpack/encode.go.html#line-16" class="ident">Encoder</a>, *<a href="../../../../../pkg/bytes.html" class="ident i0">bytes</a>.<a href="../../../../bytes/buffer.go.html#line-20" class="ident">Buffer</a>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> writeEndsStream reports whether w writes a frame that will transition</span><span class="comment"> the stream to a half-closed local state. This returns false for RST_STREAM,</span><span class="comment"> which closes the entire stream (not just the local half).</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r0" class="ident"><a href="../../../../../pkg/golang.org/x/net/http2.html#name-writeEndsStream" class="ident">writeEndsStream</a></label>(<label for="r1" class="ident">w</label> <a href="#line-19" class="ident">writeFramer</a>) <a href="../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> {
+	<span class="keyword">switch</span> v := <label for="r1" class="ident">w</label>.(<span class="keyword">type</span>) {
+	<span class="keyword">case</span> *<a href="#line-98" class="ident">writeData</a>:
+		<span class="keyword">return</span> <label for="r2" class="ident">v</label>.<a href="#line-101" class="ident">endStream</a>
+	<span class="keyword">case</span> *<a href="#line-179" class="ident">writeResHeaders</a>:
+		<span class="keyword">return</span> <label for="r3" class="ident">v</label>.<a href="#line-184" class="ident">endStream</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> This can only happen if the caller reuses w after it's</span><span class="comment">		 been intentionally nil'ed out to prevent use. Keep this</span><span class="comment">		 here to catch future refactoring breaking it.</span></div>
+<div class="code"><pre><code>		<a href="../../../../../pkg/builtin.html#name-panic" class="ident">panic</a>(<span class="lit-string">"writeEndsStream called on nil writeFramer"</span>)
+	}
+	<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-false" class="ident">false</a>
+}
+
+<span class="keyword">type</span> <a href="../../../../../pkg/golang.org/x/net/http2.html#name-flushFrameWriter" class="ident">flushFrameWriter</a> <span class="keyword">struct</span>{}
+
+<span class="keyword">func</span> (<a href="#line-65" class="ident">flushFrameWriter</a>) <label for="r4" class="ident"><a href="../../../../../use/golang.org/x/net/http2..flushFrameWriter*327b0.writeFrame*65b3e.html" class="ident">writeFrame</a></label>(<label for="r5" class="ident">ctx</label> <a href="#line-38" class="ident">writeContext</a>) <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<span class="keyword">return</span> <label for="r5" class="ident">ctx</label>.<a href="#line-40" class="ident">Flush</a>()
+}
+
+<span class="keyword">func</span> (<a href="#line-65" class="ident">flushFrameWriter</a>) <label for="r6" class="ident"><a href="../../../../../use/golang.org/x/net/http2..flushFrameWriter*327b0.staysWithinBuffer*c95a2.html" class="ident">staysWithinBuffer</a></label>(<label for="r7" class="ident">max</label> <a href="../../../../../pkg/builtin.html#name-int" class="ident">int</a>) <a href="../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> { <span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-false" class="ident">false</a> }
+
+<span class="keyword">type</span> <a href="../../../../../pkg/golang.org/x/net/http2.html#name-writeSettings" class="ident">writeSettings</a> []<a href="http2.go.html#line-113" class="ident">Setting</a>
+
+<span class="keyword">func</span> (<label for="r8" class="ident">s</label> <a href="#line-73" class="ident">writeSettings</a>) <label for="r9" class="ident"><a href="../../../../../use/golang.org/x/net/http2..writeSettings*3e654.staysWithinBuffer*c95a2.html" class="ident">staysWithinBuffer</a></label>(<label for="r10" class="ident">max</label> <a href="../../../../../pkg/builtin.html#name-int" class="ident">int</a>) <a href="../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> {
+	<span class="keyword">const</span> <label for="r11" class="ident">settingSize</label> = <span class="lit-number">6</span> <span class="comment">// uint16 + uint32</span>
+	<span class="keyword">return</span> <a href="frame.go.html#line-21" class="ident">frameHeaderLen</a>+<label for="r11" class="ident">settingSize</label>*<a href="../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r8" class="ident">s</label>) &lt;= <label for="r10" class="ident">max</label>
+
+}
+
+<span class="keyword">func</span> (<label for="r12" class="ident">s</label> <a href="#line-73" class="ident">writeSettings</a>) <label for="r13" class="ident"><a href="../../../../../use/golang.org/x/net/http2..writeSettings*3e654.writeFrame*65b3e.html" class="ident">writeFrame</a></label>(<label for="r14" class="ident">ctx</label> <a href="#line-38" class="ident">writeContext</a>) <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<span class="keyword">return</span> <label for="r14" class="ident">ctx</label>.<a href="#line-39" class="ident">Framer</a>().<a href="frame.go.html#line-806" class="ident">WriteSettings</a>([]<a href="http2.go.html#line-113" class="ident">Setting</a>(<label for="r12" class="ident">s</label>)...)
+}
+
+<span class="keyword">type</span> <a href="../../../../../pkg/golang.org/x/net/http2.html#name-writeGoAway" class="ident">writeGoAway</a> <span class="keyword">struct</span> {
+	<a href="../../../../../use/golang.org/x/net/http2..writeGoAway*69a88.maxStreamID*38eca.html" class="ident">maxStreamID</a> <a href="../../../../../pkg/builtin.html#name-uint32" class="ident">uint32</a>
+	<a href="../../../../../use/golang.org/x/net/http2..writeGoAway*69a88.code*5694d.html" class="ident">code</a>        <a href="errors.go.html#line-13" class="ident">ErrCode</a>
+}
+
+<span class="keyword">func</span> (<label for="r15" class="ident">p</label> *<a href="#line-85" class="ident">writeGoAway</a>) <label for="r16" class="ident"><a href="../../../../../use/golang.org/x/net/http2..writeGoAway*69a88.writeFrame*65b3e.html" class="ident">writeFrame</a></label>(<label for="r17" class="ident">ctx</label> <a href="#line-38" class="ident">writeContext</a>) <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<label for="r18" class="ident">err</label> := <label for="r17" class="ident">ctx</label>.<a href="#line-39" class="ident">Framer</a>().<a href="frame.go.html#line-890" class="ident">WriteGoAway</a>(<label for="r15" class="ident">p</label>.<a href="#line-86" class="ident">maxStreamID</a>, <label for="r15" class="ident">p</label>.<a href="#line-87" class="ident">code</a>, <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>)
+	<label for="r17" class="ident">ctx</label>.<a href="#line-40" class="ident">Flush</a>() <span class="comment">// ignore error: we're hanging up on them anyway</span>
+	<span class="keyword">return</span> <label for="r18" class="ident">err</label>
+}
+
+<span class="keyword">func</span> (*<a href="#line-85" class="ident">writeGoAway</a>) <label for="r19" class="ident"><a href="../../../../../use/golang.org/x/net/http2..writeGoAway*69a88.staysWithinBuffer*c95a2.html" class="ident">staysWithinBuffer</a></label>(<label for="r20" class="ident">max</label> <a href="../../../../../pkg/builtin.html#name-int" class="ident">int</a>) <a href="../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> { <span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-false" class="ident">false</a> } <span class="comment">// flushes</span>
+
+<span class="keyword">type</span> <a href="../../../../../pkg/golang.org/x/net/http2.html#name-writeData" class="ident">writeData</a> <span class="keyword">struct</span> {
+	<a href="../../../../../use/golang.org/x/net/http2..writeData*744c1.streamID*f4c4f.html" class="ident">streamID</a>  <a href="../../../../../pkg/builtin.html#name-uint32" class="ident">uint32</a>
+	<a href="../../../../../use/golang.org/x/net/http2..writeData*744c1.p*148de.html" class="ident">p</a>         []<a href="../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>
+	<a href="../../../../../use/golang.org/x/net/http2..writeData*744c1.endStream*ca77e.html" class="ident">endStream</a> <a href="../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>
+}
+
+<span class="keyword">func</span> (<label for="r21" class="ident">w</label> *<a href="#line-98" class="ident">writeData</a>) <label for="r22" class="ident"><a href="../../../../../use/golang.org/x/net/http2..writeData*744c1.String.html" class="ident">String</a></label>() <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a> {
+	<span class="keyword">return</span> <a href="../../../../../pkg/fmt.html" class="ident i1">fmt</a>.<a href="../../../../fmt/print.go.html#line-217" class="ident">Sprintf</a>(<span class="lit-string">"writeData(stream=%d, p=%d, endStream=%v)"</span>, <label for="r21" class="ident">w</label>.<a href="#line-99" class="ident">streamID</a>, <a href="../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r21" class="ident">w</label>.<a href="#line-100" class="ident">p</a>), <label for="r21" class="ident">w</label>.<a href="#line-101" class="ident">endStream</a>)
+}
+
+<span class="keyword">func</span> (<label for="r23" class="ident">w</label> *<a href="#line-98" class="ident">writeData</a>) <label for="r24" class="ident"><a href="../../../../../use/golang.org/x/net/http2..writeData*744c1.writeFrame*65b3e.html" class="ident">writeFrame</a></label>(<label for="r25" class="ident">ctx</label> <a href="#line-38" class="ident">writeContext</a>) <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<span class="keyword">return</span> <label for="r25" class="ident">ctx</label>.<a href="#line-39" class="ident">Framer</a>().<a href="frame.go.html#line-642" class="ident">WriteData</a>(<label for="r23" class="ident">w</label>.<a href="#line-99" class="ident">streamID</a>, <label for="r23" class="ident">w</label>.<a href="#line-101" class="ident">endStream</a>, <label for="r23" class="ident">w</label>.<a href="#line-100" class="ident">p</a>)
+}
+
+<span class="keyword">func</span> (<label for="r26" class="ident">w</label> *<a href="#line-98" class="ident">writeData</a>) <label for="r27" class="ident"><a href="../../../../../use/golang.org/x/net/http2..writeData*744c1.staysWithinBuffer*c95a2.html" class="ident">staysWithinBuffer</a></label>(<label for="r28" class="ident">max</label> <a href="../../../../../pkg/builtin.html#name-int" class="ident">int</a>) <a href="../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> {
+	<span class="keyword">return</span> <a href="frame.go.html#line-21" class="ident">frameHeaderLen</a>+<a href="../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r26" class="ident">w</label>.<a href="#line-100" class="ident">p</a>) &lt;= <label for="r28" class="ident">max</label>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> handlerPanicRST is the message sent from handler goroutines when</span><span class="comment"> the handler panics.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../pkg/golang.org/x/net/http2.html#name-handlerPanicRST" class="ident">handlerPanicRST</a> <span class="keyword">struct</span> {
+	<a href="../../../../../use/golang.org/x/net/http2..handlerPanicRST*bc480.StreamID.html" class="ident">StreamID</a> <a href="../../../../../pkg/builtin.html#name-uint32" class="ident">uint32</a>
+}
+
+<span class="keyword">func</span> (<label for="r29" class="ident">hp</label> <a href="#line-118" class="ident">handlerPanicRST</a>) <label for="r30" class="ident"><a href="../../../../../use/golang.org/x/net/http2..handlerPanicRST*bc480.writeFrame*65b3e.html" class="ident">writeFrame</a></label>(<label for="r31" class="ident">ctx</label> <a href="#line-38" class="ident">writeContext</a>) <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<span class="keyword">return</span> <label for="r31" class="ident">ctx</label>.<a href="#line-39" class="ident">Framer</a>().<a href="frame.go.html#line-1189" class="ident">WriteRSTStream</a>(<label for="r29" class="ident">hp</label>.<a href="#line-119" class="ident">StreamID</a>, <a href="errors.go.html#line-18" class="ident">ErrCodeInternal</a>)
+}
+
+<span class="keyword">func</span> (<label for="r32" class="ident">hp</label> <a href="#line-118" class="ident">handlerPanicRST</a>) <label for="r33" class="ident"><a href="../../../../../use/golang.org/x/net/http2..handlerPanicRST*bc480.staysWithinBuffer*c95a2.html" class="ident">staysWithinBuffer</a></label>(<label for="r34" class="ident">max</label> <a href="../../../../../pkg/builtin.html#name-int" class="ident">int</a>) <a href="../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> { <span class="keyword">return</span> <a href="frame.go.html#line-21" class="ident">frameHeaderLen</a>+<span class="lit-number">4</span> &lt;= <label for="r34" class="ident">max</label> }
+
+<span class="keyword">func</span> (<label for="r35" class="ident">se</label> <a href="errors.go.html#line-64" class="ident">StreamError</a>) <label for="r36" class="ident"><a href="../../../../../use/golang.org/x/net/http2..StreamError.writeFrame*65b3e.html" class="ident">writeFrame</a></label>(<label for="r37" class="ident">ctx</label> <a href="#line-38" class="ident">writeContext</a>) <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<span class="keyword">return</span> <label for="r37" class="ident">ctx</label>.<a href="#line-39" class="ident">Framer</a>().<a href="frame.go.html#line-1189" class="ident">WriteRSTStream</a>(<label for="r35" class="ident">se</label>.<a href="errors.go.html#line-65" class="ident">StreamID</a>, <label for="r35" class="ident">se</label>.<a href="errors.go.html#line-66" class="ident">Code</a>)
+}
+
+<span class="keyword">func</span> (<label for="r38" class="ident">se</label> <a href="errors.go.html#line-64" class="ident">StreamError</a>) <label for="r39" class="ident"><a href="../../../../../use/golang.org/x/net/http2..StreamError.staysWithinBuffer*c95a2.html" class="ident">staysWithinBuffer</a></label>(<label for="r40" class="ident">max</label> <a href="../../../../../pkg/builtin.html#name-int" class="ident">int</a>) <a href="../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> { <span class="keyword">return</span> <a href="frame.go.html#line-21" class="ident">frameHeaderLen</a>+<span class="lit-number">4</span> &lt;= <label for="r40" class="ident">max</label> }
+
+<span class="keyword">type</span> <a href="../../../../../pkg/golang.org/x/net/http2.html#name-writePingAck" class="ident">writePingAck</a> <span class="keyword">struct</span>{ <a href="../../../../../use/golang.org/x/net/http2..writePingAck*ee5f9.pf*5ec29.html" class="ident">pf</a> *<a href="frame.go.html#line-828" class="ident">PingFrame</a> }
+
+<span class="keyword">func</span> (<label for="r41" class="ident">w</label> <a href="#line-134" class="ident">writePingAck</a>) <label for="r42" class="ident"><a href="../../../../../use/golang.org/x/net/http2..writePingAck*ee5f9.writeFrame*65b3e.html" class="ident">writeFrame</a></label>(<label for="r43" class="ident">ctx</label> <a href="#line-38" class="ident">writeContext</a>) <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<span class="keyword">return</span> <label for="r43" class="ident">ctx</label>.<a href="#line-39" class="ident">Framer</a>().<a href="frame.go.html#line-847" class="ident">WritePing</a>(<a href="../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <label for="r41" class="ident">w</label>.<a href="#line-134" class="ident">pf</a>.<a href="frame.go.html#line-830" class="ident">Data</a>)
+}
+
+<span class="keyword">func</span> (<label for="r44" class="ident">w</label> <a href="#line-134" class="ident">writePingAck</a>) <label for="r45" class="ident"><a href="../../../../../use/golang.org/x/net/http2..writePingAck*ee5f9.staysWithinBuffer*c95a2.html" class="ident">staysWithinBuffer</a></label>(<label for="r46" class="ident">max</label> <a href="../../../../../pkg/builtin.html#name-int" class="ident">int</a>) <a href="../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> { <span class="keyword">return</span> <a href="frame.go.html#line-21" class="ident">frameHeaderLen</a>+<a href="../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r44" class="ident">w</label>.<a href="#line-134" class="ident">pf</a>.<a href="frame.go.html#line-830" class="ident">Data</a>) &lt;= <label for="r46" class="ident">max</label> }
+
+<span class="keyword">type</span> <a href="../../../../../pkg/golang.org/x/net/http2.html#name-writeSettingsAck" class="ident">writeSettingsAck</a> <span class="keyword">struct</span>{}
+
+<span class="keyword">func</span> (<a href="#line-142" class="ident">writeSettingsAck</a>) <label for="r47" class="ident"><a href="../../../../../use/golang.org/x/net/http2..writeSettingsAck*b4875.writeFrame*65b3e.html" class="ident">writeFrame</a></label>(<label for="r48" class="ident">ctx</label> <a href="#line-38" class="ident">writeContext</a>) <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<span class="keyword">return</span> <label for="r48" class="ident">ctx</label>.<a href="#line-39" class="ident">Framer</a>().<a href="frame.go.html#line-819" class="ident">WriteSettingsAck</a>()
+}
+
+<span class="keyword">func</span> (<a href="#line-142" class="ident">writeSettingsAck</a>) <label for="r49" class="ident"><a href="../../../../../use/golang.org/x/net/http2..writeSettingsAck*b4875.staysWithinBuffer*c95a2.html" class="ident">staysWithinBuffer</a></label>(<label for="r50" class="ident">max</label> <a href="../../../../../pkg/builtin.html#name-int" class="ident">int</a>) <a href="../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> { <span class="keyword">return</span> <a href="frame.go.html#line-21" class="ident">frameHeaderLen</a> &lt;= <label for="r50" class="ident">max</label> }
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> splitHeaderBlock splits headerBlock into fragments so that each fragment fits</span><span class="comment"> in a single frame, then calls fn for each fragment. firstFrag/lastFrag are true</span><span class="comment"> for the first/last fragment, respectively.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> For now we're lazy and just pick the minimum MAX_FRAME_SIZE</span><span class="comment">	 that all peers must support (16KB). Later we could care</span><span class="comment">	 more and send larger frames if the peer advertised it, but</span><span class="comment">	 there's little point. Most headers are small anyway (so we</span><span class="comment">	 generally won't have CONTINUATION frames), and extra frames</span><span class="comment">	 only waste 9 bytes anyway.</span></div>
+<div class="code"><pre><code>	<span class="keyword">const</span> <label for="r59" class="ident">maxFrameSize</label> = <span class="lit-number">16384</span>
+
+	<label for="r60" class="ident">first</label> := <a href="../../../../../pkg/builtin.html#name-true" class="ident">true</a>
+	<span class="keyword">for</span> <a href="../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r53" class="ident">headerBlock</label>) &gt; <span class="lit-number">0</span> {
+		<label for="r61" class="ident">frag</label> := <label for="r53" class="ident">headerBlock</label>
+		<span class="keyword">if</span> <a href="../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r61" class="ident">frag</label>) &gt; <label for="r59" class="ident">maxFrameSize</label> {
+			<label for="r61" class="ident">frag</label> = <label for="r61" class="ident">frag</label>[:<label for="r59" class="ident">maxFrameSize</label>]
+		}
+		<label for="r53" class="ident">headerBlock</label> = <label for="r53" class="ident">headerBlock</label>[<a href="../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r61" class="ident">frag</label>):]
+		<span class="keyword">if</span> <label for="r62" class="ident">err</label> := <label for="r54" class="ident">fn</label>(<label for="r52" class="ident">ctx</label>, <label for="r61" class="ident">frag</label>, <label for="r60" class="ident">first</label>, <a href="../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r53" class="ident">headerBlock</label>) == <span class="lit-number">0</span>); <label for="r62" class="ident">err</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<span class="keyword">return</span> <label for="r62" class="ident">err</label>
+		}
+		<label for="r60" class="ident">first</label> = <a href="../../../../../pkg/builtin.html#name-false" class="ident">false</a>
+	}
+	<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> writeResHeaders is a request to write a HEADERS and 0+ CONTINUATION frames</span><span class="comment"> for HTTP response headers or trailers from a server handler.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../pkg/golang.org/x/net/http2.html#name-writeResHeaders" class="ident">writeResHeaders</a> <span class="keyword">struct</span> {
+	<a href="../../../../../use/golang.org/x/net/http2..writeResHeaders*58f92.streamID*f4c4f.html" class="ident">streamID</a>    <a href="../../../../../pkg/builtin.html#name-uint32" class="ident">uint32</a>
+	<a href="../../../../../use/golang.org/x/net/http2..writeResHeaders*58f92.httpResCode*a4040.html" class="ident">httpResCode</a> <a href="../../../../../pkg/builtin.html#name-int" class="ident">int</a>         <span class="comment">// 0 means no ":status" line</span>
+	<a href="../../../../../use/golang.org/x/net/http2..writeResHeaders*58f92.h*aaa94.html" class="ident">h</a>           <a href="../../../../../pkg/net/http.html" class="ident i3">http</a>.<a href="../../../../net/http/header.go.html#line-21" class="ident">Header</a> <span class="comment">// may be nil</span>
+	<a href="../../../../../use/golang.org/x/net/http2..writeResHeaders*58f92.trailers*7d692.html" class="ident">trailers</a>    []<a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>    <span class="comment">// if non-nil, which keys of h to write. nil means all.</span>
+	<a href="../../../../../use/golang.org/x/net/http2..writeResHeaders*58f92.endStream*ca77e.html" class="ident">endStream</a>   <a href="../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>
+
+	<a href="../../../../../use/golang.org/x/net/http2..writeResHeaders*58f92.date*0e876.html" class="ident">date</a>          <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../use/golang.org/x/net/http2..writeResHeaders*58f92.contentType*72f3b.html" class="ident">contentType</a>   <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../use/golang.org/x/net/http2..writeResHeaders*58f92.contentLength*ccf54.html" class="ident">contentLength</a> <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+}
+
+<span class="keyword">func</span> <label for="r63" class="ident"><a href="../../../../../pkg/golang.org/x/net/http2.html#name-encKV" class="ident">encKV</a></label>(<label for="r64" class="ident">enc</label> *<a href="../../../../../pkg/golang.org/x/net/http2/hpack.html" class="ident i6">hpack</a>.<a href="hpack/encode.go.html#line-16" class="ident">Encoder</a>, <label for="r65" class="ident">k</label>, <label for="r66" class="ident">v</label> <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>) {
+	<span class="keyword">if</span> <a href="http2.go.html#line-35" class="ident">VerboseLogs</a> {
+		<a href="../../../../../pkg/log.html" class="ident i2">log</a>.<a href="../../../../log/log.go.html#line-322" class="ident">Printf</a>(<span class="lit-string">"http2: server encoding header %q = %q"</span>, <label for="r65" class="ident">k</label>, <label for="r66" class="ident">v</label>)
+	}
+	<label for="r64" class="ident">enc</label>.<a href="hpack/encode.go.html#line-50" class="ident">WriteField</a>(<a href="../../../../../pkg/golang.org/x/net/http2/hpack.html" class="ident i6">hpack</a>.<a href="hpack/hpack.go.html#line-36" class="ident">HeaderField</a>{<a href="hpack/hpack.go.html#line-37" class="ident">Name</a>: <label for="r65" class="ident">k</label>, <a href="hpack/hpack.go.html#line-37" class="ident">Value</a>: <label for="r66" class="ident">v</label>})
+}
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> TODO: this is a common one. It'd be nice to return true</span><span class="comment">	 here and get into the fast path if we could be clever and</span><span class="comment">	 calculate the size fast enough, or at least a conservative</span><span class="comment">	 upper bound that usually fires. (Maybe if w.h and</span><span class="comment">	 w.trailers are nil, so we don't need to enumerate it.)</span><span class="comment">	 Otherwise I'm afraid that just calculating the length to</span><span class="comment">	 answer this question would be slower than the ~2µs benefit.</span></div>
+<div class="code"><pre><code>	<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-false" class="ident">false</a>
+}
+
+<span class="keyword">func</span> (<label for="r70" class="ident">w</label> *<a href="#line-179" class="ident">writeResHeaders</a>) <label for="r71" class="ident"><a href="../../../../../use/golang.org/x/net/http2..writeResHeaders*58f92.writeFrame*65b3e.html" class="ident">writeFrame</a></label>(<label for="r72" class="ident">ctx</label> <a href="#line-38" class="ident">writeContext</a>) <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<label for="r73" class="ident">enc</label>, <label for="r74" class="ident">buf</label> := <label for="r72" class="ident">ctx</label>.<a href="#line-44" class="ident">HeaderEncoder</a>()
+	<label for="r74" class="ident">buf</label>.<a href="../../../../bytes/buffer.go.html#line-97" class="ident">Reset</a>()
+
+	<span class="keyword">if</span> <label for="r70" class="ident">w</label>.<a href="#line-181" class="ident">httpResCode</a> != <span class="lit-number">0</span> {
+		<a href="#line-191" class="ident">encKV</a>(<label for="r73" class="ident">enc</label>, <span class="lit-string">":status"</span>, <a href="http2.go.html#line-198" class="ident">httpCodeString</a>(<label for="r70" class="ident">w</label>.<a href="#line-181" class="ident">httpResCode</a>))
+	}
+
+	<a href="#line-333" class="ident">encodeHeaders</a>(<label for="r73" class="ident">enc</label>, <label for="r70" class="ident">w</label>.<a href="#line-182" class="ident">h</a>, <label for="r70" class="ident">w</label>.<a href="#line-183" class="ident">trailers</a>)
+
+	<span class="keyword">if</span> <label for="r70" class="ident">w</label>.<a href="#line-187" class="ident">contentType</a> != <span class="lit-string">""</span> {
+		<a href="#line-191" class="ident">encKV</a>(<label for="r73" class="ident">enc</label>, <span class="lit-string">"content-type"</span>, <label for="r70" class="ident">w</label>.<a href="#line-187" class="ident">contentType</a>)
+	}
+	<span class="keyword">if</span> <label for="r70" class="ident">w</label>.<a href="#line-188" class="ident">contentLength</a> != <span class="lit-string">""</span> {
+		<a href="#line-191" class="ident">encKV</a>(<label for="r73" class="ident">enc</label>, <span class="lit-string">"content-length"</span>, <label for="r70" class="ident">w</label>.<a href="#line-188" class="ident">contentLength</a>)
+	}
+	<span class="keyword">if</span> <label for="r70" class="ident">w</label>.<a href="#line-186" class="ident">date</a> != <span class="lit-string">""</span> {
+		<a href="#line-191" class="ident">encKV</a>(<label for="r73" class="ident">enc</label>, <span class="lit-string">"date"</span>, <label for="r70" class="ident">w</label>.<a href="#line-186" class="ident">date</a>)
+	}
+
+	<label for="r75" class="ident">headerBlock</label> := <label for="r74" class="ident">buf</label>.<a href="../../../../bytes/buffer.go.html#line-54" class="ident">Bytes</a>()
+	<span class="keyword">if</span> <a href="../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r75" class="ident">headerBlock</label>) == <span class="lit-number">0</span> &amp;&amp; <label for="r70" class="ident">w</label>.<a href="#line-183" class="ident">trailers</a> == <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<a href="../../../../../pkg/builtin.html#name-panic" class="ident">panic</a>(<span class="lit-string">"unexpected empty hpack"</span>)
+	}
+
+	<span class="keyword">return</span> <a href="#line-153" class="ident">splitHeaderBlock</a>(<label for="r72" class="ident">ctx</label>, <label for="r75" class="ident">headerBlock</label>, <label for="r70" class="ident">w</label>.<a href="#line-237" class="ident">writeHeaderBlock</a>)
+}
+
+<span class="keyword">func</span> (<label for="r76" class="ident">w</label> *<a href="#line-179" class="ident">writeResHeaders</a>) <label for="r77" class="ident"><a href="../../../../../use/golang.org/x/net/http2..writeResHeaders*58f92.writeHeaderBlock*53276.html" class="ident">writeHeaderBlock</a></label>(<label for="r78" class="ident">ctx</label> <a href="#line-38" class="ident">writeContext</a>, <label for="r79" class="ident">frag</label> []<a href="../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>, <label for="r80" class="ident">firstFrag</label>, <label for="r81" class="ident">lastFrag</label> <a href="../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>) <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<span class="keyword">if</span> <label for="r80" class="ident">firstFrag</label> {
+		<span class="keyword">return</span> <label for="r78" class="ident">ctx</label>.<a href="#line-39" class="ident">Framer</a>().<a href="frame.go.html#line-1063" class="ident">WriteHeaders</a>(<a href="frame.go.html#line-1029" class="ident">HeadersFrameParam</a>{
+			<a href="frame.go.html#line-1031" class="ident">StreamID</a>:      <label for="r76" class="ident">w</label>.<a href="#line-180" class="ident">streamID</a>,
+			<a href="frame.go.html#line-1033" class="ident">BlockFragment</a>: <label for="r79" class="ident">frag</label>,
+			<a href="frame.go.html#line-1039" class="ident">EndStream</a>:     <label for="r76" class="ident">w</label>.<a href="#line-184" class="ident">endStream</a>,
+			<a href="frame.go.html#line-1044" class="ident">EndHeaders</a>:    <label for="r81" class="ident">lastFrag</label>,
+		})
+	} <span class="keyword">else</span> {
+		<span class="keyword">return</span> <label for="r78" class="ident">ctx</label>.<a href="#line-39" class="ident">Framer</a>().<a href="frame.go.html#line-1225" class="ident">WriteContinuation</a>(<label for="r76" class="ident">w</label>.<a href="#line-180" class="ident">streamID</a>, <label for="r81" class="ident">lastFrag</label>, <label for="r79" class="ident">frag</label>)
+	}
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> writePushPromise is a request to write a PUSH_PROMISE and 0+ CONTINUATION frames.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../pkg/golang.org/x/net/http2.html#name-writePushPromise" class="ident">writePushPromise</a> <span class="keyword">struct</span> {
+	<a href="../../../../../use/golang.org/x/net/http2..writePushPromise*4d381.streamID*f4c4f.html" class="ident">streamID</a> <a href="../../../../../pkg/builtin.html#name-uint32" class="ident">uint32</a>   <span class="comment">// pusher stream</span>
+	<a href="../../../../../use/golang.org/x/net/http2..writePushPromise*4d381.method*5b7e6.html" class="ident">method</a>   <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>   <span class="comment">// for :method</span>
+	<a href="../../../../../use/golang.org/x/net/http2..writePushPromise*4d381.url*28e5e.html" class="ident">url</a>      *<a href="../../../../../pkg/net/url.html" class="ident i4">url</a>.<a href="../../../../net/url/url.go.html#line-358" class="ident">URL</a> <span class="comment">// for :scheme, :authority, :path</span>
+	<a href="../../../../../use/golang.org/x/net/http2..writePushPromise*4d381.h*aaa94.html" class="ident">h</a>        <a href="../../../../../pkg/net/http.html" class="ident i3">http</a>.<a href="../../../../net/http/header.go.html#line-21" class="ident">Header</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Creates an ID for a pushed stream. This runs on serveG just before</span><span class="comment">	 the frame is written. The returned ID is copied to promisedID.</span></div>
+<div class="code"><pre><code>	<a href="../../../../../use/golang.org/x/net/http2..writePushPromise*4d381.allocatePromisedID*2e749.html" class="ident">allocatePromisedID</a> <span class="keyword">func</span>() (<a href="../../../../../pkg/builtin.html#name-uint32" class="ident">uint32</a>, <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a>)
+	<a href="../../../../../use/golang.org/x/net/http2..writePushPromise*4d381.promisedID*29bc8.html" class="ident">promisedID</a>         <a href="../../../../../pkg/builtin.html#name-uint32" class="ident">uint32</a>
+}
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> TODO: see writeResHeaders.staysWithinBuffer</span></div>
+<div class="code"><pre><code>	<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-false" class="ident">false</a>
+}
+
+<span class="keyword">func</span> (<label for="r85" class="ident">w</label> *<a href="#line-251" class="ident">writePushPromise</a>) <label for="r86" class="ident"><a href="../../../../../use/golang.org/x/net/http2..writePushPromise*4d381.writeFrame*65b3e.html" class="ident">writeFrame</a></label>(<label for="r87" class="ident">ctx</label> <a href="#line-38" class="ident">writeContext</a>) <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<label for="r88" class="ident">enc</label>, <label for="r89" class="ident">buf</label> := <label for="r87" class="ident">ctx</label>.<a href="#line-44" class="ident">HeaderEncoder</a>()
+	<label for="r89" class="ident">buf</label>.<a href="../../../../bytes/buffer.go.html#line-97" class="ident">Reset</a>()
+
+	<a href="#line-191" class="ident">encKV</a>(<label for="r88" class="ident">enc</label>, <span class="lit-string">":method"</span>, <label for="r85" class="ident">w</label>.<a href="#line-253" class="ident">method</a>)
+	<a href="#line-191" class="ident">encKV</a>(<label for="r88" class="ident">enc</label>, <span class="lit-string">":scheme"</span>, <label for="r85" class="ident">w</label>.<a href="#line-254" class="ident">url</a>.<a href="../../../../net/url/url.go.html#line-359" class="ident">Scheme</a>)
+	<a href="#line-191" class="ident">encKV</a>(<label for="r88" class="ident">enc</label>, <span class="lit-string">":authority"</span>, <label for="r85" class="ident">w</label>.<a href="#line-254" class="ident">url</a>.<a href="../../../../net/url/url.go.html#line-362" class="ident">Host</a>)
+	<a href="#line-191" class="ident">encKV</a>(<label for="r88" class="ident">enc</label>, <span class="lit-string">":path"</span>, <label for="r85" class="ident">w</label>.<a href="#line-254" class="ident">url</a>.<a href="../../../../net/url/url.go.html#line-1116" class="ident">RequestURI</a>())
+	<a href="#line-333" class="ident">encodeHeaders</a>(<label for="r88" class="ident">enc</label>, <label for="r85" class="ident">w</label>.<a href="#line-255" class="ident">h</a>, <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>)
+
+	<label for="r90" class="ident">headerBlock</label> := <label for="r89" class="ident">buf</label>.<a href="../../../../bytes/buffer.go.html#line-54" class="ident">Bytes</a>()
+	<span class="keyword">if</span> <a href="../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r90" class="ident">headerBlock</label>) == <span class="lit-number">0</span> {
+		<a href="../../../../../pkg/builtin.html#name-panic" class="ident">panic</a>(<span class="lit-string">"unexpected empty hpack"</span>)
+	}
+
+	<span class="keyword">return</span> <a href="#line-153" class="ident">splitHeaderBlock</a>(<label for="r87" class="ident">ctx</label>, <label for="r90" class="ident">headerBlock</label>, <label for="r85" class="ident">w</label>.<a href="#line-286" class="ident">writeHeaderBlock</a>)
+}
+
+<span class="keyword">func</span> (<label for="r91" class="ident">w</label> *<a href="#line-251" class="ident">writePushPromise</a>) <label for="r92" class="ident"><a href="../../../../../use/golang.org/x/net/http2..writePushPromise*4d381.writeHeaderBlock*53276.html" class="ident">writeHeaderBlock</a></label>(<label for="r93" class="ident">ctx</label> <a href="#line-38" class="ident">writeContext</a>, <label for="r94" class="ident">frag</label> []<a href="../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>, <label for="r95" class="ident">firstFrag</label>, <label for="r96" class="ident">lastFrag</label> <a href="../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>) <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<span class="keyword">if</span> <label for="r95" class="ident">firstFrag</label> {
+		<span class="keyword">return</span> <label for="r93" class="ident">ctx</label>.<a href="#line-39" class="ident">Framer</a>().<a href="frame.go.html#line-1320" class="ident">WritePushPromise</a>(<a href="frame.go.html#line-1292" class="ident">PushPromiseParam</a>{
+			<a href="frame.go.html#line-1294" class="ident">StreamID</a>:      <label for="r91" class="ident">w</label>.<a href="#line-252" class="ident">streamID</a>,
+			<a href="frame.go.html#line-1298" class="ident">PromiseID</a>:     <label for="r91" class="ident">w</label>.<a href="#line-260" class="ident">promisedID</a>,
+			<a href="frame.go.html#line-1301" class="ident">BlockFragment</a>: <label for="r94" class="ident">frag</label>,
+			<a href="frame.go.html#line-1306" class="ident">EndHeaders</a>:    <label for="r96" class="ident">lastFrag</label>,
+		})
+	} <span class="keyword">else</span> {
+		<span class="keyword">return</span> <label for="r93" class="ident">ctx</label>.<a href="#line-39" class="ident">Framer</a>().<a href="frame.go.html#line-1225" class="ident">WriteContinuation</a>(<label for="r91" class="ident">w</label>.<a href="#line-252" class="ident">streamID</a>, <label for="r96" class="ident">lastFrag</label>, <label for="r94" class="ident">frag</label>)
+	}
+}
+
+<span class="keyword">type</span> <a href="../../../../../pkg/golang.org/x/net/http2.html#name-write100ContinueHeadersFrame" class="ident">write100ContinueHeadersFrame</a> <span class="keyword">struct</span> {
+	<a href="../../../../../use/golang.org/x/net/http2..write100ContinueHeadersFrame*0e138.streamID*f4c4f.html" class="ident">streamID</a> <a href="../../../../../pkg/builtin.html#name-uint32" class="ident">uint32</a>
+}
+
+<span class="keyword">func</span> (<label for="r97" class="ident">w</label> <a href="#line-299" class="ident">write100ContinueHeadersFrame</a>) <label for="r98" class="ident"><a href="../../../../../use/golang.org/x/net/http2..write100ContinueHeadersFrame*0e138.writeFrame*65b3e.html" class="ident">writeFrame</a></label>(<label for="r99" class="ident">ctx</label> <a href="#line-38" class="ident">writeContext</a>) <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<label for="r100" class="ident">enc</label>, <label for="r101" class="ident">buf</label> := <label for="r99" class="ident">ctx</label>.<a href="#line-44" class="ident">HeaderEncoder</a>()
+	<label for="r101" class="ident">buf</label>.<a href="../../../../bytes/buffer.go.html#line-97" class="ident">Reset</a>()
+	<a href="#line-191" class="ident">encKV</a>(<label for="r100" class="ident">enc</label>, <span class="lit-string">":status"</span>, <span class="lit-string">"100"</span>)
+	<span class="keyword">return</span> <label for="r99" class="ident">ctx</label>.<a href="#line-39" class="ident">Framer</a>().<a href="frame.go.html#line-1063" class="ident">WriteHeaders</a>(<a href="frame.go.html#line-1029" class="ident">HeadersFrameParam</a>{
+		<a href="frame.go.html#line-1031" class="ident">StreamID</a>:      <label for="r97" class="ident">w</label>.<a href="#line-300" class="ident">streamID</a>,
+		<a href="frame.go.html#line-1033" class="ident">BlockFragment</a>: <label for="r101" class="ident">buf</label>.<a href="../../../../bytes/buffer.go.html#line-54" class="ident">Bytes</a>(),
+		<a href="frame.go.html#line-1039" class="ident">EndStream</a>:     <a href="../../../../../pkg/builtin.html#name-false" class="ident">false</a>,
+		<a href="frame.go.html#line-1044" class="ident">EndHeaders</a>:    <a href="../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	})
+}
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Sloppy but conservative:</span></div>
+<div class="code"><pre><code>	<span class="keyword">return</span> <span class="lit-number">9</span>+<span class="lit-number">2</span>*(<a href="../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<span class="lit-string">":status"</span>)+<a href="../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<span class="lit-string">"100"</span>)) &lt;= <label for="r104" class="ident">max</label>
+}
+
+<span class="keyword">type</span> <a href="../../../../../pkg/golang.org/x/net/http2.html#name-writeWindowUpdate" class="ident">writeWindowUpdate</a> <span class="keyword">struct</span> {
+	<a href="../../../../../use/golang.org/x/net/http2..writeWindowUpdate*2c50d.streamID*f4c4f.html" class="ident">streamID</a> <a href="../../../../../pkg/builtin.html#name-uint32" class="ident">uint32</a> <span class="comment">// or 0 for conn-level</span>
+	<a href="../../../../../use/golang.org/x/net/http2..writeWindowUpdate*2c50d.n*1b16b.html" class="ident">n</a>        <a href="../../../../../pkg/builtin.html#name-uint32" class="ident">uint32</a>
+}
+
+<span class="keyword">func</span> (<label for="r105" class="ident">wu</label> <a href="#line-320" class="ident">writeWindowUpdate</a>) <label for="r106" class="ident"><a href="../../../../../use/golang.org/x/net/http2..writeWindowUpdate*2c50d.staysWithinBuffer*c95a2.html" class="ident">staysWithinBuffer</a></label>(<label for="r107" class="ident">max</label> <a href="../../../../../pkg/builtin.html#name-int" class="ident">int</a>) <a href="../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> { <span class="keyword">return</span> <a href="frame.go.html#line-21" class="ident">frameHeaderLen</a>+<span class="lit-number">4</span> &lt;= <label for="r107" class="ident">max</label> }
+
+<span class="keyword">func</span> (<label for="r108" class="ident">wu</label> <a href="#line-320" class="ident">writeWindowUpdate</a>) <label for="r109" class="ident"><a href="../../../../../use/golang.org/x/net/http2..writeWindowUpdate*2c50d.writeFrame*65b3e.html" class="ident">writeFrame</a></label>(<label for="r110" class="ident">ctx</label> <a href="#line-38" class="ident">writeContext</a>) <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<span class="keyword">return</span> <label for="r110" class="ident">ctx</label>.<a href="#line-39" class="ident">Framer</a>().<a href="frame.go.html#line-953" class="ident">WriteWindowUpdate</a>(<label for="r108" class="ident">wu</label>.<a href="#line-321" class="ident">streamID</a>, <label for="r108" class="ident">wu</label>.<a href="#line-322" class="ident">n</a>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> encodeHeaders encodes an http.Header. If keys is not nil, then (k, h[k])</span><span class="comment"> is encoded only if k is in keys.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r111" class="ident"><a href="../../../../../pkg/golang.org/x/net/http2.html#name-encodeHeaders" class="ident">encodeHeaders</a></label>(<label for="r112" class="ident">enc</label> *<a href="../../../../../pkg/golang.org/x/net/http2/hpack.html" class="ident i6">hpack</a>.<a href="hpack/encode.go.html#line-16" class="ident">Encoder</a>, <label for="r113" class="ident">h</label> <a href="../../../../../pkg/net/http.html" class="ident i3">http</a>.<a href="../../../../net/http/header.go.html#line-21" class="ident">Header</a>, <label for="r114" class="ident">keys</label> []<a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>) {
+	<span class="keyword">if</span> <label for="r114" class="ident">keys</label> == <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Using defer here, since the returned keys from the</span><span class="comment">		 sorter.Keys method is only valid until the sorter</span><span class="comment">		 is returned:</span></div>
+<div class="code"><pre><code>		<span class="keyword">defer</span> <a href="http2.go.html#line-332" class="ident">sorterPool</a>.<a href="../../../../sync/pool.go.html#line-90" class="ident">Put</a>(<label for="r115" class="ident">sorter</label>)
+		<label for="r114" class="ident">keys</label> = <label for="r115" class="ident">sorter</label>.<a href="http2.go.html#line-346" class="ident">Keys</a>(<label for="r113" class="ident">h</label>)
+	}
+	<span class="keyword">for</span> <label for="r116" class="ident">_</label>, <label for="r117" class="ident">k</label> := <span class="keyword">range</span> <label for="r114" class="ident">keys</label> {
+		<label for="r118" class="ident">vv</label> := <label for="r113" class="ident">h</label>[<label for="r117" class="ident">k</label>]
+		<label for="r117" class="ident">k</label> = <a href="headermap.go.html#line-82" class="ident">lowerHeader</a>(<label for="r117" class="ident">k</label>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Skip it as backup paranoia. Per</span><span class="comment">			 golang.org/issue/14048, these should</span><span class="comment">			 already be rejected at a higher level.</span></div>
+<div class="code"><pre><code>			<span class="keyword">continue</span>
+		}
+		<label for="r119" class="ident">isTE</label> := <label for="r117" class="ident">k</label> == <span class="lit-string">"transfer-encoding"</span>
+		<span class="keyword">for</span> <label for="r120" class="ident">_</label>, <label for="r121" class="ident">v</label> := <span class="keyword">range</span> <label for="r118" class="ident">vv</label> {
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> TODO: return an error? golang.org/issue/14048</span><span class="comment">				 For now just omit it.</span></div>
+<div class="code"><pre><code>				<span class="keyword">continue</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> TODO: more of "8.1.2.2 Connection-Specific Header Fields"</span></div>
+<div class="code"><pre><code>			<span class="keyword">if</span> <label for="r119" class="ident">isTE</label> &amp;&amp; <label for="r121" class="ident">v</label> != <span class="lit-string">"trailers"</span> {
+				<span class="keyword">continue</span>
+			}
+			<a href="#line-191" class="ident">encKV</a>(<label for="r112" class="ident">enc</label>, <label for="r117" class="ident">k</label>, <label for="r121" class="ident">v</label>)
+		}
+	}
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

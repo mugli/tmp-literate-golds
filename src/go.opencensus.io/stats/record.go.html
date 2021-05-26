@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: record.go in package go.opencensus.io/stats</title>
+<link href="../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	record.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../pkg/go.opencensus.io/stats.html">go.opencensus.io/stats</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16],
+input[id=r17]:checked ~pre label[for=r17],
+input[id=r18]:checked ~pre label[for=r18],
+input[id=r19]:checked ~pre label[for=r19],
+input[id=r20]:checked ~pre label[for=r20],
+input[id=r21]:checked ~pre label[for=r21],
+input[id=r22]:checked ~pre label[for=r22],
+input[id=r23]:checked ~pre label[for=r23],
+input[id=r24]:checked ~pre label[for=r24],
+input[id=r25]:checked ~pre label[for=r25],
+input[id=r26]:checked ~pre label[for=r26],
+input[id=r27]:checked ~pre label[for=r27],
+input[id=r28]:checked ~pre label[for=r28],
+input[id=r29]:checked ~pre label[for=r29],
+input[id=r30]:checked ~pre label[for=r30],
+input[id=r31]:checked ~pre label[for=r31],
+input[id=r32]:checked ~pre label[for=r32],
+input[id=r33]:checked ~pre label[for=r33],
+input[id=r34]:checked ~pre label[for=r34]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1,
+input[id=i2]:checked ~pre .i2,
+input[id=i3]:checked ~pre .i3
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="r17" type="radio" name="g"/>
+<input id="r18" type="radio" name="g"/>
+<input id="r19" type="radio" name="g"/>
+<input id="r20" type="radio" name="g"/>
+<input id="r21" type="radio" name="g"/>
+<input id="r22" type="radio" name="g"/>
+<input id="r23" type="radio" name="g"/>
+<input id="r24" type="radio" name="g"/>
+<input id="r25" type="radio" name="g"/>
+<input id="r26" type="radio" name="g"/>
+<input id="r27" type="radio" name="g"/>
+<input id="r28" type="radio" name="g"/>
+<input id="r29" type="radio" name="g"/>
+<input id="r30" type="radio" name="g"/>
+<input id="r31" type="radio" name="g"/>
+<input id="r32" type="radio" name="g"/>
+<input id="r33" type="radio" name="g"/>
+<input id="r34" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<input id="i2" type="radio" name="i"/>
+<input id="i3" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2018, OpenCensus Authors</span><span class="comment"></span><span class="comment"> Licensed under the Apache License, Version 2.0 (the "License");</span><span class="comment"> you may not use this file except in compliance with the License.</span><span class="comment"> You may obtain a copy of the License at</span><span class="comment"></span><span class="comment">     http://www.apache.org/licenses/LICENSE-2.0</span><span class="comment"></span><span class="comment"> Unless required by applicable law or agreed to in writing, software</span><span class="comment"> distributed under the License is distributed on an "AS IS" BASIS,</span><span class="comment"> WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span><span class="comment"> See the License for the specific language governing permissions and</span><span class="comment"> limitations under the License.</span><span class="comment"></span></div>
+<div class="code"><pre><code>
+<span class="keyword">package</span> stats
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"context"</span></label>
+
+	<label for="i1"><span class="lit-string i1">"go.opencensus.io/metric/metricdata"</span></label>
+	<label for="i2"><span class="lit-string i2">"go.opencensus.io/stats/internal"</span></label>
+	<label for="i3"><span class="lit-string i3">"go.opencensus.io/tag"</span></label>
+)
+
+<span class="keyword">func</span> <label for="r0" class="ident"><a href="../../../pkg/go.opencensus.io/stats.html#name-init" class="ident">init</a></label>() {
+	<a href="../../../pkg/go.opencensus.io/stats/internal.html" class="ident i2">internal</a>.<a href="internal/record.go.html#line-25" class="ident">SubscriptionReporter</a> = <span class="keyword">func</span>(<label for="r1" class="ident">measure</label> <a href="../../../pkg/builtin.html#name-string" class="ident">string</a>) {
+		<a href="measure.go.html#line-72" class="ident">mu</a>.<a href="../../sync/rwmutex.go.html#line-105" class="ident">Lock</a>()
+		<a href="measure.go.html#line-73" class="ident">measures</a>[<label for="r1" class="ident">measure</label>].<a href="measure.go.html#line-63" class="ident">subscribe</a>()
+		<a href="measure.go.html#line-72" class="ident">mu</a>.<a href="../../sync/rwmutex.go.html#line-131" class="ident">Unlock</a>()
+	}
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Recorder provides an interface for exporting measurement information from</span><span class="comment"> the static Record method by using the WithRecorder option.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Record records a set of measurements associated with the given tags and attachments.</span><span class="comment">	 The second argument is a `[]Measurement`.</span></div>
+<div class="code"><pre><code>	Record(*<a href="../../../pkg/go.opencensus.io/tag.html" class="ident i3">tag</a>.<a href="../tag/map.go.html#line-38" class="ident">Map</a>, <span class="keyword">interface</span>{}, <span class="keyword">map</span>[<a href="../../../pkg/builtin.html#name-string" class="ident">string</a>]<span class="keyword">interface</span>{})
+}
+
+<span class="keyword">type</span> <a href="../../../pkg/go.opencensus.io/stats.html#name-recordOptions" class="ident">recordOptions</a> <span class="keyword">struct</span> {
+	<a href="../../../use/go.opencensus.io/stats..recordOptions*414c4.attachments*3930e.html" class="ident">attachments</a>  <a href="../../../pkg/go.opencensus.io/metric/metricdata.html" class="ident i1">metricdata</a>.<a href="../metric/metricdata/exemplar.go.html#line-38" class="ident">Attachments</a>
+	<a href="../../../use/go.opencensus.io/stats..recordOptions*414c4.mutators*d53c1.html" class="ident">mutators</a>     []<a href="../../../pkg/go.opencensus.io/tag.html" class="ident i3">tag</a>.<a href="../tag/map.go.html#line-96" class="ident">Mutator</a>
+	<a href="../../../use/go.opencensus.io/stats..recordOptions*414c4.measurements*5852a.html" class="ident">measurements</a> []<a href="measure.go.html#line-95" class="ident">Measurement</a>
+	<a href="../../../use/go.opencensus.io/stats..recordOptions*414c4.recorder*93384.html" class="ident">recorder</a>     <a href="#line-36" class="ident">Recorder</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> WithAttachments applies provided exemplar attachments.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r2" class="ident"><a href="../../../pkg/go.opencensus.io/stats.html#name-WithAttachments" class="ident">WithAttachments</a></label>(<label for="r3" class="ident">attachments</label> <a href="../../../pkg/go.opencensus.io/metric/metricdata.html" class="ident i1">metricdata</a>.<a href="../metric/metricdata/exemplar.go.html#line-38" class="ident">Attachments</a>) <a href="#line-79" class="ident">Options</a> {
+	<span class="keyword">return</span> <span class="keyword">func</span>(<label for="r4" class="ident">ro</label> *<a href="#line-42" class="ident">recordOptions</a>) {
+		<label for="r4" class="ident">ro</label>.<a href="#line-43" class="ident">attachments</a> = <label for="r3" class="ident">attachments</label>
+	}
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> WithTags applies provided tag mutators.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r5" class="ident"><a href="../../../pkg/go.opencensus.io/stats.html#name-WithTags" class="ident">WithTags</a></label>(<label for="r6" class="ident">mutators</label> ...<a href="../../../pkg/go.opencensus.io/tag.html" class="ident i3">tag</a>.<a href="../tag/map.go.html#line-96" class="ident">Mutator</a>) <a href="#line-79" class="ident">Options</a> {
+	<span class="keyword">return</span> <span class="keyword">func</span>(<label for="r7" class="ident">ro</label> *<a href="#line-42" class="ident">recordOptions</a>) {
+		<label for="r7" class="ident">ro</label>.<a href="#line-44" class="ident">mutators</a> = <label for="r6" class="ident">mutators</label>
+	}
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> WithMeasurements applies provided measurements.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r8" class="ident"><a href="../../../pkg/go.opencensus.io/stats.html#name-WithMeasurements" class="ident">WithMeasurements</a></label>(<label for="r9" class="ident">measurements</label> ...<a href="measure.go.html#line-95" class="ident">Measurement</a>) <a href="#line-79" class="ident">Options</a> {
+	<span class="keyword">return</span> <span class="keyword">func</span>(<label for="r10" class="ident">ro</label> *<a href="#line-42" class="ident">recordOptions</a>) {
+		<label for="r10" class="ident">ro</label>.<a href="#line-45" class="ident">measurements</a> = <label for="r9" class="ident">measurements</label>
+	}
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> WithRecorder records the measurements to the specified `Recorder`, rather</span><span class="comment"> than to the global metrics recorder.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r11" class="ident"><a href="../../../pkg/go.opencensus.io/stats.html#name-WithRecorder" class="ident">WithRecorder</a></label>(<label for="r12" class="ident">meter</label> <a href="#line-36" class="ident">Recorder</a>) <a href="#line-79" class="ident">Options</a> {
+	<span class="keyword">return</span> <span class="keyword">func</span>(<label for="r13" class="ident">ro</label> *<a href="#line-42" class="ident">recordOptions</a>) {
+		<label for="r13" class="ident">ro</label>.<a href="#line-46" class="ident">recorder</a> = <label for="r12" class="ident">meter</label>
+	}
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Options apply changes to recordOptions.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../pkg/go.opencensus.io/stats.html#name-Options" class="ident">Options</a> <span class="keyword">func</span>(*<a href="#line-42" class="ident">recordOptions</a>)
+
+<span class="keyword">func</span> <label for="r14" class="ident"><a href="../../../pkg/go.opencensus.io/stats.html#name-createRecordOption" class="ident">createRecordOption</a></label>(<label for="r15" class="ident">ros</label> ...<a href="#line-79" class="ident">Options</a>) *<a href="#line-42" class="ident">recordOptions</a> {
+	<label for="r16" class="ident">o</label> := &amp;<a href="#line-42" class="ident">recordOptions</a>{}
+	<span class="keyword">for</span> <label for="r17" class="ident">_</label>, <label for="r18" class="ident">ro</label> := <span class="keyword">range</span> <label for="r15" class="ident">ros</label> {
+		<label for="r18" class="ident">ro</label>(<label for="r16" class="ident">o</label>)
+	}
+	<span class="keyword">return</span> <label for="r16" class="ident">o</label>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Record records one or multiple measurements with the same context at once.</span><span class="comment"> If there are any tags in the context, measurements will be tagged with them.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r19" class="ident"><a href="../../../pkg/go.opencensus.io/stats.html#name-Record" class="ident">Record</a></label>(<label for="r20" class="ident">ctx</label> <a href="../../../pkg/context.html" class="ident i0">context</a>.<a href="../../context/context.go.html#line-62" class="ident">Context</a>, <label for="r21" class="ident">ms</label> ...<a href="measure.go.html#line-95" class="ident">Measurement</a>) {
+	<a href="#line-107" class="ident">RecordWithOptions</a>(<label for="r20" class="ident">ctx</label>, <a href="#line-64" class="ident">WithMeasurements</a>(<label for="r21" class="ident">ms</label>...))
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> RecordWithTags records one or multiple measurements at once.</span><span class="comment"></span><span class="comment"> Measurements will be tagged with the tags in the context mutated by the mutators.</span><span class="comment"> RecordWithTags is useful if you want to record with tag mutations but don't want</span><span class="comment"> to propagate the mutations in the context.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r22" class="ident"><a href="../../../pkg/go.opencensus.io/stats.html#name-RecordWithTags" class="ident">RecordWithTags</a></label>(<label for="r23" class="ident">ctx</label> <a href="../../../pkg/context.html" class="ident i0">context</a>.<a href="../../context/context.go.html#line-62" class="ident">Context</a>, <label for="r24" class="ident">mutators</label> []<a href="../../../pkg/go.opencensus.io/tag.html" class="ident i3">tag</a>.<a href="../tag/map.go.html#line-96" class="ident">Mutator</a>, <label for="r25" class="ident">ms</label> ...<a href="measure.go.html#line-95" class="ident">Measurement</a>) <a href="../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<span class="keyword">return</span> <a href="#line-107" class="ident">RecordWithOptions</a>(<label for="r23" class="ident">ctx</label>, <a href="#line-57" class="ident">WithTags</a>(<label for="r24" class="ident">mutators</label>...), <a href="#line-64" class="ident">WithMeasurements</a>(<label for="r25" class="ident">ms</label>...))
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> RecordWithOptions records measurements from the given options (if any) against context</span><span class="comment"> and tags and attachments in the options (if any).</span><span class="comment"> If there are any tags in the context, measurements will be tagged with them.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r26" class="ident"><a href="../../../pkg/go.opencensus.io/stats.html#name-RecordWithOptions" class="ident">RecordWithOptions</a></label>(<label for="r27" class="ident">ctx</label> <a href="../../../pkg/context.html" class="ident i0">context</a>.<a href="../../context/context.go.html#line-62" class="ident">Context</a>, <label for="r28" class="ident">ros</label> ...<a href="#line-79" class="ident">Options</a>) <a href="../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<label for="r29" class="ident">o</label> := <a href="#line-81" class="ident">createRecordOption</a>(<label for="r28" class="ident">ros</label>...)
+	<span class="keyword">if</span> <a href="../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r29" class="ident">o</label>.<a href="#line-45" class="ident">measurements</a>) == <span class="lit-number">0</span> {
+		<span class="keyword">return</span> <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+	}
+	<label for="r30" class="ident">recorder</label> := <a href="../../../pkg/go.opencensus.io/stats/internal.html" class="ident i2">internal</a>.<a href="internal/record.go.html#line-22" class="ident">DefaultRecorder</a>
+	<span class="keyword">if</span> <label for="r29" class="ident">o</label>.<a href="#line-46" class="ident">recorder</a> != <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<label for="r30" class="ident">recorder</label> = <label for="r29" class="ident">o</label>.<a href="#line-46" class="ident">recorder</a>.<a href="#line-39" class="ident">Record</a>
+	}
+	<span class="keyword">if</span> <label for="r30" class="ident">recorder</label> == <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+	}
+	<label for="r31" class="ident">record</label> := <a href="../../../pkg/builtin.html#name-false" class="ident">false</a>
+	<span class="keyword">for</span> <label for="r32" class="ident">_</label>, <label for="r33" class="ident">m</label> := <span class="keyword">range</span> <label for="r29" class="ident">o</label>.<a href="#line-45" class="ident">measurements</a> {
+		<span class="keyword">if</span> <label for="r33" class="ident">m</label>.<a href="measure.go.html#line-98" class="ident">desc</a>.<a href="measure.go.html#line-67" class="ident">subscribed</a>() {
+			<label for="r31" class="ident">record</label> = <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>
+			<span class="keyword">break</span>
+		}
+	}
+	<span class="keyword">if</span> !<label for="r31" class="ident">record</label> {
+		<span class="keyword">return</span> <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+	}
+	<span class="keyword">if</span> <a href="../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r29" class="ident">o</label>.<a href="#line-44" class="ident">mutators</a>) &gt; <span class="lit-number">0</span> {
+		<span class="keyword">var</span> <label for="r34" class="ident">err</label> <a href="../../../pkg/builtin.html#name-error" class="ident">error</a>
+		<span class="keyword">if</span> <label for="r27" class="ident">ctx</label>, <label for="r34" class="ident">err</label> = <a href="../../../pkg/go.opencensus.io/tag.html" class="ident i3">tag</a>.<a href="../tag/map.go.html#line-187" class="ident">New</a>(<label for="r27" class="ident">ctx</label>, <label for="r29" class="ident">o</label>.<a href="#line-44" class="ident">mutators</a>...); <label for="r34" class="ident">err</label> != <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<span class="keyword">return</span> <label for="r34" class="ident">err</label>
+		}
+	}
+	<label for="r30" class="ident">recorder</label>(<a href="../../../pkg/go.opencensus.io/tag.html" class="ident i3">tag</a>.<a href="../tag/context.go.html#line-23" class="ident">FromContext</a>(<label for="r27" class="ident">ctx</label>), <label for="r29" class="ident">o</label>.<a href="#line-45" class="ident">measurements</a>, <label for="r29" class="ident">o</label>.<a href="#line-43" class="ident">attachments</a>)
+	<span class="keyword">return</span> <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

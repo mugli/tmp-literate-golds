@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: process_collector.go in package github.com/prometheus/client_golang/prometheus</title>
+<link href="../../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	process_collector.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../../pkg/github.com/prometheus/client_golang/prometheus.html">github.com/prometheus/client_golang/prometheus</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2015 The Prometheus Authors</span><span class="comment"> Licensed under the Apache License, Version 2.0 (the "License");</span><span class="comment"> you may not use this file except in compliance with the License.</span><span class="comment"> You may obtain a copy of the License at</span><span class="comment"></span><span class="comment"> http://www.apache.org/licenses/LICENSE-2.0</span><span class="comment"></span><span class="comment"> Unless required by applicable law or agreed to in writing, software</span><span class="comment"> distributed under the License is distributed on an "AS IS" BASIS,</span><span class="comment"> WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span><span class="comment"> See the License for the specific language governing permissions and</span><span class="comment"> limitations under the License.</span></div>
+<div class="code"><pre><code>
+<span class="keyword">package</span> prometheus
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"errors"</span></label>
+	<label for="i1"><span class="lit-string i1">"os"</span></label>
+)
+
+<span class="keyword">type</span> <a href="../../../../../pkg/github.com/prometheus/client_golang/prometheus.html#name-processCollector" class="ident">processCollector</a> <span class="keyword">struct</span> {
+	<a href="../../../../../use/github.com/prometheus/client_golang/prometheus..processCollector*fd1d1.collectFn*aeefc.html" class="ident">collectFn</a>       <span class="keyword">func</span>(<span class="keyword">chan</span>&lt;- <a href="metric.go.html#line-31" class="ident">Metric</a>)
+	<a href="../../../../../use/github.com/prometheus/client_golang/prometheus..processCollector*fd1d1.pidFn*bc241.html" class="ident">pidFn</a>           <span class="keyword">func</span>() (<a href="../../../../../pkg/builtin.html#name-int" class="ident">int</a>, <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a>)
+	<a href="../../../../../use/github.com/prometheus/client_golang/prometheus..processCollector*fd1d1.reportErrors*f0c16.html" class="ident">reportErrors</a>    <a href="../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>
+	<a href="../../../../../use/github.com/prometheus/client_golang/prometheus..processCollector*fd1d1.cpuTotal*39506.html" class="ident">cpuTotal</a>        *<a href="desc.go.html#line-45" class="ident">Desc</a>
+	<a href="../../../../../use/github.com/prometheus/client_golang/prometheus..processCollector*fd1d1.openFDs*19bf3.html" class="ident">openFDs</a>, <a href="../../../../../use/github.com/prometheus/client_golang/prometheus..processCollector*fd1d1.maxFDs*b4b45.html" class="ident">maxFDs</a> *<a href="desc.go.html#line-45" class="ident">Desc</a>
+	<a href="../../../../../use/github.com/prometheus/client_golang/prometheus..processCollector*fd1d1.vsize*7ef00.html" class="ident">vsize</a>, <a href="../../../../../use/github.com/prometheus/client_golang/prometheus..processCollector*fd1d1.maxVsize*a0c4d.html" class="ident">maxVsize</a> *<a href="desc.go.html#line-45" class="ident">Desc</a>
+	<a href="../../../../../use/github.com/prometheus/client_golang/prometheus..processCollector*fd1d1.rss*c6cc4.html" class="ident">rss</a>             *<a href="desc.go.html#line-45" class="ident">Desc</a>
+	<a href="../../../../../use/github.com/prometheus/client_golang/prometheus..processCollector*fd1d1.startTime*b5667.html" class="ident">startTime</a>       *<a href="desc.go.html#line-45" class="ident">Desc</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ProcessCollectorOpts defines the behavior of a process metrics collector</span><span class="comment"> created with NewProcessCollector.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> PidFn returns the PID of the process the collector collects metrics</span><span class="comment">	 for. It is called upon each collection. By default, the PID of the</span><span class="comment">	 current process is used, as determined on construction time by</span><span class="comment">	 calling os.Getpid().</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> If non-empty, each of the collected metrics is prefixed by the</span><span class="comment">	 provided string and an underscore ("_").</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> If true, any error encountered during collection is reported as an</span><span class="comment">	 invalid metric (see NewInvalidMetric). Otherwise, errors are ignored</span><span class="comment">	 and the collected metrics will be incomplete. (Possibly, no metrics</span><span class="comment">	 will be collected at all.) While that's usually not desired, it is</span><span class="comment">	 appropriate for the common "mix-in" of process metrics, where process</span><span class="comment">	 metrics are nice to have, but failing to collect them should not</span><span class="comment">	 disrupt the collection of the remaining metrics.</span></div>
+<div class="code"><pre><code>	<a href="../../../../../use/github.com/prometheus/client_golang/prometheus..ProcessCollectorOpts.ReportErrors.html" class="ident">ReportErrors</a> <a href="../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> NewProcessCollector returns a collector which exports the current state of</span><span class="comment"> process metrics including CPU, memory and file descriptor usage as well as</span><span class="comment"> the process start time. The detailed behavior is defined by the provided</span><span class="comment"> ProcessCollectorOpts. The zero value of ProcessCollectorOpts creates a</span><span class="comment"> collector for the current process with an empty namespace string and no error</span><span class="comment"> reporting.</span><span class="comment"></span><span class="comment"> The collector only works on operating systems with a Linux-style proc</span><span class="comment"> filesystem and on Microsoft Windows. On other operating systems, it will not</span><span class="comment"> collect any metrics.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r0" class="ident"><a href="../../../../../pkg/github.com/prometheus/client_golang/prometheus.html#name-NewProcessCollector" class="ident">NewProcessCollector</a></label>(<label for="r1" class="ident">opts</label> <a href="#line-34" class="ident">ProcessCollectorOpts</a>) <a href="collector.go.html#line-27" class="ident">Collector</a> {
+	<label for="r2" class="ident">ns</label> := <span class="lit-string">""</span>
+	<span class="keyword">if</span> <a href="../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r1" class="ident">opts</label>.<a href="#line-42" class="ident">Namespace</a>) &gt; <span class="lit-number">0</span> {
+		<label for="r2" class="ident">ns</label> = <label for="r1" class="ident">opts</label>.<a href="#line-42" class="ident">Namespace</a> + <span class="lit-string">"_"</span>
+	}
+
+	<label for="r3" class="ident">c</label> := &amp;<a href="#line-21" class="ident">processCollector</a>{
+		<a href="#line-24" class="ident">reportErrors</a>: <label for="r1" class="ident">opts</label>.<a href="#line-50" class="ident">ReportErrors</a>,
+		<a href="#line-25" class="ident">cpuTotal</a>: <a href="desc.go.html#line-78" class="ident">NewDesc</a>(
+			<label for="r2" class="ident">ns</label>+<span class="lit-string">"process_cpu_seconds_total"</span>,
+			<span class="lit-string">"Total user and system CPU time spent in seconds."</span>,
+			<a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>,
+		),
+		<a href="#line-26" class="ident">openFDs</a>: <a href="desc.go.html#line-78" class="ident">NewDesc</a>(
+			<label for="r2" class="ident">ns</label>+<span class="lit-string">"process_open_fds"</span>,
+			<span class="lit-string">"Number of open file descriptors."</span>,
+			<a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>,
+		),
+		<a href="#line-26" class="ident">maxFDs</a>: <a href="desc.go.html#line-78" class="ident">NewDesc</a>(
+			<label for="r2" class="ident">ns</label>+<span class="lit-string">"process_max_fds"</span>,
+			<span class="lit-string">"Maximum number of open file descriptors."</span>,
+			<a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>,
+		),
+		<a href="#line-27" class="ident">vsize</a>: <a href="desc.go.html#line-78" class="ident">NewDesc</a>(
+			<label for="r2" class="ident">ns</label>+<span class="lit-string">"process_virtual_memory_bytes"</span>,
+			<span class="lit-string">"Virtual memory size in bytes."</span>,
+			<a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>,
+		),
+		<a href="#line-27" class="ident">maxVsize</a>: <a href="desc.go.html#line-78" class="ident">NewDesc</a>(
+			<label for="r2" class="ident">ns</label>+<span class="lit-string">"process_virtual_memory_max_bytes"</span>,
+			<span class="lit-string">"Maximum amount of virtual memory available in bytes."</span>,
+			<a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>,
+		),
+		<a href="#line-28" class="ident">rss</a>: <a href="desc.go.html#line-78" class="ident">NewDesc</a>(
+			<label for="r2" class="ident">ns</label>+<span class="lit-string">"process_resident_memory_bytes"</span>,
+			<span class="lit-string">"Resident memory size in bytes."</span>,
+			<a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>,
+		),
+		<a href="#line-29" class="ident">startTime</a>: <a href="desc.go.html#line-78" class="ident">NewDesc</a>(
+			<label for="r2" class="ident">ns</label>+<span class="lit-string">"process_start_time_seconds"</span>,
+			<span class="lit-string">"Start time of the process since unix epoch in seconds."</span>,
+			<a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>,
+		),
+	}
+
+	<span class="keyword">if</span> <label for="r1" class="ident">opts</label>.<a href="#line-39" class="ident">PidFn</a> == <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<label for="r4" class="ident">pid</label> := <a href="../../../../../pkg/os.html" class="ident i1">os</a>.<a href="../../../../os/exec.go.html#line-75" class="ident">Getpid</a>()
+		<label for="r3" class="ident">c</label>.<a href="#line-23" class="ident">pidFn</a> = <span class="keyword">func</span>() (<a href="../../../../../pkg/builtin.html#name-int" class="ident">int</a>, <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a>) { <span class="keyword">return</span> <label for="r4" class="ident">pid</label>, <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> }
+	} <span class="keyword">else</span> {
+		<label for="r3" class="ident">c</label>.<a href="#line-23" class="ident">pidFn</a> = <label for="r1" class="ident">opts</label>.<a href="#line-39" class="ident">PidFn</a>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Set up process metric collection if supported by the runtime.</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> <a href="process_collector_other.go.html#line-22" class="ident">canCollectProcess</a>() {
+		<label for="r3" class="ident">c</label>.<a href="#line-22" class="ident">collectFn</a> = <label for="r3" class="ident">c</label>.<a href="process_collector_other.go.html#line-27" class="ident">processCollect</a>
+	} <span class="keyword">else</span> {
+		<label for="r3" class="ident">c</label>.<a href="#line-22" class="ident">collectFn</a> = <span class="keyword">func</span>(<label for="r5" class="ident">ch</label> <span class="keyword">chan</span>&lt;- <a href="metric.go.html#line-31" class="ident">Metric</a>) {
+			<label for="r3" class="ident">c</label>.<a href="#line-143" class="ident">reportError</a>(<label for="r5" class="ident">ch</label>, <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="../../../../../pkg/errors.html" class="ident i0">errors</a>.<a href="../../../../errors/errors.go.html#line-58" class="ident">New</a>(<span class="lit-string">"process metrics not supported on this platform"</span>))
+		}
+	}
+
+	<span class="keyword">return</span> <label for="r3" class="ident">c</label>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Describe returns all descriptions of the collector.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r6" class="ident">c</label> *<a href="#line-21" class="ident">processCollector</a>) <label for="r7" class="ident"><a href="../../../../../use/github.com/prometheus/client_golang/prometheus..processCollector*fd1d1.Describe.html" class="ident">Describe</a></label>(<label for="r8" class="ident">ch</label> <span class="keyword">chan</span>&lt;- *<a href="desc.go.html#line-45" class="ident">Desc</a>) {
+	<label for="r8" class="ident">ch</label> &lt;- <label for="r6" class="ident">c</label>.<a href="#line-25" class="ident">cpuTotal</a>
+	<label for="r8" class="ident">ch</label> &lt;- <label for="r6" class="ident">c</label>.<a href="#line-26" class="ident">openFDs</a>
+	<label for="r8" class="ident">ch</label> &lt;- <label for="r6" class="ident">c</label>.<a href="#line-26" class="ident">maxFDs</a>
+	<label for="r8" class="ident">ch</label> &lt;- <label for="r6" class="ident">c</label>.<a href="#line-27" class="ident">vsize</a>
+	<label for="r8" class="ident">ch</label> &lt;- <label for="r6" class="ident">c</label>.<a href="#line-27" class="ident">maxVsize</a>
+	<label for="r8" class="ident">ch</label> &lt;- <label for="r6" class="ident">c</label>.<a href="#line-28" class="ident">rss</a>
+	<label for="r8" class="ident">ch</label> &lt;- <label for="r6" class="ident">c</label>.<a href="#line-29" class="ident">startTime</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Collect returns the current state of all metrics of the collector.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r9" class="ident">c</label> *<a href="#line-21" class="ident">processCollector</a>) <label for="r10" class="ident"><a href="../../../../../use/github.com/prometheus/client_golang/prometheus..processCollector*fd1d1.Collect.html" class="ident">Collect</a></label>(<label for="r11" class="ident">ch</label> <span class="keyword">chan</span>&lt;- <a href="metric.go.html#line-31" class="ident">Metric</a>) {
+	<label for="r9" class="ident">c</label>.<a href="#line-22" class="ident">collectFn</a>(<label for="r11" class="ident">ch</label>)
+}
+
+<span class="keyword">func</span> (<label for="r12" class="ident">c</label> *<a href="#line-21" class="ident">processCollector</a>) <label for="r13" class="ident"><a href="../../../../../use/github.com/prometheus/client_golang/prometheus..processCollector*fd1d1.reportError*13400.html" class="ident">reportError</a></label>(<label for="r14" class="ident">ch</label> <span class="keyword">chan</span>&lt;- <a href="metric.go.html#line-31" class="ident">Metric</a>, <label for="r15" class="ident">desc</label> *<a href="desc.go.html#line-45" class="ident">Desc</a>, <label for="r16" class="ident">err</label> <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<span class="keyword">if</span> !<label for="r12" class="ident">c</label>.<a href="#line-24" class="ident">reportErrors</a> {
+		<span class="keyword">return</span>
+	}
+	<span class="keyword">if</span> <label for="r15" class="ident">desc</label> == <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<label for="r15" class="ident">desc</label> = <a href="desc.go.html#line-164" class="ident">NewInvalidDesc</a>(<label for="r16" class="ident">err</label>)
+	}
+	<label for="r14" class="ident">ch</label> &lt;- <a href="metric.go.html#line-141" class="ident">NewInvalidMetric</a>(<label for="r15" class="ident">desc</label>, <label for="r16" class="ident">err</label>)
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

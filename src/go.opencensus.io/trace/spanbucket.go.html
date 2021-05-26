@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: spanbucket.go in package go.opencensus.io/trace</title>
+<link href="../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	spanbucket.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../pkg/go.opencensus.io/trace.html">go.opencensus.io/trace</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16],
+input[id=r17]:checked ~pre label[for=r17],
+input[id=r18]:checked ~pre label[for=r18],
+input[id=r19]:checked ~pre label[for=r19],
+input[id=r20]:checked ~pre label[for=r20],
+input[id=r21]:checked ~pre label[for=r21],
+input[id=r22]:checked ~pre label[for=r22],
+input[id=r23]:checked ~pre label[for=r23]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="r17" type="radio" name="g"/>
+<input id="r18" type="radio" name="g"/>
+<input id="r19" type="radio" name="g"/>
+<input id="r20" type="radio" name="g"/>
+<input id="r21" type="radio" name="g"/>
+<input id="r22" type="radio" name="g"/>
+<input id="r23" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2017, OpenCensus Authors</span><span class="comment"></span><span class="comment"> Licensed under the Apache License, Version 2.0 (the "License");</span><span class="comment"> you may not use this file except in compliance with the License.</span><span class="comment"> You may obtain a copy of the License at</span><span class="comment"></span><span class="comment">     http://www.apache.org/licenses/LICENSE-2.0</span><span class="comment"></span><span class="comment"> Unless required by applicable law or agreed to in writing, software</span><span class="comment"> distributed under the License is distributed on an "AS IS" BASIS,</span><span class="comment"> WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span><span class="comment"> See the License for the specific language governing permissions and</span><span class="comment"> limitations under the License.</span></div>
+<div class="code"><pre><code>
+<span class="keyword">package</span> trace
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"time"</span></label>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> samplePeriod is the minimum time between accepting spans in a single bucket.</span></div>
+<div class="code"><pre><code><span class="keyword">const</span> <a href="../../../pkg/go.opencensus.io/trace.html#name-samplePeriod" class="ident">samplePeriod</a> = <a href="../../../pkg/time.html" class="ident i0">time</a>.<a href="../../time/time.go.html#line-605" class="ident">Second</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> defaultLatencies contains the default latency bucket bounds.</span><span class="comment"> TODO: consider defaults, make configurable</span></div>
+<div class="code"><pre><code><span class="keyword">var</span> <a href="../../../pkg/go.opencensus.io/trace.html#name-defaultLatencies" class="ident">defaultLatencies</a> = [...]<a href="../../../pkg/time.html" class="ident i0">time</a>.<a href="../../time/time.go.html#line-583" class="ident">Duration</a>{
+	<span class="lit-number">10</span> * <a href="../../../pkg/time.html" class="ident i0">time</a>.<a href="../../time/time.go.html#line-603" class="ident">Microsecond</a>,
+	<span class="lit-number">100</span> * <a href="../../../pkg/time.html" class="ident i0">time</a>.<a href="../../time/time.go.html#line-603" class="ident">Microsecond</a>,
+	<a href="../../../pkg/time.html" class="ident i0">time</a>.<a href="../../time/time.go.html#line-604" class="ident">Millisecond</a>,
+	<span class="lit-number">10</span> * <a href="../../../pkg/time.html" class="ident i0">time</a>.<a href="../../time/time.go.html#line-604" class="ident">Millisecond</a>,
+	<span class="lit-number">100</span> * <a href="../../../pkg/time.html" class="ident i0">time</a>.<a href="../../time/time.go.html#line-604" class="ident">Millisecond</a>,
+	<a href="../../../pkg/time.html" class="ident i0">time</a>.<a href="../../time/time.go.html#line-605" class="ident">Second</a>,
+	<span class="lit-number">10</span> * <a href="../../../pkg/time.html" class="ident i0">time</a>.<a href="../../time/time.go.html#line-605" class="ident">Second</a>,
+	<a href="../../../pkg/time.html" class="ident i0">time</a>.<a href="../../time/time.go.html#line-606" class="ident">Minute</a>,
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> bucket is a container for a set of spans for a particular error code or latency range.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../pkg/go.opencensus.io/trace.html#name-bucket" class="ident">bucket</a> <span class="keyword">struct</span> {
+	<a href="../../../use/go.opencensus.io/trace..bucket*c5879.nextTime*62821.html" class="ident">nextTime</a>  <a href="../../../pkg/time.html" class="ident i0">time</a>.<a href="../../time/time.go.html#line-127" class="ident">Time</a>   <span class="comment">// next time we can accept a span</span>
+	<a href="../../../use/go.opencensus.io/trace..bucket*c5879.buffer*d0ca8.html" class="ident">buffer</a>    []*<a href="export.go.html#line-74" class="ident">SpanData</a> <span class="comment">// circular buffer of spans</span>
+	<a href="../../../use/go.opencensus.io/trace..bucket*c5879.nextIndex*e769b.html" class="ident">nextIndex</a> <a href="../../../pkg/builtin.html#name-int" class="ident">int</a>         <span class="comment">// location next SpanData should be placed in buffer</span>
+	<a href="../../../use/go.opencensus.io/trace..bucket*c5879.overflow*94fa3.html" class="ident">overflow</a>  <a href="../../../pkg/builtin.html#name-bool" class="ident">bool</a>        <span class="comment">// whether the circular buffer has wrapped around</span>
+}
+
+<span class="keyword">func</span> <label for="r0" class="ident"><a href="../../../pkg/go.opencensus.io/trace.html#name-makeBucket" class="ident">makeBucket</a></label>(<label for="r1" class="ident">bufferSize</label> <a href="../../../pkg/builtin.html#name-int" class="ident">int</a>) <a href="#line-38" class="ident">bucket</a> {
+	<span class="keyword">return</span> <a href="#line-38" class="ident">bucket</a>{
+		<a href="#line-40" class="ident">buffer</a>: <a href="../../../pkg/builtin.html#name-make" class="ident">make</a>([]*<a href="export.go.html#line-74" class="ident">SpanData</a>, <label for="r1" class="ident">bufferSize</label>),
+	}
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> add adds a span to the bucket, if nextTime has been reached.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r2" class="ident">b</label> *<a href="#line-38" class="ident">bucket</a>) <label for="r3" class="ident"><a href="../../../use/go.opencensus.io/trace..bucket*c5879.add*7e9e5.html" class="ident">add</a></label>(<label for="r4" class="ident">s</label> *<a href="export.go.html#line-74" class="ident">SpanData</a>) {
+	<span class="keyword">if</span> <label for="r4" class="ident">s</label>.<a href="export.go.html#line-82" class="ident">EndTime</a>.<a href="../../time/time.go.html#line-251" class="ident">Before</a>(<label for="r2" class="ident">b</label>.<a href="#line-39" class="ident">nextTime</a>) {
+		<span class="keyword">return</span>
+	}
+	<span class="keyword">if</span> <a href="../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r2" class="ident">b</label>.<a href="#line-40" class="ident">buffer</a>) == <span class="lit-number">0</span> {
+		<span class="keyword">return</span>
+	}
+	<label for="r2" class="ident">b</label>.<a href="#line-39" class="ident">nextTime</a> = <label for="r4" class="ident">s</label>.<a href="export.go.html#line-82" class="ident">EndTime</a>.<a href="../../time/time.go.html#line-813" class="ident">Add</a>(<a href="#line-22" class="ident">samplePeriod</a>)
+	<label for="r2" class="ident">b</label>.<a href="#line-40" class="ident">buffer</a>[<label for="r2" class="ident">b</label>.<a href="#line-41" class="ident">nextIndex</a>] = <label for="r4" class="ident">s</label>
+	<label for="r2" class="ident">b</label>.<a href="#line-41" class="ident">nextIndex</a>++
+	<span class="keyword">if</span> <label for="r2" class="ident">b</label>.<a href="#line-41" class="ident">nextIndex</a> == <a href="../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r2" class="ident">b</label>.<a href="#line-40" class="ident">buffer</a>) {
+		<label for="r2" class="ident">b</label>.<a href="#line-41" class="ident">nextIndex</a> = <span class="lit-number">0</span>
+		<label for="r2" class="ident">b</label>.<a href="#line-42" class="ident">overflow</a> = <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>
+	}
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> size returns the number of spans in the bucket.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r5" class="ident">b</label> *<a href="#line-38" class="ident">bucket</a>) <label for="r6" class="ident"><a href="../../../use/go.opencensus.io/trace..bucket*c5879.size*ccdcb.html" class="ident">size</a></label>() <a href="../../../pkg/builtin.html#name-int" class="ident">int</a> {
+	<span class="keyword">if</span> <label for="r5" class="ident">b</label>.<a href="#line-42" class="ident">overflow</a> {
+		<span class="keyword">return</span> <a href="../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r5" class="ident">b</label>.<a href="#line-40" class="ident">buffer</a>)
+	}
+	<span class="keyword">return</span> <label for="r5" class="ident">b</label>.<a href="#line-41" class="ident">nextIndex</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> span returns the ith span in the bucket.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r7" class="ident">b</label> *<a href="#line-38" class="ident">bucket</a>) <label for="r8" class="ident"><a href="../../../use/go.opencensus.io/trace..bucket*c5879.span*37a00.html" class="ident">span</a></label>(<label for="r9" class="ident">i</label> <a href="../../../pkg/builtin.html#name-int" class="ident">int</a>) *<a href="export.go.html#line-74" class="ident">SpanData</a> {
+	<span class="keyword">if</span> !<label for="r7" class="ident">b</label>.<a href="#line-42" class="ident">overflow</a> {
+		<span class="keyword">return</span> <label for="r7" class="ident">b</label>.<a href="#line-40" class="ident">buffer</a>[<label for="r9" class="ident">i</label>]
+	}
+	<span class="keyword">if</span> <label for="r9" class="ident">i</label> &lt; <a href="../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r7" class="ident">b</label>.<a href="#line-40" class="ident">buffer</a>)-<label for="r7" class="ident">b</label>.<a href="#line-41" class="ident">nextIndex</a> {
+		<span class="keyword">return</span> <label for="r7" class="ident">b</label>.<a href="#line-40" class="ident">buffer</a>[<label for="r7" class="ident">b</label>.<a href="#line-41" class="ident">nextIndex</a>+<label for="r9" class="ident">i</label>]
+	}
+	<span class="keyword">return</span> <label for="r7" class="ident">b</label>.<a href="#line-40" class="ident">buffer</a>[<label for="r7" class="ident">b</label>.<a href="#line-41" class="ident">nextIndex</a>+<label for="r9" class="ident">i</label>-<a href="../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r7" class="ident">b</label>.<a href="#line-40" class="ident">buffer</a>)]
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> resize changes the size of the bucket to n, keeping up to n existing spans.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r10" class="ident">b</label> *<a href="#line-38" class="ident">bucket</a>) <label for="r11" class="ident"><a href="../../../use/go.opencensus.io/trace..bucket*c5879.resize*acd53.html" class="ident">resize</a></label>(<label for="r12" class="ident">n</label> <a href="../../../pkg/builtin.html#name-int" class="ident">int</a>) {
+	<label for="r13" class="ident">cur</label> := <label for="r10" class="ident">b</label>.<a href="#line-69" class="ident">size</a>()
+	<label for="r14" class="ident">newBuffer</label> := <a href="../../../pkg/builtin.html#name-make" class="ident">make</a>([]*<a href="export.go.html#line-74" class="ident">SpanData</a>, <label for="r12" class="ident">n</label>)
+	<span class="keyword">if</span> <label for="r13" class="ident">cur</label> &lt; <label for="r12" class="ident">n</label> {
+		<span class="keyword">for</span> <label for="r15" class="ident">i</label> := <span class="lit-number">0</span>; <label for="r15" class="ident">i</label> &lt; <label for="r13" class="ident">cur</label>; <label for="r15" class="ident">i</label>++ {
+			<label for="r14" class="ident">newBuffer</label>[<label for="r15" class="ident">i</label>] = <label for="r10" class="ident">b</label>.<a href="#line-77" class="ident">span</a>(<label for="r15" class="ident">i</label>)
+		}
+		<label for="r10" class="ident">b</label>.<a href="#line-40" class="ident">buffer</a> = <label for="r14" class="ident">newBuffer</label>
+		<label for="r10" class="ident">b</label>.<a href="#line-41" class="ident">nextIndex</a> = <label for="r13" class="ident">cur</label>
+		<label for="r10" class="ident">b</label>.<a href="#line-42" class="ident">overflow</a> = <a href="../../../pkg/builtin.html#name-false" class="ident">false</a>
+		<span class="keyword">return</span>
+	}
+	<span class="keyword">for</span> <label for="r16" class="ident">i</label> := <span class="lit-number">0</span>; <label for="r16" class="ident">i</label> &lt; <label for="r12" class="ident">n</label>; <label for="r16" class="ident">i</label>++ {
+		<label for="r14" class="ident">newBuffer</label>[<label for="r16" class="ident">i</label>] = <label for="r10" class="ident">b</label>.<a href="#line-77" class="ident">span</a>(<label for="r16" class="ident">i</label> + <label for="r13" class="ident">cur</label> - <label for="r12" class="ident">n</label>)
+	}
+	<label for="r10" class="ident">b</label>.<a href="#line-40" class="ident">buffer</a> = <label for="r14" class="ident">newBuffer</label>
+	<label for="r10" class="ident">b</label>.<a href="#line-41" class="ident">nextIndex</a> = <span class="lit-number">0</span>
+	<label for="r10" class="ident">b</label>.<a href="#line-42" class="ident">overflow</a> = <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> latencyBucket returns the appropriate bucket number for a given latency.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r17" class="ident"><a href="../../../pkg/go.opencensus.io/trace.html#name-latencyBucket" class="ident">latencyBucket</a></label>(<label for="r18" class="ident">latency</label> <a href="../../../pkg/time.html" class="ident i0">time</a>.<a href="../../time/time.go.html#line-583" class="ident">Duration</a>) <a href="../../../pkg/builtin.html#name-int" class="ident">int</a> {
+	<label for="r19" class="ident">i</label> := <span class="lit-number">0</span>
+	<span class="keyword">for</span> <label for="r19" class="ident">i</label> &lt; <a href="../../../pkg/builtin.html#name-len" class="ident">len</a>(<a href="#line-26" class="ident">defaultLatencies</a>) &amp;&amp; <label for="r18" class="ident">latency</label> &gt;= <a href="#line-26" class="ident">defaultLatencies</a>[<label for="r19" class="ident">i</label>] {
+		<label for="r19" class="ident">i</label>++
+	}
+	<span class="keyword">return</span> <label for="r19" class="ident">i</label>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> latencyBucketBounds returns the lower and upper bounds for a latency bucket</span><span class="comment"> number.</span><span class="comment"></span><span class="comment"> The lower bound is inclusive, the upper bound is exclusive (except for the</span><span class="comment"> last bucket.)</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r20" class="ident"><a href="../../../pkg/go.opencensus.io/trace.html#name-latencyBucketBounds" class="ident">latencyBucketBounds</a></label>(<label for="r21" class="ident">index</label> <a href="../../../pkg/builtin.html#name-int" class="ident">int</a>) (<label for="r22" class="ident">lower</label> <a href="../../../pkg/time.html" class="ident i0">time</a>.<a href="../../time/time.go.html#line-583" class="ident">Duration</a>, <label for="r23" class="ident">upper</label> <a href="../../../pkg/time.html" class="ident i0">time</a>.<a href="../../time/time.go.html#line-583" class="ident">Duration</a>) {
+	<span class="keyword">if</span> <label for="r21" class="ident">index</label> == <span class="lit-number">0</span> {
+		<span class="keyword">return</span> <span class="lit-number">0</span>, <a href="#line-26" class="ident">defaultLatencies</a>[<label for="r21" class="ident">index</label>]
+	}
+	<span class="keyword">if</span> <label for="r21" class="ident">index</label> == <a href="../../../pkg/builtin.html#name-len" class="ident">len</a>(<a href="#line-26" class="ident">defaultLatencies</a>) {
+		<span class="keyword">return</span> <a href="#line-26" class="ident">defaultLatencies</a>[<label for="r21" class="ident">index</label>-<span class="lit-number">1</span>], <span class="lit-number">1</span>&lt;&lt;<span class="lit-number">63</span> - <span class="lit-number">1</span>
+	}
+	<span class="keyword">return</span> <a href="#line-26" class="ident">defaultLatencies</a>[<label for="r21" class="ident">index</label>-<span class="lit-number">1</span>], <a href="#line-26" class="ident">defaultLatencies</a>[<label for="r21" class="ident">index</label>]
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

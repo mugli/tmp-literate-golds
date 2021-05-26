@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Package: golang.org/x/mod/module</title>
+<link href="../../../../css/light-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="package-details"><code><span style="font-size:xx-large;">package <b>module</b></span>
+
+<span class="title">Import Path</span>
+	<a href="../../../../index.html#pkg-golang.org/x/mod/module">golang.org/x/mod/module</a><i> (on <a href="https://pkg.go.dev/golang.org/x/mod/module" target="_blank">go.dev</a>)</i>
+
+<span class="title">Dependency Relation</span>
+	imports <a href="../../../../dep/golang.org/x/mod/module.html">8 packages</a>, and imported by <a href="../../../../dep/golang.org/x/mod/module.html#imported-by">9 packages</a>
+
+<div id="files"><span class="title">Involved Source Files</span>
+
+	<input type='checkbox' checked class="fold" id="file-0-fold-content"><label for="file-0-fold-content">   <a href="../../../../src/golang.org/x/mod/module/module.go.html#doc">d➜</a> <a href="../../../../src/golang.org/x/mod/module/module.go.html">module.go</a></label><span id='file-0-fold-content-items' class="fold-items">
+		Package module defines the module.Version type along with support code.
+
+		The module.Version type is a simple Path, Version pair:
+
+			type Version struct {
+				Path string
+				Version string
+			}
+
+		There are no restrictions imposed directly by use of this structure,
+		but additional checking functions, most notably Check, verify that
+		a particular path, version pair is valid.
+
+		Escaped Paths
+
+		Module paths appear as substrings of file system paths
+		(in the download cache) and of web server URLs in the proxy protocol.
+		In general we cannot rely on file systems to be case-sensitive,
+		nor can we rely on web servers, since they read from file systems.
+		That is, we cannot rely on the file system to keep rsc.io/QUOTE
+		and rsc.io/quote separate. Windows and macOS don't.
+		Instead, we must never require two different casings of a file path.
+		Because we want the download cache to match the proxy protocol,
+		and because we want the proxy protocol to be possible to serve
+		from a tree of static files (which might be stored on a case-insensitive
+		file system), the proxy protocol must never require two different casings
+		of a URL path either.
+
+		One possibility would be to make the escaped form be the lowercase
+		hexadecimal encoding of the actual path bytes. This would avoid ever
+		needing different casings of a file path, but it would be fairly illegible
+		to most programmers when those paths appeared in the file system
+		(including in file paths in compiler errors and stack traces)
+		in web server logs, and so on. Instead, we want a safe escaped form that
+		leaves most paths unaltered.
+
+		The safe escaped form is to replace every uppercase letter
+		with an exclamation mark followed by the letter's lowercase equivalent.
+
+		For example,
+
+			github.com/Azure/azure-sdk-for-go -&gt;  github.com/!azure/azure-sdk-for-go.
+			github.com/GoogleCloudPlatform/cloudsql-proxy -&gt; github.com/!google!cloud!platform/cloudsql-proxy
+			github.com/Sirupsen/logrus -&gt; github.com/!sirupsen/logrus.
+
+		Import paths that avoid upper-case letters are left unchanged.
+		Note that because import paths are ASCII-only and avoid various
+		problematic punctuation (like : &lt; and &gt;), the escaped form is also ASCII-only
+		and avoids the same problematic punctuation.
+
+		Import paths have never allowed exclamation marks, so there is no
+		need to define how to escape a literal !.
+
+		Unicode Restrictions
+
+		Today, paths are disallowed from using Unicode.
+
+		Although paths are currently disallowed from using Unicode,
+		we would like at some point to allow Unicode letters as well, to assume that
+		file systems and URLs are Unicode-safe (storing UTF-8), and apply
+		the !-for-uppercase convention for escaping them in the file system.
+		But there are at least two subtle considerations.
+
+		First, note that not all case-fold equivalent distinct runes
+		form an upper/lower pair.
+		For example, U+004B ('K'), U+006B ('k'), and U+212A ('K' for Kelvin)
+		are three distinct runes that case-fold to each other.
+		When we do add Unicode letters, we must not assume that upper/lower
+		are the only case-equivalent pairs.
+		Perhaps the Kelvin symbol would be disallowed entirely, for example.
+		Or perhaps it would escape as "!!k", or perhaps as "(212A)".
+
+		Second, it would be nice to allow Unicode marks as well as letters,
+		but marks include combining marks, and then we must deal not
+		only with case folding but also normalization: both U+00E9 ('é')
+		and U+0065 U+0301 ('e' followed by combining acute accent)
+		look the same on the page and are treated by some file systems
+		as the same path. If we do allow Unicode marks in paths, there
+		must be some kind of normalization to allow only one canonical
+		encoding of any character used in an import path.</span></div>
+<div id="exported-types"><span class="title">Package-Level Type Names<span class="title-stat"><i> (total 3, all are exported)</i></span></span>
+
+<div id="exported-types-buttons" class="js-on">	/* sort exporteds by: <label id="sort-types-by-alphabet" class="button">alphabet</label> | <label id="sort-types-by-popularity" class="button">popularity</label> */</div><div class="anchor type-res" id="name-InvalidVersionError" data-popularity="250">	<input type='checkbox' class="fold" id="InvalidVersionError-fold-content"><label for="InvalidVersionError-fold-content"> <a href="../../../../use/golang.org/x/mod/module..InvalidVersionError.html">type</a> <a href="../../../../src/golang.org/x/mod/module/module.go.html#line-174">InvalidVersionError</a> <i>(struct)</i></label><span id='InvalidVersionError-fold-content-docs' class="fold-docs">
+		An InvalidVersionError indicates an error specific to a version, with the
+		module path unknown or specified externally.
+
+		A ModuleError may wrap an InvalidVersionError, but an InvalidVersionError
+		must not wrap a ModuleError.
+
+		<input type='checkbox' class="fold" id="InvalidVersionError-fold-fields"><label for="InvalidVersionError-fold-fields">Fields (<i>total 3, all are exported</i>)</label><span id='InvalidVersionError-fold-fields-items' class="fold-items"><span>
+			<span class="nodocs"><a href="../../../../src/golang.org/x/mod/module/module.go.html#line-177">Err</a> <i><a href="../../../builtin.html#name-error">error</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../src/golang.org/x/mod/module/module.go.html#line-176">Pseudo</a> <i><a href="../../../builtin.html#name-bool">bool</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../src/golang.org/x/mod/module/module.go.html#line-175">Version</a> <i><a href="../../../builtin.html#name-string">string</a></i></span></span></span>
+		<input type='checkbox' class="fold" id="InvalidVersionError-fold-methods"><label for="InvalidVersionError-fold-methods">Methods (<i>total 3, in which 2 are exported</i>)</label><span id='InvalidVersionError-fold-methods-items' class="fold-items"><span>
+			<span class="nodocs">(*T) <a href="../../../../src/golang.org/x/mod/module/module.go.html#line-189">Error</a>() <a href="../../../builtin.html#name-string">string</a></span></span><span>
+			<span class="nodocs">(*T) <a href="../../../../src/golang.org/x/mod/module/module.go.html#line-193">Unwrap</a>() <a href="../../../builtin.html#name-error">error</a></span></span>
+			<input type='checkbox' class="showhide" id="InvalidVersionError-showhide-methods"><i><label for="InvalidVersionError-showhide-methods" class="show-inline">/* one unexported ... */</label><label for="InvalidVersionError-showhide-methods" class="hide-inline">/* one unexported: */</label></i><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="InvalidVersionError-fold-method-noun"><label for="InvalidVersionError-fold-method-noun">(*T) <a href="../../../../src/golang.org/x/mod/module/module.go.html#line-182">noun</a>() <a href="../../../builtin.html#name-string">string</a></label><span id='InvalidVersionError-fold-method-noun-docs' class="fold-docs">
+				noun returns either "version" or "pseudo-version", depending on whether
+				e.Version is a pseudo-version.
+</span></i></span></span>
+		<input type='checkbox' class="fold" id="InvalidVersionError-fold-impls"><label for="InvalidVersionError-fold-impls">Implements (<i>at least 2, both are exported</i>)</label><span id='InvalidVersionError-fold-impls-items' class="fold-items"><span>
+			*T : golang.org/x/xerrors.<a href="../xerrors.html#name-Wrapper">Wrapper</a></span><span>
+			*T : <a href="../../../builtin.html#name-error">error</a></span></span>
+
+</span></div><div class="anchor type-res" id="name-ModuleError" data-popularity="200">	<input type='checkbox' class="fold" id="ModuleError-fold-content"><label for="ModuleError-fold-content"> <a href="../../../../use/golang.org/x/mod/module..ModuleError.html">type</a> <a href="../../../../src/golang.org/x/mod/module/module.go.html#line-137">ModuleError</a> <i>(struct)</i></label><span id='ModuleError-fold-content-docs' class="fold-docs">
+		A ModuleError indicates an error specific to a module.
+
+		<input type='checkbox' class="fold" id="ModuleError-fold-fields"><label for="ModuleError-fold-fields">Fields (<i>total 3, all are exported</i>)</label><span id='ModuleError-fold-fields-items' class="fold-items"><span>
+			<span class="nodocs"><a href="../../../../src/golang.org/x/mod/module/module.go.html#line-140">Err</a> <i><a href="../../../builtin.html#name-error">error</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../src/golang.org/x/mod/module/module.go.html#line-138">Path</a> <i><a href="../../../builtin.html#name-string">string</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../src/golang.org/x/mod/module/module.go.html#line-139">Version</a> <i><a href="../../../builtin.html#name-string">string</a></i></span></span></span>
+		<input type='checkbox' class="fold" id="ModuleError-fold-methods"><label for="ModuleError-fold-methods">Methods (<i>total 2, both are exported</i>)</label><span id='ModuleError-fold-methods-items' class="fold-items"><span>
+			<span class="nodocs">(*T) <a href="../../../../src/golang.org/x/mod/module/module.go.html#line-157">Error</a>() <a href="../../../builtin.html#name-string">string</a></span></span><span>
+			<span class="nodocs">(*T) <a href="../../../../src/golang.org/x/mod/module/module.go.html#line-167">Unwrap</a>() <a href="../../../builtin.html#name-error">error</a></span></span></span>
+		<input type='checkbox' class="fold" id="ModuleError-fold-impls"><label for="ModuleError-fold-impls">Implements (<i>at least 2, both are exported</i>)</label><span id='ModuleError-fold-impls-items' class="fold-items"><span>
+			*T : golang.org/x/xerrors.<a href="../xerrors.html#name-Wrapper">Wrapper</a></span><span>
+			*T : <a href="../../../builtin.html#name-error">error</a></span></span>
+
+</span></div><div class="anchor type-res" id="name-Version" data-popularity="495">	<input type='checkbox' class="fold" id="Version-fold-content"><label for="Version-fold-content"> <a href="../../../../use/golang.org/x/mod/module..Version.html">type</a> <a href="../../../../src/golang.org/x/mod/module/module.go.html#line-112">Version</a> <i>(struct)</i></label><span id='Version-fold-content-docs' class="fold-docs">
+		A Version (for clients, a module.Version) is defined by a module path and version pair.
+		These are stored in their plain (unescaped) form.
+
+		<input type='checkbox' class="fold" id="Version-fold-fields"><label for="Version-fold-fields">Fields (<i>total 2, both are exported</i>)</label><span id='Version-fold-fields-items' class="fold-items"><span>
+			<input type='checkbox' class="fold" id="Version-fold-field-Path"><label for="Version-fold-field-Path"><a href="../../../../src/golang.org/x/mod/module/module.go.html#line-114">Path</a> <i><a href="../../../builtin.html#name-string">string</a></i></label><span id='Version-fold-field-Path-docs' class="fold-docs">
+				Path is a module path, like "golang.org/x/text" or "rsc.io/quote/v2".
+</span></span><span>
+			<input type='checkbox' class="fold" id="Version-fold-field-Version"><label for="Version-fold-field-Version"><a href="../../../../src/golang.org/x/mod/module/module.go.html#line-124">Version</a> <i><a href="../../../builtin.html#name-string">string</a></i></label><span id='Version-fold-field-Version-docs' class="fold-docs">
+				Version is usually a semantic version in canonical form.
+				There are three exceptions to this general rule.
+				First, the top-level target of a build has no specific version
+				and uses Version = "".
+				Second, during MVS calculations the version "none" is used
+				to represent the decision to take no version of a given module.
+				Third, filesystem paths found in "replace" directives are
+				represented by a path with an empty version.
+</span></span></span>
+		<input type='checkbox' class="fold" id="Version-fold-methods"><label for="Version-fold-methods">Methods (<i>only one, which is exported</i>)</label><span id='Version-fold-methods-items' class="fold-items"><span>
+			<input type='checkbox' class="fold" id="Version-fold-method-String"><label for="Version-fold-method-String">( T) <a href="../../../../src/golang.org/x/mod/module/module.go.html#line-129">String</a>() <a href="../../../builtin.html#name-string">string</a></label><span id='Version-fold-method-String-docs' class="fold-docs">
+				String returns a representation of the Version suitable for logging
+				(Path@Version, or just Path if Version is empty).
+</span></span></span>
+		<input type='checkbox' class="fold" id="Version-fold-impls"><label for="Version-fold-impls">Implements (<i>at least 4, in which 2 are exported</i>)</label><span id='Version-fold-impls-items' class="fold-items"><span>
+			 T : expvar.<a href="../../../expvar.html#name-Var">Var</a></span><span>
+			 T : fmt.<a href="../../../fmt.html#name-Stringer">Stringer</a></span>
+			<input type='checkbox' class="showhide" id="Version-showhide-impls"><i><label for="Version-showhide-impls" class="show-inline">/* 2+ unexporteds ... */</label><label for="Version-showhide-impls" class="hide-inline">/* 2+ unexporteds: */</label></i><span class="hidden"><i>
+			 T : context.<a href="../../../context.html#name-stringer">stringer</a></i></span><span class="hidden"><i>
+			 T : runtime.<a href="../../../runtime.html#name-stringer">stringer</a></i></span></span>
+		<input type='checkbox' class="fold" id="Version-fold-params"><label for="Version-fold-params">As Inputs Of (<i>at least 7, in which 6 are exported</i>)</label><span id='Version-fold-params-items' class="fold-items"><span>
+			func <a href="#name-Sort">Sort</a>(list []<b>Version</b>)</span><span>
+			func <a href="#name-VersionError">VersionError</a>(v <b>Version</b>, err <a href="../../../builtin.html#name-error">error</a>) <a href="../../../builtin.html#name-error">error</a></span><span>
+			func golang.org/x/mod/zip.<a href="zip.html#name-CheckZip">CheckZip</a>(m <b>Version</b>, zipFile <a href="../../../builtin.html#name-string">string</a>) (<a href="zip.html">zip</a>.<a href="zip.html#name-CheckedFiles">CheckedFiles</a>, <a href="../../../builtin.html#name-error">error</a>)</span><span>
+			func golang.org/x/mod/zip.<a href="zip.html#name-Create">Create</a>(w <a href="../../../io.html">io</a>.<a href="../../../io.html#name-Writer">Writer</a>, m <b>Version</b>, files []<a href="zip.html">zip</a>.<a href="zip.html#name-File">File</a>) (err <a href="../../../builtin.html#name-error">error</a>)</span><span>
+			func golang.org/x/mod/zip.<a href="zip.html#name-CreateFromDir">CreateFromDir</a>(w <a href="../../../io.html">io</a>.<a href="../../../io.html#name-Writer">Writer</a>, m <b>Version</b>, dir <a href="../../../builtin.html#name-string">string</a>) (err <a href="../../../builtin.html#name-error">error</a>)</span><span>
+			func golang.org/x/mod/zip.<a href="zip.html#name-Unzip">Unzip</a>(dir <a href="../../../builtin.html#name-string">string</a>, m <b>Version</b>, zipFile <a href="../../../builtin.html#name-string">string</a>) (err <a href="../../../builtin.html#name-error">error</a>)</span>
+			<input type='checkbox' class="showhide" id="Version-showhide-outputofs"><i><label for="Version-showhide-outputofs" class="show-inline">/* at least one unexported ... */</label><label for="Version-showhide-outputofs" class="hide-inline">/* at least one unexported: */</label></i><span class="hidden"><i>
+			func golang.org/x/mod/zip.<a href="zip.html#name-checkZip">checkZip</a>(m <b>Version</b>, f *<a href="../../../os.html">os</a>.<a href="../../../os.html#name-File">File</a>) (*<a href="../../../archive/zip.html">zip</a>.<a href="../../../archive/zip.html#name-Reader">Reader</a>, <a href="zip.html">zip</a>.<a href="zip.html#name-CheckedFiles">CheckedFiles</a>, <a href="../../../builtin.html#name-error">error</a>)</i></span></span>
+
+</span></div></div>
+<div id="exported-functions"><span class="title">Package-Level Functions<span class="title-stat"><i> (total 24, in which 16 are exported)</i></span></span>
+
+<div class="anchor value-res" id="name-CanonicalVersion">	<input type='checkbox' class="fold" id="CanonicalVersion-fold-content"><label for="CanonicalVersion-fold-content"> <a href="../../../../use/golang.org/x/mod/module..CanonicalVersion.html">func</a> <a href="../../../../src/golang.org/x/mod/module/module.go.html#line-598">CanonicalVersion</a>(v <a href="../../../builtin.html#name-string">string</a>) <a href="../../../builtin.html#name-string">string</a></label><span id='CanonicalVersion-fold-content-docs' class="fold-docs">
+		CanonicalVersion returns the canonical form of the version string v.
+		It is the same as semver.Canonical(v) except that it preserves the special build suffix "+incompatible".
+
+</span></div><div class="anchor value-res" id="name-Check">	<input type='checkbox' class="fold" id="Check-fold-content"><label for="Check-fold-content"> <a href="../../../../use/golang.org/x/mod/module..Check.html">func</a> <a href="../../../../src/golang.org/x/mod/module/module.go.html#line-201">Check</a>(path, version <a href="../../../builtin.html#name-string">string</a>) <a href="../../../builtin.html#name-error">error</a></label><span id='Check-fold-content-docs' class="fold-docs">
+		Check checks that a given module path, version pair is valid.
+		In addition to the path being a valid module path
+		and the version being a valid semantic version,
+		the two must correspond.
+		For example, the path "yaml/v2" only corresponds to
+		semantic versions beginning with "v2.".
+
+</span></div><div class="anchor value-res" id="name-CheckFilePath">	<input type='checkbox' class="fold" id="CheckFilePath-fold-content"><label for="CheckFilePath-fold-content"> <a href="../../../../use/golang.org/x/mod/module..CheckFilePath.html">func</a> <a href="../../../../src/golang.org/x/mod/module/module.go.html#line-446">CheckFilePath</a>(path <a href="../../../builtin.html#name-string">string</a>) <a href="../../../builtin.html#name-error">error</a></label><span id='CheckFilePath-fold-content-docs' class="fold-docs">
+		CheckFilePath checks that a slash-separated file path is valid.
+		The definition of a valid file path is the same as the definition
+		of a valid import path except that the set of allowed characters is larger:
+		all Unicode letters, ASCII digits, the ASCII space character (U+0020),
+		and the ASCII punctuation characters
+		“!#$%&amp;()+,-.=@[]^_{}~”.
+		(The excluded punctuation characters, " * &lt; &gt; ? ` ' | / \ and :,
+		have special meanings in certain shells or operating systems.)
+
+		CheckFilePath may be less restrictive in the future, but see the
+		top-level package documentation for additional information about
+		subtleties of Unicode.
+
+</span></div><div class="anchor value-res" id="name-CheckImportPath">	<input type='checkbox' class="fold" id="CheckImportPath-fold-content"><label for="CheckImportPath-fold-content"> <a href="../../../../use/golang.org/x/mod/module..CheckImportPath.html">func</a> <a href="../../../../src/golang.org/x/mod/module/module.go.html#line-328">CheckImportPath</a>(path <a href="../../../builtin.html#name-string">string</a>) <a href="../../../builtin.html#name-error">error</a></label><span id='CheckImportPath-fold-content-docs' class="fold-docs">
+		CheckImportPath checks that an import path is valid.
+
+		A valid import path consists of one or more valid path elements
+		separated by slashes (U+002F). (It must not begin with nor end in a slash.)
+
+		A valid path element is a non-empty string made up of
+		ASCII letters, ASCII digits, and limited ASCII punctuation: - . _ and ~.
+		It must not begin or end with a dot (U+002E), nor contain two dots in a row.
+
+		The element prefix up to the first dot must not be a reserved file name
+		on Windows, regardless of case (CON, com1, NuL, and so on). The element
+		must not have a suffix of a tilde followed by one or more ASCII digits
+		(to exclude paths elements that look like Windows short-names).
+
+		CheckImportPath may be less restrictive in the future, but see the
+		top-level package documentation for additional information about
+		subtleties of Unicode.
+
+</span></div><div class="anchor value-res" id="name-CheckPath">	<input type='checkbox' class="fold" id="CheckPath-fold-content"><label for="CheckPath-fold-content"> <a href="../../../../use/golang.org/x/mod/module..CheckPath.html">func</a> <a href="../../../../src/golang.org/x/mod/module/module.go.html#line-283">CheckPath</a>(path <a href="../../../builtin.html#name-string">string</a>) <a href="../../../builtin.html#name-error">error</a></label><span id='CheckPath-fold-content-docs' class="fold-docs">
+		CheckPath checks that a module path is valid.
+		A valid module path is a valid import path, as checked by CheckImportPath,
+		with two additional constraints.
+		First, the leading path element (up to the first slash, if any),
+		by convention a domain name, must contain only lower-case ASCII letters,
+		ASCII digits, dots (U+002E), and dashes (U+002D);
+		it must contain at least one dot and cannot start with a dash.
+		Second, for a final path element of the form /vN, where N looks numeric
+		(ASCII digits and dots) must not begin with a leading zero, must not be /v1,
+		and must not contain any dots. For paths beginning with "gopkg.in/",
+		this second requirement is replaced by a requirement that the path
+		follow the gopkg.in server's conventions.
+
+</span></div><div class="anchor value-res" id="name-CheckPathMajor">	<input type='checkbox' class="fold" id="CheckPathMajor-fold-content"><label for="CheckPathMajor-fold-content"> <a href="../../../../use/golang.org/x/mod/module..CheckPathMajor.html">func</a> <a href="../../../../src/golang.org/x/mod/module/module.go.html#line-543">CheckPathMajor</a>(v, pathMajor <a href="../../../builtin.html#name-string">string</a>) <a href="../../../builtin.html#name-error">error</a></label><span id='CheckPathMajor-fold-content-docs' class="fold-docs">
+		CheckPathMajor returns a non-nil error if the semantic version v
+		does not match the path major version pathMajor.
+
+</span></div><div class="anchor value-res" id="name-EscapePath">	<input type='checkbox' class="fold" id="EscapePath-fold-content"><label for="EscapePath-fold-content"> <a href="../../../../use/golang.org/x/mod/module..EscapePath.html">func</a> <a href="../../../../src/golang.org/x/mod/module/module.go.html#line-638">EscapePath</a>(path <a href="../../../builtin.html#name-string">string</a>) (escaped <a href="../../../builtin.html#name-string">string</a>, err <a href="../../../builtin.html#name-error">error</a>)</label><span id='EscapePath-fold-content-docs' class="fold-docs">
+		EscapePath returns the escaped form of the given module path.
+		It fails if the module path is invalid.
+
+</span></div><div class="anchor value-res" id="name-EscapeVersion">	<input type='checkbox' class="fold" id="EscapeVersion-fold-content"><label for="EscapeVersion-fold-content"> <a href="../../../../use/golang.org/x/mod/module..EscapeVersion.html">func</a> <a href="../../../../src/golang.org/x/mod/module/module.go.html#line-649">EscapeVersion</a>(v <a href="../../../builtin.html#name-string">string</a>) (escaped <a href="../../../builtin.html#name-string">string</a>, err <a href="../../../builtin.html#name-error">error</a>)</label><span id='EscapeVersion-fold-content-docs' class="fold-docs">
+		EscapeVersion returns the escaped form of the given module version.
+		Versions are allowed to be in non-semver form but must be valid file names
+		and not contain exclamation marks.
+
+</span></div><div class="anchor value-res" id="name-MatchPathMajor">	<input type='checkbox' class="fold" id="MatchPathMajor-fold-content"><label for="MatchPathMajor-fold-content"> <a href="../../../../use/golang.org/x/mod/module..MatchPathMajor.html">func</a> <a href="../../../../src/golang.org/x/mod/module/module.go.html#line-537">MatchPathMajor</a>(v, pathMajor <a href="../../../builtin.html#name-string">string</a>) <a href="../../../builtin.html#name-bool">bool</a></label><span id='MatchPathMajor-fold-content-docs' class="fold-docs">
+		MatchPathMajor reports whether the semantic version v
+		matches the path major version pathMajor.
+
+		MatchPathMajor returns true if and only if CheckPathMajor returns nil.
+
+</span></div><div class="anchor value-res" id="name-MatchPrefixPatterns">	<input type='checkbox' class="fold" id="MatchPrefixPatterns-fold-content"><label for="MatchPrefixPatterns-fold-content"> <a href="../../../../use/golang.org/x/mod/module..MatchPrefixPatterns.html">func</a> <a href="../../../../src/golang.org/x/mod/module/module.go.html#line-752">MatchPrefixPatterns</a>(globs, target <a href="../../../builtin.html#name-string">string</a>) <a href="../../../builtin.html#name-bool">bool</a></label><span id='MatchPrefixPatterns-fold-content-docs' class="fold-docs">
+		MatchPrefixPatterns reports whether any path prefix of target matches one of
+		the glob patterns (as defined by path.Match) in the comma-separated globs
+		list. This implements the algorithm used when matching a module path to the
+		GOPRIVATE environment variable, as described by 'go help module-private'.
+
+		It ignores any empty or malformed patterns in the list.
+
+</span></div><div class="anchor value-res" id="name-PathMajorPrefix">	<input type='checkbox' class="fold" id="PathMajorPrefix-fold-content"><label for="PathMajorPrefix-fold-content"> <a href="../../../../use/golang.org/x/mod/module..PathMajorPrefix.html">func</a> <a href="../../../../src/golang.org/x/mod/module/module.go.html#line-579">PathMajorPrefix</a>(pathMajor <a href="../../../builtin.html#name-string">string</a>) <a href="../../../builtin.html#name-string">string</a></label><span id='PathMajorPrefix-fold-content-docs' class="fold-docs">
+		PathMajorPrefix returns the major-version tag prefix implied by pathMajor.
+		An empty PathMajorPrefix allows either v0 or v1.
+
+		Note that MatchPathMajor may accept some versions that do not actually begin
+		with this prefix: namely, it accepts a 'v0.0.0-' prefix for a '.v1'
+		pathMajor, even though that pathMajor implies 'v1' tagging.
+
+</span></div><div class="anchor value-res" id="name-Sort">	<input type='checkbox' class="fold" id="Sort-fold-content"><label for="Sort-fold-content"> <a href="../../../../use/golang.org/x/mod/module..Sort.html">func</a> <a href="../../../../src/golang.org/x/mod/module/module.go.html#line-610">Sort</a>(list []<a href="#name-Version">Version</a>)</label><span id='Sort-fold-content-docs' class="fold-docs">
+		Sort sorts the list by Path, breaking ties by comparing Version fields.
+		The Version fields are interpreted as semantic versions (using semver.Compare)
+		optionally followed by a tie-breaking suffix introduced by a slash character,
+		like in "v0.0.1/go.mod".
+
+</span></div><div class="anchor value-res" id="name-SplitPathVersion">	<input type='checkbox' class="fold" id="SplitPathVersion-fold-content"><label for="SplitPathVersion-fold-content"> <a href="../../../../use/golang.org/x/mod/module..SplitPathVersion.html">func</a> <a href="../../../../src/golang.org/x/mod/module/module.go.html#line-487">SplitPathVersion</a>(path <a href="../../../builtin.html#name-string">string</a>) (prefix, pathMajor <a href="../../../builtin.html#name-string">string</a>, ok <a href="../../../builtin.html#name-bool">bool</a>)</label><span id='SplitPathVersion-fold-content-docs' class="fold-docs">
+		SplitPathVersion returns prefix and major version such that prefix+pathMajor == path
+		and version is either empty or "/vN" for N &gt;= 2.
+		As a special case, gopkg.in paths are recognized directly;
+		they require ".vN" instead of "/vN", and for all N, not just N &gt;= 2.
+		SplitPathVersion returns with ok = false when presented with
+		a path whose last path element does not satisfy the constraints
+		applied by CheckPath, such as "example.com/pkg/v1" or "example.com/pkg/v1.2".
+
+</span></div><div class="anchor value-res" id="name-UnescapePath">	<input type='checkbox' class="fold" id="UnescapePath-fold-content"><label for="UnescapePath-fold-content"> <a href="../../../../use/golang.org/x/mod/module..UnescapePath.html">func</a> <a href="../../../../src/golang.org/x/mod/module/module.go.html#line-689">UnescapePath</a>(escaped <a href="../../../builtin.html#name-string">string</a>) (path <a href="../../../builtin.html#name-string">string</a>, err <a href="../../../builtin.html#name-error">error</a>)</label><span id='UnescapePath-fold-content-docs' class="fold-docs">
+		UnescapePath returns the module path for the given escaped path.
+		It fails if the escaped path is invalid or describes an invalid path.
+
+</span></div><div class="anchor value-res" id="name-UnescapeVersion">	<input type='checkbox' class="fold" id="UnescapeVersion-fold-content"><label for="UnescapeVersion-fold-content"> <a href="../../../../use/golang.org/x/mod/module..UnescapeVersion.html">func</a> <a href="../../../../src/golang.org/x/mod/module/module.go.html#line-704">UnescapeVersion</a>(escaped <a href="../../../builtin.html#name-string">string</a>) (v <a href="../../../builtin.html#name-string">string</a>, err <a href="../../../builtin.html#name-error">error</a>)</label><span id='UnescapeVersion-fold-content-docs' class="fold-docs">
+		UnescapeVersion returns the version string for the given escaped version.
+		It fails if the escaped form is invalid or describes an invalid version.
+		Versions are allowed to be in non-semver form but must be valid file names
+		and not contain exclamation marks.
+
+</span></div><div class="anchor value-res" id="name-VersionError">	<input type='checkbox' class="fold" id="VersionError-fold-content"><label for="VersionError-fold-content"> <a href="../../../../use/golang.org/x/mod/module..VersionError.html">func</a> <a href="../../../../src/golang.org/x/mod/module/module.go.html#line-145">VersionError</a>(v <a href="#name-Version">Version</a>, err <a href="../../../builtin.html#name-error">error</a>) <a href="../../../builtin.html#name-error">error</a></label><span id='VersionError-fold-content-docs' class="fold-docs">
+		VersionError returns a ModuleError derived from a Version and error,
+		or err itself if it is already such an error.
+
+</span></div>	<input type='checkbox' class="showhide" id="unexported-functions-showhide"><i><label for="unexported-functions-showhide" class="show-inline">/* 8 unexporteds ... */</label><label for="unexported-functions-showhide" class="hide-inline">/* 8 unexporteds: */</label></i><div class="anchor value-res hidden" id="name-checkElem"><i>	<input type='checkbox' class="fold" id="checkElem-fold-content"><label for="checkElem-fold-content"> <a href="../../../../use/golang.org/x/mod/module..checkElem*828fe.html">func</a> <a href="../../../../src/golang.org/x/mod/module/module.go.html#line-374">checkElem</a>(elem <a href="../../../builtin.html#name-string">string</a>, fileName <a href="../../../builtin.html#name-bool">bool</a>) <a href="../../../builtin.html#name-error">error</a></label><span id='checkElem-fold-content-docs' class="fold-docs">
+		checkElem checks whether an individual path element is valid.
+		fileName indicates whether the element is a file name (not a directory name).
+
+</span></i></div><div class="anchor value-res hidden" id="name-checkPath"><i>	<input type='checkbox' class="fold" id="checkPath-fold-content"><label for="checkPath-fold-content"> <a href="../../../../use/golang.org/x/mod/module..checkPath*1fc4f.html">func</a> <a href="../../../../src/golang.org/x/mod/module/module.go.html#line-341">checkPath</a>(path <a href="../../../builtin.html#name-string">string</a>, fileName <a href="../../../builtin.html#name-bool">bool</a>) <a href="../../../builtin.html#name-error">error</a></label><span id='checkPath-fold-content-docs' class="fold-docs">
+		checkPath checks that a general path is valid.
+		It returns an error describing why but not mentioning path.
+		Because these checks apply to both module paths and import paths,
+		the caller is expected to add the "malformed ___ path %q: " prefix.
+		fileName indicates whether the final element of the path is a file name
+		(as opposed to a directory name).
+
+</span></i></div><div class="anchor value-res hidden" id="name-escapeString"><i>	<span class="nodocs"> <a href="../../../../use/golang.org/x/mod/module..escapeString*e8b81.html">func</a> <a href="../../../../src/golang.org/x/mod/module/module.go.html#line-659">escapeString</a>(s <a href="../../../builtin.html#name-string">string</a>) (escaped <a href="../../../builtin.html#name-string">string</a>, err <a href="../../../builtin.html#name-error">error</a>)</span></i></div><div class="anchor value-res hidden" id="name-fileNameOK"><i>	<input type='checkbox' class="fold" id="fileNameOK-fold-content"><label for="fileNameOK-fold-content"> <a href="../../../../use/golang.org/x/mod/module..fileNameOK*2a1c8.html">func</a> <a href="../../../../src/golang.org/x/mod/module/module.go.html#line-247">fileNameOK</a>(r <a href="../../../builtin.html#name-rune">rune</a>) <a href="../../../builtin.html#name-bool">bool</a></label><span id='fileNameOK-fold-content-docs' class="fold-docs">
+		fileNameOK reports whether r can appear in a file name.
+		For now we allow all Unicode letters but otherwise limit to pathOK plus a few more punctuation characters.
+		If we expand the set of allowed characters here, we have to
+		work harder at detecting potential case-folding and normalization collisions.
+		See note about "escaped paths" above.
+
+</span></i></div><div class="anchor value-res hidden" id="name-firstPathOK"><i>	<input type='checkbox' class="fold" id="firstPathOK-fold-content"><label for="firstPathOK-fold-content"> <a href="../../../../use/golang.org/x/mod/module..firstPathOK*61bee.html">func</a> <a href="../../../../src/golang.org/x/mod/module/module.go.html#line-221">firstPathOK</a>(r <a href="../../../builtin.html#name-rune">rune</a>) <a href="../../../builtin.html#name-bool">bool</a></label><span id='firstPathOK-fold-content-docs' class="fold-docs">
+		firstPathOK reports whether r can appear in the first element of a module path.
+		The first element of the path must be an LDH domain name, at least for now.
+		To avoid case ambiguity, the domain name must be entirely lower case.
+
+</span></i></div><div class="anchor value-res hidden" id="name-pathOK"><i>	<input type='checkbox' class="fold" id="pathOK-fold-content"><label for="pathOK-fold-content"> <a href="../../../../use/golang.org/x/mod/module..pathOK*934d8.html">func</a> <a href="../../../../src/golang.org/x/mod/module/module.go.html#line-232">pathOK</a>(r <a href="../../../builtin.html#name-rune">rune</a>) <a href="../../../builtin.html#name-bool">bool</a></label><span id='pathOK-fold-content-docs' class="fold-docs">
+		pathOK reports whether r can appear in an import path element.
+		Paths can be ASCII letters, ASCII digits, and limited ASCII punctuation: - . _ and ~.
+		This matches what "go get" has historically recognized in import paths.
+		TODO(rsc): We would like to allow Unicode letters, but that requires additional
+		care in the safe encoding (see "escaped paths" above).
+
+</span></i></div><div class="anchor value-res hidden" id="name-splitGopkgIn"><i>	<input type='checkbox' class="fold" id="splitGopkgIn-fold-content"><label for="splitGopkgIn-fold-content"> <a href="../../../../use/golang.org/x/mod/module..splitGopkgIn*f2278.html">func</a> <a href="../../../../src/golang.org/x/mod/module/module.go.html#line-511">splitGopkgIn</a>(path <a href="../../../builtin.html#name-string">string</a>) (prefix, pathMajor <a href="../../../builtin.html#name-string">string</a>, ok <a href="../../../builtin.html#name-bool">bool</a>)</label><span id='splitGopkgIn-fold-content-docs' class="fold-docs">
+		splitGopkgIn is like SplitPathVersion but only for gopkg.in paths.
+
+</span></i></div><div class="anchor value-res hidden" id="name-unescapeString"><i>	<span class="nodocs"> <a href="../../../../use/golang.org/x/mod/module..unescapeString*93d3b.html">func</a> <a href="../../../../src/golang.org/x/mod/module/module.go.html#line-715">unescapeString</a>(escaped <a href="../../../builtin.html#name-string">string</a>) (<a href="../../../builtin.html#name-string">string</a>, <a href="../../../builtin.html#name-bool">bool</a>)</span></i></div></div>
+<div id="exported-variables"><span class="title">Package-Level Variables<span class="title-stat"><i> (only one, which is unexported)</i></span></span>
+
+	<input type='checkbox' class="showhide" id="unexported-variables-showhide"><i><label for="unexported-variables-showhide" class="show-inline">/* one unexported ... */</label><label for="unexported-variables-showhide" class="hide-inline">/* one unexported: */</label></i><div class="anchor value-res hidden" id="name-badWindowsNames"><i>	<input type='checkbox' class="fold" id="badWindowsNames-fold-content"><label for="badWindowsNames-fold-content">  <a href="../../../../use/golang.org/x/mod/module..badWindowsNames*bbb4d.html">var</a> <a href="../../../../src/golang.org/x/mod/module/module.go.html#line-455">badWindowsNames</a> []<a href="../../../builtin.html#name-string">string</a></label><span id='badWindowsNames-fold-content-docs' class="fold-docs">
+		badWindowsNames are the reserved file path elements on Windows.
+		See https://docs.microsoft.com/en-us/windows/desktop/fileio/naming-a-file
+
+</span></i></div></div></code></pre><pre id="footer">
+<table><tr><td><img src="../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

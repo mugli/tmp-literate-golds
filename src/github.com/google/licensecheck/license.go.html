@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: license.go in package github.com/google/licensecheck</title>
+<link href="../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	license.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../pkg/github.com/google/licensecheck.html">github.com/google/licensecheck</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16],
+input[id=r17]:checked ~pre label[for=r17],
+input[id=r18]:checked ~pre label[for=r18],
+input[id=r19]:checked ~pre label[for=r19]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1,
+input[id=i2]:checked ~pre .i2
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="r17" type="radio" name="g"/>
+<input id="r18" type="radio" name="g"/>
+<input id="r19" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<input id="i2" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2019 The Go Authors. All rights reserved.</span><span class="comment"> Use of this source code is governed by a BSD-style</span><span class="comment"> license that can be found in the LICENSE file.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Package licensecheck classifies license files and heuristically determines</span><span class="comment"> how well they correspond to known open source licenses.</span><span class="comment"></span><span class="comment"> Scanning</span><span class="comment"></span><span class="comment"> A text (a slice of bytes) can be scanned for known licenses by calling Scan.</span><span class="comment"> The resulting Coverage structure describes all the matches found as well</span><span class="comment"> as what percentage of the file was covered by known matches.</span><span class="comment"></span><span class="comment">	cov := licensecheck.Scan(text)</span><span class="comment">	fmt.Printf("%.1f%% of text covered by licenses:\n", cov.Percent)</span><span class="comment">	for _, m := range cov.Match {</span><span class="comment">		fmt.Printf("%s at [%d:%d] IsURL=%v\n", m.Name, m.Start, m.End, m.IsURL)</span><span class="comment">	}</span><span class="comment"></span><span class="comment"> The Scan function uses a built-in license set, which is the known SPDX licenses</span><span class="comment"> augmented with some other commonly seen licenses.</span><span class="comment"> (See licenses/README.md for details about the license set.)</span><span class="comment"></span><span class="comment"> A custom scanner can be created using NewScanner, passing in a set of</span><span class="comment"> license patterns to scan for. The license patterns are written as license regular expressions (LREs).</span><span class="comment"> BuiltinLicenses returns the set of license patterns used by Scan.</span><span class="comment"></span><span class="comment"> License Regular Expressions</span><span class="comment"> Each license to be recognized is specified by writing a license regular expression (LRE) for it.</span><span class="comment"> The pattern syntax and the matching are word-based and case-insensitive;</span><span class="comment"> punctuation is ignored in the pattern and in the matched text.</span><span class="comment"></span><span class="comment"> The valid LRE patterns are:</span><span class="comment"></span><span class="comment">  - word, a single case-insensitive word</span><span class="comment">  - __N__, any sequence of up to N words</span><span class="comment">  - expr1 expr2, concatenation of two expressions</span><span class="comment">  - expr1 || expr2, alternation of two expressions</span><span class="comment">  - (( expr )), grouping</span><span class="comment">  - (( expr ))??, zero or one instances of the grouped expression</span><span class="comment">  - /* text */, a comment ignored by the parser</span><span class="comment"></span><span class="comment"> To make patterns harder to misread in large texts:</span><span class="comment"> (( must only appear at the start of a line (possibly indented);</span><span class="comment"> )) and ))?? must only appear at the end of a line (with possible trailing spaces);</span><span class="comment"> and || must only appear inside a (( )) or (( ))?? group.</span><span class="comment"></span><span class="comment"> For example:</span><span class="comment"></span><span class="comment"> 	/* https://en.wikipedia.org/wiki/Filler_text */</span><span class="comment"> 	Now is</span><span class="comment"> 	((not))??</span><span class="comment"> 	the time for all good</span><span class="comment"> 	((men || women || people))</span><span class="comment"> 	to come to the aid of their __1__.</span><span class="comment"></span><span class="comment"> The Old Cover and Checker API</span><span class="comment"></span><span class="comment"> An older, less precise matcher using the names Cover, New, and Checker</span><span class="comment"> was removed from this package.</span><span class="comment"> Use v0.1.0 for the final version of that API.</span><span class="comment"></span></div>
+<div class="code"><pre><code><span class="keyword">package</span> licensecheck
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"fmt"</span></label>
+	<label for="i1"><span class="lit-string i1">"strconv"</span></label>
+	<label for="i2"><span class="lit-string i2">"strings"</span></label>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> The order matters here.</span><span class="comment"> gen_data.go imports licensecheck for Type, so we copy over</span><span class="comment"> a trivial data.gen.go in order to build gen_data.go during "go run".</span><span class="comment">go:generate cp data.gen.go.triv data.gen.go</span><span class="comment">go:generate go run gen_data.go</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> A License describes a single license that can be recognized.</span><span class="comment"> At least one of LRE or URL should be set.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../pkg/github.com/google/licensecheck.html#name-License" class="ident">License</a> <span class="keyword">struct</span> {
+	<a href="../../../../use/github.com/google/licensecheck..License.ID.html" class="ident">ID</a>   <a href="../../../../pkg/builtin.html#name-string" class="ident">string</a> <span class="comment">// reported license ID</span>
+	<a href="../../../../use/github.com/google/licensecheck..License.Type.html" class="ident">Type</a> <a href="#line-114" class="ident">Type</a>   <span class="comment">// reported license type</span>
+	<a href="../../../../use/github.com/google/licensecheck..License.LRE.html" class="ident">LRE</a>  <a href="../../../../pkg/builtin.html#name-string" class="ident">string</a> <span class="comment">// license regular expression (see licenses/README.md)</span>
+	<a href="../../../../use/github.com/google/licensecheck..License.URL.html" class="ident">URL</a>  <a href="../../../../pkg/builtin.html#name-string" class="ident">string</a> <span class="comment">// identifying URL</span>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Coverage describes how the text matches various licenses.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Percent is the fraction of the total text, in normalized words, that</span><span class="comment">	 matches any valid license, expressed as a percentage across all of the</span><span class="comment">	 licenses matched.</span></div>
+<div class="code"><pre><code>	<a href="../../../../use/github.com/google/licensecheck..Coverage.Percent.html" class="ident">Percent</a> <a href="../../../../pkg/builtin.html#name-float64" class="ident">float64</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Match describes, in sequential order, the matches of the input text</span><span class="comment">	 across the various licenses. Typically it will be only one match long,</span><span class="comment">	 but if the input text is a concatenation of licenses it will contain</span><span class="comment">	 a match value for each element of the concatenation.</span></div>
+<div class="code"><pre><code>	<a href="../../../../use/github.com/google/licensecheck..Coverage.Match.html" class="ident">Match</a> []<a href="#line-105" class="ident">Match</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> When we build the Match, Start and End are word offsets,</span><span class="comment"> but they are converted to byte offsets in the original</span><span class="comment"> before being passed back to the caller.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Match describes how a section of the input matches a license.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../pkg/github.com/google/licensecheck.html#name-Match" class="ident">Match</a> <span class="keyword">struct</span> {
+	<a href="../../../../use/github.com/google/licensecheck..Match.ID.html" class="ident">ID</a>    <a href="../../../../pkg/builtin.html#name-string" class="ident">string</a> <span class="comment">// License identifier. (See licenses/README.md.)</span>
+	<a href="../../../../use/github.com/google/licensecheck..Match.Type.html" class="ident">Type</a>  <a href="#line-114" class="ident">Type</a>   <span class="comment">// The type of the license: BSD, MIT, etc.</span>
+	<a href="../../../../use/github.com/google/licensecheck..Match.Start.html" class="ident">Start</a> <a href="../../../../pkg/builtin.html#name-int" class="ident">int</a>    <span class="comment">// Start offset of match in text; match is at text[Start:End].</span>
+	<a href="../../../../use/github.com/google/licensecheck..Match.End.html" class="ident">End</a>   <a href="../../../../pkg/builtin.html#name-int" class="ident">int</a>    <span class="comment">// End offset of match in text.</span>
+	<a href="../../../../use/github.com/google/licensecheck..Match.IsURL.html" class="ident">IsURL</a> <a href="../../../../pkg/builtin.html#name-bool" class="ident">bool</a>   <span class="comment">// Whether match is a URL.</span>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Type is a bit set describing the requirements imposed by a license or group of licenses.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../pkg/github.com/google/licensecheck.html#name-Type" class="ident">Type</a> <a href="../../../../pkg/builtin.html#name-uint" class="ident">uint</a>
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Unknown indicates that the license requirements are unknown.</span></div>
+<div class="code"><pre><code>	<a href="../../../../pkg/github.com/google/licensecheck.html#name-Unknown" class="ident">Unknown</a> <a href="#line-114" class="ident">Type</a> = <span class="lit-number">0</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Unrestricted indicates that the license carries no requirements.</span><span class="comment">	 Examples: 0BSD, CC0, Unlicense.</span></div>
+<div class="code"><pre><code>	<a href="../../../../pkg/github.com/google/licensecheck.html#name-Unrestricted" class="ident">Unrestricted</a> <a href="#line-114" class="ident">Type</a> = <span class="lit-number">1</span> &lt;&lt; <a href="../../../../pkg/builtin.html#name-iota" class="ident">iota</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Notice indicates that the license carries notice or advertising requirements.</span><span class="comment">	 Examples: MIT, BSD, Apache 1.1, Apache 2.0</span></div>
+<div class="code"><pre><code>	<a href="../../../../pkg/github.com/google/licensecheck.html#name-Notice" class="ident">Notice</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ShareChanges indicates that source and binary distributions must include</span><span class="comment">	 source code for any modifications made to the original code itself,</span><span class="comment">	 made available under the same license as the original.</span><span class="comment">	 Example: LGPL.</span></div>
+<div class="code"><pre><code>	<a href="../../../../pkg/github.com/google/licensecheck.html#name-ShareChanges" class="ident">ShareChanges</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ShareProgram indicates that source and binary distributions must include</span><span class="comment">	 source code for the entire program using the original code library,</span><span class="comment">	 made available under the same license as the original.</span><span class="comment">	 Example: GPL.</span></div>
+<div class="code"><pre><code>	<a href="../../../../pkg/github.com/google/licensecheck.html#name-ShareProgram" class="ident">ShareProgram</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ShareServer indicates that any server program making use of the source code</span><span class="comment">	 must provide a download link for the entire source code of the server.</span><span class="comment">	 Examples: AGPL, CPAL, EUPL, SSPL.</span></div>
+<div class="code"><pre><code>	<a href="../../../../pkg/github.com/google/licensecheck.html#name-ShareServer" class="ident">ShareServer</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> NonCommercial indicates that commercial use of the software is disallowed.</span><span class="comment">	 Examples: CommonsClause, CC-BY-NC-4.0, Prosperity 3.0.0.</span></div>
+<div class="code"><pre><code>	<a href="../../../../pkg/github.com/google/licensecheck.html#name-NonCommercial" class="ident">NonCommercial</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Discouraged indicates that there is some legal problem with the license,</span><span class="comment">	 making it difficult to comply with or vague about what it permits.</span><span class="comment">	 Examples: Beerware, SISSL, WTFPL.</span></div>
+<div class="code"><pre><code>	<a href="../../../../pkg/github.com/google/licensecheck.html#name-Discouraged" class="ident">Discouraged</a>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Merge returns the result of merging the requirements of license types t and u.</span><span class="comment"></span><span class="comment"> If either is Unknown, the result is Unknown.</span><span class="comment"> Among the bits Unrestricted, Notice, ShareChanges, ShareProgram, ShareServer,</span><span class="comment"> the result will use the one that appears latest in the list and is present in either t or u.</span><span class="comment"> The NonCommercial and Discouraged bits are set in the result if they are set in either t or u.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r0" class="ident">t</label> <a href="#line-114" class="ident">Type</a>) <label for="r1" class="ident"><a href="../../../../use/github.com/google/licensecheck..Type.Merge.html" class="ident">Merge</a></label>(<label for="r2" class="ident">u</label> <a href="#line-114" class="ident">Type</a>) <a href="#line-114" class="ident">Type</a> {
+	<span class="keyword">if</span> <label for="r0" class="ident">t</label> == <a href="#line-118" class="ident">Unknown</a> || <label for="r2" class="ident">u</label> == <a href="#line-118" class="ident">Unknown</a> {
+		<span class="keyword">return</span> <a href="#line-118" class="ident">Unknown</a>
+	}
+
+	<span class="keyword">var</span> <label for="r3" class="ident">m</label> <a href="#line-114" class="ident">Type</a>
+	<span class="keyword">for</span> <label for="r4" class="ident">bit</label> := <a href="#line-143" class="ident">ShareServer</a>; <label for="r4" class="ident">bit</label> &gt; <span class="lit-number">0</span>; <label for="r4" class="ident">bit</label> &gt;&gt;= <span class="lit-number">1</span> {
+		<span class="keyword">if</span> (<label for="r0" class="ident">t</label>|<label for="r2" class="ident">u</label>)&amp;<label for="r4" class="ident">bit</label> != <span class="lit-number">0</span> {
+			<label for="r3" class="ident">m</label> |= <label for="r4" class="ident">bit</label>
+			<span class="keyword">break</span>
+		}
+	}
+	<label for="r3" class="ident">m</label> |= (<label for="r0" class="ident">t</label> | <label for="r2" class="ident">u</label>) &amp; (<a href="#line-147" class="ident">NonCommercial</a> | <a href="#line-152" class="ident">Discouraged</a>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Special case: NonCommercial is a restriction,</span><span class="comment">	 so drop the unrestricted bit if still set.</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> <label for="r3" class="ident">m</label>&amp;<a href="#line-122" class="ident">Unrestricted</a> != <span class="lit-number">0</span> &amp;&amp; <label for="r3" class="ident">m</label>&amp;<a href="#line-147" class="ident">NonCommercial</a> != <span class="lit-number">0</span> {
+		<label for="r3" class="ident">m</label> &amp;^= <a href="#line-122" class="ident">Unrestricted</a>
+	}
+
+	<span class="keyword">return</span> <label for="r3" class="ident">m</label>
+}
+
+<span class="keyword">var</span> <a href="../../../../pkg/github.com/google/licensecheck.html#name-typeBits" class="ident">typeBits</a> = []<span class="keyword">struct</span> {
+	t <a href="#line-114" class="ident">Type</a>
+	s <a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>
+}{
+	{<a href="#line-118" class="ident">Unknown</a>, <span class="lit-string">"Unknown"</span>},
+	{<a href="#line-122" class="ident">Unrestricted</a>, <span class="lit-string">"Unrestricted"</span>},
+	{<a href="#line-126" class="ident">Notice</a>, <span class="lit-string">"Notice"</span>},
+	{<a href="#line-132" class="ident">ShareChanges</a>, <span class="lit-string">"ShareChanges"</span>},
+	{<a href="#line-138" class="ident">ShareProgram</a>, <span class="lit-string">"ShareProgram"</span>},
+	{<a href="#line-143" class="ident">ShareServer</a>, <span class="lit-string">"ShareServer"</span>},
+	{<a href="#line-147" class="ident">NonCommercial</a>, <span class="lit-string">"NonCommercial"</span>},
+	{<a href="#line-152" class="ident">Discouraged</a>, <span class="lit-string">"Discouraged"</span>},
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> String returns the type t in string form.</span><span class="comment"> The form is a |-separated list of bit values (Notice, NonCommercial, and so on)</span><span class="comment"> with a final Type(0x###) if needed.</span><span class="comment"></span><span class="comment"> For example, (ShareServer|NonCommercial).String() = "ShareServer|NonCommercial".</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r5" class="ident">t</label> <a href="#line-114" class="ident">Type</a>) <label for="r6" class="ident"><a href="../../../../use/github.com/google/licensecheck..Type.String.html" class="ident">String</a></label>() <a href="../../../../pkg/builtin.html#name-string" class="ident">string</a> {
+	<span class="keyword">if</span> <label for="r5" class="ident">t</label> == <span class="lit-number">0</span> {
+		<span class="keyword">return</span> <span class="lit-string">"Unknown"</span>
+	}
+	<label for="r7" class="ident">s</label> := <span class="lit-string">""</span>
+	<span class="keyword">for</span> <label for="r8" class="ident">_</label>, <label for="r9" class="ident">b</label> := <span class="keyword">range</span> <a href="#line-184" class="ident">typeBits</a> {
+		<span class="keyword">if</span> <label for="r9" class="ident">b</label>.<a href="#line-185" class="ident">t</a> != <span class="lit-number">0</span> &amp;&amp; <label for="r5" class="ident">t</label>&amp;<label for="r9" class="ident">b</label>.<a href="#line-185" class="ident">t</a> == <label for="r9" class="ident">b</label>.<a href="#line-185" class="ident">t</a> {
+			<label for="r5" class="ident">t</label> &amp;^= <label for="r9" class="ident">b</label>.<a href="#line-185" class="ident">t</a>
+			<label for="r7" class="ident">s</label> += <span class="lit-string">"|"</span> + <label for="r9" class="ident">b</label>.<a href="#line-186" class="ident">s</a>
+		}
+	}
+	<span class="keyword">if</span> <label for="r5" class="ident">t</label> != <span class="lit-number">0</span> {
+		<label for="r7" class="ident">s</label> += <a href="../../../../pkg/fmt.html" class="ident i0">fmt</a>.<a href="../../../fmt/print.go.html#line-217" class="ident">Sprintf</a>(<span class="lit-string">"|Type(%#x)"</span>, <a href="../../../../pkg/builtin.html#name-uint" class="ident">uint</a>(<label for="r5" class="ident">t</label>))
+	}
+	<span class="keyword">return</span> <label for="r7" class="ident">s</label>[<span class="lit-number">1</span>:]
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ParseType parses s into a Type.</span><span class="comment"> The string s should be of the same form returned by Type's String method.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r10" class="ident"><a href="../../../../pkg/github.com/google/licensecheck.html#name-ParseType" class="ident">ParseType</a></label>(<label for="r11" class="ident">s</label> <a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>) (<a href="#line-114" class="ident">Type</a>, <a href="../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<span class="keyword">var</span> <label for="r12" class="ident">t</label> <a href="#line-114" class="ident">Type</a>
+<label for="r13" class="ident">Fields</label>:
+	<span class="keyword">for</span> <label for="r14" class="ident">_</label>, <label for="r15" class="ident">f</label> := <span class="keyword">range</span> <a href="../../../../pkg/strings.html" class="ident i2">strings</a>.<a href="../../../strings/strings.go.html#line-299" class="ident">Split</a>(<label for="r11" class="ident">s</label>, <span class="lit-string">"|"</span>) {
+		<span class="keyword">for</span> <label for="r16" class="ident">_</label>, <label for="r17" class="ident">b</label> := <span class="keyword">range</span> <a href="#line-184" class="ident">typeBits</a> {
+			<span class="keyword">if</span> <label for="r17" class="ident">b</label>.<a href="#line-186" class="ident">s</a> == <label for="r15" class="ident">f</label> {
+				<label for="r12" class="ident">t</label> |= <label for="r17" class="ident">b</label>.<a href="#line-185" class="ident">t</a>
+				<span class="keyword">continue</span> <label for="r13" class="ident">Fields</label>
+			}
+		}
+		<span class="keyword">if</span> <a href="../../../../pkg/strings.html" class="ident i2">strings</a>.<a href="../../../strings/strings.go.html#line-444" class="ident">HasPrefix</a>(<label for="r15" class="ident">f</label>, <span class="lit-string">"Type("</span>) &amp;&amp; <a href="../../../../pkg/strings.html" class="ident i2">strings</a>.<a href="../../../strings/strings.go.html#line-449" class="ident">HasSuffix</a>(<label for="r15" class="ident">f</label>, <span class="lit-string">")"</span>) {
+			<span class="keyword">if</span> <label for="r18" class="ident">n</label>, <label for="r19" class="ident">err</label> := <a href="../../../../pkg/strconv.html" class="ident i1">strconv</a>.<a href="../../../strconv/atoi.go.html#line-60" class="ident">ParseUint</a>(<label for="r15" class="ident">f</label>[<span class="lit-number">5</span>:<a href="../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r15" class="ident">f</label>)-<span class="lit-number">1</span>], <span class="lit-number">0</span>, <span class="lit-number">0</span>); <label for="r19" class="ident">err</label> == <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+				<label for="r12" class="ident">t</label> |= <a href="#line-114" class="ident">Type</a>(<label for="r18" class="ident">n</label>)
+				<span class="keyword">continue</span> <label for="r13" class="ident">Fields</label>
+			}
+		}
+		<span class="keyword">if</span> <label for="r15" class="ident">f</label> == <span class="lit-string">""</span> {
+			<span class="keyword">return</span> <span class="lit-number">0</span>, <a href="../../../../pkg/fmt.html" class="ident i0">fmt</a>.<a href="../../../fmt/errors.go.html#line-17" class="ident">Errorf</a>(<span class="lit-string">"parsing %q: malformed Type"</span>, <label for="r11" class="ident">s</label>)
+		}
+		<span class="keyword">return</span> <span class="lit-number">0</span>, <a href="../../../../pkg/fmt.html" class="ident i0">fmt</a>.<a href="../../../fmt/errors.go.html#line-17" class="ident">Errorf</a>(<span class="lit-string">"parsing %q: unknown Type %q"</span>, <label for="r11" class="ident">s</label>, <label for="r15" class="ident">f</label>)
+	}
+	<span class="keyword">return</span> <label for="r12" class="ident">t</label>, <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

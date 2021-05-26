@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: extern.go in package runtime</title>
+<link href="../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	extern.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../pkg/runtime.html">runtime</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2009 The Go Authors. All rights reserved.</span><span class="comment"> Use of this source code is governed by a BSD-style</span><span class="comment"> license that can be found in the LICENSE file.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"></span><span class="comment">Package runtime contains operations that interact with Go's runtime system,</span><span class="comment">such as functions to control goroutines. It also includes the low-level type information</span><span class="comment">used by the reflect package; see reflect's documentation for the programmable</span><span class="comment">interface to the run-time type system.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Environment Variables</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">The following environment variables ($name or %name%, depending on the host</span><span class="comment">operating system) control the run-time behavior of Go programs. The meanings</span><span class="comment">and use may change from release to release.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">The GOGC variable sets the initial garbage collection target percentage.</span><span class="comment">A collection is triggered when the ratio of freshly allocated data to live data</span><span class="comment">remaining after the previous collection reaches this percentage. The default</span><span class="comment">is GOGC=100. Setting GOGC=off disables the garbage collector entirely.</span><span class="comment">The runtime/debug package's SetGCPercent function allows changing this</span><span class="comment">percentage at run time. See https:golang.org/pkg/runtime/debug/#SetGCPercent.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">The GODEBUG variable controls debugging variables within the runtime.</span><span class="comment">It is a comma-separated list of name=val pairs setting these named variables:</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">	allocfreetrace: setting allocfreetrace=1 causes every allocation to be</span><span class="comment">	profiled and a stack trace printed on each object's allocation and free.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">	clobberfree: setting clobberfree=1 causes the garbage collector to</span><span class="comment">	clobber the memory content of an object with bad content when it frees</span><span class="comment">	the object.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">	cgocheck: setting cgocheck=0 disables all checks for packages</span><span class="comment">	using cgo to incorrectly pass Go pointers to non-Go code.</span><span class="comment">	Setting cgocheck=1 (the default) enables relatively cheap</span><span class="comment">	checks that may miss some errors.  Setting cgocheck=2 enables</span><span class="comment">	expensive checks that should not miss any errors, but will</span><span class="comment">	cause your program to run slower.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">	efence: setting efence=1 causes the allocator to run in a mode</span><span class="comment">	where each object is allocated on a unique page and addresses are</span><span class="comment">	never recycled.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">	gccheckmark: setting gccheckmark=1 enables verification of the</span><span class="comment">	garbage collector's concurrent mark phase by performing a</span><span class="comment">	second mark pass while the world is stopped.  If the second</span><span class="comment">	pass finds a reachable object that was not found by concurrent</span><span class="comment">	mark, the garbage collector will panic.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">	gcpacertrace: setting gcpacertrace=1 causes the garbage collector to</span><span class="comment">	print information about the internal state of the concurrent pacer.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">	gcshrinkstackoff: setting gcshrinkstackoff=1 disables moving goroutines</span><span class="comment">	onto smaller stacks. In this mode, a goroutine's stack can only grow.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">	gcstoptheworld: setting gcstoptheworld=1 disables concurrent garbage collection,</span><span class="comment">	making every garbage collection a stop-the-world event. Setting gcstoptheworld=2</span><span class="comment">	also disables concurrent sweeping after the garbage collection finishes.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">	gctrace: setting gctrace=1 causes the garbage collector to emit a single line to standard</span><span class="comment">	error at each collection, summarizing the amount of memory collected and the</span><span class="comment">	length of the pause. The format of this line is subject to change.</span><span class="comment">	Currently, it is:</span><span class="comment">		gc # @#s #%: #+#+# ms clock, #+#/#/#+# ms cpu, #-&gt;#-&gt;# MB, # MB goal, # P</span><span class="comment">	where the fields are as follows:</span><span class="comment">		gc #        the GC number, incremented at each GC</span><span class="comment">		@#s         time in seconds since program start</span><span class="comment">		#%          percentage of time spent in GC since program start</span><span class="comment">		#+...+#     wall-clock/CPU times for the phases of the GC</span><span class="comment">		#-&gt;#-&gt;# MB  heap size at GC start, at GC end, and live heap</span><span class="comment">		# MB goal   goal heap size</span><span class="comment">		# P         number of processors used</span><span class="comment">	The phases are stop-the-world (STW) sweep termination, concurrent</span><span class="comment">	mark and scan, and STW mark termination. The CPU times</span><span class="comment">	for mark/scan are broken down in to assist time (GC performed in</span><span class="comment">	line with allocation), background GC time, and idle GC time.</span><span class="comment">	If the line ends with "(forced)", this GC was forced by a</span><span class="comment">	runtime.GC() call.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">	inittrace: setting inittrace=1 causes the runtime to emit a single line to standard</span><span class="comment">	error for each package with init work, summarizing the execution time and memory</span><span class="comment">	allocation. No information is printed for inits executed as part of plugin loading</span><span class="comment">	and for packages without both user defined and compiler generated init work.</span><span class="comment">	The format of this line is subject to change. Currently, it is:</span><span class="comment">		init # @#ms, # ms clock, # bytes, # allocs</span><span class="comment">	where the fields are as follows:</span><span class="comment">		init #      the package name</span><span class="comment">		@# ms       time in milliseconds when the init started since program start</span><span class="comment">		# clock     wall-clock time for package initialization work</span><span class="comment">		# bytes     memory allocated on the heap</span><span class="comment">		# allocs    number of heap allocations</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">	madvdontneed: setting madvdontneed=0 will use MADV_FREE</span><span class="comment">	instead of MADV_DONTNEED on Linux when returning memory to the</span><span class="comment">	kernel. This is more efficient, but means RSS numbers will</span><span class="comment">	drop only when the OS is under memory pressure.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">	memprofilerate: setting memprofilerate=X will update the value of runtime.MemProfileRate.</span><span class="comment">	When set to 0 memory profiling is disabled.  Refer to the description of</span><span class="comment">	MemProfileRate for the default value.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">	invalidptr: invalidptr=1 (the default) causes the garbage collector and stack</span><span class="comment">	copier to crash the program if an invalid pointer value (for example, 1)</span><span class="comment">	is found in a pointer-typed location. Setting invalidptr=0 disables this check.</span><span class="comment">	This should only be used as a temporary workaround to diagnose buggy code.</span><span class="comment">	The real fix is to not store integers in pointer-typed locations.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">	sbrk: setting sbrk=1 replaces the memory allocator and garbage collector</span><span class="comment">	with a trivial allocator that obtains memory from the operating system and</span><span class="comment">	never reclaims any memory.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">	scavenge: scavenge=1 enables debugging mode of heap scavenger.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">	scavtrace: setting scavtrace=1 causes the runtime to emit a single line to standard</span><span class="comment">	error, roughly once per GC cycle, summarizing the amount of work done by the</span><span class="comment">	scavenger as well as the total amount of memory returned to the operating system</span><span class="comment">	and an estimate of physical memory utilization. The format of this line is subject</span><span class="comment">	to change, but currently it is:</span><span class="comment">		scav # # KiB work, # KiB total, #% util</span><span class="comment">	where the fields are as follows:</span><span class="comment">		scav #       the scavenge cycle number</span><span class="comment">		# KiB work   the amount of memory returned to the OS since the last line</span><span class="comment">		# KiB total  the total amount of memory returned to the OS</span><span class="comment">		#% util      the fraction of all unscavenged memory which is in-use</span><span class="comment">	If the line ends with "(forced)", then scavenging was forced by a</span><span class="comment">	debug.FreeOSMemory() call.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">	scheddetail: setting schedtrace=X and scheddetail=1 causes the scheduler to emit</span><span class="comment">	detailed multiline info every X milliseconds, describing state of the scheduler,</span><span class="comment">	processors, threads and goroutines.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">	schedtrace: setting schedtrace=X causes the scheduler to emit a single line to standard</span><span class="comment">	error every X milliseconds, summarizing the scheduler state.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">	tracebackancestors: setting tracebackancestors=N extends tracebacks with the stacks at</span><span class="comment">	which goroutines were created, where N limits the number of ancestor goroutines to</span><span class="comment">	report. This also extends the information returned by runtime.Stack. Ancestor's goroutine</span><span class="comment">	IDs will refer to the ID of the goroutine at the time of creation; it's possible for this</span><span class="comment">	ID to be reused for another goroutine. Setting N to 0 will report no ancestry information.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">	asyncpreemptoff: asyncpreemptoff=1 disables signal-based</span><span class="comment">	asynchronous goroutine preemption. This makes some loops</span><span class="comment">	non-preemptible for long periods, which may delay GC and</span><span class="comment">	goroutine scheduling. This is useful for debugging GC issues</span><span class="comment">	because it also disables the conservative stack scanning used</span><span class="comment">	for asynchronously preempted goroutines.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">The net, net/http, and crypto/tls packages also refer to debugging variables in GODEBUG.</span><span class="comment">See the documentation for those packages for details.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">The GOMAXPROCS variable limits the number of operating system threads that</span><span class="comment">can execute user-level Go code simultaneously. There is no limit to the number of threads</span><span class="comment">that can be blocked in system calls on behalf of Go code; those do not count against</span><span class="comment">the GOMAXPROCS limit. This package's GOMAXPROCS function queries and changes</span><span class="comment">the limit.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">The GORACE variable configures the race detector, for programs built using -race.</span><span class="comment">See https:golang.org/doc/articles/race_detector.html for details.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">The GOTRACEBACK variable controls the amount of output generated when a Go</span><span class="comment">program fails due to an unrecovered panic or an unexpected runtime condition.</span><span class="comment">By default, a failure prints a stack trace for the current goroutine,</span><span class="comment">eliding functions internal to the run-time system, and then exits with exit code 2.</span><span class="comment">The failure prints stack traces for all goroutines if there is no current goroutine</span><span class="comment">or the failure is internal to the run-time.</span><span class="comment">GOTRACEBACK=none omits the goroutine stack traces entirely.</span><span class="comment">GOTRACEBACK=single (the default) behaves as described above.</span><span class="comment">GOTRACEBACK=all adds stack traces for all user-created goroutines.</span><span class="comment">GOTRACEBACK=system is like ``all'' but adds stack frames for run-time functions</span><span class="comment">and shows goroutines created internally by the run-time.</span><span class="comment">GOTRACEBACK=crash is like ``system'' but crashes in an operating system-specific</span><span class="comment">manner instead of exiting. For example, on Unix systems, the crash raises</span><span class="comment">SIGABRT to trigger a core dump.</span><span class="comment">For historical reasons, the GOTRACEBACK settings 0, 1, and 2 are synonyms for</span><span class="comment">none, all, and system, respectively.</span><span class="comment">The runtime/debug package's SetTraceback function allows increasing the</span><span class="comment">amount of output at run time, but it cannot reduce the amount below that</span><span class="comment">specified by the environment variable.</span><span class="comment">See https:golang.org/pkg/runtime/debug/#SetTraceback.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">The GOARCH, GOOS, GOPATH, and GOROOT environment variables complete</span><span class="comment">the set of Go environment variables. They influence the building of Go programs</span><span class="comment">(see https:golang.org/cmd/go and https://golang.org/pkg/go/build).</span><span class="comment">GOARCH, GOOS, and GOROOT are recorded at compile time and made available by</span><span class="comment">constants or functions in this package, but they do not influence the execution</span><span class="comment">of the run-time system.</span><span class="comment"></span></div>
+<div class="code"><pre><code><span class="keyword">package</span> runtime
+
+<span class="keyword">import</span> <label for="i0"><span class="lit-string i0">"runtime/internal/sys"</span></label>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Caller reports file and line number information about function invocations on</span><span class="comment"> the calling goroutine's stack. The argument skip is the number of stack frames</span><span class="comment"> to ascend, with 0 identifying the caller of Caller.  (For historical reasons the</span><span class="comment"> meaning of skip differs between Caller and Callers.) The return values report the</span><span class="comment"> program counter, file name, and line number within the file of the corresponding</span><span class="comment"> call. The boolean ok is false if it was not possible to recover the information.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r0" class="ident"><a href="../../pkg/runtime.html#name-Caller" class="ident">Caller</a></label>(<label for="r1" class="ident">skip</label> <a href="../../pkg/builtin.html#name-int" class="ident">int</a>) (<label for="r2" class="ident">pc</label> <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>, <label for="r3" class="ident">file</label> <a href="../../pkg/builtin.html#name-string" class="ident">string</a>, <label for="r4" class="ident">line</label> <a href="../../pkg/builtin.html#name-int" class="ident">int</a>, <label for="r5" class="ident">ok</label> <a href="../../pkg/builtin.html#name-bool" class="ident">bool</a>) {
+	<label for="r6" class="ident">rpc</label> := <a href="../../pkg/builtin.html#name-make" class="ident">make</a>([]<a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>, <span class="lit-number">1</span>)
+	<label for="r7" class="ident">n</label> := <a href="traceback.go.html#line-794" class="ident">callers</a>(<label for="r1" class="ident">skip</label>+<span class="lit-number">1</span>, <label for="r6" class="ident">rpc</label>[:])
+	<span class="keyword">if</span> <label for="r7" class="ident">n</label> &lt; <span class="lit-number">1</span> {
+		<span class="keyword">return</span>
+	}
+	<label for="r8" class="ident">frame</label>, <label for="r9" class="ident">_</label> := <a href="symtab.go.html#line-65" class="ident">CallersFrames</a>(<label for="r6" class="ident">rpc</label>).<a href="symtab.go.html#line-73" class="ident">Next</a>()
+	<span class="keyword">return</span> <label for="r8" class="ident">frame</label>.<a href="symtab.go.html#line-31" class="ident">PC</a>, <label for="r8" class="ident">frame</label>.<a href="symtab.go.html#line-48" class="ident">File</a>, <label for="r8" class="ident">frame</label>.<a href="symtab.go.html#line-49" class="ident">Line</a>, <label for="r8" class="ident">frame</label>.<a href="symtab.go.html#line-31" class="ident">PC</a> != <span class="lit-number">0</span>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Callers fills the slice pc with the return program counters of function invocations</span><span class="comment"> on the calling goroutine's stack. The argument skip is the number of stack frames</span><span class="comment"> to skip before recording in pc, with 0 identifying the frame for Callers itself and</span><span class="comment"> 1 identifying the caller of Callers.</span><span class="comment"> It returns the number of entries written to pc.</span><span class="comment"></span><span class="comment"> To translate these PCs into symbolic information such as function</span><span class="comment"> names and line numbers, use CallersFrames. CallersFrames accounts</span><span class="comment"> for inlined functions and adjusts the return program counters into</span><span class="comment"> call program counters. Iterating over the returned slice of PCs</span><span class="comment"> directly is discouraged, as is using FuncForPC on any of the</span><span class="comment"> returned PCs, since these cannot account for inlining or return</span><span class="comment"> program counter adjustment.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> runtime.callers uses pc.array==nil as a signal</span><span class="comment">	 to print a stack trace. Pick off 0-length pc here</span><span class="comment">	 so that we don't let a nil pc slice get to it.</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> <a href="../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r12" class="ident">pc</label>) == <span class="lit-number">0</span> {
+		<span class="keyword">return</span> <span class="lit-number">0</span>
+	}
+	<span class="keyword">return</span> <a href="traceback.go.html#line-794" class="ident">callers</a>(<label for="r11" class="ident">skip</label>, <label for="r12" class="ident">pc</label>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> GOROOT returns the root of the Go tree. It uses the</span><span class="comment"> GOROOT environment variable, if set at process start,</span><span class="comment"> or else the root used during the Go build.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r13" class="ident"><a href="../../pkg/runtime.html#name-GOROOT" class="ident">GOROOT</a></label>() <a href="../../pkg/builtin.html#name-string" class="ident">string</a> {
+	<label for="r14" class="ident">s</label> := <a href="env_posix.go.html#line-11" class="ident">gogetenv</a>(<span class="lit-string">"GOROOT"</span>)
+	<span class="keyword">if</span> <label for="r14" class="ident">s</label> != <span class="lit-string">""</span> {
+		<span class="keyword">return</span> <label for="r14" class="ident">s</label>
+	}
+	<span class="keyword">return</span> <a href="../../pkg/runtime/internal/sys.html" class="ident i0">sys</a>.<a href="internal/sys/stubs.go.html#line-13" class="ident">DefaultGoroot</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Version returns the Go tree's version string.</span><span class="comment"> It is either the commit hash and date at the time of the build or,</span><span class="comment"> when possible, a release tag like "go1.3".</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r15" class="ident"><a href="../../pkg/runtime.html#name-Version" class="ident">Version</a></label>() <a href="../../pkg/builtin.html#name-string" class="ident">string</a> {
+	<span class="keyword">return</span> <a href="../../pkg/runtime/internal/sys.html" class="ident i0">sys</a>.<a href="internal/sys/zversion.go.html#line-5" class="ident">TheVersion</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> GOOS is the running program's operating system target:</span><span class="comment"> one of darwin, freebsd, linux, and so on.</span><span class="comment"> To view possible combinations of GOOS and GOARCH, run "go tool dist list".</span></div>
+<div class="code"><pre><code><span class="keyword">const</span> <a href="../../pkg/runtime.html#name-GOOS" class="ident">GOOS</a> <a href="../../pkg/builtin.html#name-string" class="ident">string</a> = <a href="../../pkg/runtime/internal/sys.html" class="ident i0">sys</a>.<a href="internal/sys/zgoos_darwin.go.html#line-8" class="ident">GOOS</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> GOARCH is the running program's architecture target:</span><span class="comment"> one of 386, amd64, arm, s390x, and so on.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

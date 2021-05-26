@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: dns_resolver.go in package google.golang.org/grpc/internal/resolver/dns</title>
+<link href="../../../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	dns_resolver.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../../../pkg/google.golang.org/grpc/internal/resolver/dns.html">google.golang.org/grpc/internal/resolver/dns</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16],
+input[id=r17]:checked ~pre label[for=r17],
+input[id=r18]:checked ~pre label[for=r18],
+input[id=r19]:checked ~pre label[for=r19],
+input[id=r20]:checked ~pre label[for=r20],
+input[id=r21]:checked ~pre label[for=r21],
+input[id=r22]:checked ~pre label[for=r22],
+input[id=r23]:checked ~pre label[for=r23],
+input[id=r24]:checked ~pre label[for=r24],
+input[id=r25]:checked ~pre label[for=r25],
+input[id=r26]:checked ~pre label[for=r26],
+input[id=r27]:checked ~pre label[for=r27],
+input[id=r28]:checked ~pre label[for=r28],
+input[id=r29]:checked ~pre label[for=r29],
+input[id=r30]:checked ~pre label[for=r30],
+input[id=r31]:checked ~pre label[for=r31],
+input[id=r32]:checked ~pre label[for=r32],
+input[id=r33]:checked ~pre label[for=r33],
+input[id=r34]:checked ~pre label[for=r34],
+input[id=r35]:checked ~pre label[for=r35],
+input[id=r36]:checked ~pre label[for=r36],
+input[id=r37]:checked ~pre label[for=r37],
+input[id=r38]:checked ~pre label[for=r38],
+input[id=r39]:checked ~pre label[for=r39],
+input[id=r40]:checked ~pre label[for=r40],
+input[id=r41]:checked ~pre label[for=r41],
+input[id=r42]:checked ~pre label[for=r42],
+input[id=r43]:checked ~pre label[for=r43],
+input[id=r44]:checked ~pre label[for=r44],
+input[id=r45]:checked ~pre label[for=r45],
+input[id=r46]:checked ~pre label[for=r46],
+input[id=r47]:checked ~pre label[for=r47],
+input[id=r48]:checked ~pre label[for=r48],
+input[id=r49]:checked ~pre label[for=r49],
+input[id=r50]:checked ~pre label[for=r50],
+input[id=r51]:checked ~pre label[for=r51],
+input[id=r52]:checked ~pre label[for=r52],
+input[id=r53]:checked ~pre label[for=r53],
+input[id=r54]:checked ~pre label[for=r54],
+input[id=r55]:checked ~pre label[for=r55],
+input[id=r56]:checked ~pre label[for=r56],
+input[id=r57]:checked ~pre label[for=r57],
+input[id=r58]:checked ~pre label[for=r58],
+input[id=r59]:checked ~pre label[for=r59],
+input[id=r60]:checked ~pre label[for=r60],
+input[id=r61]:checked ~pre label[for=r61],
+input[id=r62]:checked ~pre label[for=r62],
+input[id=r63]:checked ~pre label[for=r63],
+input[id=r64]:checked ~pre label[for=r64],
+input[id=r65]:checked ~pre label[for=r65],
+input[id=r66]:checked ~pre label[for=r66],
+input[id=r67]:checked ~pre label[for=r67],
+input[id=r68]:checked ~pre label[for=r68],
+input[id=r69]:checked ~pre label[for=r69],
+input[id=r70]:checked ~pre label[for=r70],
+input[id=r71]:checked ~pre label[for=r71],
+input[id=r72]:checked ~pre label[for=r72],
+input[id=r73]:checked ~pre label[for=r73],
+input[id=r74]:checked ~pre label[for=r74],
+input[id=r75]:checked ~pre label[for=r75],
+input[id=r76]:checked ~pre label[for=r76],
+input[id=r77]:checked ~pre label[for=r77],
+input[id=r78]:checked ~pre label[for=r78],
+input[id=r79]:checked ~pre label[for=r79],
+input[id=r80]:checked ~pre label[for=r80],
+input[id=r81]:checked ~pre label[for=r81],
+input[id=r82]:checked ~pre label[for=r82],
+input[id=r83]:checked ~pre label[for=r83],
+input[id=r84]:checked ~pre label[for=r84],
+input[id=r85]:checked ~pre label[for=r85],
+input[id=r86]:checked ~pre label[for=r86],
+input[id=r87]:checked ~pre label[for=r87],
+input[id=r88]:checked ~pre label[for=r88],
+input[id=r89]:checked ~pre label[for=r89],
+input[id=r90]:checked ~pre label[for=r90],
+input[id=r91]:checked ~pre label[for=r91],
+input[id=r92]:checked ~pre label[for=r92],
+input[id=r93]:checked ~pre label[for=r93],
+input[id=r94]:checked ~pre label[for=r94],
+input[id=r95]:checked ~pre label[for=r95],
+input[id=r96]:checked ~pre label[for=r96],
+input[id=r97]:checked ~pre label[for=r97],
+input[id=r98]:checked ~pre label[for=r98],
+input[id=r99]:checked ~pre label[for=r99],
+input[id=r100]:checked ~pre label[for=r100],
+input[id=r101]:checked ~pre label[for=r101],
+input[id=r102]:checked ~pre label[for=r102],
+input[id=r103]:checked ~pre label[for=r103],
+input[id=r104]:checked ~pre label[for=r104],
+input[id=r105]:checked ~pre label[for=r105],
+input[id=r106]:checked ~pre label[for=r106],
+input[id=r107]:checked ~pre label[for=r107],
+input[id=r108]:checked ~pre label[for=r108],
+input[id=r109]:checked ~pre label[for=r109],
+input[id=r110]:checked ~pre label[for=r110],
+input[id=r111]:checked ~pre label[for=r111],
+input[id=r112]:checked ~pre label[for=r112],
+input[id=r113]:checked ~pre label[for=r113],
+input[id=r114]:checked ~pre label[for=r114]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1,
+input[id=i2]:checked ~pre .i2,
+input[id=i3]:checked ~pre .i3,
+input[id=i4]:checked ~pre .i4,
+input[id=i5]:checked ~pre .i5,
+input[id=i6]:checked ~pre .i6,
+input[id=i7]:checked ~pre .i7,
+input[id=i8]:checked ~pre .i8,
+input[id=i9]:checked ~pre .i9,
+input[id=i10]:checked ~pre .i10,
+input[id=i11]:checked ~pre .i11,
+input[id=i12]:checked ~pre .i12,
+input[id=i13]:checked ~pre .i13,
+input[id=i14]:checked ~pre .i14,
+input[id=i15]:checked ~pre .i15
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="r17" type="radio" name="g"/>
+<input id="r18" type="radio" name="g"/>
+<input id="r19" type="radio" name="g"/>
+<input id="r20" type="radio" name="g"/>
+<input id="r21" type="radio" name="g"/>
+<input id="r22" type="radio" name="g"/>
+<input id="r23" type="radio" name="g"/>
+<input id="r24" type="radio" name="g"/>
+<input id="r25" type="radio" name="g"/>
+<input id="r26" type="radio" name="g"/>
+<input id="r27" type="radio" name="g"/>
+<input id="r28" type="radio" name="g"/>
+<input id="r29" type="radio" name="g"/>
+<input id="r30" type="radio" name="g"/>
+<input id="r31" type="radio" name="g"/>
+<input id="r32" type="radio" name="g"/>
+<input id="r33" type="radio" name="g"/>
+<input id="r34" type="radio" name="g"/>
+<input id="r35" type="radio" name="g"/>
+<input id="r36" type="radio" name="g"/>
+<input id="r37" type="radio" name="g"/>
+<input id="r38" type="radio" name="g"/>
+<input id="r39" type="radio" name="g"/>
+<input id="r40" type="radio" name="g"/>
+<input id="r41" type="radio" name="g"/>
+<input id="r42" type="radio" name="g"/>
+<input id="r43" type="radio" name="g"/>
+<input id="r44" type="radio" name="g"/>
+<input id="r45" type="radio" name="g"/>
+<input id="r46" type="radio" name="g"/>
+<input id="r47" type="radio" name="g"/>
+<input id="r48" type="radio" name="g"/>
+<input id="r49" type="radio" name="g"/>
+<input id="r50" type="radio" name="g"/>
+<input id="r51" type="radio" name="g"/>
+<input id="r52" type="radio" name="g"/>
+<input id="r53" type="radio" name="g"/>
+<input id="r54" type="radio" name="g"/>
+<input id="r55" type="radio" name="g"/>
+<input id="r56" type="radio" name="g"/>
+<input id="r57" type="radio" name="g"/>
+<input id="r58" type="radio" name="g"/>
+<input id="r59" type="radio" name="g"/>
+<input id="r60" type="radio" name="g"/>
+<input id="r61" type="radio" name="g"/>
+<input id="r62" type="radio" name="g"/>
+<input id="r63" type="radio" name="g"/>
+<input id="r64" type="radio" name="g"/>
+<input id="r65" type="radio" name="g"/>
+<input id="r66" type="radio" name="g"/>
+<input id="r67" type="radio" name="g"/>
+<input id="r68" type="radio" name="g"/>
+<input id="r69" type="radio" name="g"/>
+<input id="r70" type="radio" name="g"/>
+<input id="r71" type="radio" name="g"/>
+<input id="r72" type="radio" name="g"/>
+<input id="r73" type="radio" name="g"/>
+<input id="r74" type="radio" name="g"/>
+<input id="r75" type="radio" name="g"/>
+<input id="r76" type="radio" name="g"/>
+<input id="r77" type="radio" name="g"/>
+<input id="r78" type="radio" name="g"/>
+<input id="r79" type="radio" name="g"/>
+<input id="r80" type="radio" name="g"/>
+<input id="r81" type="radio" name="g"/>
+<input id="r82" type="radio" name="g"/>
+<input id="r83" type="radio" name="g"/>
+<input id="r84" type="radio" name="g"/>
+<input id="r85" type="radio" name="g"/>
+<input id="r86" type="radio" name="g"/>
+<input id="r87" type="radio" name="g"/>
+<input id="r88" type="radio" name="g"/>
+<input id="r89" type="radio" name="g"/>
+<input id="r90" type="radio" name="g"/>
+<input id="r91" type="radio" name="g"/>
+<input id="r92" type="radio" name="g"/>
+<input id="r93" type="radio" name="g"/>
+<input id="r94" type="radio" name="g"/>
+<input id="r95" type="radio" name="g"/>
+<input id="r96" type="radio" name="g"/>
+<input id="r97" type="radio" name="g"/>
+<input id="r98" type="radio" name="g"/>
+<input id="r99" type="radio" name="g"/>
+<input id="r100" type="radio" name="g"/>
+<input id="r101" type="radio" name="g"/>
+<input id="r102" type="radio" name="g"/>
+<input id="r103" type="radio" name="g"/>
+<input id="r104" type="radio" name="g"/>
+<input id="r105" type="radio" name="g"/>
+<input id="r106" type="radio" name="g"/>
+<input id="r107" type="radio" name="g"/>
+<input id="r108" type="radio" name="g"/>
+<input id="r109" type="radio" name="g"/>
+<input id="r110" type="radio" name="g"/>
+<input id="r111" type="radio" name="g"/>
+<input id="r112" type="radio" name="g"/>
+<input id="r113" type="radio" name="g"/>
+<input id="r114" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<input id="i2" type="radio" name="i"/>
+<input id="i3" type="radio" name="i"/>
+<input id="i4" type="radio" name="i"/>
+<input id="i5" type="radio" name="i"/>
+<input id="i6" type="radio" name="i"/>
+<input id="i7" type="radio" name="i"/>
+<input id="i8" type="radio" name="i"/>
+<input id="i9" type="radio" name="i"/>
+<input id="i10" type="radio" name="i"/>
+<input id="i11" type="radio" name="i"/>
+<input id="i12" type="radio" name="i"/>
+<input id="i13" type="radio" name="i"/>
+<input id="i14" type="radio" name="i"/>
+<input id="i15" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"></span><span class="comment"> *</span><span class="comment"> * Copyright 2018 gRPC authors.</span><span class="comment"> *</span><span class="comment"> * Licensed under the Apache License, Version 2.0 (the "License");</span><span class="comment"> * you may not use this file except in compliance with the License.</span><span class="comment"> * You may obtain a copy of the License at</span><span class="comment"> *</span><span class="comment"> *     http:www.apache.org/licenses/LICENSE-2.0</span><span class="comment"> *</span><span class="comment"> * Unless required by applicable law or agreed to in writing, software</span><span class="comment"> * distributed under the License is distributed on an "AS IS" BASIS,</span><span class="comment"> * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span><span class="comment"> * See the License for the specific language governing permissions and</span><span class="comment"> * limitations under the License.</span><span class="comment"> *</span><span class="comment"> </span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Package dns implements a dns resolver to be installed as the default resolver</span><span class="comment"> in grpc.</span></div>
+<div class="code"><pre><code><span class="keyword">package</span> dns
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"context"</span></label>
+	<label for="i1"><span class="lit-string i1">"encoding/json"</span></label>
+	<label for="i2"><span class="lit-string i2">"errors"</span></label>
+	<label for="i3"><span class="lit-string i3">"fmt"</span></label>
+	<label for="i4"><span class="lit-string i4">"net"</span></label>
+	<label for="i5"><span class="lit-string i5">"os"</span></label>
+	<label for="i6"><span class="lit-string i6">"strconv"</span></label>
+	<label for="i7"><span class="lit-string i7">"strings"</span></label>
+	<label for="i8"><span class="lit-string i8">"sync"</span></label>
+	<label for="i9"><span class="lit-string i9">"time"</span></label>
+
+	<a href="../../../../../../pkg/google.golang.org/grpc/balancer/grpclb/state.html" class="ident i10">grpclbstate</a> <label for="i10"><span class="lit-string i10">"google.golang.org/grpc/balancer/grpclb/state"</span></label>
+	<label for="i11"><span class="lit-string i11">"google.golang.org/grpc/grpclog"</span></label>
+	<label for="i12"><span class="lit-string i12">"google.golang.org/grpc/internal/envconfig"</span></label>
+	<label for="i13"><span class="lit-string i13">"google.golang.org/grpc/internal/grpcrand"</span></label>
+	<label for="i14"><span class="lit-string i14">"google.golang.org/grpc/resolver"</span></label>
+	<label for="i15"><span class="lit-string i15">"google.golang.org/grpc/serviceconfig"</span></label>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> EnableSRVLookups controls whether the DNS resolver attempts to fetch gRPCLB</span><span class="comment"> addresses from SRV records.  Must not be changed after init time.</span></div>
+<div class="code"><pre><code><span class="keyword">var</span> <a href="../../../../../../pkg/google.golang.org/grpc/internal/resolver/dns.html#name-EnableSRVLookups" class="ident">EnableSRVLookups</a> = <a href="../../../../../../pkg/builtin.html#name-false" class="ident">false</a>
+
+<span class="keyword">var</span> <a href="../../../../../../pkg/google.golang.org/grpc/internal/resolver/dns.html#name-logger" class="ident">logger</a> = <a href="../../../../../../pkg/google.golang.org/grpc/grpclog.html" class="ident i11">grpclog</a>.<a href="../../../grpclog/component.go.html#line-110" class="ident">Component</a>(<span class="lit-string">"dns"</span>)
+
+<span class="keyword">func</span> <label for="r0" class="ident"><a href="../../../../../../pkg/google.golang.org/grpc/internal/resolver/dns.html#name-init" class="ident">init</a></label>() {
+	<a href="../../../../../../pkg/google.golang.org/grpc/resolver.html" class="ident i14">resolver</a>.<a href="../../../resolver/resolver.go.html#line-47" class="ident">Register</a>(<a href="#line-103" class="ident">NewBuilder</a>())
+}
+
+<span class="keyword">const</span> (
+	<a href="../../../../../../pkg/google.golang.org/grpc/internal/resolver/dns.html#name-defaultPort" class="ident">defaultPort</a>       = <span class="lit-string">"443"</span>
+	<a href="../../../../../../pkg/google.golang.org/grpc/internal/resolver/dns.html#name-defaultDNSSvrPort" class="ident">defaultDNSSvrPort</a> = <span class="lit-string">"53"</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> txtPrefix is the prefix string to be prepended to the host name for txt record lookup.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> In DNS, service config is encoded in a TXT record via the mechanism</span><span class="comment">	 described in RFC-1464 using the attribute name grpc_config.</span></div>
+<div class="code"><pre><code>	<a href="../../../../../../pkg/google.golang.org/grpc/internal/resolver/dns.html#name-txtAttribute" class="ident">txtAttribute</a> = <span class="lit-string">"grpc_config="</span>
+)
+
+<span class="keyword">var</span> (
+	<a href="../../../../../../pkg/google.golang.org/grpc/internal/resolver/dns.html#name-errMissingAddr" class="ident">errMissingAddr</a> = <a href="../../../../../../pkg/errors.html" class="ident i2">errors</a>.<a href="../../../../../errors/errors.go.html#line-58" class="ident">New</a>(<span class="lit-string">"dns resolver: missing address"</span>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Addresses ending with a colon that is supposed to be the separator</span><span class="comment">	 between host and port is not allowed.  E.g. "::" is a valid address as</span><span class="comment">	 it is an IPv6 address (host only) and "[::]:" is invalid as it ends with</span><span class="comment">	 a colon as the host and port separator</span></div>
+<div class="code"><pre><code>	<a href="../../../../../../pkg/google.golang.org/grpc/internal/resolver/dns.html#name-errEndsWithColon" class="ident">errEndsWithColon</a> = <a href="../../../../../../pkg/errors.html" class="ident i2">errors</a>.<a href="../../../../../errors/errors.go.html#line-58" class="ident">New</a>(<span class="lit-string">"dns resolver: missing port after port-separator colon"</span>)
+)
+
+<span class="keyword">var</span> (
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> To prevent excessive re-resolution, we enforce a rate limit on DNS</span><span class="comment">	 resolution requests.</span></div>
+<div class="code"><pre><code>	<a href="../../../../../../pkg/google.golang.org/grpc/internal/resolver/dns.html#name-minDNSResRate" class="ident">minDNSResRate</a> = <span class="lit-number">30</span> * <a href="../../../../../../pkg/time.html" class="ident i9">time</a>.<a href="../../../../../time/time.go.html#line-605" class="ident">Second</a>
+)
+
+<span class="keyword">var</span> <a href="../../../../../../pkg/google.golang.org/grpc/internal/resolver/dns.html#name-customAuthorityDialler" class="ident">customAuthorityDialler</a> = <span class="keyword">func</span>(<label for="r1" class="ident">authority</label> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>) <span class="keyword">func</span>(<label for="r2" class="ident">ctx</label> <a href="../../../../../../pkg/context.html" class="ident i0">context</a>.<a href="../../../../../context/context.go.html#line-62" class="ident">Context</a>, <label for="r3" class="ident">network</label>, <label for="r4" class="ident">address</label> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>) (<a href="../../../../../../pkg/net.html" class="ident i4">net</a>.<a href="../../../../../net/net.go.html#line-113" class="ident">Conn</a>, <a href="../../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<span class="keyword">return</span> <span class="keyword">func</span>(<label for="r5" class="ident">ctx</label> <a href="../../../../../../pkg/context.html" class="ident i0">context</a>.<a href="../../../../../context/context.go.html#line-62" class="ident">Context</a>, <label for="r6" class="ident">network</label>, <label for="r7" class="ident">address</label> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>) (<a href="../../../../../../pkg/net.html" class="ident i4">net</a>.<a href="../../../../../net/net.go.html#line-113" class="ident">Conn</a>, <a href="../../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+		<span class="keyword">var</span> <label for="r8" class="ident">dialer</label> <a href="../../../../../../pkg/net.html" class="ident i4">net</a>.<a href="../../../../../net/dial.go.html#line-27" class="ident">Dialer</a>
+		<span class="keyword">return</span> <label for="r8" class="ident">dialer</label>.<a href="../../../../../net/dial.go.html#line-369" class="ident">DialContext</a>(<label for="r5" class="ident">ctx</label>, <label for="r6" class="ident">network</label>, <label for="r1" class="ident">authority</label>)
+	}
+}
+
+<span class="keyword">var</span> <a href="../../../../../../pkg/google.golang.org/grpc/internal/resolver/dns.html#name-customAuthorityResolver" class="ident">customAuthorityResolver</a> = <span class="keyword">func</span>(<label for="r9" class="ident">authority</label> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>) (<a href="#line-155" class="ident">netResolver</a>, <a href="../../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<label for="r10" class="ident">host</label>, <label for="r11" class="ident">port</label>, <label for="r12" class="ident">err</label> := <a href="#line-366" class="ident">parseTarget</a>(<label for="r9" class="ident">authority</label>, <a href="#line-55" class="ident">defaultDNSSvrPort</a>)
+	<span class="keyword">if</span> <label for="r12" class="ident">err</label> != <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <label for="r12" class="ident">err</label>
+	}
+
+	<label for="r13" class="ident">authorityWithPort</label> := <a href="../../../../../../pkg/net.html" class="ident i4">net</a>.<a href="../../../../../net/ipsock.go.html#line-227" class="ident">JoinHostPort</a>(<label for="r10" class="ident">host</label>, <label for="r11" class="ident">port</label>)
+
+	<span class="keyword">return</span> &amp;<a href="../../../../../../pkg/net.html" class="ident i4">net</a>.<a href="../../../../../net/lookup.go.html#line-119" class="ident">Resolver</a>{
+		<a href="../../../../../net/lookup.go.html#line-123" class="ident">PreferGo</a>: <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+		<a href="../../../../../net/lookup.go.html#line-146" class="ident">Dial</a>:     <a href="#line-81" class="ident">customAuthorityDialler</a>(<label for="r13" class="ident">authorityWithPort</label>),
+	}, <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> NewBuilder creates a dnsBuilder which is used to factory DNS resolvers.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r14" class="ident"><a href="../../../../../../pkg/google.golang.org/grpc/internal/resolver/dns.html#name-NewBuilder" class="ident">NewBuilder</a></label>() <a href="../../../../../../pkg/google.golang.org/grpc/resolver.html" class="ident i14">resolver</a>.<a href="../../../resolver/resolver.go.html#line-225" class="ident">Builder</a> {
+	<span class="keyword">return</span> &amp;<a href="#line-107" class="ident">dnsBuilder</a>{}
+}
+
+<span class="keyword">type</span> <a href="../../../../../../pkg/google.golang.org/grpc/internal/resolver/dns.html#name-dnsBuilder" class="ident">dnsBuilder</a> <span class="keyword">struct</span>{}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Build creates and starts a DNS resolver that watches the name resolution of the target.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r15" class="ident">b</label> *<a href="#line-107" class="ident">dnsBuilder</a>) <label for="r16" class="ident"><a href="../../../../../../use/google.golang.org/grpc/internal/resolver/dns..dnsBuilder*41586.Build.html" class="ident">Build</a></label>(<label for="r17" class="ident">target</label> <a href="../../../../../../pkg/google.golang.org/grpc/resolver.html" class="ident i14">resolver</a>.<a href="../../../resolver/resolver.go.html#line-218" class="ident">Target</a>, <label for="r18" class="ident">cc</label> <a href="../../../../../../pkg/google.golang.org/grpc/resolver.html" class="ident i14">resolver</a>.<a href="../../../resolver/resolver.go.html#line-178" class="ident">ClientConn</a>, <label for="r19" class="ident">opts</label> <a href="../../../../../../pkg/google.golang.org/grpc/resolver.html" class="ident i14">resolver</a>.<a href="../../../resolver/resolver.go.html#line-132" class="ident">BuildOptions</a>) (<a href="../../../../../../pkg/google.golang.org/grpc/resolver.html" class="ident i14">resolver</a>.<a href="../../../resolver/resolver.go.html#line-241" class="ident">Resolver</a>, <a href="../../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<label for="r20" class="ident">host</label>, <label for="r21" class="ident">port</label>, <label for="r22" class="ident">err</label> := <a href="#line-366" class="ident">parseTarget</a>(<label for="r17" class="ident">target</label>.<a href="../../../resolver/resolver.go.html#line-221" class="ident">Endpoint</a>, <a href="#line-54" class="ident">defaultPort</a>)
+	<span class="keyword">if</span> <label for="r22" class="ident">err</label> != <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <label for="r22" class="ident">err</label>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> IP address.</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> <label for="r23" class="ident">ipAddr</label>, <label for="r24" class="ident">ok</label> := <a href="#line-346" class="ident">formatIP</a>(<label for="r20" class="ident">host</label>); <label for="r24" class="ident">ok</label> {
+		<label for="r25" class="ident">addr</label> := []<a href="../../../../../../pkg/google.golang.org/grpc/resolver.html" class="ident i14">resolver</a>.<a href="../../../resolver/resolver.go.html#line-97" class="ident">Address</a>{{<a href="../../../resolver/resolver.go.html#line-99" class="ident">Addr</a>: <label for="r23" class="ident">ipAddr</label> + <span class="lit-string">":"</span> + <label for="r21" class="ident">port</label>}}
+		<label for="r18" class="ident">cc</label>.<a href="../../../resolver/resolver.go.html#line-180" class="ident">UpdateState</a>(<a href="../../../../../../pkg/google.golang.org/grpc/resolver.html" class="ident i14">resolver</a>.<a href="../../../resolver/resolver.go.html#line-157" class="ident">State</a>{<a href="../../../resolver/resolver.go.html#line-159" class="ident">Addresses</a>: <label for="r25" class="ident">addr</label>})
+		<span class="keyword">return</span> <a href="#line-162" class="ident">deadResolver</a>{}, <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> DNS address (non-IP).</span></div>
+<div class="code"><pre><code>	<label for="r26" class="ident">ctx</label>, <label for="r27" class="ident">cancel</label> := <a href="../../../../../../pkg/context.html" class="ident i0">context</a>.<a href="../../../../../context/context.go.html#line-232" class="ident">WithCancel</a>(<a href="../../../../../../pkg/context.html" class="ident i0">context</a>.<a href="../../../../../context/context.go.html#line-208" class="ident">Background</a>())
+	<label for="r28" class="ident">d</label> := &amp;<a href="#line-169" class="ident">dnsResolver</a>{
+		<a href="#line-170" class="ident">host</a>:                 <label for="r20" class="ident">host</label>,
+		<a href="#line-171" class="ident">port</a>:                 <label for="r21" class="ident">port</label>,
+		<a href="#line-173" class="ident">ctx</a>:                  <label for="r26" class="ident">ctx</label>,
+		<a href="#line-174" class="ident">cancel</a>:               <label for="r27" class="ident">cancel</label>,
+		<a href="#line-175" class="ident">cc</a>:                   <label for="r18" class="ident">cc</label>,
+		<a href="#line-177" class="ident">rn</a>:                   <a href="../../../../../runtime/chan.go.html#line-71">make</a>(<span class="keyword">chan</span> <span class="keyword">struct</span>{}, <span class="lit-number">1</span>),
+		<a href="#line-185" class="ident">disableServiceConfig</a>: <label for="r19" class="ident">opts</label>.<a href="../../../resolver/resolver.go.html#line-135" class="ident">DisableServiceConfig</a>,
+	}
+
+	<span class="keyword">if</span> <label for="r17" class="ident">target</label>.<a href="../../../resolver/resolver.go.html#line-220" class="ident">Authority</a> == <span class="lit-string">""</span> {
+		<label for="r28" class="ident">d</label>.<a href="#line-172" class="ident">resolver</a> = <a href="#line-75" class="ident">defaultResolver</a>
+	} <span class="keyword">else</span> {
+		<label for="r28" class="ident">d</label>.<a href="#line-172" class="ident">resolver</a>, <label for="r22" class="ident">err</label> = <a href="#line-88" class="ident">customAuthorityResolver</a>(<label for="r17" class="ident">target</label>.<a href="../../../resolver/resolver.go.html#line-220" class="ident">Authority</a>)
+		<span class="keyword">if</span> <label for="r22" class="ident">err</label> != <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <label for="r22" class="ident">err</label>
+		}
+	}
+
+	<label for="r28" class="ident">d</label>.<a href="#line-184" class="ident">wg</a>.<a href="../../../../../sync/waitgroup.go.html#line-53" class="ident">Add</a>(<span class="lit-number">1</span>)
+	<span class="keyword">go</span> <label for="r28" class="ident">d</label>.<a href="#line-202" class="ident">watcher</a>()
+	<label for="r28" class="ident">d</label>.<a href="#line-189" class="ident">ResolveNow</a>(<a href="../../../../../../pkg/google.golang.org/grpc/resolver.html" class="ident i14">resolver</a>.<a href="../../../resolver/resolver.go.html#line-237" class="ident">ResolveNowOptions</a>{})
+	<span class="keyword">return</span> <label for="r28" class="ident">d</label>, <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Scheme returns the naming scheme of this resolver builder, which is "dns".</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r29" class="ident">b</label> *<a href="#line-107" class="ident">dnsBuilder</a>) <label for="r30" class="ident"><a href="../../../../../../use/google.golang.org/grpc/internal/resolver/dns..dnsBuilder*41586.Scheme.html" class="ident">Scheme</a></label>() <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a> {
+	<span class="keyword">return</span> <span class="lit-string">"dns"</span>
+}
+
+<span class="keyword">type</span> <a href="../../../../../../pkg/google.golang.org/grpc/internal/resolver/dns.html#name-netResolver" class="ident">netResolver</a> <span class="keyword">interface</span> {
+	LookupHost(ctx <a href="../../../../../../pkg/context.html" class="ident i0">context</a>.<a href="../../../../../context/context.go.html#line-62" class="ident">Context</a>, host <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>) (addrs []<a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>, err <a href="../../../../../../pkg/builtin.html#name-error" class="ident">error</a>)
+	LookupSRV(ctx <a href="../../../../../../pkg/context.html" class="ident i0">context</a>.<a href="../../../../../context/context.go.html#line-62" class="ident">Context</a>, service, proto, name <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>) (cname <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>, addrs []*<a href="../../../../../../pkg/net.html" class="ident i4">net</a>.<a href="../../../../../net/dnsclient.go.html#line-153" class="ident">SRV</a>, err <a href="../../../../../../pkg/builtin.html#name-error" class="ident">error</a>)
+	LookupTXT(ctx <a href="../../../../../../pkg/context.html" class="ident i0">context</a>.<a href="../../../../../context/context.go.html#line-62" class="ident">Context</a>, name <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>) (txts []<a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>, err <a href="../../../../../../pkg/builtin.html#name-error" class="ident">error</a>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> deadResolver is a resolver that does nothing.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../../pkg/google.golang.org/grpc/internal/resolver/dns.html#name-deadResolver" class="ident">deadResolver</a> <span class="keyword">struct</span>{}
+
+<span class="keyword">func</span> (<a href="#line-162" class="ident">deadResolver</a>) <label for="r31" class="ident"><a href="../../../../../../use/google.golang.org/grpc/internal/resolver/dns..deadResolver*9babe.ResolveNow.html" class="ident">ResolveNow</a></label>(<a href="../../../../../../pkg/google.golang.org/grpc/resolver.html" class="ident i14">resolver</a>.<a href="../../../resolver/resolver.go.html#line-237" class="ident">ResolveNowOptions</a>) {}
+
+<span class="keyword">func</span> (<a href="#line-162" class="ident">deadResolver</a>) <label for="r32" class="ident"><a href="../../../../../../use/google.golang.org/grpc/internal/resolver/dns..deadResolver*9babe.Close.html" class="ident">Close</a></label>() {}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> dnsResolver watches for the name resolution update for a non-IP target.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../../pkg/google.golang.org/grpc/internal/resolver/dns.html#name-dnsResolver" class="ident">dnsResolver</a> <span class="keyword">struct</span> {
+	<a href="../../../../../../use/google.golang.org/grpc/internal/resolver/dns..dnsResolver*d79e2.host*4740a.html" class="ident">host</a>     <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../../use/google.golang.org/grpc/internal/resolver/dns..dnsResolver*d79e2.port*f8d39.html" class="ident">port</a>     <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../../use/google.golang.org/grpc/internal/resolver/dns..dnsResolver*d79e2.resolver*439c3.html" class="ident">resolver</a> <a href="#line-155" class="ident">netResolver</a>
+	<a href="../../../../../../use/google.golang.org/grpc/internal/resolver/dns..dnsResolver*d79e2.ctx*0230c.html" class="ident">ctx</a>      <a href="../../../../../../pkg/context.html" class="ident i0">context</a>.<a href="../../../../../context/context.go.html#line-62" class="ident">Context</a>
+	<a href="../../../../../../use/google.golang.org/grpc/internal/resolver/dns..dnsResolver*d79e2.cancel*2374d.html" class="ident">cancel</a>   <a href="../../../../../../pkg/context.html" class="ident i0">context</a>.<a href="../../../../../context/context.go.html#line-224" class="ident">CancelFunc</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> rn channel is used by ResolveNow() to force an immediate resolution of the target.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> wg is used to enforce Close() to return after the watcher() goroutine has finished.</span><span class="comment">	 Otherwise, data race will be possible. [Race Example] in dns_resolver_test we</span><span class="comment">	 replace the real lookup functions with mocked ones to facilitate testing.</span><span class="comment">	 If Close() doesn't wait for watcher() goroutine finishes, race detector sometimes</span><span class="comment">	 will warns lookup (READ the lookup function pointers) inside watcher() goroutine</span><span class="comment">	 has data race with replaceNetFunc (WRITE the lookup function pointers).</span></div>
+<div class="code"><pre><code>	<a href="../../../../../../use/google.golang.org/grpc/internal/resolver/dns..dnsResolver*d79e2.wg*99d38.html" class="ident">wg</a>                   <a href="../../../../../../pkg/sync.html" class="ident i8">sync</a>.<a href="../../../../../sync/waitgroup.go.html#line-20" class="ident">WaitGroup</a>
+	<a href="../../../../../../use/google.golang.org/grpc/internal/resolver/dns..dnsResolver*d79e2.disableServiceConfig*a9b93.html" class="ident">disableServiceConfig</a> <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ResolveNow invoke an immediate resolution of the target that this dnsResolver watches.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r33" class="ident">d</label> *<a href="#line-169" class="ident">dnsResolver</a>) <label for="r34" class="ident"><a href="../../../../../../use/google.golang.org/grpc/internal/resolver/dns..dnsResolver*d79e2.ResolveNow.html" class="ident">ResolveNow</a></label>(<a href="../../../../../../pkg/google.golang.org/grpc/resolver.html" class="ident i14">resolver</a>.<a href="../../../resolver/resolver.go.html#line-237" class="ident">ResolveNowOptions</a>) {
+	<a href="../../../../../runtime/chan.go.html#line-686"><span class="keyword">select</span></a> {
+	<span class="keyword">case</span> <label for="r33" class="ident">d</label>.<a href="#line-177" class="ident">rn</a> <a href="../../../../../runtime/chan.go.html#line-158">&lt;-</a> <span class="keyword">struct</span>{}{}:
+	<span class="keyword">default</span>:
+	}
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Close closes the dnsResolver.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r35" class="ident">d</label> *<a href="#line-169" class="ident">dnsResolver</a>) <label for="r36" class="ident"><a href="../../../../../../use/google.golang.org/grpc/internal/resolver/dns..dnsResolver*d79e2.Close.html" class="ident">Close</a></label>() {
+	<label for="r35" class="ident">d</label>.<a href="#line-174" class="ident">cancel</a>()
+	<label for="r35" class="ident">d</label>.<a href="#line-184" class="ident">wg</a>.<a href="../../../../../sync/waitgroup.go.html#line-103" class="ident">Wait</a>()
+}
+
+<span class="keyword">func</span> (<label for="r37" class="ident">d</label> *<a href="#line-169" class="ident">dnsResolver</a>) <label for="r38" class="ident"><a href="../../../../../../use/google.golang.org/grpc/internal/resolver/dns..dnsResolver*d79e2.watcher*0e7f3.html" class="ident">watcher</a></label>() {
+	<span class="keyword">defer</span> <label for="r37" class="ident">d</label>.<a href="#line-184" class="ident">wg</a>.<a href="../../../../../sync/waitgroup.go.html#line-98" class="ident">Done</a>()
+	<span class="keyword">for</span> {
+		<a href="../../../../../runtime/select.go.html#line-121"><span class="keyword">select</span></a> {
+		<span class="keyword">case</span> <a href="../../../../../runtime/chan.go.html#line-438">&lt;-</a><label for="r37" class="ident">d</label>.<a href="#line-173" class="ident">ctx</a>.<a href="../../../../../context/context.go.html#line-99" class="ident">Done</a>():
+			<span class="keyword">return</span>
+		<span class="keyword">case</span> <a href="../../../../../runtime/chan.go.html#line-438">&lt;-</a><label for="r37" class="ident">d</label>.<a href="#line-177" class="ident">rn</a>:
+		}
+
+		<label for="r39" class="ident">state</label>, <label for="r40" class="ident">err</label> := <label for="r37" class="ident">d</label>.<a href="#line-326" class="ident">lookup</a>()
+		<span class="keyword">if</span> <label for="r40" class="ident">err</label> != <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<label for="r37" class="ident">d</label>.<a href="#line-175" class="ident">cc</a>.<a href="../../../resolver/resolver.go.html#line-184" class="ident">ReportError</a>(<label for="r40" class="ident">err</label>)
+		} <span class="keyword">else</span> {
+			<label for="r37" class="ident">d</label>.<a href="#line-175" class="ident">cc</a>.<a href="../../../resolver/resolver.go.html#line-180" class="ident">UpdateState</a>(*<label for="r39" class="ident">state</label>)
+		}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Sleep to prevent excessive re-resolutions. Incoming resolution requests</span><span class="comment">		 will be queued in d.rn.</span></div>
+<div class="code"><pre><code>		<label for="r41" class="ident">t</label> := <a href="../../../../../../pkg/time.html" class="ident i9">time</a>.<a href="../../../../../time/sleep.go.html#line-86" class="ident">NewTimer</a>(<a href="#line-78" class="ident">minDNSResRate</a>)
+		<a href="../../../../../runtime/select.go.html#line-121"><span class="keyword">select</span></a> {
+		<span class="keyword">case</span> <a href="../../../../../runtime/chan.go.html#line-438">&lt;-</a><label for="r41" class="ident">t</label>.<a href="../../../../../time/sleep.go.html#line-51" class="ident">C</a>:
+		<span class="keyword">case</span> <a href="../../../../../runtime/chan.go.html#line-438">&lt;-</a><label for="r37" class="ident">d</label>.<a href="#line-173" class="ident">ctx</a>.<a href="../../../../../context/context.go.html#line-99" class="ident">Done</a>():
+			<label for="r41" class="ident">t</label>.<a href="../../../../../time/sleep.go.html#line-77" class="ident">Stop</a>()
+			<span class="keyword">return</span>
+		}
+	}
+}
+
+<span class="keyword">func</span> (<label for="r42" class="ident">d</label> *<a href="#line-169" class="ident">dnsResolver</a>) <label for="r43" class="ident"><a href="../../../../../../use/google.golang.org/grpc/internal/resolver/dns..dnsResolver*d79e2.lookupSRV*ed676.html" class="ident">lookupSRV</a></label>() ([]<a href="../../../../../../pkg/google.golang.org/grpc/resolver.html" class="ident i14">resolver</a>.<a href="../../../resolver/resolver.go.html#line-97" class="ident">Address</a>, <a href="../../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<span class="keyword">if</span> !<a href="#line-45" class="ident">EnableSRVLookups</a> {
+		<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+	}
+	<span class="keyword">var</span> <label for="r44" class="ident">newAddrs</label> []<a href="../../../../../../pkg/google.golang.org/grpc/resolver.html" class="ident i14">resolver</a>.<a href="../../../resolver/resolver.go.html#line-97" class="ident">Address</a>
+	<label for="r45" class="ident">_</label>, <label for="r46" class="ident">srvs</label>, <label for="r47" class="ident">err</label> := <label for="r42" class="ident">d</label>.<a href="#line-172" class="ident">resolver</a>.<a href="#line-157" class="ident">LookupSRV</a>(<label for="r42" class="ident">d</label>.<a href="#line-173" class="ident">ctx</a>, <span class="lit-string">"grpclb"</span>, <span class="lit-string">"tcp"</span>, <label for="r42" class="ident">d</label>.<a href="#line-170" class="ident">host</a>)
+	<span class="keyword">if</span> <label for="r47" class="ident">err</label> != <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<label for="r47" class="ident">err</label> = <a href="#line-273" class="ident">handleDNSError</a>(<label for="r47" class="ident">err</label>, <span class="lit-string">"SRV"</span>) <span class="comment">// may become nil</span>
+		<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <label for="r47" class="ident">err</label>
+	}
+	<span class="keyword">for</span> <label for="r48" class="ident">_</label>, <label for="r49" class="ident">s</label> := <span class="keyword">range</span> <label for="r46" class="ident">srvs</label> {
+		<label for="r50" class="ident">lbAddrs</label>, <label for="r51" class="ident">err</label> := <label for="r42" class="ident">d</label>.<a href="#line-172" class="ident">resolver</a>.<a href="#line-156" class="ident">LookupHost</a>(<label for="r42" class="ident">d</label>.<a href="#line-173" class="ident">ctx</a>, <label for="r49" class="ident">s</label>.<a href="../../../../../net/dnsclient.go.html#line-154" class="ident">Target</a>)
+		<span class="keyword">if</span> <label for="r51" class="ident">err</label> != <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<label for="r51" class="ident">err</label> = <a href="#line-273" class="ident">handleDNSError</a>(<label for="r51" class="ident">err</label>, <span class="lit-string">"A"</span>) <span class="comment">// may become nil</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> If there are other SRV records, look them up and ignore this</span><span class="comment">				 one that does not exist.</span></div>
+<div class="code"><pre><code>				<span class="keyword">continue</span>
+			}
+			<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <label for="r51" class="ident">err</label>
+		}
+		<span class="keyword">for</span> <label for="r52" class="ident">_</label>, <label for="r53" class="ident">a</label> := <span class="keyword">range</span> <label for="r50" class="ident">lbAddrs</label> {
+			<label for="r54" class="ident">ip</label>, <label for="r55" class="ident">ok</label> := <a href="#line-346" class="ident">formatIP</a>(<label for="r53" class="ident">a</label>)
+			<span class="keyword">if</span> !<label for="r55" class="ident">ok</label> {
+				<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="../../../../../../pkg/fmt.html" class="ident i3">fmt</a>.<a href="../../../../../fmt/errors.go.html#line-17" class="ident">Errorf</a>(<span class="lit-string">"dns: error parsing A record IP address %v"</span>, <label for="r53" class="ident">a</label>)
+			}
+			<label for="r56" class="ident">addr</label> := <label for="r54" class="ident">ip</label> + <span class="lit-string">":"</span> + <a href="../../../../../../pkg/strconv.html" class="ident i6">strconv</a>.<a href="../../../../../strconv/itoa.go.html#line-34" class="ident">Itoa</a>(<a href="../../../../../../pkg/builtin.html#name-int" class="ident">int</a>(<label for="r49" class="ident">s</label>.<a href="../../../../../net/dnsclient.go.html#line-155" class="ident">Port</a>))
+			<label for="r44" class="ident">newAddrs</label> = <a href="../../../../../../pkg/builtin.html#name-append" class="ident">append</a>(<label for="r44" class="ident">newAddrs</label>, <a href="../../../../../../pkg/google.golang.org/grpc/resolver.html" class="ident i14">resolver</a>.<a href="../../../resolver/resolver.go.html#line-97" class="ident">Address</a>{<a href="../../../resolver/resolver.go.html#line-99" class="ident">Addr</a>: <label for="r56" class="ident">addr</label>, <a href="../../../resolver/resolver.go.html#line-112" class="ident">ServerName</a>: <label for="r49" class="ident">s</label>.<a href="../../../../../net/dnsclient.go.html#line-154" class="ident">Target</a>})
+		}
+	}
+	<span class="keyword">return</span> <label for="r44" class="ident">newAddrs</label>, <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+}
+
+<span class="keyword">var</span> <a href="../../../../../../pkg/google.golang.org/grpc/internal/resolver/dns.html#name-filterError" class="ident">filterError</a> = <span class="keyword">func</span>(<label for="r57" class="ident">err</label> <a href="../../../../../../pkg/builtin.html#name-error" class="ident">error</a>) <a href="../../../../../../pkg/builtin.html#name-error" class="ident">error</a> {
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Timeouts and temporary errors should be communicated to gRPC to</span><span class="comment">		 attempt another DNS query (with backoff).  Other errors should be</span><span class="comment">		 suppressed (they may represent the absence of a TXT record).</span></div>
+<div class="code"><pre><code>		<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+	}
+	<span class="keyword">return</span> <label for="r57" class="ident">err</label>
+}
+
+<span class="keyword">func</span> <label for="r60" class="ident"><a href="../../../../../../pkg/google.golang.org/grpc/internal/resolver/dns.html#name-handleDNSError" class="ident">handleDNSError</a></label>(<label for="r61" class="ident">err</label> <a href="../../../../../../pkg/builtin.html#name-error" class="ident">error</a>, <label for="r62" class="ident">lookupType</label> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>) <a href="../../../../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<label for="r61" class="ident">err</label> = <a href="#line-263" class="ident">filterError</a>(<label for="r61" class="ident">err</label>)
+	<span class="keyword">if</span> <label for="r61" class="ident">err</label> != <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<label for="r61" class="ident">err</label> = <a href="../../../../../../pkg/fmt.html" class="ident i3">fmt</a>.<a href="../../../../../fmt/errors.go.html#line-17" class="ident">Errorf</a>(<span class="lit-string">"dns: %v record lookup error: %v"</span>, <label for="r62" class="ident">lookupType</label>, <label for="r61" class="ident">err</label>)
+		<a href="#line-47" class="ident">logger</a>.<a href="../../../grpclog/loggerv2.go.html#line-34" class="ident">Info</a>(<label for="r61" class="ident">err</label>)
+	}
+	<span class="keyword">return</span> <label for="r61" class="ident">err</label>
+}
+
+<span class="keyword">func</span> (<label for="r63" class="ident">d</label> *<a href="#line-169" class="ident">dnsResolver</a>) <label for="r64" class="ident"><a href="../../../../../../use/google.golang.org/grpc/internal/resolver/dns..dnsResolver*d79e2.lookupTXT*8ae4c.html" class="ident">lookupTXT</a></label>() *<a href="../../../../../../pkg/google.golang.org/grpc/serviceconfig.html" class="ident i15">serviceconfig</a>.<a href="../../../serviceconfig/serviceconfig.go.html#line-38" class="ident">ParseResult</a> {
+	<label for="r65" class="ident">ss</label>, <label for="r66" class="ident">err</label> := <label for="r63" class="ident">d</label>.<a href="#line-172" class="ident">resolver</a>.<a href="#line-158" class="ident">LookupTXT</a>(<label for="r63" class="ident">d</label>.<a href="#line-173" class="ident">ctx</a>, <a href="#line-58" class="ident">txtPrefix</a>+<label for="r63" class="ident">d</label>.<a href="#line-170" class="ident">host</a>)
+	<span class="keyword">if</span> <label for="r66" class="ident">err</label> != <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">if</span> <a href="../../../../../../pkg/google.golang.org/grpc/internal/envconfig.html" class="ident i12">envconfig</a>.<a href="../../envconfig/envconfig.go.html#line-37" class="ident">TXTErrIgnore</a> {
+			<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+		}
+		<span class="keyword">if</span> <label for="r66" class="ident">err</label> = <a href="#line-273" class="ident">handleDNSError</a>(<label for="r66" class="ident">err</label>, <span class="lit-string">"TXT"</span>); <label for="r66" class="ident">err</label> != <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<span class="keyword">return</span> &amp;<a href="../../../../../../pkg/google.golang.org/grpc/serviceconfig.html" class="ident i15">serviceconfig</a>.<a href="../../../serviceconfig/serviceconfig.go.html#line-38" class="ident">ParseResult</a>{<a href="../../../serviceconfig/serviceconfig.go.html#line-40" class="ident">Err</a>: <label for="r66" class="ident">err</label>}
+		}
+		<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+	}
+	<span class="keyword">var</span> <label for="r67" class="ident">res</label> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<span class="keyword">for</span> <label for="r68" class="ident">_</label>, <label for="r69" class="ident">s</label> := <span class="keyword">range</span> <label for="r65" class="ident">ss</label> {
+		<label for="r67" class="ident">res</label> += <label for="r69" class="ident">s</label>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> TXT record must have "grpc_config=" attribute in order to be used as service config.</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> !<a href="../../../../../../pkg/strings.html" class="ident i7">strings</a>.<a href="../../../../../strings/strings.go.html#line-444" class="ident">HasPrefix</a>(<label for="r67" class="ident">res</label>, <a href="#line-61" class="ident">txtAttribute</a>) {
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> This is not an error; it is the equivalent of not having a service config.</span></div>
+<div class="code"><pre><code>		<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+	}
+	<label for="r70" class="ident">sc</label> := <a href="#line-419" class="ident">canaryingSC</a>(<a href="../../../../../../pkg/strings.html" class="ident i7">strings</a>.<a href="../../../../../strings/strings.go.html#line-902" class="ident">TrimPrefix</a>(<label for="r67" class="ident">res</label>, <a href="#line-61" class="ident">txtAttribute</a>))
+	<span class="keyword">return</span> <label for="r63" class="ident">d</label>.<a href="#line-175" class="ident">cc</a>.<a href="../../../resolver/resolver.go.html#line-198" class="ident">ParseServiceConfig</a>(<label for="r70" class="ident">sc</label>)
+}
+
+<span class="keyword">func</span> (<label for="r71" class="ident">d</label> *<a href="#line-169" class="ident">dnsResolver</a>) <label for="r72" class="ident"><a href="../../../../../../use/google.golang.org/grpc/internal/resolver/dns..dnsResolver*d79e2.lookupHost*e3f14.html" class="ident">lookupHost</a></label>() ([]<a href="../../../../../../pkg/google.golang.org/grpc/resolver.html" class="ident i14">resolver</a>.<a href="../../../resolver/resolver.go.html#line-97" class="ident">Address</a>, <a href="../../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<span class="keyword">var</span> <label for="r73" class="ident">newAddrs</label> []<a href="../../../../../../pkg/google.golang.org/grpc/resolver.html" class="ident i14">resolver</a>.<a href="../../../resolver/resolver.go.html#line-97" class="ident">Address</a>
+	<label for="r74" class="ident">addrs</label>, <label for="r75" class="ident">err</label> := <label for="r71" class="ident">d</label>.<a href="#line-172" class="ident">resolver</a>.<a href="#line-156" class="ident">LookupHost</a>(<label for="r71" class="ident">d</label>.<a href="#line-173" class="ident">ctx</a>, <label for="r71" class="ident">d</label>.<a href="#line-170" class="ident">host</a>)
+	<span class="keyword">if</span> <label for="r75" class="ident">err</label> != <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<label for="r75" class="ident">err</label> = <a href="#line-273" class="ident">handleDNSError</a>(<label for="r75" class="ident">err</label>, <span class="lit-string">"A"</span>)
+		<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <label for="r75" class="ident">err</label>
+	}
+	<span class="keyword">for</span> <label for="r76" class="ident">_</label>, <label for="r77" class="ident">a</label> := <span class="keyword">range</span> <label for="r74" class="ident">addrs</label> {
+		<label for="r78" class="ident">ip</label>, <label for="r79" class="ident">ok</label> := <a href="#line-346" class="ident">formatIP</a>(<label for="r77" class="ident">a</label>)
+		<span class="keyword">if</span> !<label for="r79" class="ident">ok</label> {
+			<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="../../../../../../pkg/fmt.html" class="ident i3">fmt</a>.<a href="../../../../../fmt/errors.go.html#line-17" class="ident">Errorf</a>(<span class="lit-string">"dns: error parsing A record IP address %v"</span>, <label for="r77" class="ident">a</label>)
+		}
+		<label for="r80" class="ident">addr</label> := <label for="r78" class="ident">ip</label> + <span class="lit-string">":"</span> + <label for="r71" class="ident">d</label>.<a href="#line-171" class="ident">port</a>
+		<label for="r73" class="ident">newAddrs</label> = <a href="../../../../../../pkg/builtin.html#name-append" class="ident">append</a>(<label for="r73" class="ident">newAddrs</label>, <a href="../../../../../../pkg/google.golang.org/grpc/resolver.html" class="ident i14">resolver</a>.<a href="../../../resolver/resolver.go.html#line-97" class="ident">Address</a>{<a href="../../../resolver/resolver.go.html#line-99" class="ident">Addr</a>: <label for="r80" class="ident">addr</label>})
+	}
+	<span class="keyword">return</span> <label for="r73" class="ident">newAddrs</label>, <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+}
+
+<span class="keyword">func</span> (<label for="r81" class="ident">d</label> *<a href="#line-169" class="ident">dnsResolver</a>) <label for="r82" class="ident"><a href="../../../../../../use/google.golang.org/grpc/internal/resolver/dns..dnsResolver*d79e2.lookup*29a1a.html" class="ident">lookup</a></label>() (*<a href="../../../../../../pkg/google.golang.org/grpc/resolver.html" class="ident i14">resolver</a>.<a href="../../../resolver/resolver.go.html#line-157" class="ident">State</a>, <a href="../../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<label for="r83" class="ident">srv</label>, <label for="r84" class="ident">srvErr</label> := <label for="r81" class="ident">d</label>.<a href="#line-230" class="ident">lookupSRV</a>()
+	<label for="r85" class="ident">addrs</label>, <label for="r86" class="ident">hostErr</label> := <label for="r81" class="ident">d</label>.<a href="#line-308" class="ident">lookupHost</a>()
+	<span class="keyword">if</span> <label for="r86" class="ident">hostErr</label> != <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> &amp;&amp; (<label for="r84" class="ident">srvErr</label> != <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> || <a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r83" class="ident">srv</label>) == <span class="lit-number">0</span>) {
+		<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <label for="r86" class="ident">hostErr</label>
+	}
+
+	<label for="r87" class="ident">state</label> := <a href="../../../../../../pkg/google.golang.org/grpc/resolver.html" class="ident i14">resolver</a>.<a href="../../../resolver/resolver.go.html#line-157" class="ident">State</a>{<a href="../../../resolver/resolver.go.html#line-159" class="ident">Addresses</a>: <label for="r85" class="ident">addrs</label>}
+	<span class="keyword">if</span> <a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r83" class="ident">srv</label>) &gt; <span class="lit-number">0</span> {
+		<label for="r87" class="ident">state</label> = <a href="../../../../../../pkg/google.golang.org/grpc/balancer/grpclb/state.html" class="ident i10">grpclbstate</a>.<a href="../../../balancer/grpclb/state/state.go.html#line-41" class="ident">Set</a>(<label for="r87" class="ident">state</label>, &amp;<a href="../../../../../../pkg/google.golang.org/grpc/balancer/grpclb/state.html" class="ident i10">grpclbstate</a>.<a href="../../../balancer/grpclb/state/state.go.html#line-33" class="ident">State</a>{<a href="../../../balancer/grpclb/state/state.go.html#line-36" class="ident">BalancerAddresses</a>: <label for="r83" class="ident">srv</label>})
+	}
+	<span class="keyword">if</span> !<label for="r81" class="ident">d</label>.<a href="#line-185" class="ident">disableServiceConfig</a> {
+		<label for="r87" class="ident">state</label>.<a href="../../../resolver/resolver.go.html#line-164" class="ident">ServiceConfig</a> = <label for="r81" class="ident">d</label>.<a href="#line-282" class="ident">lookupTXT</a>()
+	}
+	<span class="keyword">return</span> &amp;<label for="r87" class="ident">state</label>, <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> formatIP returns ok = false if addr is not a valid textual representation of an IP address.</span><span class="comment"> If addr is an IPv4 address, return the addr and ok = true.</span><span class="comment"> If addr is an IPv6 address, return the addr enclosed in square brackets and ok = true.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r88" class="ident"><a href="../../../../../../pkg/google.golang.org/grpc/internal/resolver/dns.html#name-formatIP" class="ident">formatIP</a></label>(<label for="r89" class="ident">addr</label> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>) (<label for="r90" class="ident">addrIP</label> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>, <label for="r91" class="ident">ok</label> <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>) {
+	<label for="r92" class="ident">ip</label> := <a href="../../../../../../pkg/net.html" class="ident i4">net</a>.<a href="../../../../../net/ip.go.html#line-678" class="ident">ParseIP</a>(<label for="r89" class="ident">addr</label>)
+	<span class="keyword">if</span> <label for="r92" class="ident">ip</label> == <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <span class="lit-string">""</span>, <a href="../../../../../../pkg/builtin.html#name-false" class="ident">false</a>
+	}
+	<span class="keyword">if</span> <label for="r92" class="ident">ip</label>.<a href="../../../../../net/ip.go.html#line-189" class="ident">To4</a>() != <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <label for="r89" class="ident">addr</label>, <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>
+	}
+	<span class="keyword">return</span> <span class="lit-string">"["</span> + <label for="r89" class="ident">addr</label> + <span class="lit-string">"]"</span>, <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> parseTarget takes the user input target string and default port, returns formatted host and port info.</span><span class="comment"> If target doesn't specify a port, set the port to be the defaultPort.</span><span class="comment"> If target is in IPv6 format and host-name is enclosed in square brackets, brackets</span><span class="comment"> are stripped when setting the host.</span><span class="comment"> examples:</span><span class="comment"> target: "www.google.com" defaultPort: "443" returns host: "www.google.com", port: "443"</span><span class="comment"> target: "ipv4-host:80" defaultPort: "443" returns host: "ipv4-host", port: "80"</span><span class="comment"> target: "[ipv6-host]" defaultPort: "443" returns host: "ipv6-host", port: "443"</span><span class="comment"> target: ":80" defaultPort: "443" returns host: "localhost", port: "80"</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r93" class="ident"><a href="../../../../../../pkg/google.golang.org/grpc/internal/resolver/dns.html#name-parseTarget" class="ident">parseTarget</a></label>(<label for="r94" class="ident">target</label>, <label for="r95" class="ident">defaultPort</label> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>) (<label for="r96" class="ident">host</label>, <label for="r97" class="ident">port</label> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>, <label for="r98" class="ident">err</label> <a href="../../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<span class="keyword">if</span> <label for="r94" class="ident">target</label> == <span class="lit-string">""</span> {
+		<span class="keyword">return</span> <span class="lit-string">""</span>, <span class="lit-string">""</span>, <a href="#line-65" class="ident">errMissingAddr</a>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> target is an IPv4 or IPv6(without brackets) address</span></div>
+<div class="code"><pre><code>		<span class="keyword">return</span> <label for="r94" class="ident">target</label>, <label for="r95" class="ident">defaultPort</label>, <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+	}
+	<span class="keyword">if</span> <label for="r96" class="ident">host</label>, <label for="r97" class="ident">port</label>, <label for="r98" class="ident">err</label> = <a href="../../../../../../pkg/net.html" class="ident i4">net</a>.<a href="../../../../../net/ipsock.go.html#line-156" class="ident">SplitHostPort</a>(<label for="r94" class="ident">target</label>); <label for="r98" class="ident">err</label> == <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> If the port field is empty (target ends with colon), e.g. "[::1]:", this is an error.</span></div>
+<div class="code"><pre><code>			<span class="keyword">return</span> <span class="lit-string">""</span>, <span class="lit-string">""</span>, <a href="#line-71" class="ident">errEndsWithColon</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> target has port, i.e ipv4-host:port, [ipv6-host]:port, host-name:port</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Keep consistent with net.Dial(): If the host is empty, as in ":80", the local system is assumed.</span></div>
+<div class="code"><pre><code>			<label for="r96" class="ident">host</label> = <span class="lit-string">"localhost"</span>
+		}
+		<span class="keyword">return</span> <label for="r96" class="ident">host</label>, <label for="r97" class="ident">port</label>, <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> target doesn't have port</span></div>
+<div class="code"><pre><code>		<span class="keyword">return</span> <label for="r96" class="ident">host</label>, <label for="r97" class="ident">port</label>, <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+	}
+	<span class="keyword">return</span> <span class="lit-string">""</span>, <span class="lit-string">""</span>, <a href="../../../../../../pkg/fmt.html" class="ident i3">fmt</a>.<a href="../../../../../fmt/errors.go.html#line-17" class="ident">Errorf</a>(<span class="lit-string">"invalid target address %v, error info: %v"</span>, <label for="r94" class="ident">target</label>, <label for="r98" class="ident">err</label>)
+}
+
+<span class="keyword">type</span> <a href="../../../../../../pkg/google.golang.org/grpc/internal/resolver/dns.html#name-rawChoice" class="ident">rawChoice</a> <span class="keyword">struct</span> {
+	<a href="../../../../../../use/google.golang.org/grpc/internal/resolver/dns..rawChoice*2686f.ClientLanguage.html" class="ident">ClientLanguage</a> *[]<a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>        <span class="lit-string">`json:"clientLanguage,omitempty"`</span>
+	<a href="../../../../../../use/google.golang.org/grpc/internal/resolver/dns..rawChoice*2686f.Percentage.html" class="ident">Percentage</a>     *<a href="../../../../../../pkg/builtin.html#name-int" class="ident">int</a>             <span class="lit-string">`json:"percentage,omitempty"`</span>
+	<a href="../../../../../../use/google.golang.org/grpc/internal/resolver/dns..rawChoice*2686f.ClientHostName.html" class="ident">ClientHostName</a> *[]<a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>        <span class="lit-string">`json:"clientHostName,omitempty"`</span>
+	<a href="../../../../../../use/google.golang.org/grpc/internal/resolver/dns..rawChoice*2686f.ServiceConfig.html" class="ident">ServiceConfig</a>  *<a href="../../../../../../pkg/encoding/json.html" class="ident i1">json</a>.<a href="../../../../../encoding/json/stream.go.html#line-260" class="ident">RawMessage</a> <span class="lit-string">`json:"serviceConfig,omitempty"`</span>
+}
+
+<span class="keyword">func</span> <label for="r100" class="ident"><a href="../../../../../../pkg/google.golang.org/grpc/internal/resolver/dns.html#name-containsString" class="ident">containsString</a></label>(<label for="r101" class="ident">a</label> *[]<a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>, <label for="r102" class="ident">b</label> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>) <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> {
+	<span class="keyword">if</span> <label for="r101" class="ident">a</label> == <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>
+	}
+	<span class="keyword">for</span> <label for="r103" class="ident">_</label>, <label for="r104" class="ident">c</label> := <span class="keyword">range</span> *<label for="r101" class="ident">a</label> {
+		<span class="keyword">if</span> <label for="r104" class="ident">c</label> == <label for="r102" class="ident">b</label> {
+			<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>
+		}
+	}
+	<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-false" class="ident">false</a>
+}
+
+<span class="keyword">func</span> <label for="r105" class="ident"><a href="../../../../../../pkg/google.golang.org/grpc/internal/resolver/dns.html#name-chosenByPercentage" class="ident">chosenByPercentage</a></label>(<label for="r106" class="ident">a</label> *<a href="../../../../../../pkg/builtin.html#name-int" class="ident">int</a>) <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> {
+	<span class="keyword">if</span> <label for="r106" class="ident">a</label> == <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>
+	}
+	<span class="keyword">return</span> <a href="../../../../../../pkg/google.golang.org/grpc/internal/grpcrand.html" class="ident i13">grpcrand</a>.<a href="../../grpcrand/grpcrand.go.html#line-43" class="ident">Intn</a>(<span class="lit-number">100</span>)+<span class="lit-number">1</span> &lt;= *<label for="r106" class="ident">a</label>
+}
+
+<span class="keyword">func</span> <label for="r107" class="ident"><a href="../../../../../../pkg/google.golang.org/grpc/internal/resolver/dns.html#name-canaryingSC" class="ident">canaryingSC</a></label>(<label for="r108" class="ident">js</label> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>) <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a> {
+	<span class="keyword">if</span> <label for="r108" class="ident">js</label> == <span class="lit-string">""</span> {
+		<span class="keyword">return</span> <span class="lit-string">""</span>
+	}
+	<span class="keyword">var</span> <label for="r109" class="ident">rcs</label> []<a href="#line-393" class="ident">rawChoice</a>
+	<label for="r110" class="ident">err</label> := <a href="../../../../../../pkg/encoding/json.html" class="ident i1">json</a>.<a href="../../../../../encoding/json/decode.go.html#line-96" class="ident">Unmarshal</a>([]<a href="../../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>(<label for="r108" class="ident">js</label>), &amp;<label for="r109" class="ident">rcs</label>)
+	<span class="keyword">if</span> <label for="r110" class="ident">err</label> != <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<a href="#line-47" class="ident">logger</a>.<a href="../../../grpclog/loggerv2.go.html#line-44" class="ident">Warningf</a>(<span class="lit-string">"dns: error parsing service config json: %v"</span>, <label for="r110" class="ident">err</label>)
+		<span class="keyword">return</span> <span class="lit-string">""</span>
+	}
+	<label for="r111" class="ident">cliHostname</label>, <label for="r110" class="ident">err</label> := <a href="../../../../../../pkg/os.html" class="ident i5">os</a>.<a href="../../../../../os/sys.go.html#line-8" class="ident">Hostname</a>()
+	<span class="keyword">if</span> <label for="r110" class="ident">err</label> != <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<a href="#line-47" class="ident">logger</a>.<a href="../../../grpclog/loggerv2.go.html#line-44" class="ident">Warningf</a>(<span class="lit-string">"dns: error getting client hostname: %v"</span>, <label for="r110" class="ident">err</label>)
+		<span class="keyword">return</span> <span class="lit-string">""</span>
+	}
+	<span class="keyword">var</span> <label for="r112" class="ident">sc</label> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<span class="keyword">for</span> <label for="r113" class="ident">_</label>, <label for="r114" class="ident">c</label> := <span class="keyword">range</span> <label for="r109" class="ident">rcs</label> {
+		<span class="keyword">if</span> !<a href="#line-400" class="ident">containsString</a>(<label for="r114" class="ident">c</label>.<a href="#line-394" class="ident">ClientLanguage</a>, <a href="#line-56" class="ident">golang</a>) ||
+			!<a href="#line-412" class="ident">chosenByPercentage</a>(<label for="r114" class="ident">c</label>.<a href="#line-395" class="ident">Percentage</a>) ||
+			!<a href="#line-400" class="ident">containsString</a>(<label for="r114" class="ident">c</label>.<a href="#line-396" class="ident">ClientHostName</a>, <label for="r111" class="ident">cliHostname</label>) ||
+			<label for="r114" class="ident">c</label>.<a href="#line-397" class="ident">ServiceConfig</a> == <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<span class="keyword">continue</span>
+		}
+		<label for="r112" class="ident">sc</label> = <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>(*<label for="r114" class="ident">c</label>.<a href="#line-397" class="ident">ServiceConfig</a>)
+		<span class="keyword">break</span>
+	}
+	<span class="keyword">return</span> <label for="r112" class="ident">sc</label>
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

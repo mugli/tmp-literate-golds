@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Package: golang.org/x/net/trace</title>
+<link href="../../../../css/light-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="package-details"><code><span style="font-size:xx-large;">package <b>trace</b></span>
+
+<span class="title">Import Path</span>
+	<a href="../../../../index.html#pkg-golang.org/x/net/trace">golang.org/x/net/trace</a><i> (on <a href="https://pkg.go.dev/golang.org/x/net/trace" target="_blank">go.dev</a>)</i>
+
+<span class="title">Dependency Relation</span>
+	imports <a href="../../../../dep/golang.org/x/net/trace.html">19 packages</a>, and imported by <a href="../../../../dep/golang.org/x/net/trace.html#imported-by">one package</a>
+
+<div id="files"><span class="title">Involved Source Files</span>
+
+	<span class="nodocs">      <a href="../../../../src/golang.org/x/net/trace/events.go.html">events.go</a></span>
+	<span class="nodocs">      <a href="../../../../src/golang.org/x/net/trace/histogram.go.html">histogram.go</a></span>
+	<input type='checkbox' checked class="fold" id="file-2-fold-content"><label for="file-2-fold-content">   <a href="../../../../src/golang.org/x/net/trace/trace.go.html#doc">d➜</a> <a href="../../../../src/golang.org/x/net/trace/trace.go.html">trace.go</a></label><span id='file-2-fold-content-items' class="fold-items">
+		Package trace implements tracing of requests and long-lived objects.
+		It exports HTTP interfaces on /debug/requests and /debug/events.
+
+		A trace.Trace provides tracing for short-lived objects, usually requests.
+		A request handler might be implemented like this:
+
+			func fooHandler(w http.ResponseWriter, req *http.Request) {
+				tr := trace.New("mypkg.Foo", req.URL.Path)
+				defer tr.Finish()
+				...
+				tr.LazyPrintf("some event %q happened", str)
+				...
+				if err := somethingImportant(); err != nil {
+					tr.LazyPrintf("somethingImportant failed: %v", err)
+					tr.SetError()
+				}
+			}
+
+		The /debug/requests HTTP endpoint organizes the traces by family,
+		errors, and duration.  It also provides histogram of request duration
+		for each family.
+
+		A trace.EventLog provides tracing for long-lived objects, such as RPC
+		connections.
+
+			// A Fetcher fetches URL paths for a single domain.
+			type Fetcher struct {
+				domain string
+				events trace.EventLog
+			}
+
+			func NewFetcher(domain string) *Fetcher {
+				return &amp;Fetcher{
+					domain,
+					trace.NewEventLog("mypkg.Fetcher", domain),
+				}
+			}
+
+			func (f *Fetcher) Fetch(path string) (string, error) {
+				resp, err := http.Get("http://" + f.domain + "/" + path)
+				if err != nil {
+					f.events.Errorf("Get(%q) = %v", path, err)
+					return "", err
+				}
+				f.events.Printf("Get(%q) = %s", path, resp.Status)
+				...
+			}
+
+			func (f *Fetcher) Close() error {
+				f.events.Finish()
+				return nil
+			}
+
+		The /debug/events HTTP endpoint organizes the event logs by family and
+		by time since the last error.  The expanded view displays recent log
+		entries and the log's call stack.</span></div>
+<div id="exported-types"><span class="title">Package-Level Type Names<span class="title-stat"><i> (total 22, in which 2 are exported)</i></span></span>
+
+<div id="exported-types-buttons" class="js-on">	/* sort exporteds by: <label id="sort-types-by-alphabet" class="button">alphabet</label> | <label id="sort-types-by-popularity" class="button">popularity</label> */</div><div class="anchor type-res" id="name-EventLog" data-popularity="375">	<input type='checkbox' class="fold" id="EventLog-fold-content"><label for="EventLog-fold-content"> <a href="../../../../use/golang.org/x/net/trace..EventLog.html">type</a> <a href="../../../../src/golang.org/x/net/trace/events.go.html#line-117">EventLog</a> <b><i>(interface)</i></b></label><span id='EventLog-fold-content-docs' class="fold-docs">
+		An EventLog provides a log of events associated with a specific object.
+
+		<input type='checkbox' class="fold" id="EventLog-fold-methods"><label for="EventLog-fold-methods">Methods (<i>total 3, all are exported</i>)</label><span id='EventLog-fold-methods-items' class="fold-items"><span>
+			<input type='checkbox' class="fold" id="EventLog-fold-method-Errorf"><label for="EventLog-fold-method-Errorf">( T) <a href="../../../../src/golang.org/x/net/trace/events.go.html#line-123">Errorf</a>(format <a href="../../../builtin.html#name-string">string</a>, a ...interface{})</label><span id='EventLog-fold-method-Errorf-docs' class="fold-docs">
+				Errorf is like Printf, but it marks this event as an error.
+</span></span><span>
+			<input type='checkbox' class="fold" id="EventLog-fold-method-Finish"><label for="EventLog-fold-method-Finish">( T) <a href="../../../../src/golang.org/x/net/trace/events.go.html#line-127">Finish</a>()</label><span id='EventLog-fold-method-Finish-docs' class="fold-docs">
+				Finish declares that this event log is complete.
+				The event log should not be used after calling this method.
+</span></span><span>
+			<input type='checkbox' class="fold" id="EventLog-fold-method-Printf"><label for="EventLog-fold-method-Printf">( T) <a href="../../../../src/golang.org/x/net/trace/events.go.html#line-120">Printf</a>(format <a href="../../../builtin.html#name-string">string</a>, a ...interface{})</label><span id='EventLog-fold-method-Printf-docs' class="fold-docs">
+				Printf formats its arguments with fmt.Sprintf and adds the
+				result to the event log.
+</span></span></span>
+		<input type='checkbox' class="fold" id="EventLog-fold-impledby"><label for="EventLog-fold-impledby">Implemented By (<i>at least one unexported</i>)</label><span id='EventLog-fold-impledby-items' class="fold-items">
+			<input type='checkbox' class="showhide" id="EventLog-showhide-impedBys"><i><label for="EventLog-showhide-impedBys" class="show-inline">/* at least one unexported ... */</label><label for="EventLog-showhide-impedBys" class="hide-inline">/* at least one unexported: */</label></i><span class="hidden"><i>
+			*<a href="#name-eventLog">eventLog</a></i></span></span>
+		<input type='checkbox' class="fold" id="EventLog-fold-results"><label for="EventLog-fold-results">As Outputs Of (<i>at least one exported</i>)</label><span id='EventLog-fold-results-items' class="fold-items"><span>
+			func <a href="#name-NewEventLog">NewEventLog</a>(family, title <a href="../../../builtin.html#name-string">string</a>) <b>EventLog</b></span></span>
+
+</span></div><div class="anchor type-res" id="name-Trace" data-popularity="685">	<input type='checkbox' class="fold" id="Trace-fold-content"><label for="Trace-fold-content"> <a href="../../../../use/golang.org/x/net/trace..Trace.html">type</a> <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-317">Trace</a> <b><i>(interface)</i></b></label><span id='Trace-fold-content-docs' class="fold-docs">
+		Trace represents an active request.
+
+		<input type='checkbox' class="fold" id="Trace-fold-methods"><label for="Trace-fold-methods">Methods (<i>total 7, all are exported</i>)</label><span id='Trace-fold-methods-items' class="fold-items"><span>
+			<input type='checkbox' class="fold" id="Trace-fold-method-Finish"><label for="Trace-fold-method-Finish">( T) <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-348">Finish</a>()</label><span id='Trace-fold-method-Finish-docs' class="fold-docs">
+				Finish declares that this trace is complete.
+				The trace should not be used after calling this method.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Trace-fold-method-LazyLog"><label for="Trace-fold-method-LazyLog">( T) <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-321">LazyLog</a>(x <a href="../../../fmt.html">fmt</a>.<a href="../../../fmt.html#name-Stringer">Stringer</a>, sensitive <a href="../../../builtin.html#name-bool">bool</a>)</label><span id='Trace-fold-method-LazyLog-docs' class="fold-docs">
+				LazyLog adds x to the event log. It will be evaluated each time the
+				/debug/requests page is rendered. Any memory referenced by x will be
+				pinned until the trace is finished and later discarded.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Trace-fold-method-LazyPrintf"><label for="Trace-fold-method-LazyPrintf">( T) <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-326">LazyPrintf</a>(format <a href="../../../builtin.html#name-string">string</a>, a ...interface{})</label><span id='Trace-fold-method-LazyPrintf-docs' class="fold-docs">
+				LazyPrintf evaluates its arguments with fmt.Sprintf each time the
+				/debug/requests page is rendered. Any memory referenced by a will be
+				pinned until the trace is finished and later discarded.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Trace-fold-method-SetError"><label for="Trace-fold-method-SetError">( T) <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-329">SetError</a>()</label><span id='Trace-fold-method-SetError-docs' class="fold-docs">
+				SetError declares that this trace resulted in an error.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Trace-fold-method-SetMaxEvents"><label for="Trace-fold-method-SetMaxEvents">( T) <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-344">SetMaxEvents</a>(m <a href="../../../builtin.html#name-int">int</a>)</label><span id='Trace-fold-method-SetMaxEvents-docs' class="fold-docs">
+				SetMaxEvents sets the maximum number of events that will be stored
+				in the trace. This has no effect if any events have already been
+				added to the trace.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Trace-fold-method-SetRecycler"><label for="Trace-fold-method-SetRecycler">( T) <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-335">SetRecycler</a>(f func(interface{}))</label><span id='Trace-fold-method-SetRecycler-docs' class="fold-docs">
+				SetRecycler sets a recycler for the trace.
+				f will be called for each event passed to LazyLog at a time when
+				it is no longer required, whether while the trace is still active
+				and the event is discarded, or when a completed trace is discarded.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Trace-fold-method-SetTraceInfo"><label for="Trace-fold-method-SetTraceInfo">( T) <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-339">SetTraceInfo</a>(traceID, spanID <a href="../../../builtin.html#name-uint64">uint64</a>)</label><span id='Trace-fold-method-SetTraceInfo-docs' class="fold-docs">
+				SetTraceInfo sets the trace info for the trace.
+				This is currently unused.
+</span></span></span>
+		<input type='checkbox' class="fold" id="Trace-fold-impledby"><label for="Trace-fold-impledby">Implemented By (<i>at least one unexported</i>)</label><span id='Trace-fold-impledby-items' class="fold-items">
+			<input type='checkbox' class="showhide" id="Trace-showhide-impedBys"><i><label for="Trace-showhide-impedBys" class="show-inline">/* at least one unexported ... */</label><label for="Trace-showhide-impedBys" class="hide-inline">/* at least one unexported: */</label></i><span class="hidden"><i>
+			*<a href="#name-trace">trace</a></i></span></span>
+		<input type='checkbox' class="fold" id="Trace-fold-results"><label for="Trace-fold-results">As Outputs Of (<i>at least 2, both are exported</i>)</label><span id='Trace-fold-results-items' class="fold-items"><span>
+			func <a href="#name-FromContext">FromContext</a>(ctx <a href="../../../context.html">context</a>.<a href="../../../context.html#name-Context">Context</a>) (tr <b>Trace</b>, ok <a href="../../../builtin.html#name-bool">bool</a>)</span><span>
+			func <a href="#name-New">New</a>(family, title <a href="../../../builtin.html#name-string">string</a>) <b>Trace</b></span></span>
+		<input type='checkbox' class="fold" id="Trace-fold-params"><label for="Trace-fold-params">As Inputs Of (<i>at least one exported</i>)</label><span id='Trace-fold-params-items' class="fold-items"><span>
+			func <a href="#name-NewContext">NewContext</a>(ctx <a href="../../../context.html">context</a>.<a href="../../../context.html#name-Context">Context</a>, tr <b>Trace</b>) <a href="../../../context.html">context</a>.<a href="../../../context.html#name-Context">Context</a></span></span>
+
+</span></div></div><div>	<input type='checkbox' class="showhide" id="unexported-typenames-showhide"><i><label for="unexported-typenames-showhide" class="show-inline">/* 20 unexporteds ... */</label><label for="unexported-typenames-showhide" class="hide-inline">/* 20 unexporteds: */</label></i><div class="anchor type-res hidden" id="name-bucket" data-popularity="0">	<input type='checkbox' class="fold" id="bucket-fold-content"><label for="bucket-fold-content"> <a href="../../../../use/golang.org/x/net/trace..bucket*c5879.html">type</a> <a href="../../../../src/golang.org/x/net/trace/events.go.html#line-26">bucket</a> <i>(struct)</i></label><span id='bucket-fold-content-docs' class="fold-docs">
+
+		<input type='checkbox' class="fold" id="bucket-fold-fields"><label for="bucket-fold-fields">Fields (<i>total 2, both are exported</i>)</label><span id='bucket-fold-fields-items' class="fold-items"><span>
+			<span class="nodocs"><a href="../../../../src/golang.org/x/net/trace/events.go.html#line-27">MaxErrAge</a> <i><a href="../../../time.html">time</a>.<a href="../../../time.html#name-Duration">Duration</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../src/golang.org/x/net/trace/events.go.html#line-28">String</a> <i><a href="../../../builtin.html#name-string">string</a></i></span></span></span>
+
+</span></div><div class="anchor type-res hidden" id="name-bucketData" data-popularity="0">	<input type='checkbox' class="fold" id="bucketData-fold-content"><label for="bucketData-fold-content"> <a href="../../../../use/golang.org/x/net/trace..bucketData*7f90c.html">type</a> <a href="../../../../src/golang.org/x/net/trace/histogram.go.html#line-253">bucketData</a> <i>(struct)</i></label><span id='bucketData-fold-content-docs' class="fold-docs">
+		bucketData holds data about a specific bucket for use in distTmpl.
+
+		<input type='checkbox' class="fold" id="bucketData-fold-fields"><label for="bucketData-fold-fields">Fields (<i>total 6, all are exported</i>)</label><span id='bucketData-fold-fields-items' class="fold-items"><span>
+			<span class="nodocs"><a href="../../../../src/golang.org/x/net/trace/histogram.go.html#line-256">CumulativePct</a> <i><a href="../../../builtin.html#name-float64">float64</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../src/golang.org/x/net/trace/histogram.go.html#line-257">GraphWidth</a> <i><a href="../../../builtin.html#name-int">int</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../src/golang.org/x/net/trace/histogram.go.html#line-254">Lower</a> <i><a href="../../../builtin.html#name-int64">int64</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../src/golang.org/x/net/trace/histogram.go.html#line-255">N</a> <i><a href="../../../builtin.html#name-int64">int64</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../src/golang.org/x/net/trace/histogram.go.html#line-256">Pct</a> <i><a href="../../../builtin.html#name-float64">float64</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../src/golang.org/x/net/trace/histogram.go.html#line-254">Upper</a> <i><a href="../../../builtin.html#name-int64">int64</a></i></span></span></span>
+
+</span></div><div class="anchor type-res hidden" id="name-cond" data-popularity="600">	<input type='checkbox' class="fold" id="cond-fold-content"><label for="cond-fold-content"> <a href="../../../../use/golang.org/x/net/trace..cond*0ab2d.html">type</a> <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-656">cond</a> <b><i>(interface)</i></b></label><span id='cond-fold-content-docs' class="fold-docs">
+		cond represents a condition on a trace.
+
+		<input type='checkbox' class="fold" id="cond-fold-methods"><label for="cond-fold-methods">Methods (<i>total 2, in which 1 are exported</i>)</label><span id='cond-fold-methods-items' class="fold-items"><span>
+			<span class="nodocs">( T) <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-658">String</a>() <a href="../../../builtin.html#name-string">string</a></span></span>
+			<input type='checkbox' checked class="showhide" id="cond-showhide-methods"><i><label for="cond-showhide-methods" class="show-inline">/* one unexported ... */</label><label for="cond-showhide-methods" class="hide-inline">/* one unexported: */</label></i><span class="hidden"><i>
+			<span class="nodocs">( T) <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-657">match</a>(t *<a href="#name-trace">trace</a>) <a href="../../../builtin.html#name-bool">bool</a></span></i></span></span>
+		<input type='checkbox' class="fold" id="cond-fold-impledby"><label for="cond-fold-impledby">Implemented By (<i>at least 2, neither is exported</i>)</label><span id='cond-fold-impledby-items' class="fold-items">
+			<input type='checkbox' checked class="showhide" id="cond-showhide-impedBys"><i><label for="cond-showhide-impedBys" class="show-inline">/* 2+ unexporteds ... */</label><label for="cond-showhide-impedBys" class="hide-inline">/* 2+ unexporteds: */</label></i><span class="hidden"><i>
+			 <a href="#name-errorCond">errorCond</a></i></span><span class="hidden"><i>
+			 <a href="#name-minCond">minCond</a></i></span></span>
+		<input type='checkbox' class="fold" id="cond-fold-impls"><label for="cond-fold-impls">Implements (<i>at least 4, in which 2 are exported</i>)</label><span id='cond-fold-impls-items' class="fold-items"><span>
+			 T : expvar.<a href="../../../expvar.html#name-Var">Var</a></span><span>
+			 T : fmt.<a href="../../../fmt.html#name-Stringer">Stringer</a></span>
+			<input type='checkbox' checked class="showhide" id="cond-showhide-impls"><i><label for="cond-showhide-impls" class="show-inline">/* 2+ unexporteds ... */</label><label for="cond-showhide-impls" class="hide-inline">/* 2+ unexporteds: */</label></i><span class="hidden"><i>
+			 T : context.<a href="../../../context.html#name-stringer">stringer</a></i></span><span class="hidden"><i>
+			 T : runtime.<a href="../../../runtime.html#name-stringer">stringer</a></i></span></span>
+
+</span></div><div class="anchor type-res hidden" id="name-contextKeyT" data-popularity="5">	<input type='checkbox' class="fold" id="contextKeyT-fold-content"><label for="contextKeyT-fold-content"> <a href="../../../../use/golang.org/x/net/trace..contextKeyT*ff042.html">type</a> <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-312">contextKeyT</a> <a href="../../../builtin.html#name-string">string</a> <i>(basic type)</i></label><span id='contextKeyT-fold-content-docs' class="fold-docs">
+
+		<input type='checkbox' class="fold" id="contextKeyT-fold-values"><label for="contextKeyT-fold-values">As Types Of (<i>only one, which is unexported</i>)</label><span id='contextKeyT-fold-values-items' class="fold-items">
+			<input type='checkbox' checked class="showhide" id="contextKeyT-showhide-values"><i><label for="contextKeyT-showhide-values" class="show-inline">/* one unexported ... */</label><label for="contextKeyT-showhide-values" class="hide-inline">/* one unexported: */</label></i><span class="hidden"><i>
+			  var <a href="#name-contextKey">contextKey</a></i></span></span>
+
+</span></div><div class="anchor type-res hidden" id="name-data" data-popularity="0">	<input type='checkbox' class="fold" id="data-fold-content"><label for="data-fold-content"> <a href="../../../../use/golang.org/x/net/trace..data*3a6eb.html">type</a> <a href="../../../../src/golang.org/x/net/trace/histogram.go.html#line-261">data</a> <i>(struct)</i></label><span id='data-fold-content-docs' class="fold-docs">
+		data holds data about a Distribution for use in distTmpl.
+
+		<input type='checkbox' class="fold" id="data-fold-fields"><label for="data-fold-fields">Fields (<i>total 5, all are exported</i>)</label><span id='data-fold-fields-items' class="fold-items"><span>
+			<span class="nodocs"><a href="../../../../src/golang.org/x/net/trace/histogram.go.html#line-262">Buckets</a> <i>[]*<a href="#name-bucketData">bucketData</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../src/golang.org/x/net/trace/histogram.go.html#line-263">Count</a> <i><a href="../../../builtin.html#name-int64">int64</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../src/golang.org/x/net/trace/histogram.go.html#line-264">Mean</a> <i><a href="../../../builtin.html#name-float64">float64</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../src/golang.org/x/net/trace/histogram.go.html#line-263">Median</a> <i><a href="../../../builtin.html#name-int64">int64</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../src/golang.org/x/net/trace/histogram.go.html#line-264">StandardDeviation</a> <i><a href="../../../builtin.html#name-float64">float64</a></i></span></span></span>
+
+</span></div><div class="anchor type-res hidden" id="name-discarded" data-popularity="250">	<input type='checkbox' class="fold" id="discarded-fold-content"><label for="discarded-fold-content"> <a href="../../../../use/golang.org/x/net/trace..discarded*1fcc4.html">type</a> <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-706">discarded</a> <a href="../../../builtin.html#name-int">int</a> <i>(basic type)</i></label><span id='discarded-fold-content-docs' class="fold-docs">
+		discarded represents a number of discarded events.
+		It is stored as *discarded to make it easier to update in-place.
+
+		<input type='checkbox' class="fold" id="discarded-fold-methods"><label for="discarded-fold-methods">Methods (<i>only one, which is exported</i>)</label><span id='discarded-fold-methods-items' class="fold-items"><span>
+			<span class="nodocs">(*T) <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-708">String</a>() <a href="../../../builtin.html#name-string">string</a></span></span></span>
+		<input type='checkbox' class="fold" id="discarded-fold-impls"><label for="discarded-fold-impls">Implements (<i>at least 4, in which 2 are exported</i>)</label><span id='discarded-fold-impls-items' class="fold-items"><span>
+			*T : expvar.<a href="../../../expvar.html#name-Var">Var</a></span><span>
+			*T : fmt.<a href="../../../fmt.html#name-Stringer">Stringer</a></span>
+			<input type='checkbox' checked class="showhide" id="discarded-showhide-impls"><i><label for="discarded-showhide-impls" class="show-inline">/* 2+ unexporteds ... */</label><label for="discarded-showhide-impls" class="hide-inline">/* 2+ unexporteds: */</label></i><span class="hidden"><i>
+			*T : context.<a href="../../../context.html#name-stringer">stringer</a></i></span><span class="hidden"><i>
+			*T : runtime.<a href="../../../runtime.html#name-stringer">stringer</a></i></span></span>
+
+</span></div><div class="anchor type-res hidden" id="name-errorCond" data-popularity="350">	<input type='checkbox' class="fold" id="errorCond-fold-content"><label for="errorCond-fold-content"> <a href="../../../../use/golang.org/x/net/trace..errorCond*2eec1.html">type</a> <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-666">errorCond</a> <i>(struct)</i></label><span id='errorCond-fold-content-docs' class="fold-docs">
+
+		<input type='checkbox' class="fold" id="errorCond-fold-methods"><label for="errorCond-fold-methods">Methods (<i>total 2, in which 1 are exported</i>)</label><span id='errorCond-fold-methods-items' class="fold-items"><span>
+			<span class="nodocs">( T) <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-669">String</a>() <a href="../../../builtin.html#name-string">string</a></span></span>
+			<input type='checkbox' checked class="showhide" id="errorCond-showhide-methods"><i><label for="errorCond-showhide-methods" class="show-inline">/* one unexported ... */</label><label for="errorCond-showhide-methods" class="hide-inline">/* one unexported: */</label></i><span class="hidden"><i>
+			<span class="nodocs">( T) <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-668">match</a>(t *<a href="#name-trace">trace</a>) <a href="../../../builtin.html#name-bool">bool</a></span></i></span></span>
+		<input type='checkbox' class="fold" id="errorCond-fold-impls"><label for="errorCond-fold-impls">Implements (<i>at least 5, in which 2 are exported</i>)</label><span id='errorCond-fold-impls-items' class="fold-items"><span>
+			 T : expvar.<a href="../../../expvar.html#name-Var">Var</a></span><span>
+			 T : fmt.<a href="../../../fmt.html#name-Stringer">Stringer</a></span>
+			<input type='checkbox' checked class="showhide" id="errorCond-showhide-impls"><i><label for="errorCond-showhide-impls" class="show-inline">/* 3+ unexporteds ... */</label><label for="errorCond-showhide-impls" class="hide-inline">/* 3+ unexporteds: */</label></i><span class="hidden"><i>
+			 T : <a href="#name-cond">cond</a></i></span><span class="hidden"><i>
+			 T : context.<a href="../../../context.html#name-stringer">stringer</a></i></span><span class="hidden"><i>
+			 T : runtime.<a href="../../../runtime.html#name-stringer">stringer</a></i></span></span>
+
+</span></div><div class="anchor type-res hidden" id="name-event" data-popularity="50">	<input type='checkbox' class="fold" id="event-fold-content"><label for="event-fold-content"> <a href="../../../../use/golang.org/x/net/trace..event*b8e1f.html">type</a> <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-686">event</a> <i>(struct)</i></label><span id='event-fold-content-docs' class="fold-docs">
+		An event is a timestamped log entry in a trace.
+
+		<input type='checkbox' class="fold" id="event-fold-fields"><label for="event-fold-fields">Fields (<i>total 6, all are exported</i>)</label><span id='event-fold-fields-items' class="fold-items"><span>
+			<input type='checkbox' class="fold" id="event-fold-field-Elapsed"><label for="event-fold-field-Elapsed"><a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-688">Elapsed</a> <i><a href="../../../time.html">time</a>.<a href="../../../time.html#name-Duration">Duration</a></i></label><span id='event-fold-field-Elapsed-docs' class="fold-docs">
+				// since previous event in trace
+</span></span><span>
+			<input type='checkbox' class="fold" id="event-fold-field-NewDay"><label for="event-fold-field-NewDay"><a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-689">NewDay</a> <i><a href="../../../builtin.html#name-bool">bool</a></i></label><span id='event-fold-field-NewDay-docs' class="fold-docs">
+				// whether this event is on a different day to the previous event
+</span></span><span>
+			<input type='checkbox' class="fold" id="event-fold-field-Recyclable"><label for="event-fold-field-Recyclable"><a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-690">Recyclable</a> <i><a href="../../../builtin.html#name-bool">bool</a></i></label><span id='event-fold-field-Recyclable-docs' class="fold-docs">
+				// whether this event was passed via LazyLog
+</span></span><span>
+			<input type='checkbox' class="fold" id="event-fold-field-Sensitive"><label for="event-fold-field-Sensitive"><a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-691">Sensitive</a> <i><a href="../../../builtin.html#name-bool">bool</a></i></label><span id='event-fold-field-Sensitive-docs' class="fold-docs">
+				// whether this event contains sensitive information
+</span></span><span>
+			<input type='checkbox' class="fold" id="event-fold-field-What"><label for="event-fold-field-What"><a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-692">What</a> <i>interface{}</i></label><span id='event-fold-field-What-docs' class="fold-docs">
+				// string or fmt.Stringer
+</span></span><span>
+			<span class="nodocs"><a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-687">When</a> <i><a href="../../../time.html">time</a>.<a href="../../../time.html#name-Time">Time</a></i></span></span></span>
+		<input type='checkbox' class="fold" id="event-fold-methods"><label for="event-fold-methods">Methods (<i>only one, which is exported</i>)</label><span id='event-fold-methods-items' class="fold-items"><span>
+			<input type='checkbox' class="fold" id="event-fold-method-WhenString"><label for="event-fold-method-WhenString">( T) <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-697">WhenString</a>() <a href="../../../builtin.html#name-string">string</a></label><span id='event-fold-method-WhenString-docs' class="fold-docs">
+				WhenString returns a string representation of the elapsed time of the event.
+				It will include the date if midnight was crossed.
+</span></span></span>
+
+</span></div><div class="anchor type-res hidden" id="name-eventFamily" data-popularity="275">	<input type='checkbox' class="fold" id="eventFamily-fold-content"><label for="eventFamily-fold-content"> <a href="../../../../use/golang.org/x/net/trace..eventFamily*cded8.html">type</a> <a href="../../../../src/golang.org/x/net/trace/events.go.html#line-167">eventFamily</a> <i>(struct)</i></label><span id='eventFamily-fold-content-docs' class="fold-docs">
+
+		<input type='checkbox' class="fold" id="eventFamily-fold-fields"><label for="eventFamily-fold-fields">Fields (<i>total 2, neither is exported</i>)</label><span id='eventFamily-fold-fields-items' class="fold-items">
+			<input type='checkbox' checked class="showhide" id="eventFamily-showhide-fields"><i><label for="eventFamily-showhide-fields" class="show-inline">/* 2 unexporteds ... */</label><label for="eventFamily-showhide-fields" class="hide-inline">/* 2 unexporteds: */</label></i><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../../src/golang.org/x/net/trace/events.go.html#line-169">eventLogs</a> <i><a href="#name-eventLogs">eventLogs</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../../src/golang.org/x/net/trace/events.go.html#line-168">mu</a> <i><a href="../../../sync.html">sync</a>.<a href="../../../sync.html#name-RWMutex">RWMutex</a></i></span></i></span></span>
+		<input type='checkbox' class="fold" id="eventFamily-fold-methods"><label for="eventFamily-fold-methods">Methods (<i>total 4, in which 2 are exported</i>)</label><span id='eventFamily-fold-methods-items' class="fold-items"><span>
+			<span class="nodocs">(*T) <a href="../../../../src/golang.org/x/net/trace/events.go.html#line-201">Copy</a>(now <a href="../../../time.html">time</a>.<a href="../../../time.html#name-Time">Time</a>, maxErrAge <a href="../../../time.html">time</a>.<a href="../../../time.html#name-Duration">Duration</a>) (els <a href="#name-eventLogs">eventLogs</a>)</span></span><span>
+			<span class="nodocs">(*T) <a href="../../../../src/golang.org/x/net/trace/events.go.html#line-190">Count</a>(now <a href="../../../time.html">time</a>.<a href="../../../time.html#name-Time">Time</a>, maxErrAge <a href="../../../time.html">time</a>.<a href="../../../time.html#name-Duration">Duration</a>) (n <a href="../../../builtin.html#name-int">int</a>)</span></span>
+			<input type='checkbox' checked class="showhide" id="eventFamily-showhide-methods"><i><label for="eventFamily-showhide-methods" class="show-inline">/* 2 unexporteds ... */</label><label for="eventFamily-showhide-methods" class="hide-inline">/* 2 unexporteds: */</label></i><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../../src/golang.org/x/net/trace/events.go.html#line-172">add</a>(el *<a href="#name-eventLog">eventLog</a>)</span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../../src/golang.org/x/net/trace/events.go.html#line-178">remove</a>(el *<a href="#name-eventLog">eventLog</a>)</span></i></span></span>
+		<input type='checkbox' class="fold" id="eventFamily-fold-results"><label for="eventFamily-fold-results">As Outputs Of (<i>at least one unexported</i>)</label><span id='eventFamily-fold-results-items' class="fold-items">
+			<input type='checkbox' checked class="showhide" id="eventFamily-showhide-inputofs"><i><label for="eventFamily-showhide-inputofs" class="show-inline">/* at least one unexported ... */</label><label for="eventFamily-showhide-inputofs" class="hide-inline">/* at least one unexported: */</label></i><span class="hidden"><i>
+			func <a href="#name-getEventFamily">getEventFamily</a>(fam <a href="../../../builtin.html#name-string">string</a>) *<b>eventFamily</b></i></span></span>
+
+</span></div><div class="anchor type-res hidden" id="name-eventLog" data-popularity="810">	<input type='checkbox' class="fold" id="eventLog-fold-content"><label for="eventLog-fold-content"> <a href="../../../../use/golang.org/x/net/trace..eventLog*a3970.html">type</a> <a href="../../../../src/golang.org/x/net/trace/events.go.html#line-247">eventLog</a> <i>(struct)</i></label><span id='eventLog-fold-content-docs' class="fold-docs">
+		An eventLog represents an active event log.
+
+		<input type='checkbox' class="fold" id="eventLog-fold-fields"><label for="eventLog-fold-fields">Fields (<i>total 9, in which 4 are exported</i>)</label><span id='eventLog-fold-fields-items' class="fold-items"><span>
+			<input type='checkbox' class="fold" id="eventLog-fold-field-Family"><label for="eventLog-fold-field-Family"><a href="../../../../src/golang.org/x/net/trace/events.go.html#line-249">Family</a> <i><a href="../../../builtin.html#name-string">string</a></i></label><span id='eventLog-fold-field-Family-docs' class="fold-docs">
+				Family is the top-level grouping of event logs to which this belongs.
+</span></span><span>
+			<span class="nodocs"><a href="../../../../src/golang.org/x/net/trace/events.go.html#line-266">LastErrorTime</a> <i><a href="../../../time.html">time</a>.<a href="../../../time.html#name-Time">Time</a></i></span></span><span>
+			<input type='checkbox' class="fold" id="eventLog-fold-field-Start"><label for="eventLog-fold-field-Start"><a href="../../../../src/golang.org/x/net/trace/events.go.html#line-255">Start</a> <i><a href="../../../time.html">time</a>.<a href="../../../time.html#name-Time">Time</a></i></label><span id='eventLog-fold-field-Start-docs' class="fold-docs">
+				Timing information.
+</span></span><span>
+			<input type='checkbox' class="fold" id="eventLog-fold-field-Title"><label for="eventLog-fold-field-Title"><a href="../../../../src/golang.org/x/net/trace/events.go.html#line-252">Title</a> <i><a href="../../../builtin.html#name-string">string</a></i></label><span id='eventLog-fold-field-Title-docs' class="fold-docs">
+				Title is the title of this event log.
+</span></span>
+			<input type='checkbox' checked class="showhide" id="eventLog-showhide-fields"><i><label for="eventLog-showhide-fields" class="show-inline">/* 5 unexporteds ... */</label><label for="eventLog-showhide-fields" class="hide-inline">/* 5 unexporteds: */</label></i><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../../src/golang.org/x/net/trace/events.go.html#line-267">discarded</a> <i><a href="../../../builtin.html#name-int">int</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../../src/golang.org/x/net/trace/events.go.html#line-265">events</a> <i>[]<a href="#name-logEntry">logEntry</a></i></span></i></span><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="eventLog-fold-field-mu"><label for="eventLog-fold-field-mu"><a href="../../../../src/golang.org/x/net/trace/events.go.html#line-264">mu</a> <i><a href="../../../sync.html">sync</a>.<a href="../../../sync.html#name-RWMutex">RWMutex</a></i></label><span id='eventLog-fold-field-mu-docs' class="fold-docs">
+				Append-only sequence of events.
+
+				TODO(sameer): change this to a ring buffer to avoid the array copy
+				when we hit maxEventsPerLog.
+</span></i></span><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="eventLog-fold-field-refs"><label for="eventLog-fold-field-refs"><a href="../../../../src/golang.org/x/net/trace/events.go.html#line-269">refs</a> <i><a href="../../../builtin.html#name-int32">int32</a></i></label><span id='eventLog-fold-field-refs-docs' class="fold-docs">
+				// how many buckets this is in
+</span></i></span><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="eventLog-fold-field-stack"><label for="eventLog-fold-field-stack"><a href="../../../../src/golang.org/x/net/trace/events.go.html#line-258">stack</a> <i>[]<a href="../../../builtin.html#name-uintptr">uintptr</a></i></label><span id='eventLog-fold-field-stack-docs' class="fold-docs">
+				Call stack where this event log was created.
+</span></i></span></span>
+		<input type='checkbox' class="fold" id="eventLog-fold-methods"><label for="eventLog-fold-methods">Methods (<i>total 13, in which 7 are exported</i>)</label><span id='eventLog-fold-methods-items' class="fold-items"><span>
+			<span class="nodocs">(*T) <a href="../../../../src/golang.org/x/net/trace/events.go.html#line-358">ElapsedTime</a>() <a href="../../../builtin.html#name-string">string</a></span></span><span>
+			<span class="nodocs">(*T) <a href="../../../../src/golang.org/x/net/trace/events.go.html#line-309">Errorf</a>(format <a href="../../../builtin.html#name-string">string</a>, a ...interface{})</span></span><span>
+			<span class="nodocs">(*T) <a href="../../../../src/golang.org/x/net/trace/events.go.html#line-390">Events</a>() []<a href="#name-logEntry">logEntry</a></span></span><span>
+			<span class="nodocs">(*T) <a href="../../../../src/golang.org/x/net/trace/events.go.html#line-146">Finish</a>()</span></span><span>
+			<span class="nodocs">(*T) <a href="../../../../src/golang.org/x/net/trace/events.go.html#line-305">Printf</a>(format <a href="../../../builtin.html#name-string">string</a>, a ...interface{})</span></span><span>
+			<span class="nodocs">(*T) <a href="../../../../src/golang.org/x/net/trace/events.go.html#line-363">Stack</a>() <a href="../../../builtin.html#name-string">string</a></span></span><span>
+			<span class="nodocs">(*T) <a href="../../../../src/golang.org/x/net/trace/events.go.html#line-354">When</a>() <a href="../../../builtin.html#name-string">string</a></span></span>
+			<input type='checkbox' checked class="showhide" id="eventLog-showhide-methods"><i><label for="eventLog-showhide-methods" class="show-inline">/* 6 unexporteds ... */</label><label for="eventLog-showhide-methods" class="hide-inline">/* 6 unexporteds: */</label></i><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="eventLog-fold-method-delta"><label for="eventLog-fold-method-delta">(*T) <a href="../../../../src/golang.org/x/net/trace/events.go.html#line-296">delta</a>(t <a href="../../../time.html">time</a>.<a href="../../../time.html#name-Time">Time</a>) (<a href="../../../time.html">time</a>.<a href="../../../time.html#name-Duration">Duration</a>, <a href="../../../builtin.html#name-bool">bool</a>)</label><span id='eventLog-fold-method-delta-docs' class="fold-docs">
+				delta returns the elapsed time since the last event or the log start,
+				and whether it spans midnight.
+				L &gt;= el.mu
+</span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../../src/golang.org/x/net/trace/events.go.html#line-284">hasRecentError</a>(now <a href="../../../time.html">time</a>.<a href="../../../time.html#name-Time">Time</a>, maxErrAge <a href="../../../time.html">time</a>.<a href="../../../time.html#name-Duration">Duration</a>) <a href="../../../builtin.html#name-bool">bool</a></span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../../src/golang.org/x/net/trace/events.go.html#line-313">printf</a>(isErr <a href="../../../builtin.html#name-bool">bool</a>, format <a href="../../../builtin.html#name-string">string</a>, a ...interface{})</span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../../src/golang.org/x/net/trace/events.go.html#line-344">ref</a>()</span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../../src/golang.org/x/net/trace/events.go.html#line-272">reset</a>()</span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../../src/golang.org/x/net/trace/events.go.html#line-348">unref</a>()</span></i></span></span>
+		<input type='checkbox' class="fold" id="eventLog-fold-impls"><label for="eventLog-fold-impls">Implements (<i>at least one exported</i>)</label><span id='eventLog-fold-impls-items' class="fold-items"><span>
+			*T : <a href="#name-EventLog">EventLog</a></span></span>
+		<input type='checkbox' class="fold" id="eventLog-fold-results"><label for="eventLog-fold-results">As Outputs Of (<i>at least one unexported</i>)</label><span id='eventLog-fold-results-items' class="fold-items">
+			<input type='checkbox' checked class="showhide" id="eventLog-showhide-inputofs"><i><label for="eventLog-showhide-inputofs" class="show-inline">/* at least one unexported ... */</label><label for="eventLog-showhide-inputofs" class="hide-inline">/* at least one unexported: */</label></i><span class="hidden"><i>
+			func <a href="#name-newEventLog">newEventLog</a>() *<b>eventLog</b></i></span></span>
+		<input type='checkbox' class="fold" id="eventLog-fold-params"><label for="eventLog-fold-params">As Inputs Of (<i>at least one unexported</i>)</label><span id='eventLog-fold-params-items' class="fold-items">
+			<input type='checkbox' checked class="showhide" id="eventLog-showhide-outputofs"><i><label for="eventLog-showhide-outputofs" class="show-inline">/* at least one unexported ... */</label><label for="eventLog-showhide-outputofs" class="hide-inline">/* at least one unexported: */</label></i><span class="hidden"><i>
+			func <a href="#name-freeEventLog">freeEventLog</a>(el *<b>eventLog</b>)</i></span></span>
+
+</span></div><div class="anchor type-res hidden" id="name-eventLogs" data-popularity="300">	<input type='checkbox' class="fold" id="eventLogs-fold-content"><label for="eventLogs-fold-content"> <a href="../../../../use/golang.org/x/net/trace..eventLogs*c3098.html">type</a> <a href="../../../../src/golang.org/x/net/trace/events.go.html#line-214">eventLogs</a> <i>([]T)</i></label><span id='eventLogs-fold-content-docs' class="fold-docs">
+
+		<input type='checkbox' class="fold" id="eventLogs-fold-methods"><label for="eventLogs-fold-methods">Methods (<i>total 4, all are exported</i>)</label><span id='eventLogs-fold-methods-items' class="fold-items"><span>
+			<input type='checkbox' class="fold" id="eventLogs-fold-method-Free"><label for="eventLogs-fold-method-Free">( T) <a href="../../../../src/golang.org/x/net/trace/events.go.html#line-217">Free</a>()</label><span id='eventLogs-fold-method-Free-docs' class="fold-docs">
+				Free calls unref on each element of the list.
+</span></span><span>
+			<input type='checkbox' class="fold" id="eventLogs-fold-method-Len"><label for="eventLogs-fold-method-Len">( T) <a href="../../../../src/golang.org/x/net/trace/events.go.html#line-224">Len</a>() <a href="../../../builtin.html#name-int">int</a></label><span id='eventLogs-fold-method-Len-docs' class="fold-docs">
+				eventLogs may be sorted in reverse chronological order.
+</span></span><span>
+			<span class="nodocs">( T) <a href="../../../../src/golang.org/x/net/trace/events.go.html#line-225">Less</a>(i, j <a href="../../../builtin.html#name-int">int</a>) <a href="../../../builtin.html#name-bool">bool</a></span></span><span>
+			<span class="nodocs">( T) <a href="../../../../src/golang.org/x/net/trace/events.go.html#line-226">Swap</a>(i, j <a href="../../../builtin.html#name-int">int</a>)</span></span></span>
+		<input type='checkbox' class="fold" id="eventLogs-fold-impls"><label for="eventLogs-fold-impls">Implements (<i>at least 2, in which 1 are exported</i>)</label><span id='eventLogs-fold-impls-items' class="fold-items"><span>
+			 T : sort.<a href="../../../sort.html#name-Interface">Interface</a></span>
+			<input type='checkbox' checked class="showhide" id="eventLogs-showhide-impls"><i><label for="eventLogs-showhide-impls" class="show-inline">/* at least one unexported ... */</label><label for="eventLogs-showhide-impls" class="hide-inline">/* at least one unexported: */</label></i><span class="hidden"><i>
+			 T : github.com/aws/aws-sdk-go/aws/corehandlers.<a href="../../../github.com/aws/aws-sdk-go/aws/corehandlers.html#name-lener">lener</a></i></span></span>
+
+</span></div><div class="anchor type-res hidden" id="name-family" data-popularity="225">	<input type='checkbox' class="fold" id="family-fold-content"><label for="family-fold-content"> <a href="../../../../use/golang.org/x/net/trace..family*d34a5.html">type</a> <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-564">family</a> <i>(struct)</i></label><span id='family-fold-content-docs' class="fold-docs">
+		family represents a set of trace buckets and associated latency information.
+
+		<input type='checkbox' class="fold" id="family-fold-fields"><label for="family-fold-fields">Fields (<i>total 3, all are exported</i>)</label><span id='family-fold-fields-items' class="fold-items"><span>
+			<input type='checkbox' class="fold" id="family-fold-field-Buckets"><label for="family-fold-field-Buckets"><a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-566">Buckets</a> <i>[9]*<a href="#name-traceBucket">traceBucket</a></i></label><span id='family-fold-field-Buckets-docs' class="fold-docs">
+				traces may occur in multiple buckets.
+</span></span><span>
+			<span class="nodocs"><a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-570">Latency</a> <i>*<a href="internal/timeseries.html">timeseries</a>.<a href="internal/timeseries.html#name-MinuteHourSeries">MinuteHourSeries</a></i></span></span><span>
+			<input type='checkbox' class="fold" id="family-fold-field-LatencyMu"><label for="family-fold-field-LatencyMu"><a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-569">LatencyMu</a> <i><a href="../../../sync.html">sync</a>.<a href="../../../sync.html#name-RWMutex">RWMutex</a></i></label><span id='family-fold-field-LatencyMu-docs' class="fold-docs">
+				latency time series
+</span></span></span>
+		<input type='checkbox' class="fold" id="family-fold-results"><label for="family-fold-results">As Outputs Of (<i>at least 3, none are exported</i>)</label><span id='family-fold-results-items' class="fold-items">
+			<input type='checkbox' checked class="showhide" id="family-showhide-inputofs"><i><label for="family-showhide-inputofs" class="show-inline">/* 3+ unexporteds ... */</label><label for="family-showhide-inputofs" class="hide-inline">/* 3+ unexporteds: */</label></i><span class="hidden"><i>
+			func <a href="#name-allocFamily">allocFamily</a>(fam <a href="../../../builtin.html#name-string">string</a>) *<b>family</b></i></span><span class="hidden"><i>
+			func <a href="#name-getFamily">getFamily</a>(fam <a href="../../../builtin.html#name-string">string</a>, allocNew <a href="../../../builtin.html#name-bool">bool</a>) *<b>family</b></i></span><span class="hidden"><i>
+			func <a href="#name-newFamily">newFamily</a>() *<b>family</b></i></span></span>
+
+</span></div><div class="anchor type-res hidden" id="name-histogram" data-popularity="1050">	<input type='checkbox' class="fold" id="histogram-fold-content"><label for="histogram-fold-content"> <a href="../../../../use/golang.org/x/net/trace..histogram*56f0e.html">type</a> <a href="../../../../src/golang.org/x/net/trace/histogram.go.html#line-27">histogram</a> <i>(struct)</i></label><span id='histogram-fold-content-docs' class="fold-docs">
+		histogram keeps counts of values in buckets that are spaced
+		out in powers of 2: 0-1, 2-3, 4-7...
+		histogram implements timeseries.Observable
+
+		<input type='checkbox' class="fold" id="histogram-fold-fields"><label for="histogram-fold-fields">Fields (<i>total 5, none are exported</i>)</label><span id='histogram-fold-fields-items' class="fold-items">
+			<input type='checkbox' checked class="showhide" id="histogram-showhide-fields"><i><label for="histogram-showhide-fields" class="show-inline">/* 5 unexporteds ... */</label><label for="histogram-showhide-fields" class="hide-inline">/* 5 unexporteds: */</label></i><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="histogram-fold-field-buckets"><label for="histogram-fold-field-buckets"><a href="../../../../src/golang.org/x/net/trace/histogram.go.html#line-30">buckets</a> <i>[]<a href="../../../builtin.html#name-int64">int64</a></i></label><span id='histogram-fold-field-buckets-docs' class="fold-docs">
+				// bucketed values for histogram
+</span></i></span><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="histogram-fold-field-sum"><label for="histogram-fold-field-sum"><a href="../../../../src/golang.org/x/net/trace/histogram.go.html#line-28">sum</a> <i><a href="../../../builtin.html#name-int64">int64</a></i></label><span id='histogram-fold-field-sum-docs' class="fold-docs">
+				// running total of measurements
+</span></i></span><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="histogram-fold-field-sumOfSquares"><label for="histogram-fold-field-sumOfSquares"><a href="../../../../src/golang.org/x/net/trace/histogram.go.html#line-29">sumOfSquares</a> <i><a href="../../../builtin.html#name-float64">float64</a></i></label><span id='histogram-fold-field-sumOfSquares-docs' class="fold-docs">
+				// square of running total
+</span></i></span><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="histogram-fold-field-value"><label for="histogram-fold-field-value"><a href="../../../../src/golang.org/x/net/trace/histogram.go.html#line-31">value</a> <i><a href="../../../builtin.html#name-int">int</a></i></label><span id='histogram-fold-field-value-docs' class="fold-docs">
+				// holds a single value as an optimization
+</span></i></span><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="histogram-fold-field-valueCount"><label for="histogram-fold-field-valueCount"><a href="../../../../src/golang.org/x/net/trace/histogram.go.html#line-32">valueCount</a> <i><a href="../../../builtin.html#name-int64">int64</a></i></label><span id='histogram-fold-field-valueCount-docs' class="fold-docs">
+				// number of values recorded for single value
+</span></i></span></span>
+		<input type='checkbox' class="fold" id="histogram-fold-methods"><label for="histogram-fold-methods">Methods (<i>total 16, in which 6 are exported</i>)</label><span id='histogram-fold-methods-items' class="fold-items"><span>
+			<input type='checkbox' class="fold" id="histogram-fold-method-Add"><label for="histogram-fold-method-Add">(*T) <a href="../../../../src/golang.org/x/net/trace/histogram.go.html#line-170">Add</a>(other <a href="internal/timeseries.html">timeseries</a>.<a href="internal/timeseries.html#name-Observable">Observable</a>)</label><span id='histogram-fold-method-Add-docs' class="fold-docs">
+				Add adds other to h.
+</span></span><span>
+			<input type='checkbox' class="fold" id="histogram-fold-method-Clear"><label for="histogram-fold-method-Clear">(*T) <a href="../../../../src/golang.org/x/net/trace/histogram.go.html#line-193">Clear</a>()</label><span id='histogram-fold-method-Clear-docs' class="fold-docs">
+				Clear resets the histogram to an empty state, removing all observed values.
+</span></span><span>
+			<input type='checkbox' class="fold" id="histogram-fold-method-CopyFrom"><label for="histogram-fold-method-CopyFrom">(*T) <a href="../../../../src/golang.org/x/net/trace/histogram.go.html#line-202">CopyFrom</a>(other <a href="internal/timeseries.html">timeseries</a>.<a href="internal/timeseries.html#name-Observable">Observable</a>)</label><span id='histogram-fold-method-CopyFrom-docs' class="fold-docs">
+				CopyFrom copies from other, which must be a *histogram, into h.
+</span></span><span>
+			<input type='checkbox' class="fold" id="histogram-fold-method-Multiply"><label for="histogram-fold-method-Multiply">(*T) <a href="../../../../src/golang.org/x/net/trace/histogram.go.html#line-215">Multiply</a>(ratio <a href="../../../builtin.html#name-float64">float64</a>)</label><span id='histogram-fold-method-Multiply-docs' class="fold-docs">
+				Multiply scales the histogram by the specified ratio.
+</span></span><span>
+			<input type='checkbox' class="fold" id="histogram-fold-method-New"><label for="histogram-fold-method-New">(*T) <a href="../../../../src/golang.org/x/net/trace/histogram.go.html#line-228">New</a>() <a href="internal/timeseries.html">timeseries</a>.<a href="internal/timeseries.html#name-Observable">Observable</a></label><span id='histogram-fold-method-New-docs' class="fold-docs">
+				New creates a new histogram.
+</span></span><span>
+			<span class="nodocs">(*T) <a href="../../../../src/golang.org/x/net/trace/histogram.go.html#line-234">String</a>() <a href="../../../builtin.html#name-string">string</a></span></span>
+			<input type='checkbox' checked class="showhide" id="histogram-showhide-methods"><i><label for="histogram-showhide-methods" class="show-inline">/* 10 unexporteds ... */</label><label for="histogram-showhide-methods" class="hide-inline">/* 10 unexporteds: */</label></i><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="histogram-fold-method-addMeasurement"><label for="histogram-fold-method-addMeasurement">(*T) <a href="../../../../src/golang.org/x/net/trace/histogram.go.html#line-36">addMeasurement</a>(value <a href="../../../builtin.html#name-int64">int64</a>)</label><span id='histogram-fold-method-addMeasurement-docs' class="fold-docs">
+				AddMeasurement records a value measurement observation to the histogram.
+</span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../../src/golang.org/x/net/trace/histogram.go.html#line-52">allocateBuckets</a>()</span></i></span><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="histogram-fold-method-average"><label for="histogram-fold-method-average">(*T) <a href="../../../../src/golang.org/x/net/trace/histogram.go.html#line-95">average</a>() <a href="../../../builtin.html#name-float64">float64</a></label><span id='histogram-fold-method-average-docs' class="fold-docs">
+				Average returns the average value of recorded observations.
+</span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../../src/golang.org/x/net/trace/histogram.go.html#line-322">html</a>() <a href="../../../html/template.html">template</a>.<a href="../../../html/template.html#name-HTML">HTML</a></span></i></span><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="histogram-fold-method-median"><label for="histogram-fold-method-median">(*T) <a href="../../../../src/golang.org/x/net/trace/histogram.go.html#line-165">median</a>() <a href="../../../builtin.html#name-int64">int64</a></label><span id='histogram-fold-method-median-docs' class="fold-docs">
+				Median returns the estimated median of the observed values.
+</span></i></span><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="histogram-fold-method-newData"><label for="histogram-fold-method-newData">(*T) <a href="../../../../src/golang.org/x/net/trace/histogram.go.html#line-271">newData</a>() *<a href="#name-data">data</a></label><span id='histogram-fold-method-newData-docs' class="fold-docs">
+				newData returns data representing h for use in distTmpl.
+</span></i></span><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="histogram-fold-method-percentileBoundary"><label for="histogram-fold-method-percentileBoundary">(*T) <a href="../../../../src/golang.org/x/net/trace/histogram.go.html#line-120">percentileBoundary</a>(percentile <a href="../../../builtin.html#name-float64">float64</a>) <a href="../../../builtin.html#name-int64">int64</a></label><span id='histogram-fold-method-percentileBoundary-docs' class="fold-docs">
+				PercentileBoundary estimates the value that the given fraction of recorded
+				observations are less than.
+</span></i></span><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="histogram-fold-method-standardDeviation"><label for="histogram-fold-method-standardDeviation">(*T) <a href="../../../../src/golang.org/x/net/trace/histogram.go.html#line-114">standardDeviation</a>() <a href="../../../builtin.html#name-float64">float64</a></label><span id='histogram-fold-method-standardDeviation-docs' class="fold-docs">
+				StandardDeviation returns the standard deviation of recorded observations.
+</span></i></span><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="histogram-fold-method-total"><label for="histogram-fold-method-total">(*T) <a href="../../../../src/golang.org/x/net/trace/histogram.go.html#line-84">total</a>() (total <a href="../../../builtin.html#name-int64">int64</a>)</label><span id='histogram-fold-method-total-docs' class="fold-docs">
+				Total returns the number of recorded observations.
+</span></i></span><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="histogram-fold-method-variance"><label for="histogram-fold-method-variance">(*T) <a href="../../../../src/golang.org/x/net/trace/histogram.go.html#line-104">variance</a>() <a href="../../../builtin.html#name-float64">float64</a></label><span id='histogram-fold-method-variance-docs' class="fold-docs">
+				Variance returns the variance of recorded observations.
+</span></i></span></span>
+		<input type='checkbox' class="fold" id="histogram-fold-impls"><label for="histogram-fold-impls">Implements (<i>at least 5, in which 3 are exported</i>)</label><span id='histogram-fold-impls-items' class="fold-items"><span>
+			*T : golang.org/x/net/internal/timeseries.<a href="internal/timeseries.html#name-Observable">Observable</a></span><span>
+			*T : expvar.<a href="../../../expvar.html#name-Var">Var</a></span><span>
+			*T : fmt.<a href="../../../fmt.html#name-Stringer">Stringer</a></span>
+			<input type='checkbox' checked class="showhide" id="histogram-showhide-impls"><i><label for="histogram-showhide-impls" class="show-inline">/* 2+ unexporteds ... */</label><label for="histogram-showhide-impls" class="hide-inline">/* 2+ unexporteds: */</label></i><span class="hidden"><i>
+			*T : context.<a href="../../../context.html#name-stringer">stringer</a></i></span><span class="hidden"><i>
+			*T : runtime.<a href="../../../runtime.html#name-stringer">stringer</a></i></span></span>
+
+</span></div><div class="anchor type-res hidden" id="name-lazySprintf" data-popularity="250">	<input type='checkbox' class="fold" id="lazySprintf-fold-content"><label for="lazySprintf-fold-content"> <a href="../../../../use/golang.org/x/net/trace..lazySprintf*3a3f4.html">type</a> <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-351">lazySprintf</a> <i>(struct)</i></label><span id='lazySprintf-fold-content-docs' class="fold-docs">
+
+		<input type='checkbox' class="fold" id="lazySprintf-fold-fields"><label for="lazySprintf-fold-fields">Fields (<i>total 2, neither is exported</i>)</label><span id='lazySprintf-fold-fields-items' class="fold-items">
+			<input type='checkbox' checked class="showhide" id="lazySprintf-showhide-fields"><i><label for="lazySprintf-showhide-fields" class="show-inline">/* 2 unexporteds ... */</label><label for="lazySprintf-showhide-fields" class="hide-inline">/* 2 unexporteds: */</label></i><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-353">a</a> <i>[]interface{}</i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-352">format</a> <i><a href="../../../builtin.html#name-string">string</a></i></span></i></span></span>
+		<input type='checkbox' class="fold" id="lazySprintf-fold-methods"><label for="lazySprintf-fold-methods">Methods (<i>only one, which is exported</i>)</label><span id='lazySprintf-fold-methods-items' class="fold-items"><span>
+			<span class="nodocs">(*T) <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-356">String</a>() <a href="../../../builtin.html#name-string">string</a></span></span></span>
+		<input type='checkbox' class="fold" id="lazySprintf-fold-impls"><label for="lazySprintf-fold-impls">Implements (<i>at least 4, in which 2 are exported</i>)</label><span id='lazySprintf-fold-impls-items' class="fold-items"><span>
+			*T : expvar.<a href="../../../expvar.html#name-Var">Var</a></span><span>
+			*T : fmt.<a href="../../../fmt.html#name-Stringer">Stringer</a></span>
+			<input type='checkbox' checked class="showhide" id="lazySprintf-showhide-impls"><i><label for="lazySprintf-showhide-impls" class="show-inline">/* 2+ unexporteds ... */</label><label for="lazySprintf-showhide-impls" class="hide-inline">/* 2+ unexporteds: */</label></i><span class="hidden"><i>
+			*T : context.<a href="../../../context.html#name-stringer">stringer</a></i></span><span class="hidden"><i>
+			*T : runtime.<a href="../../../runtime.html#name-stringer">stringer</a></i></span></span>
+
+</span></div><div class="anchor type-res hidden" id="name-logEntry" data-popularity="50">	<input type='checkbox' class="fold" id="logEntry-fold-content"><label for="logEntry-fold-content"> <a href="../../../../use/golang.org/x/net/trace..logEntry*b17da.html">type</a> <a href="../../../../src/golang.org/x/net/trace/events.go.html#line-229">logEntry</a> <i>(struct)</i></label><span id='logEntry-fold-content-docs' class="fold-docs">
+		A logEntry is a timestamped log entry in an event log.
+
+		<input type='checkbox' class="fold" id="logEntry-fold-fields"><label for="logEntry-fold-fields">Fields (<i>total 5, all are exported</i>)</label><span id='logEntry-fold-fields-items' class="fold-items"><span>
+			<input type='checkbox' class="fold" id="logEntry-fold-field-Elapsed"><label for="logEntry-fold-field-Elapsed"><a href="../../../../src/golang.org/x/net/trace/events.go.html#line-231">Elapsed</a> <i><a href="../../../time.html">time</a>.<a href="../../../time.html#name-Duration">Duration</a></i></label><span id='logEntry-fold-field-Elapsed-docs' class="fold-docs">
+				// since previous event in log
+</span></span><span>
+			<span class="nodocs"><a href="../../../../src/golang.org/x/net/trace/events.go.html#line-234">IsErr</a> <i><a href="../../../builtin.html#name-bool">bool</a></i></span></span><span>
+			<input type='checkbox' class="fold" id="logEntry-fold-field-NewDay"><label for="logEntry-fold-field-NewDay"><a href="../../../../src/golang.org/x/net/trace/events.go.html#line-232">NewDay</a> <i><a href="../../../builtin.html#name-bool">bool</a></i></label><span id='logEntry-fold-field-NewDay-docs' class="fold-docs">
+				// whether this event is on a different day to the previous event
+</span></span><span>
+			<span class="nodocs"><a href="../../../../src/golang.org/x/net/trace/events.go.html#line-233">What</a> <i><a href="../../../builtin.html#name-string">string</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../src/golang.org/x/net/trace/events.go.html#line-230">When</a> <i><a href="../../../time.html">time</a>.<a href="../../../time.html#name-Time">Time</a></i></span></span></span>
+		<input type='checkbox' class="fold" id="logEntry-fold-methods"><label for="logEntry-fold-methods">Methods (<i>only one, which is exported</i>)</label><span id='logEntry-fold-methods-items' class="fold-items"><span>
+			<input type='checkbox' class="fold" id="logEntry-fold-method-WhenString"><label for="logEntry-fold-method-WhenString">( T) <a href="../../../../src/golang.org/x/net/trace/events.go.html#line-239">WhenString</a>() <a href="../../../builtin.html#name-string">string</a></label><span id='logEntry-fold-method-WhenString-docs' class="fold-docs">
+				WhenString returns a string representation of the elapsed time of the event.
+				It will include the date if midnight was crossed.
+</span></span></span>
+
+</span></div><div class="anchor type-res hidden" id="name-minCond" data-popularity="350">	<input type='checkbox' class="fold" id="minCond-fold-content"><label for="minCond-fold-content"> <a href="../../../../use/golang.org/x/net/trace..minCond*31c2c.html">type</a> <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-661">minCond</a> <a href="../../../time.html">time</a>.<a href="../../../time.html#name-Duration">Duration</a> <i>(basic type)</i></label><span id='minCond-fold-content-docs' class="fold-docs">
+
+		<input type='checkbox' class="fold" id="minCond-fold-methods"><label for="minCond-fold-methods">Methods (<i>total 2, in which 1 are exported</i>)</label><span id='minCond-fold-methods-items' class="fold-items"><span>
+			<span class="nodocs">( T) <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-664">String</a>() <a href="../../../builtin.html#name-string">string</a></span></span>
+			<input type='checkbox' checked class="showhide" id="minCond-showhide-methods"><i><label for="minCond-showhide-methods" class="show-inline">/* one unexported ... */</label><label for="minCond-showhide-methods" class="hide-inline">/* one unexported: */</label></i><span class="hidden"><i>
+			<span class="nodocs">( T) <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-663">match</a>(t *<a href="#name-trace">trace</a>) <a href="../../../builtin.html#name-bool">bool</a></span></i></span></span>
+		<input type='checkbox' class="fold" id="minCond-fold-impls"><label for="minCond-fold-impls">Implements (<i>at least 5, in which 2 are exported</i>)</label><span id='minCond-fold-impls-items' class="fold-items"><span>
+			 T : expvar.<a href="../../../expvar.html#name-Var">Var</a></span><span>
+			 T : fmt.<a href="../../../fmt.html#name-Stringer">Stringer</a></span>
+			<input type='checkbox' checked class="showhide" id="minCond-showhide-impls"><i><label for="minCond-showhide-impls" class="show-inline">/* 3+ unexporteds ... */</label><label for="minCond-showhide-impls" class="hide-inline">/* 3+ unexporteds: */</label></i><span class="hidden"><i>
+			 T : <a href="#name-cond">cond</a></i></span><span class="hidden"><i>
+			 T : context.<a href="../../../context.html#name-stringer">stringer</a></i></span><span class="hidden"><i>
+			 T : runtime.<a href="../../../runtime.html#name-stringer">stringer</a></i></span></span>
+
+</span></div><div class="anchor type-res hidden" id="name-trace" data-popularity="910">	<input type='checkbox' class="fold" id="trace-fold-content"><label for="trace-fold-content"> <a href="../../../../use/golang.org/x/net/trace..trace*eafe8.html">type</a> <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-714">trace</a> <i>(struct)</i></label><span id='trace-fold-content-docs' class="fold-docs">
+		trace represents an active or complete request,
+		either sent or received by this program.
+
+		<input type='checkbox' class="fold" id="trace-fold-fields"><label for="trace-fold-fields">Fields (<i>total 15, in which 5 are exported</i>)</label><span id='trace-fold-fields-items' class="fold-items"><span>
+			<input type='checkbox' class="fold" id="trace-fold-field-Elapsed"><label for="trace-fold-field-Elapsed"><a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-729">Elapsed</a> <i><a href="../../../time.html">time</a>.<a href="../../../time.html#name-Duration">Duration</a></i></label><span id='trace-fold-field-Elapsed-docs' class="fold-docs">
+				// Elapsed time for this trace, zero while active.
+</span></span><span>
+			<input type='checkbox' class="fold" id="trace-fold-field-Family"><label for="trace-fold-field-Family"><a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-716">Family</a> <i><a href="../../../builtin.html#name-string">string</a></i></label><span id='trace-fold-field-Family-docs' class="fold-docs">
+				Family is the top-level grouping of traces to which this belongs.
+</span></span><span>
+			<input type='checkbox' class="fold" id="trace-fold-field-IsError"><label for="trace-fold-field-IsError"><a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-728">IsError</a> <i><a href="../../../builtin.html#name-bool">bool</a></i></label><span id='trace-fold-field-IsError-docs' class="fold-docs">
+				// Whether this trace resulted in an error.
+</span></span><span>
+			<input type='checkbox' class="fold" id="trace-fold-field-Start"><label for="trace-fold-field-Start"><a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-722">Start</a> <i><a href="../../../time.html">time</a>.<a href="../../../time.html#name-Time">Time</a></i></label><span id='trace-fold-field-Start-docs' class="fold-docs">
+				Start time of the this trace.
+</span></span><span>
+			<input type='checkbox' class="fold" id="trace-fold-field-Title"><label for="trace-fold-field-Title"><a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-719">Title</a> <i><a href="../../../builtin.html#name-string">string</a></i></label><span id='trace-fold-field-Title-docs' class="fold-docs">
+				Title is the title of this trace.
+</span></span>
+			<input type='checkbox' checked class="showhide" id="trace-showhide-fields"><i><label for="trace-showhide-fields" class="show-inline">/* 10 unexporteds ... */</label><label for="trace-showhide-fields" class="hide-inline">/* 10 unexporteds: */</label></i><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="trace-fold-field-disc"><label for="trace-fold-field-disc"><a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-734">disc</a> <i><a href="#name-discarded">discarded</a></i></label><span id='trace-fold-field-disc-docs' class="fold-docs">
+				// scratch space to avoid allocation
+</span></i></span><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="trace-fold-field-events"><label for="trace-fold-field-events"><a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-725">events</a> <i>[]<a href="#name-event">event</a></i></label><span id='trace-fold-field-events-docs' class="fold-docs">
+				// Append-only sequence of events (modulo discards).
+</span></i></span><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="trace-fold-field-eventsBuf"><label for="trace-fold-field-eventsBuf"><a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-738">eventsBuf</a> <i>[4]<a href="#name-event">event</a></i></label><span id='trace-fold-field-eventsBuf-docs' class="fold-docs">
+				// preallocated buffer in case we only log a few events
+</span></i></span><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="trace-fold-field-finishStack"><label for="trace-fold-field-finishStack"><a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-736">finishStack</a> <i>[]<a href="../../../builtin.html#name-byte">byte</a></i></label><span id='trace-fold-field-finishStack-docs' class="fold-docs">
+				// where finish was called, if DebugUseAfterFinish is set
+</span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-726">maxEvents</a> <i><a href="../../../builtin.html#name-int">int</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-724">mu</a> <i><a href="../../../sync.html">sync</a>.<a href="../../../sync.html#name-RWMutex">RWMutex</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-727">recycler</a> <i>func(interface{})</i></span></i></span><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="trace-fold-field-refs"><label for="trace-fold-field-refs"><a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-733">refs</a> <i><a href="../../../builtin.html#name-int32">int32</a></i></label><span id='trace-fold-field-refs-docs' class="fold-docs">
+				// how many buckets this is in
+</span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-731">spanID</a> <i><a href="../../../builtin.html#name-uint64">uint64</a></i></span></i></span><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="trace-fold-field-traceID"><label for="trace-fold-field-traceID"><a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-730">traceID</a> <i><a href="../../../builtin.html#name-uint64">uint64</a></i></label><span id='trace-fold-field-traceID-docs' class="fold-docs">
+				// Trace information if non-zero.
+</span></i></span></span>
+		<input type='checkbox' class="fold" id="trace-fold-methods"><label for="trace-fold-methods">Methods (<i>total 15, in which 10 are exported</i>)</label><span id='trace-fold-methods-items' class="fold-items"><span>
+			<span class="nodocs">(*T) <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-891">ElapsedTime</a>() <a href="../../../builtin.html#name-string">string</a></span></span><span>
+			<span class="nodocs">(*T) <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-903">Events</a>() []<a href="#name-event">event</a></span></span><span>
+			<span class="nodocs">(*T) <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-397">Finish</a>()</span></span><span>
+			<span class="nodocs">(*T) <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-829">LazyLog</a>(x <a href="../../../fmt.html">fmt</a>.<a href="../../../fmt.html#name-Stringer">Stringer</a>, sensitive <a href="../../../builtin.html#name-bool">bool</a>)</span></span><span>
+			<span class="nodocs">(*T) <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-833">LazyPrintf</a>(format <a href="../../../builtin.html#name-string">string</a>, a ...interface{})</span></span><span>
+			<span class="nodocs">(*T) <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-837">SetError</a>()</span></span><span>
+			<span class="nodocs">(*T) <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-855">SetMaxEvents</a>(m <a href="../../../builtin.html#name-int">int</a>)</span></span><span>
+			<span class="nodocs">(*T) <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-843">SetRecycler</a>(f func(interface{}))</span></span><span>
+			<span class="nodocs">(*T) <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-849">SetTraceInfo</a>(traceID, spanID <a href="../../../builtin.html#name-uint64">uint64</a>)</span></span><span>
+			<span class="nodocs">(*T) <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-887">When</a>() <a href="../../../builtin.html#name-string">string</a></span></span>
+			<input type='checkbox' checked class="showhide" id="trace-showhide-methods"><i><label for="trace-showhide-methods" class="show-inline">/* 5 unexporteds ... */</label><label for="trace-showhide-methods" class="hide-inline">/* 5 unexporteds: */</label></i><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-776">addEvent</a>(x interface{}, recyclable, sensitive <a href="../../../builtin.html#name-bool">bool</a>)</span></i></span><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="trace-fold-method-delta"><label for="trace-fold-method-delta">(*T) <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-768">delta</a>(t <a href="../../../time.html">time</a>.<a href="../../../time.html#name-Time">Time</a>) (<a href="../../../time.html">time</a>.<a href="../../../time.html#name-Duration">Duration</a>, <a href="../../../builtin.html#name-bool">bool</a>)</label><span id='trace-fold-method-delta-docs' class="fold-docs">
+				delta returns the elapsed time since the last event or the trace start,
+				and whether it spans midnight.
+				L &gt;= tr.mu
+</span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-864">ref</a>()</span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-741">reset</a>()</span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-868">unref</a>()</span></i></span></span>
+		<input type='checkbox' class="fold" id="trace-fold-impls"><label for="trace-fold-impls">Implements (<i>at least one exported</i>)</label><span id='trace-fold-impls-items' class="fold-items"><span>
+			*T : <a href="#name-Trace">Trace</a></span></span>
+		<input type='checkbox' class="fold" id="trace-fold-results"><label for="trace-fold-results">As Outputs Of (<i>at least one unexported</i>)</label><span id='trace-fold-results-items' class="fold-items">
+			<input type='checkbox' checked class="showhide" id="trace-showhide-inputofs"><i><label for="trace-showhide-inputofs" class="show-inline">/* at least one unexported ... */</label><label for="trace-showhide-inputofs" class="hide-inline">/* at least one unexported: */</label></i><span class="hidden"><i>
+			func <a href="#name-newTrace">newTrace</a>() *<b>trace</b></i></span></span>
+		<input type='checkbox' class="fold" id="trace-fold-params"><label for="trace-fold-params">As Inputs Of (<i>at least one unexported</i>)</label><span id='trace-fold-params-items' class="fold-items">
+			<input type='checkbox' checked class="showhide" id="trace-showhide-outputofs"><i><label for="trace-showhide-outputofs" class="show-inline">/* at least one unexported ... */</label><label for="trace-showhide-outputofs" class="hide-inline">/* at least one unexported: */</label></i><span class="hidden"><i>
+			func <a href="#name-freeTrace">freeTrace</a>(tr *<b>trace</b>)</i></span></span>
+
+</span></div><div class="anchor type-res hidden" id="name-traceBucket" data-popularity="225">	<input type='checkbox' class="fold" id="traceBucket-fold-content"><label for="traceBucket-fold-content"> <a href="../../../../use/golang.org/x/net/trace..traceBucket*6a7d3.html">type</a> <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-592">traceBucket</a> <i>(struct)</i></label><span id='traceBucket-fold-content-docs' class="fold-docs">
+		traceBucket represents a size-capped bucket of historic traces,
+		along with a condition for a trace to belong to the bucket.
+
+		<input type='checkbox' class="fold" id="traceBucket-fold-fields"><label for="traceBucket-fold-fields">Fields (<i>total 5, in which 1 are exported</i>)</label><span id='traceBucket-fold-fields-items' class="fold-items"><span>
+			<span class="nodocs"><a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-593">Cond</a> <i><a href="#name-cond">cond</a></i></span></span>
+			<input type='checkbox' checked class="showhide" id="traceBucket-showhide-fields"><i><label for="traceBucket-showhide-fields" class="show-inline">/* 4 unexporteds ... */</label><label for="traceBucket-showhide-fields" class="hide-inline">/* 4 unexporteds: */</label></i><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-597">buf</a> <i>[10]*<a href="#name-trace">trace</a></i></span></i></span><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="traceBucket-fold-field-length"><label for="traceBucket-fold-field-length"><a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-599">length</a> <i><a href="../../../builtin.html#name-int">int</a></i></label><span id='traceBucket-fold-field-length-docs' class="fold-docs">
+				// &lt;= tracesPerBucket
+</span></i></span><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="traceBucket-fold-field-mu"><label for="traceBucket-fold-field-mu"><a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-596">mu</a> <i><a href="../../../sync.html">sync</a>.<a href="../../../sync.html#name-RWMutex">RWMutex</a></i></label><span id='traceBucket-fold-field-mu-docs' class="fold-docs">
+				Ring buffer implementation of a fixed-size FIFO queue.
+</span></i></span><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="traceBucket-fold-field-start"><label for="traceBucket-fold-field-start"><a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-598">start</a> <i><a href="../../../builtin.html#name-int">int</a></i></label><span id='traceBucket-fold-field-start-docs' class="fold-docs">
+				// &lt; tracesPerBucket
+</span></i></span></span>
+		<input type='checkbox' class="fold" id="traceBucket-fold-methods"><label for="traceBucket-fold-methods">Methods (<i>total 3, all are exported</i>)</label><span id='traceBucket-fold-methods-items' class="fold-items"><span>
+			<span class="nodocs">(*T) <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-602">Add</a>(tr *<a href="#name-trace">trace</a>)</span></span><span>
+			<input type='checkbox' class="fold" id="traceBucket-fold-method-Copy"><label for="traceBucket-fold-method-Copy">(*T) <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-630">Copy</a>(tracedOnly <a href="../../../builtin.html#name-bool">bool</a>) <a href="#name-traceList">traceList</a></label><span id='traceBucket-fold-method-Copy-docs' class="fold-docs">
+				Copy returns a copy of the traces in the bucket.
+				If tracedOnly is true, only the traces with trace information will be returned.
+				The logs will be ref'd before returning; the caller should call
+				the Free method when it is done with them.
+				TODO(dsymonds): keep track of traced requests in separate buckets.
+</span></span><span>
+			<span class="nodocs">(*T) <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-649">Empty</a>() <a href="../../../builtin.html#name-bool">bool</a></span></span></span>
+		<input type='checkbox' class="fold" id="traceBucket-fold-results"><label for="traceBucket-fold-results">As Outputs Of (<i>at least one unexported</i>)</label><span id='traceBucket-fold-results-items' class="fold-items">
+			<input type='checkbox' checked class="showhide" id="traceBucket-showhide-inputofs"><i><label for="traceBucket-showhide-inputofs" class="show-inline">/* at least one unexported ... */</label><label for="traceBucket-showhide-inputofs" class="hide-inline">/* at least one unexported: */</label></i><span class="hidden"><i>
+			func <a href="#name-lookupBucket">lookupBucket</a>(fam <a href="../../../builtin.html#name-string">string</a>, b <a href="../../../builtin.html#name-int">int</a>) *<b>traceBucket</b></i></span></span>
+
+</span></div><div class="anchor type-res hidden" id="name-traceList" data-popularity="375">	<input type='checkbox' class="fold" id="traceList-fold-content"><label for="traceList-fold-content"> <a href="../../../../use/golang.org/x/net/trace..traceList*63372.html">type</a> <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-671">traceList</a> <i>([]T)</i></label><span id='traceList-fold-content-docs' class="fold-docs">
+
+		<input type='checkbox' class="fold" id="traceList-fold-methods"><label for="traceList-fold-methods">Methods (<i>total 4, all are exported</i>)</label><span id='traceList-fold-methods-items' class="fold-items"><span>
+			<input type='checkbox' class="fold" id="traceList-fold-method-Free"><label for="traceList-fold-method-Free">( T) <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-674">Free</a>()</label><span id='traceList-fold-method-Free-docs' class="fold-docs">
+				Free calls unref on each element of the list.
+</span></span><span>
+			<input type='checkbox' class="fold" id="traceList-fold-method-Len"><label for="traceList-fold-method-Len">( T) <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-681">Len</a>() <a href="../../../builtin.html#name-int">int</a></label><span id='traceList-fold-method-Len-docs' class="fold-docs">
+				traceList may be sorted in reverse chronological order.
+</span></span><span>
+			<span class="nodocs">( T) <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-682">Less</a>(i, j <a href="../../../builtin.html#name-int">int</a>) <a href="../../../builtin.html#name-bool">bool</a></span></span><span>
+			<span class="nodocs">( T) <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-683">Swap</a>(i, j <a href="../../../builtin.html#name-int">int</a>)</span></span></span>
+		<input type='checkbox' class="fold" id="traceList-fold-impls"><label for="traceList-fold-impls">Implements (<i>at least 2, in which 1 are exported</i>)</label><span id='traceList-fold-impls-items' class="fold-items"><span>
+			 T : sort.<a href="../../../sort.html#name-Interface">Interface</a></span>
+			<input type='checkbox' checked class="showhide" id="traceList-showhide-impls"><i><label for="traceList-showhide-impls" class="show-inline">/* at least one unexported ... */</label><label for="traceList-showhide-impls" class="hide-inline">/* at least one unexported: */</label></i><span class="hidden"><i>
+			 T : github.com/aws/aws-sdk-go/aws/corehandlers.<a href="../../../github.com/aws/aws-sdk-go/aws/corehandlers.html#name-lener">lener</a></i></span></span>
+		<input type='checkbox' class="fold" id="traceList-fold-results"><label for="traceList-fold-results">As Outputs Of (<i>at least one unexported</i>)</label><span id='traceList-fold-results-items' class="fold-items">
+			<input type='checkbox' checked class="showhide" id="traceList-showhide-inputofs"><i><label for="traceList-showhide-inputofs" class="show-inline">/* at least one unexported ... */</label><label for="traceList-showhide-inputofs" class="hide-inline">/* at least one unexported: */</label></i><span class="hidden"><i>
+			func <a href="#name-getActiveTraces">getActiveTraces</a>(fam <a href="../../../builtin.html#name-string">string</a>) <b>traceList</b></i></span></span>
+
+</span></div><div class="anchor type-res hidden" id="name-traceSet" data-popularity="250">	<input type='checkbox' class="fold" id="traceSet-fold-content"><label for="traceSet-fold-content"> <a href="../../../../use/golang.org/x/net/trace..traceSet*9bf55.html">type</a> <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-451">traceSet</a> <i>(struct)</i></label><span id='traceSet-fold-content-docs' class="fold-docs">
+
+		<input type='checkbox' class="fold" id="traceSet-fold-fields"><label for="traceSet-fold-fields">Fields (<i>total 2, neither is exported</i>)</label><span id='traceSet-fold-fields-items' class="fold-items">
+			<input type='checkbox' checked class="showhide" id="traceSet-showhide-fields"><i><label for="traceSet-showhide-fields" class="show-inline">/* 2 unexporteds ... */</label><label for="traceSet-showhide-fields" class="hide-inline">/* 2 unexporteds: */</label></i><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-453">m</a> <i>map[*<a href="#name-trace">trace</a>]<a href="../../../builtin.html#name-bool">bool</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-452">mu</a> <i><a href="../../../sync.html">sync</a>.<a href="../../../sync.html#name-RWMutex">RWMutex</a></i></span></i></span></span>
+		<input type='checkbox' class="fold" id="traceSet-fold-methods"><label for="traceSet-fold-methods">Methods (<i>total 4, all are exported</i>)</label><span id='traceSet-fold-methods-items' class="fold-items"><span>
+			<span class="nodocs">(*T) <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-468">Add</a>(tr *<a href="#name-trace">trace</a>)</span></span><span>
+			<input type='checkbox' class="fold" id="traceSet-fold-method-FirstN"><label for="traceSet-fold-method-FirstN">(*T) <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-484">FirstN</a>(n <a href="../../../builtin.html#name-int">int</a>) <a href="#name-traceList">traceList</a></label><span id='traceSet-fold-method-FirstN-docs' class="fold-docs">
+				FirstN returns the first n traces ordered by time.
+</span></span><span>
+			<span class="nodocs">(*T) <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-462">Len</a>() <a href="../../../builtin.html#name-int">int</a></span></span><span>
+			<span class="nodocs">(*T) <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-477">Remove</a>(tr *<a href="#name-trace">trace</a>)</span></span></span>
+		<input type='checkbox' class="fold" id="traceSet-fold-impls"><label for="traceSet-fold-impls">Implements (<i>at least one unexported</i>)</label><span id='traceSet-fold-impls-items' class="fold-items">
+			<input type='checkbox' checked class="showhide" id="traceSet-showhide-impls"><i><label for="traceSet-showhide-impls" class="show-inline">/* at least one unexported ... */</label><label for="traceSet-showhide-impls" class="hide-inline">/* at least one unexported: */</label></i><span class="hidden"><i>
+			*T : github.com/aws/aws-sdk-go/aws/corehandlers.<a href="../../../github.com/aws/aws-sdk-go/aws/corehandlers.html#name-lener">lener</a></i></span></span>
+
+</span></div></div>
+<div id="exported-functions"><span class="title">Package-Level Functions<span class="title-stat"><i> (total 30, in which 8 are exported)</i></span></span>
+
+<div class="anchor value-res" id="name-Events">	<input type='checkbox' class="fold" id="Events-fold-content"><label for="Events-fold-content"> <a href="../../../../use/golang.org/x/net/trace..Events.html">func</a> <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-166">Events</a>(w <a href="../../../net/http.html">http</a>.<a href="../../../net/http.html#name-ResponseWriter">ResponseWriter</a>, req *<a href="../../../net/http.html">http</a>.<a href="../../../net/http.html#name-Request">Request</a>)</label><span id='Events-fold-content-docs' class="fold-docs">
+		Events responds with a page of events collected by EventLogs.
+		The package initialization registers it in http.DefaultServeMux
+		at /debug/events.
+
+		It performs authorization by running AuthRequest.
+
+</span></div><div class="anchor value-res" id="name-FromContext">	<input type='checkbox' class="fold" id="FromContext-fold-content"><label for="FromContext-fold-content"> <a href="../../../../use/golang.org/x/net/trace..FromContext.html">func</a> <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-141">FromContext</a>(ctx <a href="../../../context.html">context</a>.<a href="../../../context.html#name-Context">Context</a>) (tr <a href="#name-Trace">Trace</a>, ok <a href="../../../builtin.html#name-bool">bool</a>)</label><span id='FromContext-fold-content-docs' class="fold-docs">
+		FromContext returns the Trace bound to the context, if any.
+
+</span></div><div class="anchor value-res" id="name-New">	<input type='checkbox' class="fold" id="New-fold-content"><label for="New-fold-content"> <a href="../../../../use/golang.org/x/net/trace..New.html">func</a> <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-361">New</a>(family, title <a href="../../../builtin.html#name-string">string</a>) <a href="#name-Trace">Trace</a></label><span id='New-fold-content-docs' class="fold-docs">
+		New returns a new Trace with the specified family and title.
+
+</span></div><div class="anchor value-res" id="name-NewContext">	<input type='checkbox' class="fold" id="NewContext-fold-content"><label for="NewContext-fold-content"> <a href="../../../../use/golang.org/x/net/trace..NewContext.html">func</a> <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-136">NewContext</a>(ctx <a href="../../../context.html">context</a>.<a href="../../../context.html#name-Context">Context</a>, tr <a href="#name-Trace">Trace</a>) <a href="../../../context.html">context</a>.<a href="../../../context.html#name-Context">Context</a></label><span id='NewContext-fold-content-docs' class="fold-docs">
+		NewContext returns a copy of the parent context
+		and associates it with a Trace.
+
+</span></div><div class="anchor value-res" id="name-NewEventLog">	<input type='checkbox' class="fold" id="NewEventLog-fold-content"><label for="NewEventLog-fold-content"> <a href="../../../../use/golang.org/x/net/trace..NewEventLog.html">func</a> <a href="../../../../src/golang.org/x/net/trace/events.go.html#line-132">NewEventLog</a>(family, title <a href="../../../builtin.html#name-string">string</a>) <a href="#name-EventLog">EventLog</a></label><span id='NewEventLog-fold-content-docs' class="fold-docs">
+		NewEventLog returns a new EventLog with the specified family name
+		and title.
+
+</span></div><div class="anchor value-res" id="name-Render">	<input type='checkbox' class="fold" id="Render-fold-content"><label for="Render-fold-content"> <a href="../../../../use/golang.org/x/net/trace..Render.html">func</a> <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-180">Render</a>(w <a href="../../../io.html">io</a>.<a href="../../../io.html#name-Writer">Writer</a>, req *<a href="../../../net/http.html">http</a>.<a href="../../../net/http.html#name-Request">Request</a>, sensitive <a href="../../../builtin.html#name-bool">bool</a>)</label><span id='Render-fold-content-docs' class="fold-docs">
+		Render renders the HTML page typically served at /debug/requests.
+		It does not do any auth checking. The request may be nil.
+
+		Most users will use the Traces handler.
+
+</span></div><div class="anchor value-res" id="name-RenderEvents">	<input type='checkbox' class="fold" id="RenderEvents-fold-content"><label for="RenderEvents-fold-content"> <a href="../../../../use/golang.org/x/net/trace..RenderEvents.html">func</a> <a href="../../../../src/golang.org/x/net/trace/events.go.html#line-45">RenderEvents</a>(w <a href="../../../net/http.html">http</a>.<a href="../../../net/http.html#name-ResponseWriter">ResponseWriter</a>, req *<a href="../../../net/http.html">http</a>.<a href="../../../net/http.html#name-Request">Request</a>, sensitive <a href="../../../builtin.html#name-bool">bool</a>)</label><span id='RenderEvents-fold-content-docs' class="fold-docs">
+		RenderEvents renders the HTML page typically served at /debug/events.
+		It does not do any auth checking. The request may be nil.
+
+		Most users will use the Events handler.
+
+</span></div><div class="anchor value-res" id="name-Traces">	<input type='checkbox' class="fold" id="Traces-fold-content"><label for="Traces-fold-content"> <a href="../../../../use/golang.org/x/net/trace..Traces.html">func</a> <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-151">Traces</a>(w <a href="../../../net/http.html">http</a>.<a href="../../../net/http.html#name-ResponseWriter">ResponseWriter</a>, req *<a href="../../../net/http.html">http</a>.<a href="../../../net/http.html#name-Request">Request</a>)</label><span id='Traces-fold-content-docs' class="fold-docs">
+		Traces responds with traces from the program.
+		The package initialization registers it in http.DefaultServeMux
+		at /debug/requests.
+
+		It performs authorization by running AuthRequest.
+
+</span></div>	<input type='checkbox' class="showhide" id="unexported-functions-showhide"><i><label for="unexported-functions-showhide" class="show-inline">/* 22 unexporteds ... */</label><label for="unexported-functions-showhide" class="hide-inline">/* 22 unexporteds: */</label></i><div class="anchor value-res hidden" id="name-allocFamily"><i>	<span class="nodocs"> <a href="../../../../use/golang.org/x/net/trace..allocFamily*4a395.html">func</a> <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-552">allocFamily</a>(fam <a href="../../../builtin.html#name-string">string</a>) *<a href="#name-family">family</a></span></i></div><div class="anchor value-res hidden" id="name-bucketBoundary"><i>	<input type='checkbox' class="fold" id="bucketBoundary-fold-content"><label for="bucketBoundary-fold-content"> <a href="../../../../use/golang.org/x/net/trace..bucketBoundary*b50c8.html">func</a> <a href="../../../../src/golang.org/x/net/trace/histogram.go.html#line-245">bucketBoundary</a>(bucket <a href="../../../builtin.html#name-uint8">uint8</a>) <a href="../../../builtin.html#name-int64">int64</a></label><span id='bucketBoundary-fold-content-docs' class="fold-docs">
+		bucketBoundary returns the first value in the bucket.
+
+</span></i></div><div class="anchor value-res hidden" id="name-distTmpl"><i>	<span class="nodocs"> <a href="../../../../use/golang.org/x/net/trace..distTmpl*0ef68.html">func</a> <a href="../../../../src/golang.org/x/net/trace/histogram.go.html#line-334">distTmpl</a>() *<a href="../../../html/template.html">template</a>.<a href="../../../html/template.html#name-Template">Template</a></span></i></div><div class="anchor value-res hidden" id="name-elapsed"><i>	<span class="nodocs"> <a href="../../../../use/golang.org/x/net/trace..elapsed*b712c.html">func</a> <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-934">elapsed</a>(d <a href="../../../time.html">time</a>.<a href="../../../time.html#name-Duration">Duration</a>) <a href="../../../builtin.html#name-string">string</a></span></i></div><div class="anchor value-res hidden" id="name-eventsTmpl"><i>	<span class="nodocs"> <a href="../../../../use/golang.org/x/net/trace..eventsTmpl*aeb91.html">func</a> <a href="../../../../src/golang.org/x/net/trace/events.go.html#line-422">eventsTmpl</a>() *<a href="../../../html/template.html">template</a>.<a href="../../../html/template.html#name-Template">Template</a></span></i></div><div class="anchor value-res hidden" id="name-freeEventLog"><i>	<input type='checkbox' class="fold" id="freeEventLog-fold-content"><label for="freeEventLog-fold-content"> <a href="../../../../use/golang.org/x/net/trace..freeEventLog*4c0e1.html">func</a> <a href="../../../../src/golang.org/x/net/trace/events.go.html#line-411">freeEventLog</a>(el *<a href="#name-eventLog">eventLog</a>)</label><span id='freeEventLog-fold-content-docs' class="fold-docs">
+		freeEventLog adds el to freeEventLogs if there's room.
+		This is non-blocking.
+
+</span></i></div><div class="anchor value-res hidden" id="name-freeTrace"><i>	<input type='checkbox' class="fold" id="freeTrace-fold-content"><label for="freeTrace-fold-content"> <a href="../../../../use/golang.org/x/net/trace..freeTrace*cbb27.html">func</a> <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-923">freeTrace</a>(tr *<a href="#name-trace">trace</a>)</label><span id='freeTrace-fold-content-docs' class="fold-docs">
+		freeTrace adds tr to traceFreeList if there's room.
+		This is non-blocking.
+
+</span></i></div><div class="anchor value-res hidden" id="name-getActiveTraces"><i>	<span class="nodocs"> <a href="../../../../use/golang.org/x/net/trace..getActiveTraces*a78b7.html">func</a> <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-532">getActiveTraces</a>(fam <a href="../../../builtin.html#name-string">string</a>) <a href="#name-traceList">traceList</a></span></i></div><div class="anchor value-res hidden" id="name-getBucket"><i>	<span class="nodocs"> <a href="../../../../use/golang.org/x/net/trace..getBucket*27c7d.html">func</a> <a href="../../../../src/golang.org/x/net/trace/histogram.go.html#line-72">getBucket</a>(i <a href="../../../builtin.html#name-int64">int64</a>) (index <a href="../../../builtin.html#name-int">int</a>)</span></i></div><div class="anchor value-res hidden" id="name-getEventFamily"><i>	<span class="nodocs"> <a href="../../../../use/golang.org/x/net/trace..getEventFamily*94dee.html">func</a> <a href="../../../../src/golang.org/x/net/trace/events.go.html#line-156">getEventFamily</a>(fam <a href="../../../builtin.html#name-string">string</a>) *<a href="#name-eventFamily">eventFamily</a></span></i></div><div class="anchor value-res hidden" id="name-getFamily"><i>	<span class="nodocs"> <a href="../../../../use/golang.org/x/net/trace..getFamily*40a67.html">func</a> <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-542">getFamily</a>(fam <a href="../../../builtin.html#name-string">string</a>, allocNew <a href="../../../builtin.html#name-bool">bool</a>) *<a href="#name-family">family</a></span></i></div><div class="anchor value-res hidden" id="name-init"><i>	<span class="nodocs"> <a href="../../../../use/golang.org/x/net/trace..init*bb540.html">func</a> <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-120">init</a>()</span></i></div><div class="anchor value-res hidden" id="name-log2"><i>	<span class="nodocs"> <a href="../../../../use/golang.org/x/net/trace..log2*73aaa.html">func</a> <a href="../../../../src/golang.org/x/net/trace/histogram.go.html#line-61">log2</a>(i <a href="../../../builtin.html#name-int64">int64</a>) <a href="../../../builtin.html#name-int">int</a></span></i></div><div class="anchor value-res hidden" id="name-lookupBucket"><i>	<span class="nodocs"> <a href="../../../../use/golang.org/x/net/trace..lookupBucket*d2891.html">func</a> <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-304">lookupBucket</a>(fam <a href="../../../builtin.html#name-string">string</a>, b <a href="../../../builtin.html#name-int">int</a>) *<a href="#name-traceBucket">traceBucket</a></span></i></div><div class="anchor value-res hidden" id="name-newEventLog"><i>	<input type='checkbox' class="fold" id="newEventLog-fold-content"><label for="newEventLog-fold-content"> <a href="../../../../use/golang.org/x/net/trace..newEventLog*4e8b0.html">func</a> <a href="../../../../src/golang.org/x/net/trace/events.go.html#line-400">newEventLog</a>() *<a href="#name-eventLog">eventLog</a></label><span id='newEventLog-fold-content-docs' class="fold-docs">
+		newEventLog returns a event log ready to use.
+
+</span></i></div><div class="anchor value-res hidden" id="name-newFamily"><i>	<span class="nodocs"> <a href="../../../../use/golang.org/x/net/trace..newFamily*fe1e3.html">func</a> <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-573">newFamily</a>() *<a href="#name-family">family</a></span></i></div><div class="anchor value-res hidden" id="name-newTrace"><i>	<input type='checkbox' class="fold" id="newTrace-fold-content"><label for="newTrace-fold-content"> <a href="../../../../use/golang.org/x/net/trace..newTrace*020d3.html">func</a> <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-912">newTrace</a>() *<a href="#name-trace">trace</a></label><span id='newTrace-fold-content-docs' class="fold-docs">
+		newTrace returns a trace ready to use.
+
+</span></i></div><div class="anchor value-res hidden" id="name-pageTmpl"><i>	<span class="nodocs"> <a href="../../../../use/golang.org/x/net/trace..pageTmpl*35f8a.html">func</a> <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-959">pageTmpl</a>() *<a href="../../../html/template.html">template</a>.<a href="../../../html/template.html#name-Template">Template</a></span></i></div><div class="anchor value-res hidden" id="name-parseArgs"><i>	<span class="nodocs"> <a href="../../../../use/golang.org/x/net/trace..parseArgs*98508.html">func</a> <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-288">parseArgs</a>(req *<a href="../../../net/http.html">http</a>.<a href="../../../net/http.html#name-Request">Request</a>) (fam <a href="../../../builtin.html#name-string">string</a>, b <a href="../../../builtin.html#name-int">int</a>, ok <a href="../../../builtin.html#name-bool">bool</a>)</span></i></div><div class="anchor value-res hidden" id="name-parseEventsArgs"><i>	<span class="nodocs"> <a href="../../../../use/golang.org/x/net/trace..parseEventsArgs*d34a3.html">func</a> <a href="../../../../src/golang.org/x/net/trace/events.go.html#line-104">parseEventsArgs</a>(req *<a href="../../../net/http.html">http</a>.<a href="../../../net/http.html#name-Request">Request</a>) (fam <a href="../../../builtin.html#name-string">string</a>, b <a href="../../../builtin.html#name-int">int</a>, ok <a href="../../../builtin.html#name-bool">bool</a>)</span></i></div><div class="anchor value-res hidden" id="name-printStackRecord"><i>	<input type='checkbox' class="fold" id="printStackRecord-fold-content"><label for="printStackRecord-fold-content"> <a href="../../../../use/golang.org/x/net/trace..printStackRecord*7f91f.html">func</a> <a href="../../../../src/golang.org/x/net/trace/events.go.html#line-374">printStackRecord</a>(w <a href="../../../io.html">io</a>.<a href="../../../io.html#name-Writer">Writer</a>, stk []<a href="../../../builtin.html#name-uintptr">uintptr</a>)</label><span id='printStackRecord-fold-content-docs' class="fold-docs">
+		printStackRecord prints the function + source line information
+		for a single stack trace.
+		Adapted from runtime/pprof/pprof.go.
+
+</span></i></div><div class="anchor value-res hidden" id="name-round"><i>	<input type='checkbox' class="fold" id="round-fold-content"><label for="round-fold-content"> <a href="../../../../use/golang.org/x/net/trace..round*a97b0.html">func</a> <a href="../../../../src/golang.org/x/net/trace/histogram.go.html#line-240">round</a>(in <a href="../../../builtin.html#name-float64">float64</a>) <a href="../../../builtin.html#name-int64">int64</a></label><span id='round-fold-content-docs' class="fold-docs">
+		round returns the closest int64 to the argument
+
+</span></i></div></div>
+<div id="exported-variables"><span class="title">Package-Level Variables<span class="title-stat"><i> (total 18, in which 2 are exported)</i></span></span>
+
+<div class="anchor value-res" id="name-AuthRequest">	<input type='checkbox' class="fold" id="AuthRequest-fold-content"><label for="AuthRequest-fold-content">  <a href="../../../../use/golang.org/x/net/trace..AuthRequest.html">var</a> <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-105">AuthRequest</a> func(req *<a href="../../../net/http.html">http</a>.<a href="../../../net/http.html#name-Request">Request</a>) (any <a href="../../../builtin.html#name-bool">bool</a>, sensitive <a href="../../../builtin.html#name-bool">bool</a>)</label><span id='AuthRequest-fold-content-docs' class="fold-docs">
+		AuthRequest determines whether a specific request is permitted to load the
+		/debug/requests or /debug/events pages.
+
+		It returns two bools; the first indicates whether the page may be viewed at all,
+		and the second indicates whether sensitive events will be shown.
+
+		AuthRequest may be replaced by a program to customize its authorization requirements.
+
+		The default AuthRequest function returns (true, true) if and only if the request
+		comes from localhost/127.0.0.1/[::1].
+
+</span></div><div class="anchor value-res" id="name-DebugUseAfterFinish">	<input type='checkbox' class="fold" id="DebugUseAfterFinish-fold-content"><label for="DebugUseAfterFinish-fold-content">  <a href="../../../../use/golang.org/x/net/trace..DebugUseAfterFinish.html">var</a> <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-87">DebugUseAfterFinish</a> <a href="../../../builtin.html#name-bool">bool</a></label><span id='DebugUseAfterFinish-fold-content-docs' class="fold-docs">
+		DebugUseAfterFinish controls whether to debug uses of Trace values after finishing.
+		FOR DEBUGGING ONLY. This will slow down the program.
+
+</span></div>	<input type='checkbox' class="showhide" id="unexported-variables-showhide"><i><label for="unexported-variables-showhide" class="show-inline">/* 16 unexporteds ... */</label><label for="unexported-variables-showhide" class="hide-inline">/* 16 unexporteds: */</label></i><div class="anchor value-res hidden" id="name-activeMu"><i>	<input type='checkbox' class="fold" id="activeMu-fold-content"><label for="activeMu-fold-content">  <a href="../../../../use/golang.org/x/net/trace..activeMu*b8ab9.html">var</a> <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-443">activeMu</a> <a href="../../../sync.html">sync</a>.<a href="../../../sync.html#name-RWMutex">RWMutex</a></label><span id='activeMu-fold-content-docs' class="fold-docs">
+		The active traces.
+
+</span></i></div><div class="anchor value-res hidden" id="name-activeTraces"><i>	<span class="nodocs">  <a href="../../../../use/golang.org/x/net/trace..activeTraces*cafaa.html">var</a> <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-444">activeTraces</a> map[<a href="../../../builtin.html#name-string">string</a>]*<a href="#name-traceSet">traceSet</a> // family -&gt; traces</span></i></div><div class="anchor value-res hidden" id="name-buckets"><i>	<span class="nodocs">  <a href="../../../../use/golang.org/x/net/trace..buckets*4985c.html">var</a> <a href="../../../../src/golang.org/x/net/trace/events.go.html#line-31">buckets</a> []<a href="#name-bucket">bucket</a></span></i></div><div class="anchor value-res hidden" id="name-completedMu"><i>	<input type='checkbox' class="fold" id="completedMu-fold-content"><label for="completedMu-fold-content">  <a href="../../../../use/golang.org/x/net/trace..completedMu*9e43c.html">var</a> <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-447">completedMu</a> <a href="../../../sync.html">sync</a>.<a href="../../../sync.html#name-RWMutex">RWMutex</a></label><span id='completedMu-fold-content-docs' class="fold-docs">
+		Families of completed traces.
+
+</span></i></div><div class="anchor value-res hidden" id="name-completedTraces"><i>	<span class="nodocs">  <a href="../../../../use/golang.org/x/net/trace..completedTraces*c0b2c.html">var</a> <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-448">completedTraces</a> map[<a href="../../../builtin.html#name-string">string</a>]*<a href="#name-family">family</a> // family -&gt; traces</span></i></div><div class="anchor value-res hidden" id="name-contextKey"><i>	<span class="nodocs">  <a href="../../../../use/golang.org/x/net/trace..contextKey*33ab4.html">var</a> <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-314">contextKey</a> <a href="#name-contextKeyT">contextKeyT</a></span></i></div><div class="anchor value-res hidden" id="name-distTmplCache"><i>	<span class="nodocs">  <a href="../../../../use/golang.org/x/net/trace..distTmplCache*addc7.html">var</a> <a href="../../../../src/golang.org/x/net/trace/histogram.go.html#line-331">distTmplCache</a> *<a href="../../../html/template.html">template</a>.<a href="../../../html/template.html#name-Template">Template</a></span></i></div><div class="anchor value-res hidden" id="name-distTmplOnce"><i>	<span class="nodocs">  <a href="../../../../use/golang.org/x/net/trace..distTmplOnce*f69db.html">var</a> <a href="../../../../src/golang.org/x/net/trace/histogram.go.html#line-332">distTmplOnce</a> <a href="../../../sync.html">sync</a>.<a href="../../../sync.html#name-Once">Once</a></span></i></div><div class="anchor value-res hidden" id="name-eventsTmplCache"><i>	<span class="nodocs">  <a href="../../../../use/golang.org/x/net/trace..eventsTmplCache*12854.html">var</a> <a href="../../../../src/golang.org/x/net/trace/events.go.html#line-419">eventsTmplCache</a> *<a href="../../../html/template.html">template</a>.<a href="../../../html/template.html#name-Template">Template</a></span></i></div><div class="anchor value-res hidden" id="name-eventsTmplOnce"><i>	<span class="nodocs">  <a href="../../../../use/golang.org/x/net/trace..eventsTmplOnce*63b2d.html">var</a> <a href="../../../../src/golang.org/x/net/trace/events.go.html#line-420">eventsTmplOnce</a> <a href="../../../sync.html">sync</a>.<a href="../../../sync.html#name-Once">Once</a></span></i></div><div class="anchor value-res hidden" id="name-families"><i>	<span class="nodocs">  <a href="../../../../use/golang.org/x/net/trace..families*e1c06.html">var</a> <a href="../../../../src/golang.org/x/net/trace/events.go.html#line-153">families</a> map[<a href="../../../builtin.html#name-string">string</a>]*<a href="#name-eventFamily">eventFamily</a> // family name =&gt; family</span></i></div><div class="anchor value-res hidden" id="name-famMu"><i>	<span class="nodocs">  <a href="../../../../use/golang.org/x/net/trace..famMu*084d8.html">var</a> <a href="../../../../src/golang.org/x/net/trace/events.go.html#line-152">famMu</a> <a href="../../../sync.html">sync</a>.<a href="../../../sync.html#name-RWMutex">RWMutex</a></span></i></div><div class="anchor value-res hidden" id="name-freeEventLogs"><i>	<input type='checkbox' class="fold" id="freeEventLogs-fold-content"><label for="freeEventLogs-fold-content">  <a href="../../../../use/golang.org/x/net/trace..freeEventLogs*8af38.html">var</a> <a href="../../../../src/golang.org/x/net/trace/events.go.html#line-397">freeEventLogs</a> chan *<a href="#name-eventLog">eventLog</a></label><span id='freeEventLogs-fold-content-docs' class="fold-docs">
+		freeEventLogs is a freelist of *eventLog
+
+</span></i></div><div class="anchor value-res hidden" id="name-pageTmplCache"><i>	<span class="nodocs">  <a href="../../../../use/golang.org/x/net/trace..pageTmplCache*3153f.html">var</a> <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-956">pageTmplCache</a> *<a href="../../../html/template.html">template</a>.<a href="../../../html/template.html#name-Template">Template</a></span></i></div><div class="anchor value-res hidden" id="name-pageTmplOnce"><i>	<span class="nodocs">  <a href="../../../../use/golang.org/x/net/trace..pageTmplOnce*6f8e4.html">var</a> <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-957">pageTmplOnce</a> <a href="../../../sync.html">sync</a>.<a href="../../../sync.html#name-Once">Once</a></span></i></div><div class="anchor value-res hidden" id="name-traceFreeList"><i>	<span class="nodocs">  <a href="../../../../use/golang.org/x/net/trace..traceFreeList*104d3.html">var</a> <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-909">traceFreeList</a> chan *<a href="#name-trace">trace</a> // TODO(dsymonds): Use sync.Pool?</span></i></div></div>
+<div id="exported-constants"><span class="title">Package-Level Constants<span class="title-stat"><i> (total 12, none are exported)</i></span></span>
+
+	<input type='checkbox' class="showhide" id="unexported-constants-showhide"><i><label for="unexported-constants-showhide" class="show-inline">/* 12 unexporteds ... */</label><label for="unexported-constants-showhide" class="hide-inline">/* 12 unexporteds: */</label></i><div class="anchor value-res hidden" id="name-bucketCount"><i>	<span class="nodocs"><a href="../../../../use/golang.org/x/net/trace..bucketCount*2be1e.html">const</a> <a href="../../../../src/golang.org/x/net/trace/histogram.go.html#line-21">bucketCount</a> = 38</span></i></div><div class="anchor value-res hidden" id="name-bucketsPerFamily"><i>	<span class="nodocs"><a href="../../../../use/golang.org/x/net/trace..bucketsPerFamily*4c594.html">const</a> <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-434">bucketsPerFamily</a> = 9</span></i></div><div class="anchor value-res hidden" id="name-debugEventsPath"><i>	<input type='checkbox' class="fold" id="debugEventsPath-fold-content"><label for="debugEventsPath-fold-content"><a href="../../../../use/golang.org/x/net/trace..debugEventsPath*c67b7.html">const</a> <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-92">debugEventsPath</a> = "/debug/events"</label><span id='debugEventsPath-fold-content-docs' class="fold-docs">
+		HTTP ServeMux paths.
+
+</span></i></div><div class="anchor value-res hidden" id="name-debugRequestsPath"><i>	<input type='checkbox' class="fold" id="debugRequestsPath-fold-content"><label for="debugRequestsPath-fold-content"><a href="../../../../use/golang.org/x/net/trace..debugRequestsPath*cbe76.html">const</a> <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-91">debugRequestsPath</a> = "/debug/requests"</label><span id='debugRequestsPath-fold-content-docs' class="fold-docs">
+		HTTP ServeMux paths.
+
+</span></i></div><div class="anchor value-res hidden" id="name-eventsHTML"><i>	<span class="nodocs"><a href="../../../../use/golang.org/x/net/trace..eventsHTML*b52c3.html">const</a> <a href="../../../../src/golang.org/x/net/trace/events.go.html#line-432">eventsHTML</a> = "\n<html>\n\t<head>\n\t\t<title>events</title>\n\t</head>\n\t<style t...</span></i></div><div class="anchor value-res hidden" id="name-maxActiveTraces"><i>	<span class="nodocs"><a href="../../../../use/golang.org/x/net/trace..maxActiveTraces*9c61f.html">const</a> <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-436">maxActiveTraces</a> = 20 // Maximum number of active traces to show.</span></i></div><div class="anchor value-res hidden" id="name-maxEventsPerLog"><i>	<span class="nodocs"><a href="../../../../use/golang.org/x/net/trace..maxEventsPerLog*d2f9b.html">const</a> <a href="../../../../src/golang.org/x/net/trace/events.go.html#line-24">maxEventsPerLog</a> = 100</span></i></div><div class="anchor value-res hidden" id="name-maxEventsPerTrace"><i>	<span class="nodocs"><a href="../../../../use/golang.org/x/net/trace..maxEventsPerTrace*077bc.html">const</a> <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-437">maxEventsPerTrace</a> = 10</span></i></div><div class="anchor value-res hidden" id="name-maxHTMLBarWidth"><i>	<input type='checkbox' class="fold" id="maxHTMLBarWidth-fold-content"><label for="maxHTMLBarWidth-fold-content"><a href="../../../../use/golang.org/x/net/trace..maxHTMLBarWidth*83e0f.html">const</a> <a href="../../../../src/golang.org/x/net/trace/histogram.go.html#line-268">maxHTMLBarWidth</a> = 350</label><span id='maxHTMLBarWidth-fold-content-docs' class="fold-docs">
+		maxHTMLBarWidth is the maximum width of the HTML bar for visualizing buckets.
+
+</span></i></div><div class="anchor value-res hidden" id="name-numHistogramBuckets"><i>	<span class="nodocs"><a href="../../../../use/golang.org/x/net/trace..numHistogramBuckets*7f4ac.html">const</a> <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-438">numHistogramBuckets</a> = 38</span></i></div><div class="anchor value-res hidden" id="name-pageHTML"><i>	<span class="nodocs"><a href="../../../../use/golang.org/x/net/trace..pageHTML*a83ed.html">const</a> <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-969">pageHTML</a> = "\n{{template \"Prolog\" .}}\n{{template \"StatusTable\" .}}\n{{templ...</span></i></div><div class="anchor value-res hidden" id="name-tracesPerBucket"><i>	<span class="nodocs"><a href="../../../../use/golang.org/x/net/trace..tracesPerBucket*f1e3a.html">const</a> <a href="../../../../src/golang.org/x/net/trace/trace.go.html#line-435">tracesPerBucket</a> = 10</span></i></div></div></code></pre><pre id="footer">
+<table><tr><td><img src="../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

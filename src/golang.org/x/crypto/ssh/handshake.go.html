@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: handshake.go in package golang.org/x/crypto/ssh</title>
+<link href="../../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	handshake.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../../pkg/golang.org/x/crypto/ssh.html">golang.org/x/crypto/ssh</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16],
+input[id=r17]:checked ~pre label[for=r17],
+input[id=r18]:checked ~pre label[for=r18],
+input[id=r19]:checked ~pre label[for=r19],
+input[id=r20]:checked ~pre label[for=r20],
+input[id=r21]:checked ~pre label[for=r21],
+input[id=r22]:checked ~pre label[for=r22],
+input[id=r23]:checked ~pre label[for=r23],
+input[id=r24]:checked ~pre label[for=r24],
+input[id=r25]:checked ~pre label[for=r25],
+input[id=r26]:checked ~pre label[for=r26],
+input[id=r27]:checked ~pre label[for=r27],
+input[id=r28]:checked ~pre label[for=r28],
+input[id=r29]:checked ~pre label[for=r29],
+input[id=r30]:checked ~pre label[for=r30],
+input[id=r31]:checked ~pre label[for=r31],
+input[id=r32]:checked ~pre label[for=r32],
+input[id=r33]:checked ~pre label[for=r33],
+input[id=r34]:checked ~pre label[for=r34],
+input[id=r35]:checked ~pre label[for=r35],
+input[id=r36]:checked ~pre label[for=r36],
+input[id=r37]:checked ~pre label[for=r37],
+input[id=r38]:checked ~pre label[for=r38],
+input[id=r39]:checked ~pre label[for=r39],
+input[id=r40]:checked ~pre label[for=r40],
+input[id=r41]:checked ~pre label[for=r41],
+input[id=r42]:checked ~pre label[for=r42],
+input[id=r43]:checked ~pre label[for=r43],
+input[id=r44]:checked ~pre label[for=r44],
+input[id=r45]:checked ~pre label[for=r45],
+input[id=r46]:checked ~pre label[for=r46],
+input[id=r47]:checked ~pre label[for=r47],
+input[id=r48]:checked ~pre label[for=r48],
+input[id=r49]:checked ~pre label[for=r49],
+input[id=r50]:checked ~pre label[for=r50],
+input[id=r51]:checked ~pre label[for=r51],
+input[id=r52]:checked ~pre label[for=r52],
+input[id=r53]:checked ~pre label[for=r53],
+input[id=r54]:checked ~pre label[for=r54],
+input[id=r55]:checked ~pre label[for=r55],
+input[id=r56]:checked ~pre label[for=r56],
+input[id=r57]:checked ~pre label[for=r57],
+input[id=r58]:checked ~pre label[for=r58],
+input[id=r59]:checked ~pre label[for=r59],
+input[id=r60]:checked ~pre label[for=r60],
+input[id=r61]:checked ~pre label[for=r61],
+input[id=r62]:checked ~pre label[for=r62],
+input[id=r63]:checked ~pre label[for=r63],
+input[id=r64]:checked ~pre label[for=r64],
+input[id=r65]:checked ~pre label[for=r65],
+input[id=r66]:checked ~pre label[for=r66],
+input[id=r67]:checked ~pre label[for=r67],
+input[id=r68]:checked ~pre label[for=r68],
+input[id=r69]:checked ~pre label[for=r69],
+input[id=r70]:checked ~pre label[for=r70],
+input[id=r71]:checked ~pre label[for=r71],
+input[id=r72]:checked ~pre label[for=r72],
+input[id=r73]:checked ~pre label[for=r73],
+input[id=r74]:checked ~pre label[for=r74],
+input[id=r75]:checked ~pre label[for=r75],
+input[id=r76]:checked ~pre label[for=r76],
+input[id=r77]:checked ~pre label[for=r77],
+input[id=r78]:checked ~pre label[for=r78],
+input[id=r79]:checked ~pre label[for=r79],
+input[id=r80]:checked ~pre label[for=r80],
+input[id=r81]:checked ~pre label[for=r81],
+input[id=r82]:checked ~pre label[for=r82],
+input[id=r83]:checked ~pre label[for=r83],
+input[id=r84]:checked ~pre label[for=r84],
+input[id=r85]:checked ~pre label[for=r85],
+input[id=r86]:checked ~pre label[for=r86],
+input[id=r87]:checked ~pre label[for=r87],
+input[id=r88]:checked ~pre label[for=r88],
+input[id=r89]:checked ~pre label[for=r89],
+input[id=r90]:checked ~pre label[for=r90],
+input[id=r91]:checked ~pre label[for=r91],
+input[id=r92]:checked ~pre label[for=r92],
+input[id=r93]:checked ~pre label[for=r93],
+input[id=r94]:checked ~pre label[for=r94],
+input[id=r95]:checked ~pre label[for=r95],
+input[id=r96]:checked ~pre label[for=r96],
+input[id=r97]:checked ~pre label[for=r97],
+input[id=r98]:checked ~pre label[for=r98],
+input[id=r99]:checked ~pre label[for=r99],
+input[id=r100]:checked ~pre label[for=r100],
+input[id=r101]:checked ~pre label[for=r101],
+input[id=r102]:checked ~pre label[for=r102],
+input[id=r103]:checked ~pre label[for=r103],
+input[id=r104]:checked ~pre label[for=r104],
+input[id=r105]:checked ~pre label[for=r105],
+input[id=r106]:checked ~pre label[for=r106],
+input[id=r107]:checked ~pre label[for=r107],
+input[id=r108]:checked ~pre label[for=r108],
+input[id=r109]:checked ~pre label[for=r109],
+input[id=r110]:checked ~pre label[for=r110],
+input[id=r111]:checked ~pre label[for=r111],
+input[id=r112]:checked ~pre label[for=r112],
+input[id=r113]:checked ~pre label[for=r113],
+input[id=r114]:checked ~pre label[for=r114],
+input[id=r115]:checked ~pre label[for=r115],
+input[id=r116]:checked ~pre label[for=r116],
+input[id=r117]:checked ~pre label[for=r117],
+input[id=r118]:checked ~pre label[for=r118],
+input[id=r119]:checked ~pre label[for=r119],
+input[id=r120]:checked ~pre label[for=r120],
+input[id=r121]:checked ~pre label[for=r121],
+input[id=r122]:checked ~pre label[for=r122],
+input[id=r123]:checked ~pre label[for=r123],
+input[id=r124]:checked ~pre label[for=r124],
+input[id=r125]:checked ~pre label[for=r125],
+input[id=r126]:checked ~pre label[for=r126],
+input[id=r127]:checked ~pre label[for=r127],
+input[id=r128]:checked ~pre label[for=r128],
+input[id=r129]:checked ~pre label[for=r129],
+input[id=r130]:checked ~pre label[for=r130]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1,
+input[id=i2]:checked ~pre .i2,
+input[id=i3]:checked ~pre .i3,
+input[id=i4]:checked ~pre .i4,
+input[id=i5]:checked ~pre .i5,
+input[id=i6]:checked ~pre .i6
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="r17" type="radio" name="g"/>
+<input id="r18" type="radio" name="g"/>
+<input id="r19" type="radio" name="g"/>
+<input id="r20" type="radio" name="g"/>
+<input id="r21" type="radio" name="g"/>
+<input id="r22" type="radio" name="g"/>
+<input id="r23" type="radio" name="g"/>
+<input id="r24" type="radio" name="g"/>
+<input id="r25" type="radio" name="g"/>
+<input id="r26" type="radio" name="g"/>
+<input id="r27" type="radio" name="g"/>
+<input id="r28" type="radio" name="g"/>
+<input id="r29" type="radio" name="g"/>
+<input id="r30" type="radio" name="g"/>
+<input id="r31" type="radio" name="g"/>
+<input id="r32" type="radio" name="g"/>
+<input id="r33" type="radio" name="g"/>
+<input id="r34" type="radio" name="g"/>
+<input id="r35" type="radio" name="g"/>
+<input id="r36" type="radio" name="g"/>
+<input id="r37" type="radio" name="g"/>
+<input id="r38" type="radio" name="g"/>
+<input id="r39" type="radio" name="g"/>
+<input id="r40" type="radio" name="g"/>
+<input id="r41" type="radio" name="g"/>
+<input id="r42" type="radio" name="g"/>
+<input id="r43" type="radio" name="g"/>
+<input id="r44" type="radio" name="g"/>
+<input id="r45" type="radio" name="g"/>
+<input id="r46" type="radio" name="g"/>
+<input id="r47" type="radio" name="g"/>
+<input id="r48" type="radio" name="g"/>
+<input id="r49" type="radio" name="g"/>
+<input id="r50" type="radio" name="g"/>
+<input id="r51" type="radio" name="g"/>
+<input id="r52" type="radio" name="g"/>
+<input id="r53" type="radio" name="g"/>
+<input id="r54" type="radio" name="g"/>
+<input id="r55" type="radio" name="g"/>
+<input id="r56" type="radio" name="g"/>
+<input id="r57" type="radio" name="g"/>
+<input id="r58" type="radio" name="g"/>
+<input id="r59" type="radio" name="g"/>
+<input id="r60" type="radio" name="g"/>
+<input id="r61" type="radio" name="g"/>
+<input id="r62" type="radio" name="g"/>
+<input id="r63" type="radio" name="g"/>
+<input id="r64" type="radio" name="g"/>
+<input id="r65" type="radio" name="g"/>
+<input id="r66" type="radio" name="g"/>
+<input id="r67" type="radio" name="g"/>
+<input id="r68" type="radio" name="g"/>
+<input id="r69" type="radio" name="g"/>
+<input id="r70" type="radio" name="g"/>
+<input id="r71" type="radio" name="g"/>
+<input id="r72" type="radio" name="g"/>
+<input id="r73" type="radio" name="g"/>
+<input id="r74" type="radio" name="g"/>
+<input id="r75" type="radio" name="g"/>
+<input id="r76" type="radio" name="g"/>
+<input id="r77" type="radio" name="g"/>
+<input id="r78" type="radio" name="g"/>
+<input id="r79" type="radio" name="g"/>
+<input id="r80" type="radio" name="g"/>
+<input id="r81" type="radio" name="g"/>
+<input id="r82" type="radio" name="g"/>
+<input id="r83" type="radio" name="g"/>
+<input id="r84" type="radio" name="g"/>
+<input id="r85" type="radio" name="g"/>
+<input id="r86" type="radio" name="g"/>
+<input id="r87" type="radio" name="g"/>
+<input id="r88" type="radio" name="g"/>
+<input id="r89" type="radio" name="g"/>
+<input id="r90" type="radio" name="g"/>
+<input id="r91" type="radio" name="g"/>
+<input id="r92" type="radio" name="g"/>
+<input id="r93" type="radio" name="g"/>
+<input id="r94" type="radio" name="g"/>
+<input id="r95" type="radio" name="g"/>
+<input id="r96" type="radio" name="g"/>
+<input id="r97" type="radio" name="g"/>
+<input id="r98" type="radio" name="g"/>
+<input id="r99" type="radio" name="g"/>
+<input id="r100" type="radio" name="g"/>
+<input id="r101" type="radio" name="g"/>
+<input id="r102" type="radio" name="g"/>
+<input id="r103" type="radio" name="g"/>
+<input id="r104" type="radio" name="g"/>
+<input id="r105" type="radio" name="g"/>
+<input id="r106" type="radio" name="g"/>
+<input id="r107" type="radio" name="g"/>
+<input id="r108" type="radio" name="g"/>
+<input id="r109" type="radio" name="g"/>
+<input id="r110" type="radio" name="g"/>
+<input id="r111" type="radio" name="g"/>
+<input id="r112" type="radio" name="g"/>
+<input id="r113" type="radio" name="g"/>
+<input id="r114" type="radio" name="g"/>
+<input id="r115" type="radio" name="g"/>
+<input id="r116" type="radio" name="g"/>
+<input id="r117" type="radio" name="g"/>
+<input id="r118" type="radio" name="g"/>
+<input id="r119" type="radio" name="g"/>
+<input id="r120" type="radio" name="g"/>
+<input id="r121" type="radio" name="g"/>
+<input id="r122" type="radio" name="g"/>
+<input id="r123" type="radio" name="g"/>
+<input id="r124" type="radio" name="g"/>
+<input id="r125" type="radio" name="g"/>
+<input id="r126" type="radio" name="g"/>
+<input id="r127" type="radio" name="g"/>
+<input id="r128" type="radio" name="g"/>
+<input id="r129" type="radio" name="g"/>
+<input id="r130" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<input id="i2" type="radio" name="i"/>
+<input id="i3" type="radio" name="i"/>
+<input id="i4" type="radio" name="i"/>
+<input id="i5" type="radio" name="i"/>
+<input id="i6" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2013 The Go Authors. All rights reserved.</span><span class="comment"> Use of this source code is governed by a BSD-style</span><span class="comment"> license that can be found in the LICENSE file.</span></div>
+<div class="code"><pre><code>
+<span class="keyword">package</span> ssh
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"crypto/rand"</span></label>
+	<label for="i1"><span class="lit-string i1">"errors"</span></label>
+	<label for="i2"><span class="lit-string i2">"fmt"</span></label>
+	<label for="i3"><span class="lit-string i3">"io"</span></label>
+	<label for="i4"><span class="lit-string i4">"log"</span></label>
+	<label for="i5"><span class="lit-string i5">"net"</span></label>
+	<label for="i6"><span class="lit-string i6">"sync"</span></label>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> debugHandshake, if set, prints messages sent and received.  Key</span><span class="comment"> exchange messages are printed as if DH were used, so the debug</span><span class="comment"> messages are wrong when using ECDH.</span></div>
+<div class="code"><pre><code><span class="keyword">const</span> <a href="../../../../../pkg/golang.org/x/crypto/ssh.html#name-debugHandshake" class="ident">debugHandshake</a> = <a href="../../../../../pkg/builtin.html#name-false" class="ident">false</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> chanSize sets the amount of buffering SSH connections. This is</span><span class="comment"> primarily for testing: setting chanSize=0 uncovers deadlocks more</span><span class="comment"> quickly.</span></div>
+<div class="code"><pre><code><span class="keyword">const</span> <a href="../../../../../pkg/golang.org/x/crypto/ssh.html#name-chanSize" class="ident">chanSize</a> = <span class="lit-number">16</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> keyingTransport is a packet based transport that supports key</span><span class="comment"> changes. It need not be thread-safe. It should pass through</span><span class="comment"> msgNewKeys in both directions.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../pkg/golang.org/x/crypto/ssh.html#name-keyingTransport" class="ident">keyingTransport</a> <span class="keyword">interface</span> {
+	<a href="transport.go.html#line-27" class="ident">packetConn</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> prepareKeyChange sets up a key change. The key change for a</span><span class="comment">	 direction will be effected if a msgNewKeys message is sent</span><span class="comment">	 or received.</span></div>
+<div class="code"><pre><code>	prepareKeyChange(*<a href="common.go.html#line-149" class="ident">algorithms</a>, *<a href="kex.go.html#line-38" class="ident">kexResult</a>) <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> handshakeTransport implements rekeying on top of a keyingTransport</span><span class="comment"> and offers a thread-safe writePacket() interface.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../pkg/golang.org/x/crypto/ssh.html#name-handshakeTransport" class="ident">handshakeTransport</a> <span class="keyword">struct</span> {
+	<a href="../../../../../use/golang.org/x/crypto/ssh..handshakeTransport*e6103.conn*08041.html" class="ident">conn</a>   <a href="#line-30" class="ident">keyingTransport</a>
+	<a href="../../../../../use/golang.org/x/crypto/ssh..handshakeTransport*e6103.config*b7960.html" class="ident">config</a> *<a href="common.go.html#line-213" class="ident">Config</a>
+
+	<a href="../../../../../use/golang.org/x/crypto/ssh..handshakeTransport*e6103.serverVersion*d3a72.html" class="ident">serverVersion</a> []<a href="../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>
+	<a href="../../../../../use/golang.org/x/crypto/ssh..handshakeTransport*e6103.clientVersion*a7581.html" class="ident">clientVersion</a> []<a href="../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> hostKeys is non-empty if we are the server. In that case,</span><span class="comment">	 it contains all host keys that can be used to sign the</span><span class="comment">	 connection.</span></div>
+<div class="code"><pre><code>	<a href="../../../../../use/golang.org/x/crypto/ssh..handshakeTransport*e6103.hostKeys*f3ee2.html" class="ident">hostKeys</a> []<a href="keys.go.html#line-314" class="ident">Signer</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> hostKeyAlgorithms is non-empty if we are the client. In that case,</span><span class="comment">	 we accept these key types from the server as host key.</span></div>
+<div class="code"><pre><code>	<a href="../../../../../use/golang.org/x/crypto/ssh..handshakeTransport*e6103.hostKeyAlgorithms*346fe.html" class="ident">hostKeyAlgorithms</a> []<a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> On read error, incoming is closed, and readError is set.</span></div>
+<div class="code"><pre><code>	<a href="../../../../../use/golang.org/x/crypto/ssh..handshakeTransport*e6103.incoming*3a747.html" class="ident">incoming</a>  <span class="keyword">chan</span> []<a href="../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>
+	<a href="../../../../../use/golang.org/x/crypto/ssh..handshakeTransport*e6103.readError*e3266.html" class="ident">readError</a> <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a>
+
+	<a href="../../../../../use/golang.org/x/crypto/ssh..handshakeTransport*e6103.mu*19503.html" class="ident">mu</a>             <a href="../../../../../pkg/sync.html" class="ident i6">sync</a>.<a href="../../../../sync/mutex.go.html#line-25" class="ident">Mutex</a>
+	<a href="../../../../../use/golang.org/x/crypto/ssh..handshakeTransport*e6103.writeError*2ec0b.html" class="ident">writeError</a>     <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a>
+	<a href="../../../../../use/golang.org/x/crypto/ssh..handshakeTransport*e6103.sentInitPacket*7067e.html" class="ident">sentInitPacket</a> []<a href="../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>
+	<a href="../../../../../use/golang.org/x/crypto/ssh..handshakeTransport*e6103.sentInitMsg*01fea.html" class="ident">sentInitMsg</a>    *<a href="messages.go.html#line-53" class="ident">kexInitMsg</a>
+	<a href="../../../../../use/golang.org/x/crypto/ssh..handshakeTransport*e6103.pendingPackets*46970.html" class="ident">pendingPackets</a> [][]<a href="../../../../../pkg/builtin.html#name-byte" class="ident">byte</a> <span class="comment">// Used when a key exchange is in progress.</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> If the read loop wants to schedule a kex, it pings this</span><span class="comment">	 channel, and the write loop will send out a kex</span><span class="comment">	 message.</span></div>
+<div class="code"><pre><code>	<a href="../../../../../use/golang.org/x/crypto/ssh..handshakeTransport*e6103.requestKex*28d52.html" class="ident">requestKex</a> <span class="keyword">chan</span> <span class="keyword">struct</span>{}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> If the other side requests or confirms a kex, its kexInit</span><span class="comment">	 packet is sent here for the write loop to find it.</span></div>
+<div class="code"><pre><code>	<a href="../../../../../use/golang.org/x/crypto/ssh..handshakeTransport*e6103.startKex*780ea.html" class="ident">startKex</a> <span class="keyword">chan</span> *<a href="#line-99" class="ident">pendingKex</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> data for host key checking</span></div>
+<div class="code"><pre><code>	<a href="../../../../../use/golang.org/x/crypto/ssh..handshakeTransport*e6103.hostKeyCallback*77235.html" class="ident">hostKeyCallback</a> <a href="client.go.html#line-189" class="ident">HostKeyCallback</a>
+	<a href="../../../../../use/golang.org/x/crypto/ssh..handshakeTransport*e6103.dialAddress*27d3a.html" class="ident">dialAddress</a>     <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../use/golang.org/x/crypto/ssh..handshakeTransport*e6103.remoteAddr*10870.html" class="ident">remoteAddr</a>      <a href="../../../../../pkg/net.html" class="ident i5">net</a>.<a href="../../../../net/net.go.html#line-105" class="ident">Addr</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> bannerCallback is non-empty if we are the client and it has been set in</span><span class="comment">	 ClientConfig. In that case it is called during the user authentication</span><span class="comment">	 dance to handle a custom server's message.</span></div>
+<div class="code"><pre><code>	<a href="../../../../../use/golang.org/x/crypto/ssh..handshakeTransport*e6103.bannerCallback*7998c.html" class="ident">bannerCallback</a> <a href="client.go.html#line-193" class="ident">BannerCallback</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Algorithms agreed in the last key exchange.</span></div>
+<div class="code"><pre><code>	<a href="../../../../../use/golang.org/x/crypto/ssh..handshakeTransport*e6103.algorithms*1ba71.html" class="ident">algorithms</a> *<a href="common.go.html#line-149" class="ident">algorithms</a>
+
+	<a href="../../../../../use/golang.org/x/crypto/ssh..handshakeTransport*e6103.readPacketsLeft*87c5b.html" class="ident">readPacketsLeft</a> <a href="../../../../../pkg/builtin.html#name-uint32" class="ident">uint32</a>
+	<a href="../../../../../use/golang.org/x/crypto/ssh..handshakeTransport*e6103.readBytesLeft*d38cc.html" class="ident">readBytesLeft</a>   <a href="../../../../../pkg/builtin.html#name-int64" class="ident">int64</a>
+
+	<a href="../../../../../use/golang.org/x/crypto/ssh..handshakeTransport*e6103.writePacketsLeft*a36ff.html" class="ident">writePacketsLeft</a> <a href="../../../../../pkg/builtin.html#name-uint32" class="ident">uint32</a>
+	<a href="../../../../../use/golang.org/x/crypto/ssh..handshakeTransport*e6103.writeBytesLeft*85395.html" class="ident">writeBytesLeft</a>   <a href="../../../../../pkg/builtin.html#name-int64" class="ident">int64</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> The session ID or nil if first kex did not complete yet.</span></div>
+<div class="code"><pre><code>	<a href="../../../../../use/golang.org/x/crypto/ssh..handshakeTransport*e6103.sessionID*b0538.html" class="ident">sessionID</a> []<a href="../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>
+}
+
+<span class="keyword">type</span> <a href="../../../../../pkg/golang.org/x/crypto/ssh.html#name-pendingKex" class="ident">pendingKex</a> <span class="keyword">struct</span> {
+	<a href="../../../../../use/golang.org/x/crypto/ssh..pendingKex*2f0e2.otherInit*c1f0e.html" class="ident">otherInit</a> []<a href="../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>
+	<a href="../../../../../use/golang.org/x/crypto/ssh..pendingKex*2f0e2.done*a4c3e.html" class="ident">done</a>      <span class="keyword">chan</span> <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a>
+}
+
+<span class="keyword">func</span> <label for="r0" class="ident"><a href="../../../../../pkg/golang.org/x/crypto/ssh.html#name-newHandshakeTransport" class="ident">newHandshakeTransport</a></label>(<label for="r1" class="ident">conn</label> <a href="#line-30" class="ident">keyingTransport</a>, <label for="r2" class="ident">config</label> *<a href="common.go.html#line-213" class="ident">Config</a>, <label for="r3" class="ident">clientVersion</label>, <label for="r4" class="ident">serverVersion</label> []<a href="../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>) *<a href="#line-41" class="ident">handshakeTransport</a> {
+	<label for="r5" class="ident">t</label> := &amp;<a href="#line-41" class="ident">handshakeTransport</a>{
+		<a href="#line-42" class="ident">conn</a>:          <label for="r1" class="ident">conn</label>,
+		<a href="#line-45" class="ident">serverVersion</a>: <label for="r4" class="ident">serverVersion</label>,
+		<a href="#line-46" class="ident">clientVersion</a>: <label for="r3" class="ident">clientVersion</label>,
+		<a href="#line-58" class="ident">incoming</a>:      <a href="../../../../runtime/chan.go.html#line-71">make</a>(<span class="keyword">chan</span> []<a href="../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>, <a href="#line-25" class="ident">chanSize</a>),
+		<a href="#line-70" class="ident">requestKex</a>:    <a href="../../../../runtime/chan.go.html#line-71">make</a>(<span class="keyword">chan</span> <span class="keyword">struct</span>{}, <span class="lit-number">1</span>),
+		<a href="#line-74" class="ident">startKex</a>:      <a href="../../../../runtime/chan.go.html#line-71">make</a>(<span class="keyword">chan</span> *<a href="#line-99" class="ident">pendingKex</a>, <span class="lit-number">1</span>),
+
+		<a href="#line-43" class="ident">config</a>: <label for="r2" class="ident">config</label>,
+	}
+	<label for="r5" class="ident">t</label>.<a href="#line-362" class="ident">resetReadThresholds</a>()
+	<label for="r5" class="ident">t</label>.<a href="#line-248" class="ident">resetWriteThresholds</a>()
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> We always start with a mandatory key exchange.</span></div>
+<div class="code"><pre><code>	<label for="r5" class="ident">t</label>.<a href="#line-70" class="ident">requestKex</a> &lt;- <span class="keyword">struct</span>{}{}
+	<span class="keyword">return</span> <label for="r5" class="ident">t</label>
+}
+
+<span class="keyword">func</span> <label for="r6" class="ident"><a href="../../../../../pkg/golang.org/x/crypto/ssh.html#name-newClientTransport" class="ident">newClientTransport</a></label>(<label for="r7" class="ident">conn</label> <a href="#line-30" class="ident">keyingTransport</a>, <label for="r8" class="ident">clientVersion</label>, <label for="r9" class="ident">serverVersion</label> []<a href="../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>, <label for="r10" class="ident">config</label> *<a href="client.go.html#line-197" class="ident">ClientConfig</a>, <label for="r11" class="ident">dialAddr</label> <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>, <label for="r12" class="ident">addr</label> <a href="../../../../../pkg/net.html" class="ident i5">net</a>.<a href="../../../../net/net.go.html#line-105" class="ident">Addr</a>) *<a href="#line-41" class="ident">handshakeTransport</a> {
+	<label for="r13" class="ident">t</label> := <a href="#line-104" class="ident">newHandshakeTransport</a>(<label for="r7" class="ident">conn</label>, &amp;<label for="r10" class="ident">config</label>.<a href="client.go.html#line-200" class="ident">Config</a>, <label for="r8" class="ident">clientVersion</label>, <label for="r9" class="ident">serverVersion</label>)
+	<label for="r13" class="ident">t</label>.<a href="#line-78" class="ident">dialAddress</a> = <label for="r11" class="ident">dialAddr</label>
+	<label for="r13" class="ident">t</label>.<a href="#line-79" class="ident">remoteAddr</a> = <label for="r12" class="ident">addr</label>
+	<label for="r13" class="ident">t</label>.<a href="#line-77" class="ident">hostKeyCallback</a> = <label for="r10" class="ident">config</label>.<a href="client.go.html#line-215" class="ident">HostKeyCallback</a>
+	<label for="r13" class="ident">t</label>.<a href="#line-84" class="ident">bannerCallback</a> = <label for="r10" class="ident">config</label>.<a href="client.go.html#line-221" class="ident">BannerCallback</a>
+	<span class="keyword">if</span> <label for="r10" class="ident">config</label>.<a href="client.go.html#line-232" class="ident">HostKeyAlgorithms</a> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<label for="r13" class="ident">t</label>.<a href="#line-55" class="ident">hostKeyAlgorithms</a> = <label for="r10" class="ident">config</label>.<a href="client.go.html#line-232" class="ident">HostKeyAlgorithms</a>
+	} <span class="keyword">else</span> {
+		<label for="r13" class="ident">t</label>.<a href="#line-55" class="ident">hostKeyAlgorithms</a> = <a href="common.go.html#line-71" class="ident">supportedHostKeyAlgos</a>
+	}
+	<span class="keyword">go</span> <label for="r13" class="ident">t</label>.<a href="#line-194" class="ident">readLoop</a>()
+	<span class="keyword">go</span> <label for="r13" class="ident">t</label>.<a href="#line-259" class="ident">kexLoop</a>()
+	<span class="keyword">return</span> <label for="r13" class="ident">t</label>
+}
+
+<span class="keyword">func</span> <label for="r14" class="ident"><a href="../../../../../pkg/golang.org/x/crypto/ssh.html#name-newServerTransport" class="ident">newServerTransport</a></label>(<label for="r15" class="ident">conn</label> <a href="#line-30" class="ident">keyingTransport</a>, <label for="r16" class="ident">clientVersion</label>, <label for="r17" class="ident">serverVersion</label> []<a href="../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>, <label for="r18" class="ident">config</label> *<a href="server.go.html#line-63" class="ident">ServerConfig</a>) *<a href="#line-41" class="ident">handshakeTransport</a> {
+	<label for="r19" class="ident">t</label> := <a href="#line-104" class="ident">newHandshakeTransport</a>(<label for="r15" class="ident">conn</label>, &amp;<label for="r18" class="ident">config</label>.<a href="server.go.html#line-65" class="ident">Config</a>, <label for="r16" class="ident">clientVersion</label>, <label for="r17" class="ident">serverVersion</label>)
+	<label for="r19" class="ident">t</label>.<a href="#line-51" class="ident">hostKeys</a> = <label for="r18" class="ident">config</label>.<a href="server.go.html#line-67" class="ident">hostKeys</a>
+	<span class="keyword">go</span> <label for="r19" class="ident">t</label>.<a href="#line-194" class="ident">readLoop</a>()
+	<span class="keyword">go</span> <label for="r19" class="ident">t</label>.<a href="#line-259" class="ident">kexLoop</a>()
+	<span class="keyword">return</span> <label for="r19" class="ident">t</label>
+}
+
+<span class="keyword">func</span> (<label for="r20" class="ident">t</label> *<a href="#line-41" class="ident">handshakeTransport</a>) <label for="r21" class="ident"><a href="../../../../../use/golang.org/x/crypto/ssh..handshakeTransport*e6103.getSessionID*89c43.html" class="ident">getSessionID</a></label>() []<a href="../../../../../pkg/builtin.html#name-byte" class="ident">byte</a> {
+	<span class="keyword">return</span> <label for="r20" class="ident">t</label>.<a href="#line-96" class="ident">sessionID</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> waitSession waits for the session to be established. This should be</span><span class="comment"> the first thing to call after instantiating handshakeTransport.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r22" class="ident">t</label> *<a href="#line-41" class="ident">handshakeTransport</a>) <label for="r23" class="ident"><a href="../../../../../use/golang.org/x/crypto/ssh..handshakeTransport*e6103.waitSession*92313.html" class="ident">waitSession</a></label>() <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<label for="r24" class="ident">p</label>, <label for="r25" class="ident">err</label> := <label for="r22" class="ident">t</label>.<a href="#line-186" class="ident">readPacket</a>()
+	<span class="keyword">if</span> <label for="r25" class="ident">err</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <label for="r25" class="ident">err</label>
+	}
+	<span class="keyword">if</span> <label for="r24" class="ident">p</label>[<span class="lit-number">0</span>] != <a href="messages.go.html#line-25" class="ident">msgNewKeys</a> {
+		<span class="keyword">return</span> <a href="../../../../../pkg/fmt.html" class="ident i2">fmt</a>.<a href="../../../../fmt/errors.go.html#line-17" class="ident">Errorf</a>(<span class="lit-string">"ssh: first packet should be msgNewKeys"</span>)
+	}
+
+	<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+}
+
+<span class="keyword">func</span> (<label for="r26" class="ident">t</label> *<a href="#line-41" class="ident">handshakeTransport</a>) <label for="r27" class="ident"><a href="../../../../../use/golang.org/x/crypto/ssh..handshakeTransport*e6103.id*a5614.html" class="ident">id</a></label>() <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a> {
+	<span class="keyword">if</span> <a href="../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r26" class="ident">t</label>.<a href="#line-51" class="ident">hostKeys</a>) &gt; <span class="lit-number">0</span> {
+		<span class="keyword">return</span> <span class="lit-string">"server"</span>
+	}
+	<span class="keyword">return</span> <span class="lit-string">"client"</span>
+}
+
+<span class="keyword">func</span> (<label for="r28" class="ident">t</label> *<a href="#line-41" class="ident">handshakeTransport</a>) <label for="r29" class="ident"><a href="../../../../../use/golang.org/x/crypto/ssh..handshakeTransport*e6103.printPacket*76aff.html" class="ident">printPacket</a></label>(<label for="r30" class="ident">p</label> []<a href="../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>, <label for="r31" class="ident">write</label> <a href="../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>) {
+	<label for="r32" class="ident">action</label> := <span class="lit-string">"got"</span>
+	<span class="keyword">if</span> <label for="r31" class="ident">write</label> {
+		<label for="r32" class="ident">action</label> = <span class="lit-string">"sent"</span>
+	}
+
+	<span class="keyword">if</span> <label for="r30" class="ident">p</label>[<span class="lit-number">0</span>] == <a href="messages.go.html#line-202" class="ident">msgChannelData</a> || <label for="r30" class="ident">p</label>[<span class="lit-number">0</span>] == <a href="messages.go.html#line-201" class="ident">msgChannelExtendedData</a> {
+		<a href="../../../../../pkg/log.html" class="ident i4">log</a>.<a href="../../../../log/log.go.html#line-322" class="ident">Printf</a>(<span class="lit-string">"%s %s data (packet %d bytes)"</span>, <label for="r28" class="ident">t</label>.<a href="#line-165" class="ident">id</a>(), <label for="r32" class="ident">action</label>, <a href="../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r30" class="ident">p</label>))
+	} <span class="keyword">else</span> {
+		<label for="r33" class="ident">msg</label>, <label for="r34" class="ident">err</label> := <a href="messages.go.html#line-776" class="ident">decode</a>(<label for="r30" class="ident">p</label>)
+		<a href="../../../../../pkg/log.html" class="ident i4">log</a>.<a href="../../../../log/log.go.html#line-322" class="ident">Printf</a>(<span class="lit-string">"%s %s %T %v (%v)"</span>, <label for="r28" class="ident">t</label>.<a href="#line-165" class="ident">id</a>(), <label for="r32" class="ident">action</label>, <label for="r33" class="ident">msg</label>, <label for="r33" class="ident">msg</label>, <label for="r34" class="ident">err</label>)
+	}
+}
+
+<span class="keyword">func</span> (<label for="r35" class="ident">t</label> *<a href="#line-41" class="ident">handshakeTransport</a>) <label for="r36" class="ident"><a href="../../../../../use/golang.org/x/crypto/ssh..handshakeTransport*e6103.readPacket*d6e94.html" class="ident">readPacket</a></label>() ([]<a href="../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>, <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<label for="r37" class="ident">p</label>, <label for="r38" class="ident">ok</label> := &lt;-<label for="r35" class="ident">t</label>.<a href="#line-58" class="ident">incoming</a>
+	<span class="keyword">if</span> !<label for="r38" class="ident">ok</label> {
+		<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <label for="r35" class="ident">t</label>.<a href="#line-59" class="ident">readError</a>
+	}
+	<span class="keyword">return</span> <label for="r37" class="ident">p</label>, <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+}
+
+<span class="keyword">func</span> (<label for="r39" class="ident">t</label> *<a href="#line-41" class="ident">handshakeTransport</a>) <label for="r40" class="ident"><a href="../../../../../use/golang.org/x/crypto/ssh..handshakeTransport*e6103.readLoop*f528e.html" class="ident">readLoop</a></label>() {
+	<label for="r41" class="ident">first</label> := <a href="../../../../../pkg/builtin.html#name-true" class="ident">true</a>
+	<span class="keyword">for</span> {
+		<label for="r42" class="ident">p</label>, <label for="r43" class="ident">err</label> := <label for="r39" class="ident">t</label>.<a href="#line-373" class="ident">readOnePacket</a>(<label for="r41" class="ident">first</label>)
+		<label for="r41" class="ident">first</label> = <a href="../../../../../pkg/builtin.html#name-false" class="ident">false</a>
+		<span class="keyword">if</span> <label for="r43" class="ident">err</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<label for="r39" class="ident">t</label>.<a href="#line-59" class="ident">readError</a> = <label for="r43" class="ident">err</label>
+			<a href="../../../../../pkg/builtin.html#name-close" class="ident">close</a>(<label for="r39" class="ident">t</label>.<a href="#line-58" class="ident">incoming</a>)
+			<span class="keyword">break</span>
+		}
+		<span class="keyword">if</span> <label for="r42" class="ident">p</label>[<span class="lit-number">0</span>] == <a href="messages.go.html#line-22" class="ident">msgIgnore</a> || <label for="r42" class="ident">p</label>[<span class="lit-number">0</span>] == <a href="messages.go.html#line-24" class="ident">msgDebug</a> {
+			<span class="keyword">continue</span>
+		}
+		<label for="r39" class="ident">t</label>.<a href="#line-58" class="ident">incoming</a> &lt;- <label for="r42" class="ident">p</label>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Stop writers too.</span></div>
+<div class="code"><pre><code>	<label for="r39" class="ident">t</label>.<a href="#line-232" class="ident">recordWriteError</a>(<label for="r39" class="ident">t</label>.<a href="#line-59" class="ident">readError</a>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Unblock the writer should it wait for this.</span></div>
+<div class="code"><pre><code>	<a href="../../../../../pkg/builtin.html#name-close" class="ident">close</a>(<label for="r39" class="ident">t</label>.<a href="#line-74" class="ident">startKex</a>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Don't close t.requestKex; it's also written to from writePacket.</span></div>
+<div class="code"><pre><code>}
+
+<span class="keyword">func</span> (<label for="r44" class="ident">t</label> *<a href="#line-41" class="ident">handshakeTransport</a>) <label for="r45" class="ident"><a href="../../../../../use/golang.org/x/crypto/ssh..handshakeTransport*e6103.pushPacket*1bd7b.html" class="ident">pushPacket</a></label>(<label for="r46" class="ident">p</label> []<a href="../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>) <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<span class="keyword">if</span> <a href="#line-20" class="ident">debugHandshake</a> {
+		<label for="r44" class="ident">t</label>.<a href="#line-172" class="ident">printPacket</a>(<label for="r46" class="ident">p</label>, <a href="../../../../../pkg/builtin.html#name-true" class="ident">true</a>)
+	}
+	<span class="keyword">return</span> <label for="r44" class="ident">t</label>.<a href="#line-42" class="ident">conn</a>.<a href="transport.go.html#line-29" class="ident">writePacket</a>(<label for="r46" class="ident">p</label>)
+}
+
+<span class="keyword">func</span> (<label for="r47" class="ident">t</label> *<a href="#line-41" class="ident">handshakeTransport</a>) <label for="r48" class="ident"><a href="../../../../../use/golang.org/x/crypto/ssh..handshakeTransport*e6103.getWriteError*2c6db.html" class="ident">getWriteError</a></label>() <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<label for="r47" class="ident">t</label>.<a href="#line-61" class="ident">mu</a>.<a href="../../../../sync/mutex.go.html#line-72" class="ident">Lock</a>()
+	<span class="keyword">defer</span> <label for="r47" class="ident">t</label>.<a href="#line-61" class="ident">mu</a>.<a href="../../../../sync/mutex.go.html#line-179" class="ident">Unlock</a>()
+	<span class="keyword">return</span> <label for="r47" class="ident">t</label>.<a href="#line-62" class="ident">writeError</a>
+}
+
+<span class="keyword">func</span> (<label for="r49" class="ident">t</label> *<a href="#line-41" class="ident">handshakeTransport</a>) <label for="r50" class="ident"><a href="../../../../../use/golang.org/x/crypto/ssh..handshakeTransport*e6103.recordWriteError*ee9e3.html" class="ident">recordWriteError</a></label>(<label for="r51" class="ident">err</label> <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<label for="r49" class="ident">t</label>.<a href="#line-61" class="ident">mu</a>.<a href="../../../../sync/mutex.go.html#line-72" class="ident">Lock</a>()
+	<span class="keyword">defer</span> <label for="r49" class="ident">t</label>.<a href="#line-61" class="ident">mu</a>.<a href="../../../../sync/mutex.go.html#line-179" class="ident">Unlock</a>()
+	<span class="keyword">if</span> <label for="r49" class="ident">t</label>.<a href="#line-62" class="ident">writeError</a> == <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> &amp;&amp; <label for="r51" class="ident">err</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<label for="r49" class="ident">t</label>.<a href="#line-62" class="ident">writeError</a> = <label for="r51" class="ident">err</label>
+	}
+}
+
+<span class="keyword">func</span> (<label for="r52" class="ident">t</label> *<a href="#line-41" class="ident">handshakeTransport</a>) <label for="r53" class="ident"><a href="../../../../../use/golang.org/x/crypto/ssh..handshakeTransport*e6103.requestKeyExchange*00722.html" class="ident">requestKeyExchange</a></label>() {
+	<a href="../../../../runtime/chan.go.html#line-686"><span class="keyword">select</span></a> {
+	<span class="keyword">case</span> <label for="r52" class="ident">t</label>.<a href="#line-70" class="ident">requestKex</a> <a href="../../../../runtime/chan.go.html#line-158">&lt;-</a> <span class="keyword">struct</span>{}{}:
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> something already requested a kex, so do nothing.</span></div>
+<div class="code"><pre><code>	}
+}
+
+<span class="keyword">func</span> (<label for="r54" class="ident">t</label> *<a href="#line-41" class="ident">handshakeTransport</a>) <label for="r55" class="ident"><a href="../../../../../use/golang.org/x/crypto/ssh..handshakeTransport*e6103.resetWriteThresholds*0f1a6.html" class="ident">resetWriteThresholds</a></label>() {
+	<label for="r54" class="ident">t</label>.<a href="#line-92" class="ident">writePacketsLeft</a> = <a href="#line-360" class="ident">packetRekeyThreshold</a>
+	<span class="keyword">if</span> <label for="r54" class="ident">t</label>.<a href="#line-43" class="ident">config</a>.<a href="common.go.html#line-222" class="ident">RekeyThreshold</a> &gt; <span class="lit-number">0</span> {
+		<label for="r54" class="ident">t</label>.<a href="#line-93" class="ident">writeBytesLeft</a> = <a href="../../../../../pkg/builtin.html#name-int64" class="ident">int64</a>(<label for="r54" class="ident">t</label>.<a href="#line-43" class="ident">config</a>.<a href="common.go.html#line-222" class="ident">RekeyThreshold</a>)
+	} <span class="keyword">else</span> <span class="keyword">if</span> <label for="r54" class="ident">t</label>.<a href="#line-87" class="ident">algorithms</a> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<label for="r54" class="ident">t</label>.<a href="#line-93" class="ident">writeBytesLeft</a> = <label for="r54" class="ident">t</label>.<a href="#line-87" class="ident">algorithms</a>.<a href="common.go.html#line-152" class="ident">w</a>.<a href="common.go.html#line-135" class="ident">rekeyBytes</a>()
+	} <span class="keyword">else</span> {
+		<label for="r54" class="ident">t</label>.<a href="#line-93" class="ident">writeBytesLeft</a> = <span class="lit-number">1</span> &lt;&lt; <span class="lit-number">30</span>
+	}
+}
+
+<span class="keyword">func</span> (<label for="r56" class="ident">t</label> *<a href="#line-41" class="ident">handshakeTransport</a>) <label for="r57" class="ident"><a href="../../../../../use/golang.org/x/crypto/ssh..handshakeTransport*e6103.kexLoop*3cda2.html" class="ident">kexLoop</a></label>() {
+
+<label for="r58" class="ident">write</label>:
+	<span class="keyword">for</span> <label for="r56" class="ident">t</label>.<a href="#line-226" class="ident">getWriteError</a>() == <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">var</span> <label for="r59" class="ident">request</label> *<a href="#line-99" class="ident">pendingKex</a>
+		<span class="keyword">var</span> <label for="r60" class="ident">sent</label> <a href="../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>
+
+		<span class="keyword">for</span> <label for="r59" class="ident">request</label> == <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> || !<label for="r60" class="ident">sent</label> {
+			<span class="keyword">var</span> <label for="r61" class="ident">ok</label> <a href="../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>
+			<a href="../../../../runtime/select.go.html#line-121"><span class="keyword">select</span></a> {
+			<span class="keyword">case</span> <label for="r59" class="ident">request</label>, <label for="r61" class="ident">ok</label> = <a href="../../../../runtime/chan.go.html#line-443">&lt;-</a><label for="r56" class="ident">t</label>.<a href="#line-74" class="ident">startKex</a>:
+				<span class="keyword">if</span> !<label for="r61" class="ident">ok</label> {
+					<span class="keyword">break</span> <label for="r58" class="ident">write</label>
+				}
+			<span class="keyword">case</span> <a href="../../../../runtime/chan.go.html#line-438">&lt;-</a><label for="r56" class="ident">t</label>.<a href="#line-70" class="ident">requestKex</a>:
+				<span class="keyword">break</span>
+			}
+
+			<span class="keyword">if</span> !<label for="r60" class="ident">sent</label> {
+				<span class="keyword">if</span> <label for="r62" class="ident">err</label> := <label for="r56" class="ident">t</label>.<a href="#line-436" class="ident">sendKexInit</a>(); <label for="r62" class="ident">err</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+					<label for="r56" class="ident">t</label>.<a href="#line-232" class="ident">recordWriteError</a>(<label for="r62" class="ident">err</label>)
+					<span class="keyword">break</span>
+				}
+				<label for="r60" class="ident">sent</label> = <a href="../../../../../pkg/builtin.html#name-true" class="ident">true</a>
+			}
+		}
+
+		<span class="keyword">if</span> <label for="r63" class="ident">err</label> := <label for="r56" class="ident">t</label>.<a href="#line-226" class="ident">getWriteError</a>(); <label for="r63" class="ident">err</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<span class="keyword">if</span> <label for="r59" class="ident">request</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+				<label for="r59" class="ident">request</label>.<a href="#line-101" class="ident">done</a> &lt;- <label for="r63" class="ident">err</label>
+			}
+			<span class="keyword">break</span>
+		}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> We're not servicing t.requestKex, but that is OK:</span><span class="comment">		 we never block on sending to t.requestKex.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> We're not servicing t.startKex, but the remote end</span><span class="comment">		 has just sent us a kexInitMsg, so it can't send</span><span class="comment">		 another key change request, until we close the done</span><span class="comment">		 channel on the pendingKex request.</span></div>
+<div class="code"><pre><code>
+		<label for="r64" class="ident">err</label> := <label for="r56" class="ident">t</label>.<a href="#line-527" class="ident">enterKeyExchange</a>(<label for="r59" class="ident">request</label>.<a href="#line-100" class="ident">otherInit</a>)
+
+		<label for="r56" class="ident">t</label>.<a href="#line-61" class="ident">mu</a>.<a href="../../../../sync/mutex.go.html#line-72" class="ident">Lock</a>()
+		<label for="r56" class="ident">t</label>.<a href="#line-62" class="ident">writeError</a> = <label for="r64" class="ident">err</label>
+		<label for="r56" class="ident">t</label>.<a href="#line-63" class="ident">sentInitPacket</a> = <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+		<label for="r56" class="ident">t</label>.<a href="#line-64" class="ident">sentInitMsg</a> = <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+
+		<label for="r56" class="ident">t</label>.<a href="#line-248" class="ident">resetWriteThresholds</a>()
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> we have completed the key exchange. Since the</span><span class="comment">		 reader is still blocked, it is safe to clear out</span><span class="comment">		 the requestKex channel. This avoids the situation</span><span class="comment">		 where: 1) we consumed our own request for the</span><span class="comment">		 initial kex, and 2) the kex from the remote side</span><span class="comment">		 caused another send on the requestKex channel,</span></div>
+<div class="code"><pre><code>	<label for="r65" class="ident">clear</label>:
+		<span class="keyword">for</span> {
+			<a href="../../../../runtime/chan.go.html#line-707"><span class="keyword">select</span></a> {
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"></span></div>
+<div class="code"><pre><code>			<span class="keyword">default</span>:
+				<span class="keyword">break</span> <label for="r65" class="ident">clear</label>
+			}
+		}
+
+		<label for="r59" class="ident">request</label>.<a href="#line-101" class="ident">done</a> &lt;- <label for="r56" class="ident">t</label>.<a href="#line-62" class="ident">writeError</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> kex finished. Push packets that we received while</span><span class="comment">		 the kex was in progress. Don't look at t.startKex</span><span class="comment">		 and don't increment writtenSinceKex: if we trigger</span><span class="comment">		 another kex while we are still busy with the last</span><span class="comment">		 one, things will become very confusing.</span></div>
+<div class="code"><pre><code>		<span class="keyword">for</span> <label for="r66" class="ident">_</label>, <label for="r67" class="ident">p</label> := <span class="keyword">range</span> <label for="r56" class="ident">t</label>.<a href="#line-65" class="ident">pendingPackets</a> {
+			<label for="r56" class="ident">t</label>.<a href="#line-62" class="ident">writeError</a> = <label for="r56" class="ident">t</label>.<a href="#line-219" class="ident">pushPacket</a>(<label for="r67" class="ident">p</label>)
+			<span class="keyword">if</span> <label for="r56" class="ident">t</label>.<a href="#line-62" class="ident">writeError</a> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+				<span class="keyword">break</span>
+			}
+		}
+		<label for="r56" class="ident">t</label>.<a href="#line-65" class="ident">pendingPackets</a> = <label for="r56" class="ident">t</label>.<a href="#line-65" class="ident">pendingPackets</a>[:<span class="lit-number">0</span>]
+		<label for="r56" class="ident">t</label>.<a href="#line-61" class="ident">mu</a>.<a href="../../../../sync/mutex.go.html#line-179" class="ident">Unlock</a>()
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> drain startKex channel. We don't service t.requestKex</span><span class="comment">	 because nobody does blocking sends there.</span></div>
+<div class="code"><pre><code>	<span class="keyword">go</span> <span class="keyword">func</span>() {
+		<span class="keyword">for</span> <label for="r68" class="ident">init</label> := <span class="keyword">range</span> <label for="r56" class="ident">t</label>.<a href="#line-74" class="ident">startKex</a> {
+			<label for="r68" class="ident">init</label>.<a href="#line-101" class="ident">done</a> &lt;- <label for="r56" class="ident">t</label>.<a href="#line-62" class="ident">writeError</a>
+		}
+	}()
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Unblock reader.</span></div>
+<div class="code"><pre><code>	<label for="r56" class="ident">t</label>.<a href="#line-42" class="ident">conn</a>.<a href="transport.go.html#line-37" class="ident">Close</a>()
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> The protocol uses uint32 for packet counters, so we can't let them</span><span class="comment"> reach 1&lt;&lt;32.  We will actually read and write more packets than</span><span class="comment"> this, though: the other side may send more packets, and after we</span><span class="comment"> hit this limit on writing we will send a few more packets for the</span><span class="comment"> key exchange itself.</span></div>
+<div class="code"><pre><code><span class="keyword">const</span> <a href="../../../../../pkg/golang.org/x/crypto/ssh.html#name-packetRekeyThreshold" class="ident">packetRekeyThreshold</a> = (<span class="lit-number">1</span> &lt;&lt; <span class="lit-number">31</span>)
+
+<span class="keyword">func</span> (<label for="r69" class="ident">t</label> *<a href="#line-41" class="ident">handshakeTransport</a>) <label for="r70" class="ident"><a href="../../../../../use/golang.org/x/crypto/ssh..handshakeTransport*e6103.resetReadThresholds*5898b.html" class="ident">resetReadThresholds</a></label>() {
+	<label for="r69" class="ident">t</label>.<a href="#line-89" class="ident">readPacketsLeft</a> = <a href="#line-360" class="ident">packetRekeyThreshold</a>
+	<span class="keyword">if</span> <label for="r69" class="ident">t</label>.<a href="#line-43" class="ident">config</a>.<a href="common.go.html#line-222" class="ident">RekeyThreshold</a> &gt; <span class="lit-number">0</span> {
+		<label for="r69" class="ident">t</label>.<a href="#line-90" class="ident">readBytesLeft</a> = <a href="../../../../../pkg/builtin.html#name-int64" class="ident">int64</a>(<label for="r69" class="ident">t</label>.<a href="#line-43" class="ident">config</a>.<a href="common.go.html#line-222" class="ident">RekeyThreshold</a>)
+	} <span class="keyword">else</span> <span class="keyword">if</span> <label for="r69" class="ident">t</label>.<a href="#line-87" class="ident">algorithms</a> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<label for="r69" class="ident">t</label>.<a href="#line-90" class="ident">readBytesLeft</a> = <label for="r69" class="ident">t</label>.<a href="#line-87" class="ident">algorithms</a>.<a href="common.go.html#line-153" class="ident">r</a>.<a href="common.go.html#line-135" class="ident">rekeyBytes</a>()
+	} <span class="keyword">else</span> {
+		<label for="r69" class="ident">t</label>.<a href="#line-90" class="ident">readBytesLeft</a> = <span class="lit-number">1</span> &lt;&lt; <span class="lit-number">30</span>
+	}
+}
+
+<span class="keyword">func</span> (<label for="r71" class="ident">t</label> *<a href="#line-41" class="ident">handshakeTransport</a>) <label for="r72" class="ident"><a href="../../../../../use/golang.org/x/crypto/ssh..handshakeTransport*e6103.readOnePacket*09325.html" class="ident">readOnePacket</a></label>(<label for="r73" class="ident">first</label> <a href="../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>) ([]<a href="../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>, <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<label for="r74" class="ident">p</label>, <label for="r75" class="ident">err</label> := <label for="r71" class="ident">t</label>.<a href="#line-42" class="ident">conn</a>.<a href="transport.go.html#line-34" class="ident">readPacket</a>()
+	<span class="keyword">if</span> <label for="r75" class="ident">err</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <label for="r75" class="ident">err</label>
+	}
+
+	<span class="keyword">if</span> <label for="r71" class="ident">t</label>.<a href="#line-89" class="ident">readPacketsLeft</a> &gt; <span class="lit-number">0</span> {
+		<label for="r71" class="ident">t</label>.<a href="#line-89" class="ident">readPacketsLeft</a>--
+	} <span class="keyword">else</span> {
+		<label for="r71" class="ident">t</label>.<a href="#line-240" class="ident">requestKeyExchange</a>()
+	}
+
+	<span class="keyword">if</span> <label for="r71" class="ident">t</label>.<a href="#line-90" class="ident">readBytesLeft</a> &gt; <span class="lit-number">0</span> {
+		<label for="r71" class="ident">t</label>.<a href="#line-90" class="ident">readBytesLeft</a> -= <a href="../../../../../pkg/builtin.html#name-int64" class="ident">int64</a>(<a href="../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r74" class="ident">p</label>))
+	} <span class="keyword">else</span> {
+		<label for="r71" class="ident">t</label>.<a href="#line-240" class="ident">requestKeyExchange</a>()
+	}
+
+	<span class="keyword">if</span> <a href="#line-20" class="ident">debugHandshake</a> {
+		<label for="r71" class="ident">t</label>.<a href="#line-172" class="ident">printPacket</a>(<label for="r74" class="ident">p</label>, <a href="../../../../../pkg/builtin.html#name-false" class="ident">false</a>)
+	}
+
+	<span class="keyword">if</span> <label for="r73" class="ident">first</label> &amp;&amp; <label for="r74" class="ident">p</label>[<span class="lit-number">0</span>] != <a href="messages.go.html#line-51" class="ident">msgKexInit</a> {
+		<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="../../../../../pkg/fmt.html" class="ident i2">fmt</a>.<a href="../../../../fmt/errors.go.html#line-17" class="ident">Errorf</a>(<span class="lit-string">"ssh: first packet should be msgKexInit"</span>)
+	}
+
+	<span class="keyword">if</span> <label for="r74" class="ident">p</label>[<span class="lit-number">0</span>] != <a href="messages.go.html#line-51" class="ident">msgKexInit</a> {
+		<span class="keyword">return</span> <label for="r74" class="ident">p</label>, <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+	}
+
+	<label for="r76" class="ident">firstKex</label> := <label for="r71" class="ident">t</label>.<a href="#line-96" class="ident">sessionID</a> == <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+
+	<label for="r77" class="ident">kex</label> := <a href="#line-99" class="ident">pendingKex</a>{
+		<a href="#line-101" class="ident">done</a>:      <a href="../../../../runtime/chan.go.html#line-71">make</a>(<span class="keyword">chan</span> <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a>, <span class="lit-number">1</span>),
+		<a href="#line-100" class="ident">otherInit</a>: <label for="r74" class="ident">p</label>,
+	}
+	<label for="r71" class="ident">t</label>.<a href="#line-74" class="ident">startKex</a> &lt;- &amp;<label for="r77" class="ident">kex</label>
+	<label for="r75" class="ident">err</label> = &lt;-<label for="r77" class="ident">kex</label>.<a href="#line-101" class="ident">done</a>
+
+	<span class="keyword">if</span> <a href="#line-20" class="ident">debugHandshake</a> {
+		<a href="../../../../../pkg/log.html" class="ident i4">log</a>.<a href="../../../../log/log.go.html#line-322" class="ident">Printf</a>(<span class="lit-string">"%s exited key exchange (first %v), err %v"</span>, <label for="r71" class="ident">t</label>.<a href="#line-165" class="ident">id</a>(), <label for="r76" class="ident">firstKex</label>, <label for="r75" class="ident">err</label>)
+	}
+
+	<span class="keyword">if</span> <label for="r75" class="ident">err</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <label for="r75" class="ident">err</label>
+	}
+
+	<label for="r71" class="ident">t</label>.<a href="#line-362" class="ident">resetReadThresholds</a>()
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> By default, a key exchange is hidden from higher layers by</span><span class="comment">	 translating it into msgIgnore.</span></div>
+<div class="code"><pre><code>	<label for="r78" class="ident">successPacket</label> := []<a href="../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>{<a href="messages.go.html#line-22" class="ident">msgIgnore</a>}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> sendKexInit() for the first kex waits for</span><span class="comment">		 msgNewKeys so the authentication process is</span><span class="comment">		 guaranteed to happen over an encrypted transport.</span></div>
+<div class="code"><pre><code>		<label for="r78" class="ident">successPacket</label> = []<a href="../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>{<a href="messages.go.html#line-25" class="ident">msgNewKeys</a>}
+	}
+
+	<span class="keyword">return</span> <label for="r78" class="ident">successPacket</label>, <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> sendKexInit sends a key change message.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r79" class="ident">t</label> *<a href="#line-41" class="ident">handshakeTransport</a>) <label for="r80" class="ident"><a href="../../../../../use/golang.org/x/crypto/ssh..handshakeTransport*e6103.sendKexInit*62599.html" class="ident">sendKexInit</a></label>() <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<label for="r79" class="ident">t</label>.<a href="#line-61" class="ident">mu</a>.<a href="../../../../sync/mutex.go.html#line-72" class="ident">Lock</a>()
+	<span class="keyword">defer</span> <label for="r79" class="ident">t</label>.<a href="#line-61" class="ident">mu</a>.<a href="../../../../sync/mutex.go.html#line-179" class="ident">Unlock</a>()
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> kexInits may be sent either in response to the other side,</span><span class="comment">		 or because our side wants to initiate a key change, so we</span><span class="comment">		 may have already sent a kexInit. In that case, don't send a</span><span class="comment">		 second kexInit.</span></div>
+<div class="code"><pre><code>		<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+	}
+
+	<label for="r81" class="ident">msg</label> := &amp;<a href="messages.go.html#line-53" class="ident">kexInitMsg</a>{
+		<a href="messages.go.html#line-55" class="ident">KexAlgos</a>:                <label for="r79" class="ident">t</label>.<a href="#line-43" class="ident">config</a>.<a href="common.go.html#line-226" class="ident">KeyExchanges</a>,
+		<a href="messages.go.html#line-57" class="ident">CiphersClientServer</a>:     <label for="r79" class="ident">t</label>.<a href="#line-43" class="ident">config</a>.<a href="common.go.html#line-230" class="ident">Ciphers</a>,
+		<a href="messages.go.html#line-58" class="ident">CiphersServerClient</a>:     <label for="r79" class="ident">t</label>.<a href="#line-43" class="ident">config</a>.<a href="common.go.html#line-230" class="ident">Ciphers</a>,
+		<a href="messages.go.html#line-59" class="ident">MACsClientServer</a>:        <label for="r79" class="ident">t</label>.<a href="#line-43" class="ident">config</a>.<a href="common.go.html#line-234" class="ident">MACs</a>,
+		<a href="messages.go.html#line-60" class="ident">MACsServerClient</a>:        <label for="r79" class="ident">t</label>.<a href="#line-43" class="ident">config</a>.<a href="common.go.html#line-234" class="ident">MACs</a>,
+		<a href="messages.go.html#line-61" class="ident">CompressionClientServer</a>: <a href="common.go.html#line-88" class="ident">supportedCompressions</a>,
+		<a href="messages.go.html#line-62" class="ident">CompressionServerClient</a>: <a href="common.go.html#line-88" class="ident">supportedCompressions</a>,
+	}
+	<a href="../../../../../pkg/io.html" class="ident i3">io</a>.<a href="../../../../io/io.go.html#line-346" class="ident">ReadFull</a>(<a href="../../../../../pkg/crypto/rand.html" class="ident i0">rand</a>.<a href="../../../../crypto/rand/rand.go.html#line-19" class="ident">Reader</a>, <label for="r81" class="ident">msg</label>.<a href="messages.go.html#line-54" class="ident">Cookie</a>[:])
+
+	<span class="keyword">if</span> <a href="../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r79" class="ident">t</label>.<a href="#line-51" class="ident">hostKeys</a>) &gt; <span class="lit-number">0</span> {
+		<span class="keyword">for</span> <label for="r82" class="ident">_</label>, <label for="r83" class="ident">k</label> := <span class="keyword">range</span> <label for="r79" class="ident">t</label>.<a href="#line-51" class="ident">hostKeys</a> {
+			<label for="r81" class="ident">msg</label>.<a href="messages.go.html#line-56" class="ident">ServerHostKeyAlgos</a> = <a href="../../../../../pkg/builtin.html#name-append" class="ident">append</a>(
+				<label for="r81" class="ident">msg</label>.<a href="messages.go.html#line-56" class="ident">ServerHostKeyAlgos</a>, <label for="r83" class="ident">k</label>.<a href="keys.go.html#line-316" class="ident">PublicKey</a>().<a href="keys.go.html#line-295" class="ident">Type</a>())
+		}
+	} <span class="keyword">else</span> {
+		<label for="r81" class="ident">msg</label>.<a href="messages.go.html#line-56" class="ident">ServerHostKeyAlgos</a> = <label for="r79" class="ident">t</label>.<a href="#line-55" class="ident">hostKeyAlgorithms</a>
+	}
+	<label for="r84" class="ident">packet</label> := <a href="messages.go.html#line-497" class="ident">Marshal</a>(<label for="r81" class="ident">msg</label>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> writePacket destroys the contents, so save a copy.</span></div>
+<div class="code"><pre><code>	<label for="r85" class="ident">packetCopy</label> := <a href="../../../../../pkg/builtin.html#name-make" class="ident">make</a>([]<a href="../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>, <a href="../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r84" class="ident">packet</label>))
+	<a href="../../../../../pkg/builtin.html#name-copy" class="ident">copy</a>(<label for="r85" class="ident">packetCopy</label>, <label for="r84" class="ident">packet</label>)
+
+	<span class="keyword">if</span> <label for="r86" class="ident">err</label> := <label for="r79" class="ident">t</label>.<a href="#line-219" class="ident">pushPacket</a>(<label for="r85" class="ident">packetCopy</label>); <label for="r86" class="ident">err</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <label for="r86" class="ident">err</label>
+	}
+
+	<label for="r79" class="ident">t</label>.<a href="#line-64" class="ident">sentInitMsg</a> = <label for="r81" class="ident">msg</label>
+	<label for="r79" class="ident">t</label>.<a href="#line-63" class="ident">sentInitPacket</a> = <label for="r84" class="ident">packet</label>
+
+	<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+}
+
+<span class="keyword">func</span> (<label for="r87" class="ident">t</label> *<a href="#line-41" class="ident">handshakeTransport</a>) <label for="r88" class="ident"><a href="../../../../../use/golang.org/x/crypto/ssh..handshakeTransport*e6103.writePacket*dd22c.html" class="ident">writePacket</a></label>(<label for="r89" class="ident">p</label> []<a href="../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>) <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<span class="keyword">switch</span> <label for="r89" class="ident">p</label>[<span class="lit-number">0</span>] {
+	<span class="keyword">case</span> <a href="messages.go.html#line-51" class="ident">msgKexInit</a>:
+		<span class="keyword">return</span> <a href="../../../../../pkg/errors.html" class="ident i1">errors</a>.<a href="../../../../errors/errors.go.html#line-58" class="ident">New</a>(<span class="lit-string">"ssh: only handshakeTransport can send kexInit"</span>)
+	<span class="keyword">case</span> <a href="messages.go.html#line-25" class="ident">msgNewKeys</a>:
+		<span class="keyword">return</span> <a href="../../../../../pkg/errors.html" class="ident i1">errors</a>.<a href="../../../../errors/errors.go.html#line-58" class="ident">New</a>(<span class="lit-string">"ssh: only handshakeTransport can send newKeys"</span>)
+	}
+
+	<label for="r87" class="ident">t</label>.<a href="#line-61" class="ident">mu</a>.<a href="../../../../sync/mutex.go.html#line-72" class="ident">Lock</a>()
+	<span class="keyword">defer</span> <label for="r87" class="ident">t</label>.<a href="#line-61" class="ident">mu</a>.<a href="../../../../sync/mutex.go.html#line-179" class="ident">Unlock</a>()
+	<span class="keyword">if</span> <label for="r87" class="ident">t</label>.<a href="#line-62" class="ident">writeError</a> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <label for="r87" class="ident">t</label>.<a href="#line-62" class="ident">writeError</a>
+	}
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Copy the packet so the writer can reuse the buffer.</span></div>
+<div class="code"><pre><code>		<label for="r90" class="ident">cp</label> := <a href="../../../../../pkg/builtin.html#name-make" class="ident">make</a>([]<a href="../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>, <a href="../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r89" class="ident">p</label>))
+		<a href="../../../../../pkg/builtin.html#name-copy" class="ident">copy</a>(<label for="r90" class="ident">cp</label>, <label for="r89" class="ident">p</label>)
+		<label for="r87" class="ident">t</label>.<a href="#line-65" class="ident">pendingPackets</a> = <a href="../../../../../pkg/builtin.html#name-append" class="ident">append</a>(<label for="r87" class="ident">t</label>.<a href="#line-65" class="ident">pendingPackets</a>, <label for="r90" class="ident">cp</label>)
+		<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+	}
+
+	<span class="keyword">if</span> <label for="r87" class="ident">t</label>.<a href="#line-93" class="ident">writeBytesLeft</a> &gt; <span class="lit-number">0</span> {
+		<label for="r87" class="ident">t</label>.<a href="#line-93" class="ident">writeBytesLeft</a> -= <a href="../../../../../pkg/builtin.html#name-int64" class="ident">int64</a>(<a href="../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r89" class="ident">p</label>))
+	} <span class="keyword">else</span> {
+		<label for="r87" class="ident">t</label>.<a href="#line-240" class="ident">requestKeyExchange</a>()
+	}
+
+	<span class="keyword">if</span> <label for="r87" class="ident">t</label>.<a href="#line-92" class="ident">writePacketsLeft</a> &gt; <span class="lit-number">0</span> {
+		<label for="r87" class="ident">t</label>.<a href="#line-92" class="ident">writePacketsLeft</a>--
+	} <span class="keyword">else</span> {
+		<label for="r87" class="ident">t</label>.<a href="#line-240" class="ident">requestKeyExchange</a>()
+	}
+
+	<span class="keyword">if</span> <label for="r91" class="ident">err</label> := <label for="r87" class="ident">t</label>.<a href="#line-219" class="ident">pushPacket</a>(<label for="r89" class="ident">p</label>); <label for="r91" class="ident">err</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<label for="r87" class="ident">t</label>.<a href="#line-62" class="ident">writeError</a> = <label for="r91" class="ident">err</label>
+	}
+
+	<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+}
+
+<span class="keyword">func</span> (<label for="r92" class="ident">t</label> *<a href="#line-41" class="ident">handshakeTransport</a>) <label for="r93" class="ident"><a href="../../../../../use/golang.org/x/crypto/ssh..handshakeTransport*e6103.Close.html" class="ident">Close</a></label>() <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<span class="keyword">return</span> <label for="r92" class="ident">t</label>.<a href="#line-42" class="ident">conn</a>.<a href="transport.go.html#line-37" class="ident">Close</a>()
+}
+
+<span class="keyword">func</span> (<label for="r94" class="ident">t</label> *<a href="#line-41" class="ident">handshakeTransport</a>) <label for="r95" class="ident"><a href="../../../../../use/golang.org/x/crypto/ssh..handshakeTransport*e6103.enterKeyExchange*ecda3.html" class="ident">enterKeyExchange</a></label>(<label for="r96" class="ident">otherInitPacket</label> []<a href="../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>) <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<span class="keyword">if</span> <a href="#line-20" class="ident">debugHandshake</a> {
+		<a href="../../../../../pkg/log.html" class="ident i4">log</a>.<a href="../../../../log/log.go.html#line-322" class="ident">Printf</a>(<span class="lit-string">"%s entered key exchange"</span>, <label for="r94" class="ident">t</label>.<a href="#line-165" class="ident">id</a>())
+	}
+
+	<label for="r97" class="ident">otherInit</label> := &amp;<a href="messages.go.html#line-53" class="ident">kexInitMsg</a>{}
+	<span class="keyword">if</span> <label for="r98" class="ident">err</label> := <a href="messages.go.html#line-374" class="ident">Unmarshal</a>(<label for="r96" class="ident">otherInitPacket</label>, <label for="r97" class="ident">otherInit</label>); <label for="r98" class="ident">err</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <label for="r98" class="ident">err</label>
+	}
+
+	<label for="r99" class="ident">magics</label> := <a href="kex.go.html#line-63" class="ident">handshakeMagics</a>{
+		<a href="kex.go.html#line-64" class="ident">clientVersion</a>: <label for="r94" class="ident">t</label>.<a href="#line-46" class="ident">clientVersion</a>,
+		<a href="kex.go.html#line-64" class="ident">serverVersion</a>: <label for="r94" class="ident">t</label>.<a href="#line-45" class="ident">serverVersion</a>,
+		<a href="kex.go.html#line-65" class="ident">clientKexInit</a>: <label for="r96" class="ident">otherInitPacket</label>,
+		<a href="kex.go.html#line-65" class="ident">serverKexInit</a>: <label for="r94" class="ident">t</label>.<a href="#line-63" class="ident">sentInitPacket</a>,
+	}
+
+	<label for="r100" class="ident">clientInit</label> := <label for="r97" class="ident">otherInit</label>
+	<label for="r101" class="ident">serverInit</label> := <label for="r94" class="ident">t</label>.<a href="#line-64" class="ident">sentInitMsg</a>
+	<label for="r102" class="ident">isClient</label> := <a href="../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r94" class="ident">t</label>.<a href="#line-51" class="ident">hostKeys</a>) == <span class="lit-number">0</span>
+	<span class="keyword">if</span> <label for="r102" class="ident">isClient</label> {
+		<label for="r100" class="ident">clientInit</label>, <label for="r101" class="ident">serverInit</label> = <label for="r101" class="ident">serverInit</label>, <label for="r100" class="ident">clientInit</label>
+
+		<label for="r99" class="ident">magics</label>.<a href="kex.go.html#line-65" class="ident">clientKexInit</a> = <label for="r94" class="ident">t</label>.<a href="#line-63" class="ident">sentInitPacket</a>
+		<label for="r99" class="ident">magics</label>.<a href="kex.go.html#line-65" class="ident">serverKexInit</a> = <label for="r96" class="ident">otherInitPacket</label>
+	}
+
+	<span class="keyword">var</span> <label for="r103" class="ident">err</label> <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a>
+	<label for="r94" class="ident">t</label>.<a href="#line-87" class="ident">algorithms</a>, <label for="r103" class="ident">err</label> = <a href="common.go.html#line-156" class="ident">findAgreedAlgorithms</a>(<label for="r102" class="ident">isClient</label>, <label for="r100" class="ident">clientInit</label>, <label for="r101" class="ident">serverInit</label>)
+	<span class="keyword">if</span> <label for="r103" class="ident">err</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <label for="r103" class="ident">err</label>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> We don't send FirstKexFollows, but we handle receiving it.</span><span class="comment">	</span><span class="comment">	 RFC 4253 section 7 defines the kex and the agreement method for</span><span class="comment">	 first_kex_packet_follows. It states that the guessed packet</span><span class="comment">	 should be ignored if the "kex algorithm and/or the host</span><span class="comment">	 key algorithm is guessed wrong (server and client have</span><span class="comment">	 different preferred algorithm), or if any of the other</span><span class="comment">	 algorithms cannot be agreed upon". The other algorithms have</span><span class="comment">	 already been checked above so the kex algorithm and host key</span><span class="comment">	 algorithm are checked here.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> other side sent a kex message for the wrong algorithm,</span><span class="comment">		 which we have to ignore.</span></div>
+<div class="code"><pre><code>		<span class="keyword">if</span> <label for="r104" class="ident">_</label>, <label for="r105" class="ident">err</label> := <label for="r94" class="ident">t</label>.<a href="#line-42" class="ident">conn</a>.<a href="transport.go.html#line-34" class="ident">readPacket</a>(); <label for="r105" class="ident">err</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<span class="keyword">return</span> <label for="r105" class="ident">err</label>
+		}
+	}
+
+	<label for="r106" class="ident">kex</label>, <label for="r107" class="ident">ok</label> := <a href="kex.go.html#line-387" class="ident">kexAlgoMap</a>[<label for="r94" class="ident">t</label>.<a href="#line-87" class="ident">algorithms</a>.<a href="common.go.html#line-150" class="ident">kex</a>]
+	<span class="keyword">if</span> !<label for="r107" class="ident">ok</label> {
+		<span class="keyword">return</span> <a href="../../../../../pkg/fmt.html" class="ident i2">fmt</a>.<a href="../../../../fmt/errors.go.html#line-17" class="ident">Errorf</a>(<span class="lit-string">"ssh: unexpected key exchange algorithm %v"</span>, <label for="r94" class="ident">t</label>.<a href="#line-87" class="ident">algorithms</a>.<a href="common.go.html#line-150" class="ident">kex</a>)
+	}
+
+	<span class="keyword">var</span> <label for="r108" class="ident">result</label> *<a href="kex.go.html#line-38" class="ident">kexResult</a>
+	<span class="keyword">if</span> <a href="../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r94" class="ident">t</label>.<a href="#line-51" class="ident">hostKeys</a>) &gt; <span class="lit-number">0</span> {
+		<label for="r108" class="ident">result</label>, <label for="r103" class="ident">err</label> = <label for="r94" class="ident">t</label>.<a href="#line-614" class="ident">server</a>(<label for="r106" class="ident">kex</label>, <label for="r94" class="ident">t</label>.<a href="#line-87" class="ident">algorithms</a>, &amp;<label for="r99" class="ident">magics</label>)
+	} <span class="keyword">else</span> {
+		<label for="r108" class="ident">result</label>, <label for="r103" class="ident">err</label> = <label for="r94" class="ident">t</label>.<a href="#line-626" class="ident">client</a>(<label for="r106" class="ident">kex</label>, <label for="r94" class="ident">t</label>.<a href="#line-87" class="ident">algorithms</a>, &amp;<label for="r99" class="ident">magics</label>)
+	}
+
+	<span class="keyword">if</span> <label for="r103" class="ident">err</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <label for="r103" class="ident">err</label>
+	}
+
+	<span class="keyword">if</span> <label for="r94" class="ident">t</label>.<a href="#line-96" class="ident">sessionID</a> == <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<label for="r94" class="ident">t</label>.<a href="#line-96" class="ident">sessionID</a> = <label for="r108" class="ident">result</label>.<a href="kex.go.html#line-40" class="ident">H</a>
+	}
+	<label for="r108" class="ident">result</label>.<a href="kex.go.html#line-58" class="ident">SessionID</a> = <label for="r94" class="ident">t</label>.<a href="#line-96" class="ident">sessionID</a>
+
+	<span class="keyword">if</span> <label for="r109" class="ident">err</label> := <label for="r94" class="ident">t</label>.<a href="#line-42" class="ident">conn</a>.<a href="#line-36" class="ident">prepareKeyChange</a>(<label for="r94" class="ident">t</label>.<a href="#line-87" class="ident">algorithms</a>, <label for="r108" class="ident">result</label>); <label for="r109" class="ident">err</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <label for="r109" class="ident">err</label>
+	}
+	<span class="keyword">if</span> <label for="r103" class="ident">err</label> = <label for="r94" class="ident">t</label>.<a href="#line-42" class="ident">conn</a>.<a href="transport.go.html#line-29" class="ident">writePacket</a>([]<a href="../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>{<a href="messages.go.html#line-25" class="ident">msgNewKeys</a>}); <label for="r103" class="ident">err</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <label for="r103" class="ident">err</label>
+	}
+	<span class="keyword">if</span> <label for="r110" class="ident">packet</label>, <label for="r111" class="ident">err</label> := <label for="r94" class="ident">t</label>.<a href="#line-42" class="ident">conn</a>.<a href="transport.go.html#line-34" class="ident">readPacket</a>(); <label for="r111" class="ident">err</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <label for="r111" class="ident">err</label>
+	} <span class="keyword">else</span> <span class="keyword">if</span> <label for="r110" class="ident">packet</label>[<span class="lit-number">0</span>] != <a href="messages.go.html#line-25" class="ident">msgNewKeys</a> {
+		<span class="keyword">return</span> <a href="common.go.html#line-107" class="ident">unexpectedMessageError</a>(<a href="messages.go.html#line-25" class="ident">msgNewKeys</a>, <label for="r110" class="ident">packet</label>[<span class="lit-number">0</span>])
+	}
+
+	<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+}
+
+<span class="keyword">func</span> (<label for="r112" class="ident">t</label> *<a href="#line-41" class="ident">handshakeTransport</a>) <label for="r113" class="ident"><a href="../../../../../use/golang.org/x/crypto/ssh..handshakeTransport*e6103.server*b3eac.html" class="ident">server</a></label>(<label for="r114" class="ident">kex</label> <a href="kex.go.html#line-76" class="ident">kexAlgorithm</a>, <label for="r115" class="ident">algs</label> *<a href="common.go.html#line-149" class="ident">algorithms</a>, <label for="r116" class="ident">magics</label> *<a href="kex.go.html#line-63" class="ident">handshakeMagics</a>) (*<a href="kex.go.html#line-38" class="ident">kexResult</a>, <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<span class="keyword">var</span> <label for="r117" class="ident">hostKey</label> <a href="keys.go.html#line-314" class="ident">Signer</a>
+	<span class="keyword">for</span> <label for="r118" class="ident">_</label>, <label for="r119" class="ident">k</label> := <span class="keyword">range</span> <label for="r112" class="ident">t</label>.<a href="#line-51" class="ident">hostKeys</a> {
+		<span class="keyword">if</span> <label for="r115" class="ident">algs</label>.<a href="common.go.html#line-151" class="ident">hostKey</a> == <label for="r119" class="ident">k</label>.<a href="keys.go.html#line-316" class="ident">PublicKey</a>().<a href="keys.go.html#line-295" class="ident">Type</a>() {
+			<label for="r117" class="ident">hostKey</label> = <label for="r119" class="ident">k</label>
+		}
+	}
+
+	<label for="r120" class="ident">r</label>, <label for="r121" class="ident">err</label> := <label for="r114" class="ident">kex</label>.<a href="kex.go.html#line-79" class="ident">Server</a>(<label for="r112" class="ident">t</label>.<a href="#line-42" class="ident">conn</a>, <label for="r112" class="ident">t</label>.<a href="#line-43" class="ident">config</a>.<a href="common.go.html#line-217" class="ident">Rand</a>, <label for="r116" class="ident">magics</label>, <label for="r117" class="ident">hostKey</label>)
+	<span class="keyword">return</span> <label for="r120" class="ident">r</label>, <label for="r121" class="ident">err</label>
+}
+
+<span class="keyword">func</span> (<label for="r122" class="ident">t</label> *<a href="#line-41" class="ident">handshakeTransport</a>) <label for="r123" class="ident"><a href="../../../../../use/golang.org/x/crypto/ssh..handshakeTransport*e6103.client*948fe.html" class="ident">client</a></label>(<label for="r124" class="ident">kex</label> <a href="kex.go.html#line-76" class="ident">kexAlgorithm</a>, <label for="r125" class="ident">algs</label> *<a href="common.go.html#line-149" class="ident">algorithms</a>, <label for="r126" class="ident">magics</label> *<a href="kex.go.html#line-63" class="ident">handshakeMagics</a>) (*<a href="kex.go.html#line-38" class="ident">kexResult</a>, <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<label for="r127" class="ident">result</label>, <label for="r128" class="ident">err</label> := <label for="r124" class="ident">kex</label>.<a href="kex.go.html#line-83" class="ident">Client</a>(<label for="r122" class="ident">t</label>.<a href="#line-42" class="ident">conn</a>, <label for="r122" class="ident">t</label>.<a href="#line-43" class="ident">config</a>.<a href="common.go.html#line-217" class="ident">Rand</a>, <label for="r126" class="ident">magics</label>)
+	<span class="keyword">if</span> <label for="r128" class="ident">err</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <label for="r128" class="ident">err</label>
+	}
+
+	<label for="r129" class="ident">hostKey</label>, <label for="r128" class="ident">err</label> := <a href="keys.go.html#line-265" class="ident">ParsePublicKey</a>(<label for="r127" class="ident">result</label>.<a href="kex.go.html#line-46" class="ident">HostKey</a>)
+	<span class="keyword">if</span> <label for="r128" class="ident">err</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <label for="r128" class="ident">err</label>
+	}
+
+	<span class="keyword">if</span> <label for="r130" class="ident">err</label> := <a href="client.go.html#line-118" class="ident">verifyHostKeySignature</a>(<label for="r129" class="ident">hostKey</label>, <label for="r127" class="ident">result</label>); <label for="r130" class="ident">err</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <label for="r130" class="ident">err</label>
+	}
+
+	<label for="r128" class="ident">err</label> = <label for="r122" class="ident">t</label>.<a href="#line-77" class="ident">hostKeyCallback</a>(<label for="r122" class="ident">t</label>.<a href="#line-78" class="ident">dialAddress</a>, <label for="r122" class="ident">t</label>.<a href="#line-79" class="ident">remoteAddr</a>, <label for="r129" class="ident">hostKey</label>)
+	<span class="keyword">if</span> <label for="r128" class="ident">err</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <label for="r128" class="ident">err</label>
+	}
+
+	<span class="keyword">return</span> <label for="r127" class="ident">result</label>, <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

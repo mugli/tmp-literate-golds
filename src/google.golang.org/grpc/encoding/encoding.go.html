@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: encoding.go in package google.golang.org/grpc/encoding</title>
+<link href="../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	encoding.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../pkg/google.golang.org/grpc/encoding.html">google.golang.org/grpc/encoding</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"></span><span class="comment"> *</span><span class="comment"> * Copyright 2017 gRPC authors.</span><span class="comment"> *</span><span class="comment"> * Licensed under the Apache License, Version 2.0 (the "License");</span><span class="comment"> * you may not use this file except in compliance with the License.</span><span class="comment"> * You may obtain a copy of the License at</span><span class="comment"> *</span><span class="comment"> *     http:www.apache.org/licenses/LICENSE-2.0</span><span class="comment"> *</span><span class="comment"> * Unless required by applicable law or agreed to in writing, software</span><span class="comment"> * distributed under the License is distributed on an "AS IS" BASIS,</span><span class="comment"> * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span><span class="comment"> * See the License for the specific language governing permissions and</span><span class="comment"> * limitations under the License.</span><span class="comment"> *</span><span class="comment"> </span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Package encoding defines the interface for the compressor and codec, and</span><span class="comment"> functions to register and retrieve compressors and codecs.</span><span class="comment"></span><span class="comment"> This package is EXPERIMENTAL.</span></div>
+<div class="code"><pre><code><span class="keyword">package</span> encoding
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"io"</span></label>
+	<label for="i1"><span class="lit-string i1">"strings"</span></label>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Identity specifies the optional encoding for uncompressed streams.</span><span class="comment"> It is intended for grpc internal use only.</span></div>
+<div class="code"><pre><code><span class="keyword">const</span> <a href="../../../../pkg/google.golang.org/grpc/encoding.html#name-Identity" class="ident">Identity</a> = <span class="lit-string">"identity"</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Compressor is used for compressing and decompressing when sending or</span><span class="comment"> receiving messages.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Compress writes the data written to wc to w after compressing it.  If an</span><span class="comment">	 error occurs while initializing the compressor, that error is returned</span><span class="comment">	 instead.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Decompress reads data from r, decompresses it, and provides the</span><span class="comment">	 uncompressed data via the returned io.Reader.  If an error occurs while</span><span class="comment">	 initializing the decompressor, that error is returned instead.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Name is the name of the compression codec and is used to set the content</span><span class="comment">	 coding header.  The result must be static; the result cannot change</span><span class="comment">	 between calls.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> EXPERIMENTAL: if a Compressor implements</span><span class="comment">	 DecompressedSize(compressedBytes []byte) int, gRPC will call it</span><span class="comment">	 to determine the size of the buffer allocated for the result of decompression.</span><span class="comment">	 Return -1 to indicate unknown size.</span></div>
+<div class="code"><pre><code>}
+
+<span class="keyword">var</span> <a href="../../../../pkg/google.golang.org/grpc/encoding.html#name-registeredCompressor" class="ident">registeredCompressor</a> = <a href="../../../../pkg/builtin.html#name-make" class="ident">make</a>(<span class="keyword">map</span>[<a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>]<a href="#line-36" class="ident">Compressor</a>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> RegisterCompressor registers the compressor with gRPC by its name.  It can</span><span class="comment"> be activated when sending an RPC via grpc.UseCompressor().  It will be</span><span class="comment"> automatically accessed when receiving a message based on the content coding</span><span class="comment"> header.  Servers also use it to send a response with the same encoding as</span><span class="comment"> the request.</span><span class="comment"></span><span class="comment"> NOTE: this function must only be called during initialization time (i.e. in</span><span class="comment"> an init() function), and is not thread-safe.  If multiple Compressors are</span><span class="comment"> registered with the same name, the one registered last will take effect.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r0" class="ident"><a href="../../../../pkg/google.golang.org/grpc/encoding.html#name-RegisterCompressor" class="ident">RegisterCompressor</a></label>(<label for="r1" class="ident">c</label> <a href="#line-36" class="ident">Compressor</a>) {
+	<a href="#line-55" class="ident">registeredCompressor</a>[<label for="r1" class="ident">c</label>.<a href="#line-48" class="ident">Name</a>()] = <label for="r1" class="ident">c</label>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> GetCompressor returns Compressor for the given compressor name.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r2" class="ident"><a href="../../../../pkg/google.golang.org/grpc/encoding.html#name-GetCompressor" class="ident">GetCompressor</a></label>(<label for="r3" class="ident">name</label> <a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>) <a href="#line-36" class="ident">Compressor</a> {
+	<span class="keyword">return</span> <a href="#line-55" class="ident">registeredCompressor</a>[<label for="r3" class="ident">name</label>]
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Codec defines the interface gRPC uses to encode and decode messages.  Note</span><span class="comment"> that implementations of this interface must be thread safe; a Codec's</span><span class="comment"> methods can be called from concurrent goroutines.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Marshal returns the wire format of v.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Unmarshal parses the wire format into v.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Name returns the name of the Codec implementation. The returned string</span><span class="comment">	 will be used as part of content type in transmission.  The result must be</span><span class="comment">	 static; the result cannot change between calls.</span></div>
+<div class="code"><pre><code>	Name() <a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>
+}
+
+<span class="keyword">var</span> <a href="../../../../pkg/google.golang.org/grpc/encoding.html#name-registeredCodecs" class="ident">registeredCodecs</a> = <a href="../../../../pkg/builtin.html#name-make" class="ident">make</a>(<span class="keyword">map</span>[<a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>]<a href="#line-78" class="ident">Codec</a>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> RegisterCodec registers the provided Codec for use with all gRPC clients and</span><span class="comment"> servers.</span><span class="comment"></span><span class="comment"> The Codec will be stored and looked up by result of its Name() method, which</span><span class="comment"> should match the content-subtype of the encoding handled by the Codec.  This</span><span class="comment"> is case-insensitive, and is stored and looked up as lowercase.  If the</span><span class="comment"> result of calling Name() is an empty string, RegisterCodec will panic. See</span><span class="comment"> Content-Type on</span><span class="comment"> https://github.com/grpc/grpc/blob/master/doc/PROTOCOL-HTTP2.md#requests for</span><span class="comment"> more details.</span><span class="comment"></span><span class="comment"> NOTE: this function must only be called during initialization time (i.e. in</span><span class="comment"> an init() function), and is not thread-safe.  If multiple Compressors are</span><span class="comment"> registered with the same name, the one registered last will take effect.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r4" class="ident"><a href="../../../../pkg/google.golang.org/grpc/encoding.html#name-RegisterCodec" class="ident">RegisterCodec</a></label>(<label for="r5" class="ident">codec</label> <a href="#line-78" class="ident">Codec</a>) {
+	<span class="keyword">if</span> <label for="r5" class="ident">codec</label> == <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<a href="../../../../pkg/builtin.html#name-panic" class="ident">panic</a>(<span class="lit-string">"cannot register a nil Codec"</span>)
+	}
+	<span class="keyword">if</span> <label for="r5" class="ident">codec</label>.<a href="#line-86" class="ident">Name</a>() == <span class="lit-string">""</span> {
+		<a href="../../../../pkg/builtin.html#name-panic" class="ident">panic</a>(<span class="lit-string">"cannot register Codec with empty string result for Name()"</span>)
+	}
+	<label for="r6" class="ident">contentSubtype</label> := <a href="../../../../pkg/strings.html" class="ident i1">strings</a>.<a href="../../../strings/strings.go.html#line-580" class="ident">ToLower</a>(<label for="r5" class="ident">codec</label>.<a href="#line-86" class="ident">Name</a>())
+	<a href="#line-89" class="ident">registeredCodecs</a>[<label for="r6" class="ident">contentSubtype</label>] = <label for="r5" class="ident">codec</label>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> GetCodec gets a registered Codec by content-subtype, or nil if no Codec is</span><span class="comment"> registered for the content-subtype.</span><span class="comment"></span><span class="comment"> The content-subtype is expected to be lowercase.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r7" class="ident"><a href="../../../../pkg/google.golang.org/grpc/encoding.html#name-GetCodec" class="ident">GetCodec</a></label>(<label for="r8" class="ident">contentSubtype</label> <a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>) <a href="#line-78" class="ident">Codec</a> {
+	<span class="keyword">return</span> <a href="#line-89" class="ident">registeredCodecs</a>[<label for="r8" class="ident">contentSubtype</label>]
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

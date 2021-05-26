@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: safehtmlutil.go in package github.com/google/safehtml/internal/safehtmlutil</title>
+<link href="../../../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	safehtmlutil.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../../../pkg/github.com/google/safehtml/internal/safehtmlutil.html">github.com/google/safehtml/internal/safehtmlutil</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16],
+input[id=r17]:checked ~pre label[for=r17],
+input[id=r18]:checked ~pre label[for=r18],
+input[id=r19]:checked ~pre label[for=r19],
+input[id=r20]:checked ~pre label[for=r20],
+input[id=r21]:checked ~pre label[for=r21],
+input[id=r22]:checked ~pre label[for=r22],
+input[id=r23]:checked ~pre label[for=r23],
+input[id=r24]:checked ~pre label[for=r24],
+input[id=r25]:checked ~pre label[for=r25],
+input[id=r26]:checked ~pre label[for=r26],
+input[id=r27]:checked ~pre label[for=r27],
+input[id=r28]:checked ~pre label[for=r28],
+input[id=r29]:checked ~pre label[for=r29],
+input[id=r30]:checked ~pre label[for=r30]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1,
+input[id=i2]:checked ~pre .i2,
+input[id=i3]:checked ~pre .i3
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="r17" type="radio" name="g"/>
+<input id="r18" type="radio" name="g"/>
+<input id="r19" type="radio" name="g"/>
+<input id="r20" type="radio" name="g"/>
+<input id="r21" type="radio" name="g"/>
+<input id="r22" type="radio" name="g"/>
+<input id="r23" type="radio" name="g"/>
+<input id="r24" type="radio" name="g"/>
+<input id="r25" type="radio" name="g"/>
+<input id="r26" type="radio" name="g"/>
+<input id="r27" type="radio" name="g"/>
+<input id="r28" type="radio" name="g"/>
+<input id="r29" type="radio" name="g"/>
+<input id="r30" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<input id="i2" type="radio" name="i"/>
+<input id="i3" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright (c) 2017 The Go Authors. All rights reserved.</span><span class="comment"></span><span class="comment"> Use of this source code is governed by a BSD-style</span><span class="comment"> license that can be found in the LICENSE file or at</span><span class="comment"> https://developers.google.com/open-source/licenses/bsd</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Package safehtmlutil contains functions shared by package safehtml and safehtml/template.</span></div>
+<div class="code"><pre><code><span class="keyword">package</span> safehtmlutil
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"bytes"</span></label>
+	<label for="i1"><span class="lit-string i1">"fmt"</span></label>
+	<label for="i2"><span class="lit-string i2">"reflect"</span></label>
+	<label for="i3"><span class="lit-string i3">"regexp"</span></label>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> IsSafeTrustedResourceURLPrefix returns whether the given prefix is safe to use as a</span><span class="comment"> TrustedResourceURL prefix.</span><span class="comment"></span><span class="comment"> TrustedResourceURL prefixes must start with one of the following:</span><span class="comment">    * `https://&lt;origin&gt;/`</span><span class="comment">    * `//&lt;origin&gt;/`</span><span class="comment">    * `/&lt;pathStart&gt;`</span><span class="comment">    * `about:blank#`</span><span class="comment"></span><span class="comment"> `&lt;origin&gt;` must contain only alphanumerics, '.', ':', '[', ']', or '-'.</span><span class="comment"> These restrictions do not enforce a well-formed domain name, so '.' and '1.2' are valid.</span><span class="comment"></span><span class="comment"> `&lt;pathStart&gt;` is any character except `/` and `\`. Based on</span><span class="comment"> https://url.spec.whatwg.org/commit-snapshots/56b74ce7cca8883eab62e9a12666e2fac665d03d/#url-parsing,</span><span class="comment"> an initial / which is not followed by another / or \ will end up in the "path state" and from there</span><span class="comment"> it can only go to the "fragment state" and "query state".</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r0" class="ident"><a href="../../../../../../pkg/github.com/google/safehtml/internal/safehtmlutil.html#name-IsSafeTrustedResourceURLPrefix" class="ident">IsSafeTrustedResourceURLPrefix</a></label>(<label for="r1" class="ident">prefix</label> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>) <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> {
+	<span class="keyword">return</span> <a href="#line-37" class="ident">safeTrustedResourceURLPrefixPattern</a>.<a href="../../../../../regexp/regexp.go.html#line-524" class="ident">MatchString</a>(<label for="r1" class="ident">prefix</label>)
+}
+
+<span class="keyword">var</span> <a href="../../../../../../pkg/github.com/google/safehtml/internal/safehtmlutil.html#name-safeTrustedResourceURLPrefixPattern" class="ident">safeTrustedResourceURLPrefixPattern</a> = <a href="../../../../../../pkg/regexp.html" class="ident i3">regexp</a>.<a href="../../../../../regexp/regexp.go.html#line-308" class="ident">MustCompile</a>(<span class="lit-string">`(?i)^(?:`</span> +
+	<span class="lit-string">`(?:https:)?//[0-9a-z.:\[\]-]+/|`</span> +
+	<span class="lit-string">`/[^/\\]|`</span> +
+	<span class="lit-string">`about:blank#)`</span>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> URLContainsDoubleDotSegment returns whether the given URL or URL substring</span><span class="comment"> contains the double dot-segment ".." (RFC3986 3.3) in its percent-encoded or</span><span class="comment"> unencoded form.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r2" class="ident"><a href="../../../../../../pkg/github.com/google/safehtml/internal/safehtmlutil.html#name-URLContainsDoubleDotSegment" class="ident">URLContainsDoubleDotSegment</a></label>(<label for="r3" class="ident">url</label> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>) <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> {
+	<span class="keyword">return</span> <a href="#line-49" class="ident">urlDoubleDotSegmentPattern</a>.<a href="../../../../../regexp/regexp.go.html#line-524" class="ident">MatchString</a>(<label for="r3" class="ident">url</label>)
+}
+
+<span class="keyword">var</span> <a href="../../../../../../pkg/github.com/google/safehtml/internal/safehtmlutil.html#name-urlDoubleDotSegmentPattern" class="ident">urlDoubleDotSegmentPattern</a> = <a href="../../../../../../pkg/regexp.html" class="ident i3">regexp</a>.<a href="../../../../../regexp/regexp.go.html#line-308" class="ident">MustCompile</a>(<span class="lit-string">`(?i)(?:\.|%2e)(?:\.|%2e)`</span>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> QueryEscapeURL produces an output that can be embedded in a URL query.</span><span class="comment"> The output can be embedded in an HTML attribute without further escaping.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r4" class="ident"><a href="../../../../../../pkg/github.com/google/safehtml/internal/safehtmlutil.html#name-QueryEscapeURL" class="ident">QueryEscapeURL</a></label>(<label for="r5" class="ident">args</label> ...<span class="keyword">interface</span>{}) <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a> {
+	<span class="keyword">return</span> <a href="#line-68" class="ident">urlProcessor</a>(<a href="../../../../../../pkg/builtin.html#name-false" class="ident">false</a>, <a href="#line-132" class="ident">Stringify</a>(<label for="r5" class="ident">args</label>...))
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> NormalizeURL normalizes URL content so it can be embedded in a quote-delimited</span><span class="comment"> string or parenthesis delimited url(...).</span><span class="comment"> The normalizer does not encode all HTML specials. Specifically, it does not</span><span class="comment"> encode '&amp;' so correct embedding in an HTML attribute requires escaping of</span><span class="comment"> '&amp;' to '&amp;amp;'.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r6" class="ident"><a href="../../../../../../pkg/github.com/google/safehtml/internal/safehtmlutil.html#name-NormalizeURL" class="ident">NormalizeURL</a></label>(<label for="r7" class="ident">args</label> ...<span class="keyword">interface</span>{}) <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a> {
+	<span class="keyword">return</span> <a href="#line-68" class="ident">urlProcessor</a>(<a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <a href="#line-132" class="ident">Stringify</a>(<label for="r7" class="ident">args</label>...))
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> urlProcessor normalizes (when norm is true) or escapes its input to produce</span><span class="comment"> a valid hierarchical or opaque URL part.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r8" class="ident"><a href="../../../../../../pkg/github.com/google/safehtml/internal/safehtmlutil.html#name-urlProcessor" class="ident">urlProcessor</a></label>(<label for="r9" class="ident">norm</label> <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>, <label for="r10" class="ident">s</label> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>) <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a> {
+	<span class="keyword">var</span> <label for="r11" class="ident">b</label> <a href="../../../../../../pkg/bytes.html" class="ident i0">bytes</a>.<a href="../../../../../bytes/buffer.go.html#line-20" class="ident">Buffer</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> The byte loop below assumes that all URLs use UTF-8 as the</span><span class="comment">	 content-encoding. This is similar to the URI to IRI encoding scheme</span><span class="comment">	 defined in section 3.1 of  RFC 3987, and behaves the same as the</span><span class="comment">	 EcmaScript builtin encodeURIComponent.</span><span class="comment">	 It should not cause any misencoding of URLs in pages with</span><span class="comment">	 Content-type: text/html;charset=UTF-8.</span></div>
+<div class="code"><pre><code>	<span class="keyword">for</span> <label for="r13" class="ident">i</label>, <label for="r14" class="ident">n</label> := <span class="lit-number">0</span>, <a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r10" class="ident">s</label>); <label for="r13" class="ident">i</label> &lt; <label for="r14" class="ident">n</label>; <label for="r13" class="ident">i</label>++ {
+		<label for="r15" class="ident">c</label> := <label for="r10" class="ident">s</label>[<label for="r13" class="ident">i</label>]
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Single quote and parens are sub-delims in RFC 3986, but we</span><span class="comment">		 escape them so the output can be embedded in single</span><span class="comment">		 quoted attributes and unquoted CSS url(...) constructs.</span><span class="comment">		 Single quotes are reserved in URLs, but are only used in</span><span class="comment">		 the obsolete "mark" rule in an appendix in RFC 3986</span><span class="comment">		 so can be safely encoded.</span></div>
+<div class="code"><pre><code>		<span class="keyword">case</span> <span class="lit-number">'!'</span>, <span class="lit-number">'#'</span>, <span class="lit-number">'$'</span>, <span class="lit-number">'&amp;'</span>, <span class="lit-number">'*'</span>, <span class="lit-number">'+'</span>, <span class="lit-number">','</span>, <span class="lit-number">'/'</span>, <span class="lit-number">':'</span>, <span class="lit-number">';'</span>, <span class="lit-number">'='</span>, <span class="lit-number">'?'</span>, <span class="lit-number">'@'</span>, <span class="lit-number">'['</span>, <span class="lit-number">']'</span>:
+			<span class="keyword">if</span> <label for="r9" class="ident">norm</label> {
+				<span class="keyword">continue</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Unreserved according to RFC 3986 sec 2.3</span><span class="comment">		 "For consistency, percent-encoded octets in the ranges of</span><span class="comment">		 ALPHA (%41-%5A and %61-%7A), DIGIT (%30-%39), hyphen (%2D),</span><span class="comment">		 period (%2E), underscore (%5F), or tilde (%7E) should not be</span><span class="comment">		 created by URI producers</span></div>
+<div class="code"><pre><code>		<span class="keyword">case</span> <span class="lit-number">'-'</span>, <span class="lit-number">'.'</span>, <span class="lit-number">'_'</span>, <span class="lit-number">'~'</span>:
+			<span class="keyword">continue</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> When normalizing do not re-encode valid escapes.</span></div>
+<div class="code"><pre><code>			<span class="keyword">if</span> <label for="r9" class="ident">norm</label> &amp;&amp; <label for="r13" class="ident">i</label>+<span class="lit-number">2</span> &lt; <a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r10" class="ident">s</label>) &amp;&amp; <a href="#line-126" class="ident">isHex</a>(<label for="r10" class="ident">s</label>[<label for="r13" class="ident">i</label>+<span class="lit-number">1</span>]) &amp;&amp; <a href="#line-126" class="ident">isHex</a>(<label for="r10" class="ident">s</label>[<label for="r13" class="ident">i</label>+<span class="lit-number">2</span>]) {
+				<span class="keyword">continue</span>
+			}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Unreserved according to RFC 3986 sec 2.3</span></div>
+<div class="code"><pre><code>			<span class="keyword">if</span> <span class="lit-number">'a'</span> &lt;= <label for="r15" class="ident">c</label> &amp;&amp; <label for="r15" class="ident">c</label> &lt;= <span class="lit-number">'z'</span> {
+				<span class="keyword">continue</span>
+			}
+			<span class="keyword">if</span> <span class="lit-number">'A'</span> &lt;= <label for="r15" class="ident">c</label> &amp;&amp; <label for="r15" class="ident">c</label> &lt;= <span class="lit-number">'Z'</span> {
+				<span class="keyword">continue</span>
+			}
+			<span class="keyword">if</span> <span class="lit-number">'0'</span> &lt;= <label for="r15" class="ident">c</label> &amp;&amp; <label for="r15" class="ident">c</label> &lt;= <span class="lit-number">'9'</span> {
+				<span class="keyword">continue</span>
+			}
+		}
+		<label for="r11" class="ident">b</label>.<a href="../../../../../bytes/buffer.go.html#line-180" class="ident">WriteString</a>(<label for="r10" class="ident">s</label>[<label for="r12" class="ident">written</label>:<label for="r13" class="ident">i</label>])
+		<a href="../../../../../../pkg/fmt.html" class="ident i1">fmt</a>.<a href="../../../../../fmt/print.go.html#line-202" class="ident">Fprintf</a>(&amp;<label for="r11" class="ident">b</label>, <span class="lit-string">"%%%02x"</span>, <label for="r15" class="ident">c</label>)
+		<label for="r12" class="ident">written</label> = <label for="r13" class="ident">i</label> + <span class="lit-number">1</span>
+	}
+	<span class="keyword">if</span> <label for="r12" class="ident">written</label> == <span class="lit-number">0</span> {
+		<span class="keyword">return</span> <label for="r10" class="ident">s</label>
+	}
+	<label for="r11" class="ident">b</label>.<a href="../../../../../bytes/buffer.go.html#line-180" class="ident">WriteString</a>(<label for="r10" class="ident">s</label>[<label for="r12" class="ident">written</label>:])
+	<span class="keyword">return</span> <label for="r11" class="ident">b</label>.<a href="../../../../../bytes/buffer.go.html#line-60" class="ident">String</a>()
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> isHex reports whether the given character is a hex digit.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r16" class="ident"><a href="../../../../../../pkg/github.com/google/safehtml/internal/safehtmlutil.html#name-isHex" class="ident">isHex</a></label>(<label for="r17" class="ident">c</label> <a href="../../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>) <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> {
+	<span class="keyword">return</span> <span class="lit-number">'0'</span> &lt;= <label for="r17" class="ident">c</label> &amp;&amp; <label for="r17" class="ident">c</label> &lt;= <span class="lit-number">'9'</span> || <span class="lit-number">'a'</span> &lt;= <label for="r17" class="ident">c</label> &amp;&amp; <label for="r17" class="ident">c</label> &lt;= <span class="lit-number">'f'</span> || <span class="lit-number">'A'</span> &lt;= <label for="r17" class="ident">c</label> &amp;&amp; <label for="r17" class="ident">c</label> &lt;= <span class="lit-number">'F'</span>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Stringify converts its arguments to a string. It is equivalent to</span><span class="comment"> fmt.Sprint(args...), except that it deferences all pointers.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Optimization for simple common case of a single string argument.</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> <a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r19" class="ident">args</label>) == <span class="lit-number">1</span> {
+		<span class="keyword">if</span> <label for="r20" class="ident">s</label>, <label for="r21" class="ident">ok</label> := <label for="r19" class="ident">args</label>[<span class="lit-number">0</span>].(<a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>); <label for="r21" class="ident">ok</label> {
+			<span class="keyword">return</span> <label for="r20" class="ident">s</label>
+		}
+	}
+	<span class="keyword">for</span> <label for="r22" class="ident">i</label>, <label for="r23" class="ident">arg</label> := <span class="keyword">range</span> <label for="r19" class="ident">args</label> {
+		<label for="r19" class="ident">args</label>[<label for="r22" class="ident">i</label>] = <a href="#line-154" class="ident">indirectToStringerOrError</a>(<label for="r23" class="ident">arg</label>)
+	}
+	<span class="keyword">return</span> <a href="../../../../../../pkg/fmt.html" class="ident i1">fmt</a>.<a href="../../../../../fmt/print.go.html#line-247" class="ident">Sprint</a>(<label for="r19" class="ident">args</label>...)
+}
+
+<span class="keyword">var</span> (
+	<a href="../../../../../../pkg/github.com/google/safehtml/internal/safehtmlutil.html#name-errorType" class="ident">errorType</a>       = <a href="../../../../../../pkg/reflect.html" class="ident i2">reflect</a>.<a href="../../../../../reflect/type.go.html#line-1368" class="ident">TypeOf</a>((*<a href="../../../../../../pkg/builtin.html#name-error" class="ident">error</a>)(<a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>)).<a href="../../../../../reflect/type.go.html#line-151" class="ident">Elem</a>()
+	<a href="../../../../../../pkg/github.com/google/safehtml/internal/safehtmlutil.html#name-fmtStringerType" class="ident">fmtStringerType</a> = <a href="../../../../../../pkg/reflect.html" class="ident i2">reflect</a>.<a href="../../../../../reflect/type.go.html#line-1368" class="ident">TypeOf</a>((*<a href="../../../../../../pkg/fmt.html" class="ident i1">fmt</a>.<a href="../../../../../fmt/print.go.html#line-62" class="ident">Stringer</a>)(<a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>)).<a href="../../../../../reflect/type.go.html#line-151" class="ident">Elem</a>()
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> indirectToStringerOrError dereferences a as many times</span><span class="comment"> as necessary to reach the base type, an implementation of fmt.Stringer,</span><span class="comment"> or an implementation of error, and returns a value of that type. It returns</span><span class="comment"> nil if a is nil.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r24" class="ident"><a href="../../../../../../pkg/github.com/google/safehtml/internal/safehtmlutil.html#name-indirectToStringerOrError" class="ident">indirectToStringerOrError</a></label>(<label for="r25" class="ident">a</label> <span class="keyword">interface</span>{}) <span class="keyword">interface</span>{} {
+	<span class="keyword">if</span> <label for="r25" class="ident">a</label> == <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+	}
+	<label for="r26" class="ident">v</label> := <a href="../../../../../../pkg/reflect.html" class="ident i2">reflect</a>.<a href="../../../../../reflect/value.go.html#line-2351" class="ident">ValueOf</a>(<label for="r25" class="ident">a</label>)
+	<span class="keyword">for</span> !<label for="r26" class="ident">v</label>.<a href="../../../../../reflect/value.go.html#line-1905" class="ident">Type</a>().<a href="../../../../../reflect/type.go.html#line-103" class="ident">Implements</a>(<a href="#line-147" class="ident">fmtStringerType</a>) &amp;&amp; !<label for="r26" class="ident">v</label>.<a href="../../../../../reflect/value.go.html#line-1905" class="ident">Type</a>().<a href="../../../../../reflect/type.go.html#line-103" class="ident">Implements</a>(<a href="#line-146" class="ident">errorType</a>) &amp;&amp; <label for="r26" class="ident">v</label>.<a href="../../../../../reflect/value.go.html#line-1140" class="ident">Kind</a>() == <a href="../../../../../../pkg/reflect.html" class="ident i2">reflect</a>.<a href="../../../../../reflect/type.go.html#line-257" class="ident">Ptr</a> &amp;&amp; !<label for="r26" class="ident">v</label>.<a href="../../../../../reflect/value.go.html#line-1069" class="ident">IsNil</a>() {
+		<label for="r26" class="ident">v</label> = <label for="r26" class="ident">v</label>.<a href="../../../../../reflect/value.go.html#line-811" class="ident">Elem</a>()
+	}
+	<span class="keyword">return</span> <label for="r26" class="ident">v</label>.<a href="../../../../../reflect/value.go.html#line-1015" class="ident">Interface</a>()
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Indirect returns the value, after dereferencing as many times</span><span class="comment"> as necessary to reach the base type (or nil).</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r27" class="ident"><a href="../../../../../../pkg/github.com/google/safehtml/internal/safehtmlutil.html#name-Indirect" class="ident">Indirect</a></label>(<label for="r28" class="ident">a</label> <span class="keyword">interface</span>{}) <span class="keyword">interface</span>{} {
+	<span class="keyword">if</span> <label for="r28" class="ident">a</label> == <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Avoid creating a reflect.Value if it's not a pointer.</span></div>
+<div class="code"><pre><code>		<span class="keyword">return</span> <label for="r28" class="ident">a</label>
+	}
+	<label for="r30" class="ident">v</label> := <a href="../../../../../../pkg/reflect.html" class="ident i2">reflect</a>.<a href="../../../../../reflect/value.go.html#line-2351" class="ident">ValueOf</a>(<label for="r28" class="ident">a</label>)
+	<span class="keyword">for</span> <label for="r30" class="ident">v</label>.<a href="../../../../../reflect/value.go.html#line-1140" class="ident">Kind</a>() == <a href="../../../../../../pkg/reflect.html" class="ident i2">reflect</a>.<a href="../../../../../reflect/type.go.html#line-257" class="ident">Ptr</a> &amp;&amp; !<label for="r30" class="ident">v</label>.<a href="../../../../../reflect/value.go.html#line-1069" class="ident">IsNil</a>() {
+		<label for="r30" class="ident">v</label> = <label for="r30" class="ident">v</label>.<a href="../../../../../reflect/value.go.html#line-811" class="ident">Elem</a>()
+	}
+	<span class="keyword">return</span> <label for="r30" class="ident">v</label>.<a href="../../../../../reflect/value.go.html#line-1015" class="ident">Interface</a>()
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

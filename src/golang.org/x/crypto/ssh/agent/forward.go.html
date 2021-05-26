@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: forward.go in package golang.org/x/crypto/ssh/agent</title>
+<link href="../../../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	forward.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../../../pkg/golang.org/x/crypto/ssh/agent.html">golang.org/x/crypto/ssh/agent</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16],
+input[id=r17]:checked ~pre label[for=r17],
+input[id=r18]:checked ~pre label[for=r18],
+input[id=r19]:checked ~pre label[for=r19],
+input[id=r20]:checked ~pre label[for=r20],
+input[id=r21]:checked ~pre label[for=r21],
+input[id=r22]:checked ~pre label[for=r22],
+input[id=r23]:checked ~pre label[for=r23],
+input[id=r24]:checked ~pre label[for=r24],
+input[id=r25]:checked ~pre label[for=r25],
+input[id=r26]:checked ~pre label[for=r26],
+input[id=r27]:checked ~pre label[for=r27]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1,
+input[id=i2]:checked ~pre .i2,
+input[id=i3]:checked ~pre .i3,
+input[id=i4]:checked ~pre .i4
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="r17" type="radio" name="g"/>
+<input id="r18" type="radio" name="g"/>
+<input id="r19" type="radio" name="g"/>
+<input id="r20" type="radio" name="g"/>
+<input id="r21" type="radio" name="g"/>
+<input id="r22" type="radio" name="g"/>
+<input id="r23" type="radio" name="g"/>
+<input id="r24" type="radio" name="g"/>
+<input id="r25" type="radio" name="g"/>
+<input id="r26" type="radio" name="g"/>
+<input id="r27" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<input id="i2" type="radio" name="i"/>
+<input id="i3" type="radio" name="i"/>
+<input id="i4" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2014 The Go Authors. All rights reserved.</span><span class="comment"> Use of this source code is governed by a BSD-style</span><span class="comment"> license that can be found in the LICENSE file.</span></div>
+<div class="code"><pre><code>
+<span class="keyword">package</span> agent
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"errors"</span></label>
+	<label for="i1"><span class="lit-string i1">"io"</span></label>
+	<label for="i2"><span class="lit-string i2">"net"</span></label>
+	<label for="i3"><span class="lit-string i3">"sync"</span></label>
+
+	<label for="i4"><span class="lit-string i4">"golang.org/x/crypto/ssh"</span></label>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> RequestAgentForwarding sets up agent forwarding for the session.</span><span class="comment"> ForwardToAgent or ForwardToRemote should be called to route</span><span class="comment"> the authentication requests.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r0" class="ident"><a href="../../../../../../pkg/golang.org/x/crypto/ssh/agent.html#name-RequestAgentForwarding" class="ident">RequestAgentForwarding</a></label>(<label for="r1" class="ident">session</label> *<a href="../../../../../../pkg/golang.org/x/crypto/ssh.html" class="ident i4">ssh</a>.<a href="../session.go.html#line-116" class="ident">Session</a>) <a href="../../../../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<label for="r2" class="ident">ok</label>, <label for="r3" class="ident">err</label> := <label for="r1" class="ident">session</label>.<a href="../session.go.html#line-151" class="ident">SendRequest</a>(<span class="lit-string">"auth-agent-req@openssh.com"</span>, <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>)
+	<span class="keyword">if</span> <label for="r3" class="ident">err</label> != <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <label for="r3" class="ident">err</label>
+	}
+	<span class="keyword">if</span> !<label for="r2" class="ident">ok</label> {
+		<span class="keyword">return</span> <a href="../../../../../../pkg/errors.html" class="ident i0">errors</a>.<a href="../../../../../errors/errors.go.html#line-58" class="ident">New</a>(<span class="lit-string">"forwarding request denied"</span>)
+	}
+	<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ForwardToAgent routes authentication requests to the given keyring.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r4" class="ident"><a href="../../../../../../pkg/golang.org/x/crypto/ssh/agent.html#name-ForwardToAgent" class="ident">ForwardToAgent</a></label>(<label for="r5" class="ident">client</label> *<a href="../../../../../../pkg/golang.org/x/crypto/ssh.html" class="ident i4">ssh</a>.<a href="../client.go.html#line-19" class="ident">Client</a>, <label for="r6" class="ident">keyring</label> <a href="client.go.html#line-45" class="ident">Agent</a>) <a href="../../../../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<label for="r7" class="ident">channels</label> := <label for="r5" class="ident">client</label>.<a href="../client.go.html#line-32" class="ident">HandleChannelOpen</a>(<a href="#line-53" class="ident">channelType</a>)
+	<span class="keyword">if</span> <label for="r7" class="ident">channels</label> == <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../../../../../pkg/errors.html" class="ident i0">errors</a>.<a href="../../../../../errors/errors.go.html#line-58" class="ident">New</a>(<span class="lit-string">"agent: already have handler for "</span> + <a href="#line-53" class="ident">channelType</a>)
+	}
+
+	<span class="keyword">go</span> <span class="keyword">func</span>() {
+		<span class="keyword">for</span> <label for="r8" class="ident">ch</label> := <span class="keyword">range</span> <label for="r7" class="ident">channels</label> {
+			<label for="r9" class="ident">channel</label>, <label for="r10" class="ident">reqs</label>, <label for="r11" class="ident">err</label> := <label for="r8" class="ident">ch</label>.<a href="../channel.go.html#line-32" class="ident">Accept</a>()
+			<span class="keyword">if</span> <label for="r11" class="ident">err</label> != <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+				<span class="keyword">continue</span>
+			}
+			<span class="keyword">go</span> <a href="../../../../../../pkg/golang.org/x/crypto/ssh.html" class="ident i4">ssh</a>.<a href="../connection.go.html#line-79" class="ident">DiscardRequests</a>(<label for="r10" class="ident">reqs</label>)
+			<span class="keyword">go</span> <span class="keyword">func</span>() {
+				<a href="server.go.html#line-535" class="ident">ServeAgent</a>(<label for="r6" class="ident">keyring</label>, <label for="r9" class="ident">channel</label>)
+				<label for="r9" class="ident">channel</label>.<a href="../channel.go.html#line-58" class="ident">Close</a>()
+			}()
+		}
+	}()
+	<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+}
+
+<span class="keyword">const</span> <a href="../../../../../../pkg/golang.org/x/crypto/ssh/agent.html#name-channelType" class="ident">channelType</a> = <span class="lit-string">"auth-agent@openssh.com"</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ForwardToRemote routes authentication requests to the ssh-agent</span><span class="comment"> process serving on the given unix socket.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r12" class="ident"><a href="../../../../../../pkg/golang.org/x/crypto/ssh/agent.html#name-ForwardToRemote" class="ident">ForwardToRemote</a></label>(<label for="r13" class="ident">client</label> *<a href="../../../../../../pkg/golang.org/x/crypto/ssh.html" class="ident i4">ssh</a>.<a href="../client.go.html#line-19" class="ident">Client</a>, <label for="r14" class="ident">addr</label> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>) <a href="../../../../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<label for="r15" class="ident">channels</label> := <label for="r13" class="ident">client</label>.<a href="../client.go.html#line-32" class="ident">HandleChannelOpen</a>(<a href="#line-53" class="ident">channelType</a>)
+	<span class="keyword">if</span> <label for="r15" class="ident">channels</label> == <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../../../../../pkg/errors.html" class="ident i0">errors</a>.<a href="../../../../../errors/errors.go.html#line-58" class="ident">New</a>(<span class="lit-string">"agent: already have handler for "</span> + <a href="#line-53" class="ident">channelType</a>)
+	}
+	<label for="r16" class="ident">conn</label>, <label for="r17" class="ident">err</label> := <a href="../../../../../../pkg/net.html" class="ident i2">net</a>.<a href="../../../../../net/dial.go.html#line-317" class="ident">Dial</a>(<span class="lit-string">"unix"</span>, <label for="r14" class="ident">addr</label>)
+	<span class="keyword">if</span> <label for="r17" class="ident">err</label> != <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <label for="r17" class="ident">err</label>
+	}
+	<label for="r16" class="ident">conn</label>.<a href="../../../../../net/net.go.html#line-126" class="ident">Close</a>()
+
+	<span class="keyword">go</span> <span class="keyword">func</span>() {
+		<span class="keyword">for</span> <label for="r18" class="ident">ch</label> := <span class="keyword">range</span> <label for="r15" class="ident">channels</label> {
+			<label for="r19" class="ident">channel</label>, <label for="r20" class="ident">reqs</label>, <label for="r21" class="ident">err</label> := <label for="r18" class="ident">ch</label>.<a href="../channel.go.html#line-32" class="ident">Accept</a>()
+			<span class="keyword">if</span> <label for="r21" class="ident">err</label> != <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+				<span class="keyword">continue</span>
+			}
+			<span class="keyword">go</span> <a href="../../../../../../pkg/golang.org/x/crypto/ssh.html" class="ident i4">ssh</a>.<a href="../connection.go.html#line-79" class="ident">DiscardRequests</a>(<label for="r20" class="ident">reqs</label>)
+			<span class="keyword">go</span> <a href="#line-81" class="ident">forwardUnixSocket</a>(<label for="r19" class="ident">channel</label>, <label for="r14" class="ident">addr</label>)
+		}
+	}()
+	<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+}
+
+<span class="keyword">func</span> <label for="r22" class="ident"><a href="../../../../../../pkg/golang.org/x/crypto/ssh/agent.html#name-forwardUnixSocket" class="ident">forwardUnixSocket</a></label>(<label for="r23" class="ident">channel</label> <a href="../../../../../../pkg/golang.org/x/crypto/ssh.html" class="ident i4">ssh</a>.<a href="../channel.go.html#line-49" class="ident">Channel</a>, <label for="r24" class="ident">addr</label> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>) {
+	<label for="r25" class="ident">conn</label>, <label for="r26" class="ident">err</label> := <a href="../../../../../../pkg/net.html" class="ident i2">net</a>.<a href="../../../../../net/dial.go.html#line-317" class="ident">Dial</a>(<span class="lit-string">"unix"</span>, <label for="r24" class="ident">addr</label>)
+	<span class="keyword">if</span> <label for="r26" class="ident">err</label> != <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span>
+	}
+
+	<span class="keyword">var</span> <label for="r27" class="ident">wg</label> <a href="../../../../../../pkg/sync.html" class="ident i3">sync</a>.<a href="../../../../../sync/waitgroup.go.html#line-20" class="ident">WaitGroup</a>
+	<label for="r27" class="ident">wg</label>.<a href="../../../../../sync/waitgroup.go.html#line-53" class="ident">Add</a>(<span class="lit-number">2</span>)
+	<span class="keyword">go</span> <span class="keyword">func</span>() {
+		<a href="../../../../../../pkg/io.html" class="ident i1">io</a>.<a href="../../../../../io/io.go.html#line-381" class="ident">Copy</a>(<label for="r25" class="ident">conn</label>, <label for="r23" class="ident">channel</label>)
+		<label for="r25" class="ident">conn</label>.(*<a href="../../../../../../pkg/net.html" class="ident i2">net</a>.<a href="../../../../../net/unixsock.go.html#line-68" class="ident">UnixConn</a>).<a href="../../../../../net/unixsock.go.html#line-95" class="ident">CloseWrite</a>()
+		<label for="r27" class="ident">wg</label>.<a href="../../../../../sync/waitgroup.go.html#line-98" class="ident">Done</a>()
+	}()
+	<span class="keyword">go</span> <span class="keyword">func</span>() {
+		<a href="../../../../../../pkg/io.html" class="ident i1">io</a>.<a href="../../../../../io/io.go.html#line-381" class="ident">Copy</a>(<label for="r23" class="ident">channel</label>, <label for="r25" class="ident">conn</label>)
+		<label for="r23" class="ident">channel</label>.<a href="../channel.go.html#line-63" class="ident">CloseWrite</a>()
+		<label for="r27" class="ident">wg</label>.<a href="../../../../../sync/waitgroup.go.html#line-98" class="ident">Done</a>()
+	}()
+
+	<label for="r27" class="ident">wg</label>.<a href="../../../../../sync/waitgroup.go.html#line-103" class="ident">Wait</a>()
+	<label for="r25" class="ident">conn</label>.<a href="../../../../../net/net.go.html#line-126" class="ident">Close</a>()
+	<label for="r23" class="ident">channel</label>.<a href="../channel.go.html#line-58" class="ident">Close</a>()
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

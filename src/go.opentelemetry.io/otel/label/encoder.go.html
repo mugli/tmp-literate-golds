@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: encoder.go in package go.opentelemetry.io/otel/label</title>
+<link href="../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	encoder.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../pkg/go.opentelemetry.io/otel/label.html">go.opentelemetry.io/otel/label</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1,
+input[id=i2]:checked ~pre .i2
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<input id="i2" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright The OpenTelemetry Authors</span><span class="comment"></span><span class="comment"> Licensed under the Apache License, Version 2.0 (the "License");</span><span class="comment"> you may not use this file except in compliance with the License.</span><span class="comment"> You may obtain a copy of the License at</span><span class="comment"></span><span class="comment">     http://www.apache.org/licenses/LICENSE-2.0</span><span class="comment"></span><span class="comment"> Unless required by applicable law or agreed to in writing, software</span><span class="comment"> distributed under the License is distributed on an "AS IS" BASIS,</span><span class="comment"> WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span><span class="comment"> See the License for the specific language governing permissions and</span><span class="comment"> limitations under the License.</span></div>
+<div class="code"><pre><code>
+<span class="keyword">package</span> label
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"bytes"</span></label>
+	<label for="i1"><span class="lit-string i1">"sync"</span></label>
+	<label for="i2"><span class="lit-string i2">"sync/atomic"</span></label>
+)
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Encoder is a mechanism for serializing a label set into a</span><span class="comment">	 specific string representation that supports caching, to</span><span class="comment">	 avoid repeated serialization. An example could be an</span><span class="comment">	 exporter encoding the label set into a wire representation.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Encode returns the serialized encoding of the label</span><span class="comment">		 set using its Iterator.  This result may be cached</span><span class="comment">		 by a label.Set.</span></div>
+<div class="code"><pre><code>		Encode(<a href="iterator.go.html#line-19" class="ident">Iterator</a>) <a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ID returns a value that is unique for each class of</span><span class="comment">		 label encoder.  Label encoders allocate these using</span><span class="comment">		 `NewEncoderID`.</span></div>
+<div class="code"><pre><code>		ID() <a href="#line-42" class="ident">EncoderID</a>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> EncoderID is used to identify distinct Encoder</span><span class="comment">	 implementations, for caching encoded results.</span></div>
+<div class="code"><pre><code>	<a href="../../../../pkg/go.opentelemetry.io/otel/label.html#name-EncoderID" class="ident">EncoderID</a> <span class="keyword">struct</span> {
+		<a href="../../../../use/go.opentelemetry.io/otel/label..EncoderID.value*cd424.html" class="ident">value</a> <a href="../../../../pkg/builtin.html#name-uint64" class="ident">uint64</a>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> defaultLabelEncoder uses a sync.Pool of buffers to reduce</span><span class="comment">	 the number of allocations used in encoding labels.  This</span><span class="comment">	 implementation encodes a comma-separated list of key=value,</span><span class="comment">	 with '/'-escaping of '=', ',', and '\'.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> pool is a pool of labelset builders.  The buffers in this</span><span class="comment">		 pool grow to a size that most label encodings will not</span><span class="comment">		 allocate new memory.</span></div>
+<div class="code"><pre><code>		<a href="../../../../use/go.opentelemetry.io/otel/label..defaultLabelEncoder*7da91.pool*27cac.html" class="ident">pool</a> <a href="../../../../pkg/sync.html" class="ident i1">sync</a>.<a href="../../../sync/pool.go.html#line-44" class="ident">Pool</a> <span class="comment">// *bytes.Buffer</span>
+	}
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> escapeChar is used to ensure uniqueness of the label encoding where</span><span class="comment"> keys or values contain either '=' or ','.  Since there is no parser</span><span class="comment"> needed for this encoding and its only requirement is to be unique,</span><span class="comment"> this choice is arbitrary.  Users will see these in some exporters</span><span class="comment"> (e.g., stdout), so the backslash ('\') is used as a conventional choice.</span></div>
+<div class="code"><pre><code><span class="keyword">const</span> <a href="../../../../pkg/go.opentelemetry.io/otel/label.html#name-escapeChar" class="ident">escapeChar</a> = <span class="lit-number">'\\'</span>
+
+<span class="keyword">var</span> (
+	_ <a href="#line-28" class="ident">Encoder</a> = &amp;<a href="#line-50" class="ident">defaultLabelEncoder</a>{}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> encoderIDCounter is for generating IDs for other label</span><span class="comment">	 encoders.</span></div>
+<div class="code"><pre><code>	<a href="../../../../pkg/go.opentelemetry.io/otel/label.html#name-encoderIDCounter" class="ident">encoderIDCounter</a> <a href="../../../../pkg/builtin.html#name-uint64" class="ident">uint64</a>
+
+	<a href="../../../../pkg/go.opentelemetry.io/otel/label.html#name-defaultEncoderOnce" class="ident">defaultEncoderOnce</a>     <a href="../../../../pkg/sync.html" class="ident i1">sync</a>.<a href="../../../sync/once.go.html#line-14" class="ident">Once</a>
+	<a href="../../../../pkg/go.opentelemetry.io/otel/label.html#name-defaultEncoderID" class="ident">defaultEncoderID</a>       = <a href="#line-80" class="ident">NewEncoderID</a>()
+	<a href="../../../../pkg/go.opentelemetry.io/otel/label.html#name-defaultEncoderInstance" class="ident">defaultEncoderInstance</a> *<a href="#line-50" class="ident">defaultLabelEncoder</a>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> NewEncoderID returns a unique label encoder ID. It should be</span><span class="comment"> called once per each type of label encoder. Preferably in init() or</span><span class="comment"> in var definition.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r0" class="ident"><a href="../../../../pkg/go.opentelemetry.io/otel/label.html#name-NewEncoderID" class="ident">NewEncoderID</a></label>() <a href="#line-42" class="ident">EncoderID</a> {
+	<span class="keyword">return</span> <a href="#line-42" class="ident">EncoderID</a>{<a href="#line-43" class="ident">value</a>: <a href="../../../../pkg/sync/atomic.html" class="ident i2">atomic</a>.<a href="../../../sync/atomic/doc.go.html#line-105" class="ident">AddUint64</a>(&amp;<a href="#line-70" class="ident">encoderIDCounter</a>, <span class="lit-number">1</span>)}
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> DefaultEncoder returns a label encoder that encodes labels</span><span class="comment"> in such a way that each escaped label's key is followed by an equal</span><span class="comment"> sign and then by an escaped label's value. All key-value pairs are</span><span class="comment"> separated by a comma.</span><span class="comment"></span><span class="comment"> Escaping is done by prepending a backslash before either a</span><span class="comment"> backslash, equal sign or a comma.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r1" class="ident"><a href="../../../../pkg/go.opentelemetry.io/otel/label.html#name-DefaultEncoder" class="ident">DefaultEncoder</a></label>() <a href="#line-28" class="ident">Encoder</a> {
+	<a href="#line-72" class="ident">defaultEncoderOnce</a>.<a href="../../../sync/once.go.html#line-42" class="ident">Do</a>(<span class="keyword">func</span>() {
+		<a href="#line-74" class="ident">defaultEncoderInstance</a> = &amp;<a href="#line-50" class="ident">defaultLabelEncoder</a>{
+			<a href="#line-54" class="ident">pool</a>: <a href="../../../../pkg/sync.html" class="ident i1">sync</a>.<a href="../../../sync/pool.go.html#line-44" class="ident">Pool</a>{
+				<a href="../../../sync/pool.go.html#line-56" class="ident">New</a>: <span class="keyword">func</span>() <span class="keyword">interface</span>{} {
+					<span class="keyword">return</span> &amp;<a href="../../../../pkg/bytes.html" class="ident i0">bytes</a>.<a href="../../../bytes/buffer.go.html#line-20" class="ident">Buffer</a>{}
+				},
+			},
+		}
+	})
+	<span class="keyword">return</span> <a href="#line-74" class="ident">defaultEncoderInstance</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Encode is a part of an implementation of the LabelEncoder</span><span class="comment"> interface.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r2" class="ident">d</label> *<a href="#line-50" class="ident">defaultLabelEncoder</a>) <label for="r3" class="ident"><a href="../../../../use/go.opentelemetry.io/otel/label..defaultLabelEncoder*7da91.Encode.html" class="ident">Encode</a></label>(<label for="r4" class="ident">iter</label> <a href="iterator.go.html#line-19" class="ident">Iterator</a>) <a href="../../../../pkg/builtin.html#name-string" class="ident">string</a> {
+	<label for="r5" class="ident">buf</label> := <label for="r2" class="ident">d</label>.<a href="#line-54" class="ident">pool</a>.<a href="../../../sync/pool.go.html#line-124" class="ident">Get</a>().(*<a href="../../../../pkg/bytes.html" class="ident i0">bytes</a>.<a href="../../../bytes/buffer.go.html#line-20" class="ident">Buffer</a>)
+	<span class="keyword">defer</span> <label for="r2" class="ident">d</label>.<a href="#line-54" class="ident">pool</a>.<a href="../../../sync/pool.go.html#line-90" class="ident">Put</a>(<label for="r5" class="ident">buf</label>)
+	<label for="r5" class="ident">buf</label>.<a href="../../../bytes/buffer.go.html#line-97" class="ident">Reset</a>()
+
+	<span class="keyword">for</span> <label for="r4" class="ident">iter</label>.<a href="iterator.go.html#line-41" class="ident">Next</a>() {
+		<label for="r6" class="ident">i</label>, <label for="r7" class="ident">keyValue</label> := <label for="r4" class="ident">iter</label>.<a href="iterator.go.html#line-60" class="ident">IndexedLabel</a>()
+		<span class="keyword">if</span> <label for="r6" class="ident">i</label> &gt; <span class="lit-number">0</span> {
+			_, _ = <label for="r5" class="ident">buf</label>.<a href="../../../bytes/buffer.go.html#line-277" class="ident">WriteRune</a>(<span class="lit-number">','</span>)
+		}
+		<a href="#line-136" class="ident">copyAndEscape</a>(<label for="r5" class="ident">buf</label>, <a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>(<label for="r7" class="ident">keyValue</label>.<a href="kv.go.html#line-25" class="ident">Key</a>))
+
+		_, _ = <label for="r5" class="ident">buf</label>.<a href="../../../bytes/buffer.go.html#line-277" class="ident">WriteRune</a>(<span class="lit-number">'='</span>)
+
+		<span class="keyword">if</span> <label for="r7" class="ident">keyValue</label>.<a href="kv.go.html#line-26" class="ident">Value</a>.<a href="value.go.html#line-165" class="ident">Type</a>() == <a href="value.go.html#line-52" class="ident">STRING</a> {
+			<a href="#line-136" class="ident">copyAndEscape</a>(<label for="r5" class="ident">buf</label>, <label for="r7" class="ident">keyValue</label>.<a href="kv.go.html#line-26" class="ident">Value</a>.<a href="value.go.html#line-213" class="ident">AsString</a>())
+		} <span class="keyword">else</span> {
+			_, _ = <label for="r5" class="ident">buf</label>.<a href="../../../bytes/buffer.go.html#line-180" class="ident">WriteString</a>(<label for="r7" class="ident">keyValue</label>.<a href="kv.go.html#line-26" class="ident">Value</a>.<a href="value.go.html#line-250" class="ident">Emit</a>())
+		}
+	}
+	<span class="keyword">return</span> <label for="r5" class="ident">buf</label>.<a href="../../../bytes/buffer.go.html#line-60" class="ident">String</a>()
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ID is a part of an implementation of the LabelEncoder interface.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (*<a href="#line-50" class="ident">defaultLabelEncoder</a>) <label for="r8" class="ident"><a href="../../../../use/go.opentelemetry.io/otel/label..defaultLabelEncoder*7da91.ID.html" class="ident">ID</a></label>() <a href="#line-42" class="ident">EncoderID</a> {
+	<span class="keyword">return</span> <a href="#line-73" class="ident">defaultEncoderID</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> copyAndEscape escapes `=`, `,` and its own escape character (`\`),</span><span class="comment"> making the default encoding unique.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r9" class="ident"><a href="../../../../pkg/go.opentelemetry.io/otel/label.html#name-copyAndEscape" class="ident">copyAndEscape</a></label>(<label for="r10" class="ident">buf</label> *<a href="../../../../pkg/bytes.html" class="ident i0">bytes</a>.<a href="../../../bytes/buffer.go.html#line-20" class="ident">Buffer</a>, <label for="r11" class="ident">val</label> <a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>) {
+	<span class="keyword">for</span> <label for="r12" class="ident">_</label>, <label for="r13" class="ident">ch</label> := <span class="keyword">range</span> <label for="r11" class="ident">val</label> {
+		<span class="keyword">switch</span> <label for="r13" class="ident">ch</label> {
+		<span class="keyword">case</span> <span class="lit-number">'='</span>, <span class="lit-number">','</span>, <a href="#line-63" class="ident">escapeChar</a>:
+			<label for="r10" class="ident">buf</label>.<a href="../../../bytes/buffer.go.html#line-277" class="ident">WriteRune</a>(<a href="#line-63" class="ident">escapeChar</a>)
+		}
+		<label for="r10" class="ident">buf</label>.<a href="../../../bytes/buffer.go.html#line-277" class="ident">WriteRune</a>(<label for="r13" class="ident">ch</label>)
+	}
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Valid returns true if this encoder ID was allocated by</span><span class="comment"> `NewEncoderID`.  Invalid encoder IDs will not be cached.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r14" class="ident">id</label> <a href="#line-42" class="ident">EncoderID</a>) <label for="r15" class="ident"><a href="../../../../use/go.opentelemetry.io/otel/label..EncoderID.Valid.html" class="ident">Valid</a></label>() <a href="../../../../pkg/builtin.html#name-bool" class="ident">bool</a> {
+	<span class="keyword">return</span> <label for="r14" class="ident">id</label>.<a href="#line-43" class="ident">value</a> != <span class="lit-number">0</span>
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

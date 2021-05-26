@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: unbounded.go in package google.golang.org/grpc/internal/buffer</title>
+<link href="../../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	unbounded.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../../pkg/google.golang.org/grpc/internal/buffer.html">google.golang.org/grpc/internal/buffer</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"></span><span class="comment"> * Copyright 2019 gRPC authors.</span><span class="comment"> *</span><span class="comment"> * Licensed under the Apache License, Version 2.0 (the "License");</span><span class="comment"> * you may not use this file except in compliance with the License.</span><span class="comment"> * You may obtain a copy of the License at</span><span class="comment"> *</span><span class="comment"> *     http:www.apache.org/licenses/LICENSE-2.0</span><span class="comment"> *</span><span class="comment"> * Unless required by applicable law or agreed to in writing, software</span><span class="comment"> * distributed under the License is distributed on an "AS IS" BASIS,</span><span class="comment"> * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span><span class="comment"> * See the License for the specific language governing permissions and</span><span class="comment"> * limitations under the License.</span><span class="comment"> *</span><span class="comment"> </span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Package buffer provides an implementation of an unbounded buffer.</span></div>
+<div class="code"><pre><code><span class="keyword">package</span> buffer
+
+<span class="keyword">import</span> <label for="i0"><span class="lit-string i0">"sync"</span></label>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Unbounded is an implementation of an unbounded buffer which does not use</span><span class="comment"> extra goroutines. This is typically used for passing updates from one entity</span><span class="comment"> to another within gRPC.</span><span class="comment"></span><span class="comment"> All methods on this type are thread-safe and don't block on anything except</span><span class="comment"> the underlying mutex used for synchronization.</span><span class="comment"></span><span class="comment"> Unbounded supports values of any type to be stored in it by using a channel</span><span class="comment"> of `interface{}`. This means that a call to Put() incurs an extra memory</span><span class="comment"> allocation, and also that users need a type assertion while reading. For</span><span class="comment"> performance critical code paths, using Unbounded is strongly discouraged and</span><span class="comment"> defining a new type specific implementation of this buffer is preferred. See</span><span class="comment"> internal/transport/transport.go for an example of this.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../pkg/google.golang.org/grpc/internal/buffer.html#name-Unbounded" class="ident">Unbounded</a> <span class="keyword">struct</span> {
+	<a href="../../../../../use/google.golang.org/grpc/internal/buffer..Unbounded.c*2e7d2.html" class="ident">c</a>       <span class="keyword">chan</span> <span class="keyword">interface</span>{}
+	<a href="../../../../../use/google.golang.org/grpc/internal/buffer..Unbounded.mu*19503.html" class="ident">mu</a>      <a href="../../../../../pkg/sync.html" class="ident i0">sync</a>.<a href="../../../../sync/mutex.go.html#line-25" class="ident">Mutex</a>
+	<a href="../../../../../use/google.golang.org/grpc/internal/buffer..Unbounded.backlog*43313.html" class="ident">backlog</a> []<span class="keyword">interface</span>{}
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> NewUnbounded returns a new instance of Unbounded.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r0" class="ident"><a href="../../../../../pkg/google.golang.org/grpc/internal/buffer.html#name-NewUnbounded" class="ident">NewUnbounded</a></label>() *<a href="#line-36" class="ident">Unbounded</a> {
+	<span class="keyword">return</span> &amp;<a href="#line-36" class="ident">Unbounded</a>{<a href="#line-37" class="ident">c</a>: <a href="../../../../runtime/chan.go.html#line-71">make</a>(<span class="keyword">chan</span> <span class="keyword">interface</span>{}, <span class="lit-number">1</span>)}
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Put adds t to the unbounded buffer.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r1" class="ident">b</label> *<a href="#line-36" class="ident">Unbounded</a>) <label for="r2" class="ident"><a href="../../../../../use/google.golang.org/grpc/internal/buffer..Unbounded.Put.html" class="ident">Put</a></label>(<label for="r3" class="ident">t</label> <span class="keyword">interface</span>{}) {
+	<label for="r1" class="ident">b</label>.<a href="#line-38" class="ident">mu</a>.<a href="../../../../sync/mutex.go.html#line-72" class="ident">Lock</a>()
+	<span class="keyword">if</span> <a href="../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r1" class="ident">b</label>.<a href="#line-39" class="ident">backlog</a>) == <span class="lit-number">0</span> {
+		<a href="../../../../runtime/chan.go.html#line-686"><span class="keyword">select</span></a> {
+		<span class="keyword">case</span> <label for="r1" class="ident">b</label>.<a href="#line-37" class="ident">c</a> <a href="../../../../runtime/chan.go.html#line-158">&lt;-</a> <label for="r3" class="ident">t</label>:
+			<label for="r1" class="ident">b</label>.<a href="#line-38" class="ident">mu</a>.<a href="../../../../sync/mutex.go.html#line-179" class="ident">Unlock</a>()
+			<span class="keyword">return</span>
+		<span class="keyword">default</span>:
+		}
+	}
+	<label for="r1" class="ident">b</label>.<a href="#line-39" class="ident">backlog</a> = <a href="../../../../../pkg/builtin.html#name-append" class="ident">append</a>(<label for="r1" class="ident">b</label>.<a href="#line-39" class="ident">backlog</a>, <label for="r3" class="ident">t</label>)
+	<label for="r1" class="ident">b</label>.<a href="#line-38" class="ident">mu</a>.<a href="../../../../sync/mutex.go.html#line-179" class="ident">Unlock</a>()
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Load sends the earliest buffered data, if any, onto the read channel</span><span class="comment"> returned by Get(). Users are expected to call this every time they read a</span><span class="comment"> value from the read channel.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r4" class="ident">b</label> *<a href="#line-36" class="ident">Unbounded</a>) <label for="r5" class="ident"><a href="../../../../../use/google.golang.org/grpc/internal/buffer..Unbounded.Load.html" class="ident">Load</a></label>() {
+	<label for="r4" class="ident">b</label>.<a href="#line-38" class="ident">mu</a>.<a href="../../../../sync/mutex.go.html#line-72" class="ident">Lock</a>()
+	<span class="keyword">if</span> <a href="../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r4" class="ident">b</label>.<a href="#line-39" class="ident">backlog</a>) &gt; <span class="lit-number">0</span> {
+		<a href="../../../../runtime/chan.go.html#line-686"><span class="keyword">select</span></a> {
+		<span class="keyword">case</span> <label for="r4" class="ident">b</label>.<a href="#line-37" class="ident">c</a> <a href="../../../../runtime/chan.go.html#line-158">&lt;-</a> <label for="r4" class="ident">b</label>.<a href="#line-39" class="ident">backlog</a>[<span class="lit-number">0</span>]:
+			<label for="r4" class="ident">b</label>.<a href="#line-39" class="ident">backlog</a>[<span class="lit-number">0</span>] = <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+			<label for="r4" class="ident">b</label>.<a href="#line-39" class="ident">backlog</a> = <label for="r4" class="ident">b</label>.<a href="#line-39" class="ident">backlog</a>[<span class="lit-number">1</span>:]
+		<span class="keyword">default</span>:
+		}
+	}
+	<label for="r4" class="ident">b</label>.<a href="#line-38" class="ident">mu</a>.<a href="../../../../sync/mutex.go.html#line-179" class="ident">Unlock</a>()
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Get returns a read channel on which values added to the buffer, via Put(),</span><span class="comment"> are sent on.</span><span class="comment"></span><span class="comment"> Upon reading a value from this channel, users are expected to call Load() to</span><span class="comment"> send the next buffered value onto the channel if there is any.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r6" class="ident">b</label> *<a href="#line-36" class="ident">Unbounded</a>) <label for="r7" class="ident"><a href="../../../../../use/google.golang.org/grpc/internal/buffer..Unbounded.Get.html" class="ident">Get</a></label>() &lt;-<span class="keyword">chan</span> <span class="keyword">interface</span>{} {
+	<span class="keyword">return</span> <label for="r6" class="ident">b</label>.<a href="#line-37" class="ident">c</a>
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

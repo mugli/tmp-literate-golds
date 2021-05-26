@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Package: net/http/httputil</title>
+<link href="../../../css/light-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="package-details"><code><span style="font-size:xx-large;">package <b>httputil</b></span>
+
+<span class="title">Import Path</span>
+	<a href="../../../index.html#pkg-net/http/httputil">net/http/httputil</a><i> (on <a href="https://golang.org/pkg/net/http/httputil/" target="_blank">golang.org</a> and <a href="https://pkg.go.dev/net/http/httputil" target="_blank">go.dev</a>)</i>
+
+<span class="title">Dependency Relation</span>
+	imports <a href="../../../dep/net/http/httputil.html">16 packages</a>, and imported by <a href="../../../dep/net/http/httputil.html#imported-by">3 packages</a>
+
+<div id="files"><span class="title">Involved Source Files</span>
+
+	<span class="nodocs">      <a href="../../../src/net/http/httputil/dump.go.html">dump.go</a></span>
+	<input type='checkbox' checked class="fold" id="file-1-fold-content"><label for="file-1-fold-content">   <a href="../../../src/net/http/httputil/httputil.go.html#doc">d➜</a> <a href="../../../src/net/http/httputil/httputil.go.html">httputil.go</a></label><span id='file-1-fold-content-items' class="fold-items">
+		Package httputil provides HTTP utility functions, complementing the
+		more common ones in the net/http package.
+</span>
+	<span class="nodocs">      <a href="../../../src/net/http/httputil/persist.go.html">persist.go</a></span>
+	<span class="nodocs">      <a href="../../../src/net/http/httputil/reverseproxy.go.html">reverseproxy.go</a></span></div>
+<div id="examples"><span class="title">Code Examples</span>
+
+	<input type='checkbox' class="fold" id="example-0-fold-content"><label for="example-0-fold-content">DumpRequest</label><span id='example-0-fold-content-items' class="fold-items">
+		package main
+		
+		import (
+			"fmt"
+			"io"
+			"log"
+			"net/http"
+			"net/http/httptest"
+			"net/http/httputil"
+			"strings"
+		)
+		
+		func main() {
+			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				dump, err := httputil.DumpRequest(r, true)
+				if err != nil {
+					http.Error(w, fmt.Sprint(err), http.StatusInternalServerError)
+					return
+				}
+		
+				fmt.Fprintf(w, "%q", dump)
+			}))
+			defer ts.Close()
+		
+			const body = "Go is a general-purpose language designed with systems programming in mind."
+			req, err := http.NewRequest("POST", ts.URL, strings.NewReader(body))
+			if err != nil {
+				log.Fatal(err)
+			}
+			req.Host = "www.example.org"
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				log.Fatal(err)
+			}
+			defer resp.Body.Close()
+		
+			b, err := io.ReadAll(resp.Body)
+			if err != nil {
+				log.Fatal(err)
+			}
+		
+			fmt.Printf("%s", b)
+		
+		}
+
+</span>
+	<input type='checkbox' class="fold" id="example-1-fold-content"><label for="example-1-fold-content">DumpRequestOut</label><span id='example-1-fold-content-items' class="fold-items">
+		package main
+		
+		import (
+			"fmt"
+			"log"
+			"net/http"
+			"net/http/httputil"
+			"strings"
+		)
+		
+		func main() {
+			const body = "Go is a general-purpose language designed with systems programming in mind."
+			req, err := http.NewRequest("PUT", "http://www.example.org", strings.NewReader(body))
+			if err != nil {
+				log.Fatal(err)
+			}
+		
+			dump, err := httputil.DumpRequestOut(req, true)
+			if err != nil {
+				log.Fatal(err)
+			}
+		
+			fmt.Printf("%q", dump)
+		
+		}
+
+</span>
+	<input type='checkbox' class="fold" id="example-2-fold-content"><label for="example-2-fold-content">DumpResponse</label><span id='example-2-fold-content-items' class="fold-items">
+		package main
+		
+		import (
+			"fmt"
+			"log"
+			"net/http"
+			"net/http/httptest"
+			"net/http/httputil"
+		)
+		
+		func main() {
+			const body = "Go is a general-purpose language designed with systems programming in mind."
+			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Date", "Wed, 19 Jul 1972 19:00:00 GMT")
+				fmt.Fprintln(w, body)
+			}))
+			defer ts.Close()
+		
+			resp, err := http.Get(ts.URL)
+			if err != nil {
+				log.Fatal(err)
+			}
+			defer resp.Body.Close()
+		
+			dump, err := httputil.DumpResponse(resp, true)
+			if err != nil {
+				log.Fatal(err)
+			}
+		
+			fmt.Printf("%q", dump)
+		
+		}
+
+</span>
+	<input type='checkbox' class="fold" id="example-3-fold-content"><label for="example-3-fold-content">ReverseProxy</label><span id='example-3-fold-content-items' class="fold-items">
+		package main
+		
+		import (
+			"fmt"
+			"io"
+			"log"
+			"net/http"
+			"net/http/httptest"
+			"net/http/httputil"
+			"net/url"
+		)
+		
+		func main() {
+			backendServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				fmt.Fprintln(w, "this call was relayed by the reverse proxy")
+			}))
+			defer backendServer.Close()
+		
+			rpURL, err := url.Parse(backendServer.URL)
+			if err != nil {
+				log.Fatal(err)
+			}
+			frontendProxy := httptest.NewServer(httputil.NewSingleHostReverseProxy(rpURL))
+			defer frontendProxy.Close()
+		
+			resp, err := http.Get(frontendProxy.URL)
+			if err != nil {
+				log.Fatal(err)
+			}
+		
+			b, err := io.ReadAll(resp.Body)
+			if err != nil {
+				log.Fatal(err)
+			}
+		
+			fmt.Printf("%s", b)
+		
+		}
+</span>
+</div>
+<div id="exported-types"><span class="title">Package-Level Type Names<span class="title-stat"><i> (total 11, in which 4 are exported)</i></span></span>
+
+<div id="exported-types-buttons" class="js-on">	/* sort exporteds by: <label id="sort-types-by-alphabet" class="button">alphabet</label> | <label id="sort-types-by-popularity" class="button">popularity</label> */</div><div class="anchor type-res" id="name-BufferPool" data-popularity="100">	<input type='checkbox' class="fold" id="BufferPool-fold-content"><label for="BufferPool-fold-content"> <a href="../../../use/net/http/httputil..BufferPool.html">type</a> <a href="../../../src/net/http/httputil/reverseproxy.go.html#line-97">BufferPool</a> <b><i>(interface)</i></b></label><span id='BufferPool-fold-content-docs' class="fold-docs">
+		A BufferPool is an interface for getting and returning temporary
+		byte slices for use by io.CopyBuffer.
+
+		<input type='checkbox' class="fold" id="BufferPool-fold-methods"><label for="BufferPool-fold-methods">Methods (<i>total 2, both are exported</i>)</label><span id='BufferPool-fold-methods-items' class="fold-items"><span>
+			<span class="nodocs">( T) <a href="../../../src/net/http/httputil/reverseproxy.go.html#line-98">Get</a>() []<a href="../../builtin.html#name-byte">byte</a></span></span><span>
+			<span class="nodocs">( T) <a href="../../../src/net/http/httputil/reverseproxy.go.html#line-99">Put</a>([]<a href="../../builtin.html#name-byte">byte</a>)</span></span></span>
+
+</span></div><div class="anchor type-res" id="name-ClientConn" data-popularity="500">	<input type='checkbox' class="fold" id="ClientConn-fold-content"><label for="ClientConn-fold-content"> <a href="../../../use/net/http/httputil..ClientConn.html">type</a> <a href="../../../src/net/http/httputil/persist.go.html#line-230">ClientConn</a> <i>(struct)</i></label><span id='ClientConn-fold-content-docs' class="fold-docs">
+		ClientConn is an artifact of Go's early HTTP implementation.
+		It is low-level, old, and unused by Go's current HTTP stack.
+		We should have deleted it before Go 1.
+
+		Deprecated: Use Client or Transport in package net/http instead.
+
+		<input type='checkbox' class="fold" id="ClientConn-fold-fields"><label for="ClientConn-fold-fields">Fields (<i>total 11, none are exported</i>)</label><span id='ClientConn-fold-fields-items' class="fold-items">
+			<input type='checkbox' class="showhide" id="ClientConn-showhide-fields"><i><label for="ClientConn-showhide-fields" class="show-inline">/* 11 unexporteds ... */</label><label for="ClientConn-showhide-fields" class="hide-inline">/* 11 unexporteds: */</label></i><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/net/http/httputil/persist.go.html#line-232">c</a> <i><a href="../../net.html">net</a>.<a href="../../net.html#name-Conn">Conn</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/net/http/httputil/persist.go.html#line-235">lastbody</a> <i><a href="../../io.html">io</a>.<a href="../../io.html#name-ReadCloser">ReadCloser</a></i></span></i></span><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="ClientConn-fold-field-mu"><label for="ClientConn-fold-field-mu"><a href="../../../src/net/http/httputil/persist.go.html#line-231">mu</a> <i><a href="../../sync.html">sync</a>.<a href="../../sync.html#name-Mutex">Mutex</a></i></label><span id='ClientConn-fold-field-mu-docs' class="fold-docs">
+				// read-write protects the following fields
+</span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/net/http/httputil/persist.go.html#line-236">nread</a> <i><a href="../../builtin.html#name-int">int</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/net/http/httputil/persist.go.html#line-236">nwritten</a> <i><a href="../../builtin.html#name-int">int</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/net/http/httputil/persist.go.html#line-239">pipe</a> <i><a href="../textproto.html">textproto</a>.<a href="../textproto.html#name-Pipeline">Pipeline</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/net/http/httputil/persist.go.html#line-237">pipereq</a> <i>map[*<a href="../http.html">http</a>.<a href="../http.html#name-Request">Request</a>]<a href="../../builtin.html#name-uint">uint</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/net/http/httputil/persist.go.html#line-233">r</a> <i>*<a href="../../bufio.html">bufio</a>.<a href="../../bufio.html#name-Reader">Reader</a></i></span></i></span><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="ClientConn-fold-field-re"><label for="ClientConn-fold-field-re"><a href="../../../src/net/http/httputil/persist.go.html#line-234">re</a> <i><a href="../../builtin.html#name-error">error</a></i></label><span id='ClientConn-fold-field-re-docs' class="fold-docs">
+				// read/write errors
+</span></i></span><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="ClientConn-fold-field-we"><label for="ClientConn-fold-field-we"><a href="../../../src/net/http/httputil/persist.go.html#line-234">we</a> <i><a href="../../builtin.html#name-error">error</a></i></label><span id='ClientConn-fold-field-we-docs' class="fold-docs">
+				// read/write errors
+</span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/net/http/httputil/persist.go.html#line-240">writeReq</a> <i>func(*<a href="../http.html">http</a>.<a href="../http.html#name-Request">Request</a>, <a href="../../io.html">io</a>.<a href="../../io.html#name-Writer">Writer</a>) <a href="../../builtin.html#name-error">error</a></i></span></i></span></span>
+		<input type='checkbox' class="fold" id="ClientConn-fold-methods"><label for="ClientConn-fold-methods">Methods (<i>total 6, all are exported</i>)</label><span id='ClientConn-fold-methods-items' class="fold-items"><span>
+			<input type='checkbox' class="fold" id="ClientConn-fold-method-Close"><label for="ClientConn-fold-method-Close">(*T) <a href="../../../src/net/http/httputil/persist.go.html#line-286">Close</a>() <a href="../../builtin.html#name-error">error</a></label><span id='ClientConn-fold-method-Close-docs' class="fold-docs">
+				Close calls Hijack and then also closes the underlying connection.
+</span></span><span>
+			<input type='checkbox' class="fold" id="ClientConn-fold-method-Do"><label for="ClientConn-fold-method-Do">(*T) <a href="../../../src/net/http/httputil/persist.go.html#line-425">Do</a>(req *<a href="../http.html">http</a>.<a href="../http.html#name-Request">Request</a>) (*<a href="../http.html">http</a>.<a href="../http.html#name-Response">Response</a>, <a href="../../builtin.html#name-error">error</a>)</label><span id='ClientConn-fold-method-Do-docs' class="fold-docs">
+				Do is convenience method that writes a request and reads a response.
+</span></span><span>
+			<input type='checkbox' class="fold" id="ClientConn-fold-method-Hijack"><label for="ClientConn-fold-method-Hijack">(*T) <a href="../../../src/net/http/httputil/persist.go.html#line-275">Hijack</a>() (c <a href="../../net.html">net</a>.<a href="../../net.html#name-Conn">Conn</a>, r *<a href="../../bufio.html">bufio</a>.<a href="../../bufio.html#name-Reader">Reader</a>)</label><span id='ClientConn-fold-method-Hijack-docs' class="fold-docs">
+				Hijack detaches the ClientConn and returns the underlying connection as well
+				as the read-side bufio which may have some left over data. Hijack may be
+				called before the user or Read have signaled the end of the keep-alive
+				logic. The user should not call Hijack while Read or Write is in progress.
+</span></span><span>
+			<input type='checkbox' class="fold" id="ClientConn-fold-method-Pending"><label for="ClientConn-fold-method-Pending">(*T) <a href="../../../src/net/http/httputil/persist.go.html#line-353">Pending</a>() <a href="../../builtin.html#name-int">int</a></label><span id='ClientConn-fold-method-Pending-docs' class="fold-docs">
+				Pending returns the number of unanswered requests
+				that have been sent on the connection.
+</span></span><span>
+			<input type='checkbox' class="fold" id="ClientConn-fold-method-Read"><label for="ClientConn-fold-method-Read">(*T) <a href="../../../src/net/http/httputil/persist.go.html#line-363">Read</a>(req *<a href="../http.html">http</a>.<a href="../http.html#name-Request">Request</a>) (resp *<a href="../http.html">http</a>.<a href="../http.html#name-Response">Response</a>, err <a href="../../builtin.html#name-error">error</a>)</label><span id='ClientConn-fold-method-Read-docs' class="fold-docs">
+				Read reads the next response from the wire. A valid response might be
+				returned together with an ErrPersistEOF, which means that the remote
+				requested that this be the last request serviced. Read can be called
+				concurrently with Write, but not with another Read.
+</span></span><span>
+			<input type='checkbox' class="fold" id="ClientConn-fold-method-Write"><label for="ClientConn-fold-method-Write">(*T) <a href="../../../src/net/http/httputil/persist.go.html#line-299">Write</a>(req *<a href="../http.html">http</a>.<a href="../http.html#name-Request">Request</a>) <a href="../../builtin.html#name-error">error</a></label><span id='ClientConn-fold-method-Write-docs' class="fold-docs">
+				Write writes a request. An ErrPersistEOF error is returned if the connection
+				has been closed in an HTTP keep-alive sense. If req.Close equals true, the
+				keep-alive connection is logically closed after this request and the opposing
+				server is informed. An ErrUnexpectedEOF indicates the remote closed the
+				underlying TCP connection, which is usually considered as graceful close.
+</span></span></span>
+		<input type='checkbox' class="fold" id="ClientConn-fold-impls"><label for="ClientConn-fold-impls">Implements (<i>at least one exported</i>)</label><span id='ClientConn-fold-impls-items' class="fold-items"><span>
+			*T : io.<a href="../../io.html#name-Closer">Closer</a></span></span>
+		<input type='checkbox' class="fold" id="ClientConn-fold-results"><label for="ClientConn-fold-results">As Outputs Of (<i>at least 2, both are exported</i>)</label><span id='ClientConn-fold-results-items' class="fold-items"><span>
+			func <a href="#name-NewClientConn">NewClientConn</a>(c <a href="../../net.html">net</a>.<a href="../../net.html#name-Conn">Conn</a>, r *<a href="../../bufio.html">bufio</a>.<a href="../../bufio.html#name-Reader">Reader</a>) *<b>ClientConn</b></span><span>
+			func <a href="#name-NewProxyClientConn">NewProxyClientConn</a>(c <a href="../../net.html">net</a>.<a href="../../net.html#name-Conn">Conn</a>, r *<a href="../../bufio.html">bufio</a>.<a href="../../bufio.html#name-Reader">Reader</a>) *<b>ClientConn</b></span></span>
+
+</span></div><div class="anchor type-res" id="name-ReverseProxy" data-popularity="650">	<input type='checkbox' class="fold" id="ReverseProxy-fold-content"><label for="ReverseProxy-fold-content"> <a href="../../../use/net/http/httputil..ReverseProxy.html">type</a> <a href="../../../src/net/http/httputil/reverseproxy.go.html#line-41">ReverseProxy</a> <i>(struct)</i></label><span id='ReverseProxy-fold-content-docs' class="fold-docs">
+		ReverseProxy is an HTTP Handler that takes an incoming request and
+		sends it to another server, proxying the response back to the
+		client.
+
+		ReverseProxy by default sets the client IP as the value of the
+		X-Forwarded-For header.
+
+		If an X-Forwarded-For header already exists, the client IP is
+		appended to the existing values. As a special case, if the header
+		exists in the Request.Header map but has a nil value (such as when
+		set by the Director func), the X-Forwarded-For header is
+		not modified.
+
+		To prevent IP spoofing, be sure to delete any pre-existing
+		X-Forwarded-For header coming from the client or
+		an untrusted proxy.
+
+		<input type='checkbox' class="fold" id="ReverseProxy-fold-fields"><label for="ReverseProxy-fold-fields">Fields (<i>total 7, all are exported</i>)</label><span id='ReverseProxy-fold-fields-items' class="fold-items"><span>
+			<input type='checkbox' class="fold" id="ReverseProxy-fold-field-BufferPool"><label for="ReverseProxy-fold-field-BufferPool"><a href="../../../src/net/http/httputil/reverseproxy.go.html#line-74">BufferPool</a> <i><a href="#name-BufferPool">BufferPool</a></i></label><span id='ReverseProxy-fold-field-BufferPool-docs' class="fold-docs">
+				BufferPool optionally specifies a buffer pool to
+				get byte slices for use by io.CopyBuffer when
+				copying HTTP response bodies.
+</span></span><span>
+			<input type='checkbox' class="fold" id="ReverseProxy-fold-field-Director"><label for="ReverseProxy-fold-field-Director"><a href="../../../src/net/http/httputil/reverseproxy.go.html#line-48">Director</a> <i>func(*<a href="../http.html">http</a>.<a href="../http.html#name-Request">Request</a>)</i></label><span id='ReverseProxy-fold-field-Director-docs' class="fold-docs">
+				Director must be a function which modifies
+				the request into a new request to be sent
+				using Transport. Its response is then copied
+				back to the original client unmodified.
+				Director must not access the provided Request
+				after returning.
+</span></span><span>
+			<input type='checkbox' class="fold" id="ReverseProxy-fold-field-ErrorHandler"><label for="ReverseProxy-fold-field-ErrorHandler"><a href="../../../src/net/http/httputil/reverseproxy.go.html#line-92">ErrorHandler</a> <i>func(<a href="../http.html">http</a>.<a href="../http.html#name-ResponseWriter">ResponseWriter</a>, *<a href="../http.html">http</a>.<a href="../http.html#name-Request">Request</a>, <a href="../../builtin.html#name-error">error</a>)</i></label><span id='ReverseProxy-fold-field-ErrorHandler-docs' class="fold-docs">
+				ErrorHandler is an optional function that handles errors
+				reaching the backend or errors from ModifyResponse.
+
+				If nil, the default is to log the provided error and return
+				a 502 Status Bad Gateway response.
+</span></span><span>
+			<input type='checkbox' class="fold" id="ReverseProxy-fold-field-ErrorLog"><label for="ReverseProxy-fold-field-ErrorLog"><a href="../../../src/net/http/httputil/reverseproxy.go.html#line-69">ErrorLog</a> <i>*<a href="../../log.html">log</a>.<a href="../../log.html#name-Logger">Logger</a></i></label><span id='ReverseProxy-fold-field-ErrorLog-docs' class="fold-docs">
+				ErrorLog specifies an optional logger for errors
+				that occur when attempting to proxy the request.
+				If nil, logging is done via the log package's standard logger.
+</span></span><span>
+			<input type='checkbox' class="fold" id="ReverseProxy-fold-field-FlushInterval"><label for="ReverseProxy-fold-field-FlushInterval"><a href="../../../src/net/http/httputil/reverseproxy.go.html#line-64">FlushInterval</a> <i><a href="../../time.html">time</a>.<a href="../../time.html#name-Duration">Duration</a></i></label><span id='ReverseProxy-fold-field-FlushInterval-docs' class="fold-docs">
+				FlushInterval specifies the flush interval
+				to flush to the client while copying the
+				response body.
+				If zero, no periodic flushing is done.
+				A negative value means to flush immediately
+				after each write to the client.
+				The FlushInterval is ignored when ReverseProxy
+				recognizes a response as a streaming response, or
+				if its ContentLength is -1; for such responses, writes
+				are flushed to the client immediately.
+</span></span><span>
+			<input type='checkbox' class="fold" id="ReverseProxy-fold-field-ModifyResponse"><label for="ReverseProxy-fold-field-ModifyResponse"><a href="../../../src/net/http/httputil/reverseproxy.go.html#line-85">ModifyResponse</a> <i>func(*<a href="../http.html">http</a>.<a href="../http.html#name-Response">Response</a>) <a href="../../builtin.html#name-error">error</a></i></label><span id='ReverseProxy-fold-field-ModifyResponse-docs' class="fold-docs">
+				ModifyResponse is an optional function that modifies the
+				Response from the backend. It is called if the backend
+				returns a response at all, with any HTTP status code.
+				If the backend is unreachable, the optional ErrorHandler is
+				called without any call to ModifyResponse.
+
+				If ModifyResponse returns an error, ErrorHandler is called
+				with its error value. If ErrorHandler is nil, its default
+				implementation is used.
+</span></span><span>
+			<input type='checkbox' class="fold" id="ReverseProxy-fold-field-Transport"><label for="ReverseProxy-fold-field-Transport"><a href="../../../src/net/http/httputil/reverseproxy.go.html#line-52">Transport</a> <i><a href="../http.html">http</a>.<a href="../http.html#name-RoundTripper">RoundTripper</a></i></label><span id='ReverseProxy-fold-field-Transport-docs' class="fold-docs">
+				The transport used to perform proxy requests.
+				If nil, http.DefaultTransport is used.
+</span></span></span>
+		<input type='checkbox' class="fold" id="ReverseProxy-fold-methods"><label for="ReverseProxy-fold-methods">Methods (<i>total 9, in which 1 are exported</i>)</label><span id='ReverseProxy-fold-methods-items' class="fold-items"><span>
+			<span class="nodocs">(*T) <a href="../../../src/net/http/httputil/reverseproxy.go.html#line-212">ServeHTTP</a>(rw <a href="../http.html">http</a>.<a href="../http.html#name-ResponseWriter">ResponseWriter</a>, req *<a href="../http.html">http</a>.<a href="../http.html#name-Request">Request</a>)</span></span>
+			<input type='checkbox' class="showhide" id="ReverseProxy-showhide-methods"><i><label for="ReverseProxy-showhide-methods" class="show-inline">/* 8 unexporteds ... */</label><label for="ReverseProxy-showhide-methods" class="hide-inline">/* 8 unexporteds: */</label></i><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="ReverseProxy-fold-method-copyBuffer"><label for="ReverseProxy-fold-method-copyBuffer">(*T) <a href="../../../src/net/http/httputil/reverseproxy.go.html#line-445">copyBuffer</a>(dst <a href="../../io.html">io</a>.<a href="../../io.html#name-Writer">Writer</a>, src <a href="../../io.html">io</a>.<a href="../../io.html#name-Reader">Reader</a>, buf []<a href="../../builtin.html#name-byte">byte</a>) (<a href="../../builtin.html#name-int64">int64</a>, <a href="../../builtin.html#name-error">error</a>)</label><span id='ReverseProxy-fold-method-copyBuffer-docs' class="fold-docs">
+				copyBuffer returns any write errors or non-EOF read errors, and the amount
+				of bytes written.
+</span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../src/net/http/httputil/reverseproxy.go.html#line-417">copyResponse</a>(dst <a href="../../io.html">io</a>.<a href="../../io.html#name-Writer">Writer</a>, src <a href="../../io.html">io</a>.<a href="../../io.html#name-Reader">Reader</a>, flushInterval <a href="../../time.html">time</a>.<a href="../../time.html#name-Duration">Duration</a>) <a href="../../builtin.html#name-error">error</a></span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../src/net/http/httputil/reverseproxy.go.html#line-186">defaultErrorHandler</a>(rw <a href="../http.html">http</a>.<a href="../http.html#name-ResponseWriter">ResponseWriter</a>, req *<a href="../http.html">http</a>.<a href="../http.html#name-Request">Request</a>, err <a href="../../builtin.html#name-error">error</a>)</span></i></span><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="ReverseProxy-fold-method-flushInterval"><label for="ReverseProxy-fold-method-flushInterval">(*T) <a href="../../../src/net/http/httputil/reverseproxy.go.html#line-400">flushInterval</a>(res *<a href="../http.html">http</a>.<a href="../http.html#name-Response">Response</a>) <a href="../../time.html">time</a>.<a href="../../time.html#name-Duration">Duration</a></label><span id='ReverseProxy-fold-method-flushInterval-docs' class="fold-docs">
+				flushInterval returns the p.FlushInterval value, conditionally
+				overriding its value for a specific request/response.
+</span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../src/net/http/httputil/reverseproxy.go.html#line-191">getErrorHandler</a>() func(<a href="../http.html">http</a>.<a href="../http.html#name-ResponseWriter">ResponseWriter</a>, *<a href="../http.html">http</a>.<a href="../http.html#name-Request">Request</a>, <a href="../../builtin.html#name-error">error</a>)</span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../src/net/http/httputil/reverseproxy.go.html#line-544">handleUpgradeResponse</a>(rw <a href="../http.html">http</a>.<a href="../http.html#name-ResponseWriter">ResponseWriter</a>, req *<a href="../http.html">http</a>.<a href="../http.html#name-Request">Request</a>, res *<a href="../http.html">http</a>.<a href="../http.html#name-Response">Response</a>)</span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../src/net/http/httputil/reverseproxy.go.html#line-476">logf</a>(format <a href="../../builtin.html#name-string">string</a>, args ...interface{})</span></i></span><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="ReverseProxy-fold-method-modifyResponse"><label for="ReverseProxy-fold-method-modifyResponse">(*T) <a href="../../../src/net/http/httputil/reverseproxy.go.html#line-200">modifyResponse</a>(rw <a href="../http.html">http</a>.<a href="../http.html#name-ResponseWriter">ResponseWriter</a>, res *<a href="../http.html">http</a>.<a href="../http.html#name-Response">Response</a>, req *<a href="../http.html">http</a>.<a href="../http.html#name-Request">Request</a>) <a href="../../builtin.html#name-bool">bool</a></label><span id='ReverseProxy-fold-method-modifyResponse-docs' class="fold-docs">
+				modifyResponse conditionally runs the optional ModifyResponse hook
+				and reports whether the request should proceed.
+</span></i></span></span>
+		<input type='checkbox' class="fold" id="ReverseProxy-fold-impls"><label for="ReverseProxy-fold-impls">Implements (<i>at least one exported</i>)</label><span id='ReverseProxy-fold-impls-items' class="fold-items"><span>
+			*T : net/http.<a href="../http.html#name-Handler">Handler</a></span></span>
+		<input type='checkbox' class="fold" id="ReverseProxy-fold-results"><label for="ReverseProxy-fold-results">As Outputs Of (<i>at least 2, in which 1 are exported</i>)</label><span id='ReverseProxy-fold-results-items' class="fold-items"><span>
+			func <a href="#name-NewSingleHostReverseProxy">NewSingleHostReverseProxy</a>(target *<a href="../url.html">url</a>.<a href="../url.html#name-URL">URL</a>) *<b>ReverseProxy</b></span>
+			<input type='checkbox' class="showhide" id="ReverseProxy-showhide-inputofs"><i><label for="ReverseProxy-showhide-inputofs" class="show-inline">/* at least one unexported ... */</label><label for="ReverseProxy-showhide-inputofs" class="hide-inline">/* at least one unexported: */</label></i><span class="hidden"><i>
+			func golang.org/x/pkgsite/internal/frontend.<a href="../../golang.org/x/pkgsite/internal/frontend.html#name-makePlaygroundProxy">makePlaygroundProxy</a>(pgURL *<a href="../url.html">url</a>.<a href="../url.html#name-URL">URL</a>) *<b>ReverseProxy</b></i></span></span>
+
+</span></div><div class="anchor type-res" id="name-ServerConn" data-popularity="375">	<input type='checkbox' class="fold" id="ServerConn-fold-content"><label for="ServerConn-fold-content"> <a href="../../../use/net/http/httputil..ServerConn.html">type</a> <a href="../../../src/net/http/httputil/persist.go.html#line-37">ServerConn</a> <i>(struct)</i></label><span id='ServerConn-fold-content-docs' class="fold-docs">
+		ServerConn is an artifact of Go's early HTTP implementation.
+		It is low-level, old, and unused by Go's current HTTP stack.
+		We should have deleted it before Go 1.
+
+		Deprecated: Use the Server in package net/http instead.
+
+		<input type='checkbox' class="fold" id="ServerConn-fold-fields"><label for="ServerConn-fold-fields">Fields (<i>total 10, none are exported</i>)</label><span id='ServerConn-fold-fields-items' class="fold-items">
+			<input type='checkbox' class="showhide" id="ServerConn-showhide-fields"><i><label for="ServerConn-showhide-fields" class="show-inline">/* 10 unexporteds ... */</label><label for="ServerConn-showhide-fields" class="hide-inline">/* 10 unexporteds: */</label></i><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/net/http/httputil/persist.go.html#line-39">c</a> <i><a href="../../net.html">net</a>.<a href="../../net.html#name-Conn">Conn</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/net/http/httputil/persist.go.html#line-42">lastbody</a> <i><a href="../../io.html">io</a>.<a href="../../io.html#name-ReadCloser">ReadCloser</a></i></span></i></span><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="ServerConn-fold-field-mu"><label for="ServerConn-fold-field-mu"><a href="../../../src/net/http/httputil/persist.go.html#line-38">mu</a> <i><a href="../../sync.html">sync</a>.<a href="../../sync.html#name-Mutex">Mutex</a></i></label><span id='ServerConn-fold-field-mu-docs' class="fold-docs">
+				// read-write protects the following fields
+</span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/net/http/httputil/persist.go.html#line-43">nread</a> <i><a href="../../builtin.html#name-int">int</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/net/http/httputil/persist.go.html#line-43">nwritten</a> <i><a href="../../builtin.html#name-int">int</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/net/http/httputil/persist.go.html#line-46">pipe</a> <i><a href="../textproto.html">textproto</a>.<a href="../textproto.html#name-Pipeline">Pipeline</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/net/http/httputil/persist.go.html#line-44">pipereq</a> <i>map[*<a href="../http.html">http</a>.<a href="../http.html#name-Request">Request</a>]<a href="../../builtin.html#name-uint">uint</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/net/http/httputil/persist.go.html#line-40">r</a> <i>*<a href="../../bufio.html">bufio</a>.<a href="../../bufio.html#name-Reader">Reader</a></i></span></i></span><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="ServerConn-fold-field-re"><label for="ServerConn-fold-field-re"><a href="../../../src/net/http/httputil/persist.go.html#line-41">re</a> <i><a href="../../builtin.html#name-error">error</a></i></label><span id='ServerConn-fold-field-re-docs' class="fold-docs">
+				// read/write errors
+</span></i></span><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="ServerConn-fold-field-we"><label for="ServerConn-fold-field-we"><a href="../../../src/net/http/httputil/persist.go.html#line-41">we</a> <i><a href="../../builtin.html#name-error">error</a></i></label><span id='ServerConn-fold-field-we-docs' class="fold-docs">
+				// read/write errors
+</span></i></span></span>
+		<input type='checkbox' class="fold" id="ServerConn-fold-methods"><label for="ServerConn-fold-methods">Methods (<i>total 5, all are exported</i>)</label><span id='ServerConn-fold-methods-items' class="fold-items"><span>
+			<input type='checkbox' class="fold" id="ServerConn-fold-method-Close"><label for="ServerConn-fold-method-Close">(*T) <a href="../../../src/net/http/httputil/persist.go.html#line-76">Close</a>() <a href="../../builtin.html#name-error">error</a></label><span id='ServerConn-fold-method-Close-docs' class="fold-docs">
+				Close calls Hijack and then also closes the underlying connection.
+</span></span><span>
+			<input type='checkbox' class="fold" id="ServerConn-fold-method-Hijack"><label for="ServerConn-fold-method-Hijack">(*T) <a href="../../../src/net/http/httputil/persist.go.html#line-65">Hijack</a>() (<a href="../../net.html">net</a>.<a href="../../net.html#name-Conn">Conn</a>, *<a href="../../bufio.html">bufio</a>.<a href="../../bufio.html#name-Reader">Reader</a>)</label><span id='ServerConn-fold-method-Hijack-docs' class="fold-docs">
+				Hijack detaches the ServerConn and returns the underlying connection as well
+				as the read-side bufio which may have some left over data. Hijack may be
+				called before Read has signaled the end of the keep-alive logic. The user
+				should not call Hijack while Read or Write is in progress.
+</span></span><span>
+			<input type='checkbox' class="fold" id="ServerConn-fold-method-Pending"><label for="ServerConn-fold-method-Pending">(*T) <a href="../../../src/net/http/httputil/persist.go.html#line-166">Pending</a>() <a href="../../builtin.html#name-int">int</a></label><span id='ServerConn-fold-method-Pending-docs' class="fold-docs">
+				Pending returns the number of unanswered requests
+				that have been received on the connection.
+</span></span><span>
+			<input type='checkbox' class="fold" id="ServerConn-fold-method-Read"><label for="ServerConn-fold-method-Read">(*T) <a href="../../../src/net/http/httputil/persist.go.html#line-88">Read</a>() (*<a href="../http.html">http</a>.<a href="../http.html#name-Request">Request</a>, <a href="../../builtin.html#name-error">error</a>)</label><span id='ServerConn-fold-method-Read-docs' class="fold-docs">
+				Read returns the next request on the wire. An ErrPersistEOF is returned if
+				it is gracefully determined that there are no more requests (e.g. after the
+				first request on an HTTP/1.0 connection, or after a Connection:close on a
+				HTTP/1.1 connection).
+</span></span><span>
+			<input type='checkbox' class="fold" id="ServerConn-fold-method-Write"><label for="ServerConn-fold-method-Write">(*T) <a href="../../../src/net/http/httputil/persist.go.html#line-175">Write</a>(req *<a href="../http.html">http</a>.<a href="../http.html#name-Request">Request</a>, resp *<a href="../http.html">http</a>.<a href="../http.html#name-Response">Response</a>) <a href="../../builtin.html#name-error">error</a></label><span id='ServerConn-fold-method-Write-docs' class="fold-docs">
+				Write writes resp in response to req. To close the connection gracefully, set the
+				Response.Close field to true. Write should be considered operational until
+				it returns an error, regardless of any errors returned on the Read side.
+</span></span></span>
+		<input type='checkbox' class="fold" id="ServerConn-fold-impls"><label for="ServerConn-fold-impls">Implements (<i>at least one exported</i>)</label><span id='ServerConn-fold-impls-items' class="fold-items"><span>
+			*T : io.<a href="../../io.html#name-Closer">Closer</a></span></span>
+		<input type='checkbox' class="fold" id="ServerConn-fold-results"><label for="ServerConn-fold-results">As Outputs Of (<i>at least one exported</i>)</label><span id='ServerConn-fold-results-items' class="fold-items"><span>
+			func <a href="#name-NewServerConn">NewServerConn</a>(c <a href="../../net.html">net</a>.<a href="../../net.html#name-Conn">Conn</a>, r *<a href="../../bufio.html">bufio</a>.<a href="../../bufio.html#name-Reader">Reader</a>) *<b>ServerConn</b></span></span>
+
+</span></div></div><div>	<input type='checkbox' class="showhide" id="unexported-typenames-showhide"><i><label for="unexported-typenames-showhide" class="show-inline">/* 7 unexporteds ... */</label><label for="unexported-typenames-showhide" class="hide-inline">/* 7 unexporteds: */</label></i><div class="anchor type-res hidden" id="name-delegateReader" data-popularity="150">	<input type='checkbox' class="fold" id="delegateReader-fold-content"><label for="delegateReader-fold-content"> <a href="../../../use/net/http/httputil..delegateReader*25988.html">type</a> <a href="../../../src/net/http/httputil/dump.go.html#line-172">delegateReader</a> <i>(struct)</i></label><span id='delegateReader-fold-content-docs' class="fold-docs">
+		delegateReader is a reader that delegates to another reader,
+		once it arrives on a channel.
+
+		<input type='checkbox' class="fold" id="delegateReader-fold-fields"><label for="delegateReader-fold-fields">Fields (<i>total 3, none are exported</i>)</label><span id='delegateReader-fold-fields-items' class="fold-items">
+			<input type='checkbox' checked class="showhide" id="delegateReader-showhide-fields"><i><label for="delegateReader-showhide-fields" class="show-inline">/* 3 unexporteds ... */</label><label for="delegateReader-showhide-fields" class="hide-inline">/* 3 unexporteds: */</label></i><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/net/http/httputil/dump.go.html#line-173">c</a> <i>chan <a href="../../io.html">io</a>.<a href="../../io.html#name-Reader">Reader</a></i></span></i></span><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="delegateReader-fold-field-err"><label for="delegateReader-fold-field-err"><a href="../../../src/net/http/httputil/dump.go.html#line-174">err</a> <i><a href="../../builtin.html#name-error">error</a></i></label><span id='delegateReader-fold-field-err-docs' class="fold-docs">
+				// only used if r is nil and c is closed.
+</span></i></span><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="delegateReader-fold-field-r"><label for="delegateReader-fold-field-r"><a href="../../../src/net/http/httputil/dump.go.html#line-175">r</a> <i><a href="../../io.html">io</a>.<a href="../../io.html#name-Reader">Reader</a></i></label><span id='delegateReader-fold-field-r-docs' class="fold-docs">
+				// nil until received from c
+</span></i></span></span>
+		<input type='checkbox' class="fold" id="delegateReader-fold-methods"><label for="delegateReader-fold-methods">Methods (<i>only one, which is exported</i>)</label><span id='delegateReader-fold-methods-items' class="fold-items"><span>
+			<span class="nodocs">(*T) <a href="../../../src/net/http/httputil/dump.go.html#line-178">Read</a>(p []<a href="../../builtin.html#name-byte">byte</a>) (<a href="../../builtin.html#name-int">int</a>, <a href="../../builtin.html#name-error">error</a>)</span></span></span>
+		<input type='checkbox' class="fold" id="delegateReader-fold-impls"><label for="delegateReader-fold-impls">Implements (<i>at least 2, both are exported</i>)</label><span id='delegateReader-fold-impls-items' class="fold-items"><span>
+			*T : github.com/jbenet/go-context/io.<a href="../../github.com/jbenet/go-context/io.html#name-Reader">Reader</a></span><span>
+			*T : io.<a href="../../io.html#name-Reader">Reader</a></span></span>
+
+</span></div><div class="anchor type-res hidden" id="name-dumpConn" data-popularity="950">	<input type='checkbox' class="fold" id="dumpConn-fold-content"><label for="dumpConn-fold-content"> <a href="../../../use/net/http/httputil..dumpConn*e1afb.html">type</a> <a href="../../../src/net/http/httputil/dump.go.html#line-41">dumpConn</a> <i>(struct)</i></label><span id='dumpConn-fold-content-docs' class="fold-docs">
+		dumpConn is a net.Conn which writes to Writer and reads from Reader
+
+		<input type='checkbox' class="fold" id="dumpConn-fold-fields"><label for="dumpConn-fold-fields">Fields (<i>total 2, both are exported</i>)</label><span id='dumpConn-fold-fields-items' class="fold-items"><span>
+			<span class="nodocs"><a href="../../../src/net/http/httputil/dump.go.html#line-43">Reader</a> <i><a href="../../io.html">io</a>.<a href="../../io.html#name-Reader">Reader</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../src/net/http/httputil/dump.go.html#line-42">Writer</a> <i><a href="../../io.html">io</a>.<a href="../../io.html#name-Writer">Writer</a></i></span></span></span>
+		<input type='checkbox' class="fold" id="dumpConn-fold-methods"><label for="dumpConn-fold-methods">Methods (<i>total 8, all are exported</i>)</label><span id='dumpConn-fold-methods-items' class="fold-items"><span>
+			<span class="nodocs">(*T) <a href="../../../src/net/http/httputil/dump.go.html#line-46">Close</a>() <a href="../../builtin.html#name-error">error</a></span></span><span>
+			<span class="nodocs">(*T) <a href="../../../src/net/http/httputil/dump.go.html#line-47">LocalAddr</a>() <a href="../../net.html">net</a>.<a href="../../net.html#name-Addr">Addr</a></span></span><span>
+			<span class="nodocs">( T) <a href="../../../src/io/io.go.html#line-84">Read</a>(p []<a href="../../builtin.html#name-byte">byte</a>) (n <a href="../../builtin.html#name-int">int</a>, err <a href="../../builtin.html#name-error">error</a>)</span></span><span>
+			<span class="nodocs">(*T) <a href="../../../src/net/http/httputil/dump.go.html#line-48">RemoteAddr</a>() <a href="../../net.html">net</a>.<a href="../../net.html#name-Addr">Addr</a></span></span><span>
+			<span class="nodocs">(*T) <a href="../../../src/net/http/httputil/dump.go.html#line-49">SetDeadline</a>(t <a href="../../time.html">time</a>.<a href="../../time.html#name-Time">Time</a>) <a href="../../builtin.html#name-error">error</a></span></span><span>
+			<span class="nodocs">(*T) <a href="../../../src/net/http/httputil/dump.go.html#line-50">SetReadDeadline</a>(t <a href="../../time.html">time</a>.<a href="../../time.html#name-Time">Time</a>) <a href="../../builtin.html#name-error">error</a></span></span><span>
+			<span class="nodocs">(*T) <a href="../../../src/net/http/httputil/dump.go.html#line-51">SetWriteDeadline</a>(t <a href="../../time.html">time</a>.<a href="../../time.html#name-Time">Time</a>) <a href="../../builtin.html#name-error">error</a></span></span><span>
+			<span class="nodocs">( T) <a href="../../../src/io/io.go.html#line-97">Write</a>(p []<a href="../../builtin.html#name-byte">byte</a>) (n <a href="../../builtin.html#name-int">int</a>, err <a href="../../builtin.html#name-error">error</a>)</span></span></span>
+		<input type='checkbox' class="fold" id="dumpConn-fold-impls"><label for="dumpConn-fold-impls">Implements (<i>at least 11, all are exported</i>)</label><span id='dumpConn-fold-impls-items' class="fold-items"><span>
+			*T : net.<a href="../../net.html#name-Conn">Conn</a></span><span>
+			 T : github.com/go-git/go-git/v5/plumbing/protocol/packp/sideband.<a href="../../github.com/go-git/go-git/v5/plumbing/protocol/packp/sideband.html#name-Progress">Progress</a></span><span>
+			 T : github.com/jbenet/go-context/io.<a href="../../github.com/jbenet/go-context/io.html#name-Reader">Reader</a></span><span>
+			 T : github.com/jbenet/go-context/io.<a href="../../github.com/jbenet/go-context/io.html#name-Writer">Writer</a></span><span>
+			*T : io.<a href="../../io.html#name-Closer">Closer</a></span><span>
+			*T : io.<a href="../../io.html#name-ReadCloser">ReadCloser</a></span><span>
+			 T : io.<a href="../../io.html#name-Reader">Reader</a></span><span>
+			*T : io.<a href="../../io.html#name-ReadWriteCloser">ReadWriteCloser</a></span><span>
+			 T : io.<a href="../../io.html#name-ReadWriter">ReadWriter</a></span><span>
+			*T : io.<a href="../../io.html#name-WriteCloser">WriteCloser</a></span><span>
+			 T : io.<a href="../../io.html#name-Writer">Writer</a></span></span>
+
+</span></div><div class="anchor type-res hidden" id="name-failureToReadBody" data-popularity="300">	<input type='checkbox' class="fold" id="failureToReadBody-fold-content"><label for="failureToReadBody-fold-content"> <a href="../../../use/net/http/httputil..failureToReadBody*d67bc.html">type</a> <a href="../../../src/net/http/httputil/dump.go.html#line-299">failureToReadBody</a> <i>(struct)</i></label><span id='failureToReadBody-fold-content-docs' class="fold-docs">
+		failureToReadBody is a io.ReadCloser that just returns errNoBody on
+		Read. It's swapped in when we don't actually want to consume
+		the body, but need a non-nil one, and want to distinguish the
+		error from reading the dummy body.
+
+		<input type='checkbox' class="fold" id="failureToReadBody-fold-methods"><label for="failureToReadBody-fold-methods">Methods (<i>total 2, both are exported</i>)</label><span id='failureToReadBody-fold-methods-items' class="fold-items"><span>
+			<span class="nodocs">( T) <a href="../../../src/net/http/httputil/dump.go.html#line-302">Close</a>() <a href="../../builtin.html#name-error">error</a></span></span><span>
+			<span class="nodocs">( T) <a href="../../../src/net/http/httputil/dump.go.html#line-301">Read</a>([]<a href="../../builtin.html#name-byte">byte</a>) (<a href="../../builtin.html#name-int">int</a>, <a href="../../builtin.html#name-error">error</a>)</span></span></span>
+		<input type='checkbox' class="fold" id="failureToReadBody-fold-impls"><label for="failureToReadBody-fold-impls">Implements (<i>at least 4, all are exported</i>)</label><span id='failureToReadBody-fold-impls-items' class="fold-items"><span>
+			 T : github.com/jbenet/go-context/io.<a href="../../github.com/jbenet/go-context/io.html#name-Reader">Reader</a></span><span>
+			 T : io.<a href="../../io.html#name-Closer">Closer</a></span><span>
+			 T : io.<a href="../../io.html#name-ReadCloser">ReadCloser</a></span><span>
+			 T : io.<a href="../../io.html#name-Reader">Reader</a></span></span>
+
+</span></div><div class="anchor type-res hidden" id="name-maxLatencyWriter" data-popularity="300">	<input type='checkbox' class="fold" id="maxLatencyWriter-fold-content"><label for="maxLatencyWriter-fold-content"> <a href="../../../use/net/http/httputil..maxLatencyWriter*c1231.html">type</a> <a href="../../../src/net/http/httputil/reverseproxy.go.html#line-489">maxLatencyWriter</a> <i>(struct)</i></label><span id='maxLatencyWriter-fold-content-docs' class="fold-docs">
+
+		<input type='checkbox' class="fold" id="maxLatencyWriter-fold-fields"><label for="maxLatencyWriter-fold-fields">Fields (<i>total 5, none are exported</i>)</label><span id='maxLatencyWriter-fold-fields-items' class="fold-items">
+			<input type='checkbox' checked class="showhide" id="maxLatencyWriter-showhide-fields"><i><label for="maxLatencyWriter-showhide-fields" class="show-inline">/* 5 unexporteds ... */</label><label for="maxLatencyWriter-showhide-fields" class="hide-inline">/* 5 unexporteds: */</label></i><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/net/http/httputil/reverseproxy.go.html#line-490">dst</a> <i><a href="#name-writeFlusher">writeFlusher</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/net/http/httputil/reverseproxy.go.html#line-495">flushPending</a> <i><a href="../../builtin.html#name-bool">bool</a></i></span></i></span><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="maxLatencyWriter-fold-field-latency"><label for="maxLatencyWriter-fold-field-latency"><a href="../../../src/net/http/httputil/reverseproxy.go.html#line-491">latency</a> <i><a href="../../time.html">time</a>.<a href="../../time.html#name-Duration">Duration</a></i></label><span id='maxLatencyWriter-fold-field-latency-docs' class="fold-docs">
+				// non-zero; negative means to flush immediately
+</span></i></span><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="maxLatencyWriter-fold-field-mu"><label for="maxLatencyWriter-fold-field-mu"><a href="../../../src/net/http/httputil/reverseproxy.go.html#line-493">mu</a> <i><a href="../../sync.html">sync</a>.<a href="../../sync.html#name-Mutex">Mutex</a></i></label><span id='maxLatencyWriter-fold-field-mu-docs' class="fold-docs">
+				// protects t, flushPending, and dst.Flush
+</span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/net/http/httputil/reverseproxy.go.html#line-494">t</a> <i>*<a href="../../time.html">time</a>.<a href="../../time.html#name-Timer">Timer</a></i></span></i></span></span>
+		<input type='checkbox' class="fold" id="maxLatencyWriter-fold-methods"><label for="maxLatencyWriter-fold-methods">Methods (<i>total 3, in which 1 are exported</i>)</label><span id='maxLatencyWriter-fold-methods-items' class="fold-items"><span>
+			<span class="nodocs">(*T) <a href="../../../src/net/http/httputil/reverseproxy.go.html#line-498">Write</a>(p []<a href="../../builtin.html#name-byte">byte</a>) (n <a href="../../builtin.html#name-int">int</a>, err <a href="../../builtin.html#name-error">error</a>)</span></span>
+			<input type='checkbox' checked class="showhide" id="maxLatencyWriter-showhide-methods"><i><label for="maxLatencyWriter-showhide-methods" class="show-inline">/* 2 unexporteds ... */</label><label for="maxLatencyWriter-showhide-methods" class="hide-inline">/* 2 unexporteds: */</label></i><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../src/net/http/httputil/reverseproxy.go.html#line-518">delayedFlush</a>()</span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../src/net/http/httputil/reverseproxy.go.html#line-528">stop</a>()</span></i></span></span>
+		<input type='checkbox' class="fold" id="maxLatencyWriter-fold-impls"><label for="maxLatencyWriter-fold-impls">Implements (<i>at least 3, all are exported</i>)</label><span id='maxLatencyWriter-fold-impls-items' class="fold-items"><span>
+			*T : github.com/go-git/go-git/v5/plumbing/protocol/packp/sideband.<a href="../../github.com/go-git/go-git/v5/plumbing/protocol/packp/sideband.html#name-Progress">Progress</a></span><span>
+			*T : github.com/jbenet/go-context/io.<a href="../../github.com/jbenet/go-context/io.html#name-Writer">Writer</a></span><span>
+			*T : io.<a href="../../io.html#name-Writer">Writer</a></span></span>
+
+</span></div><div class="anchor type-res hidden" id="name-neverEnding" data-popularity="150">	<input type='checkbox' class="fold" id="neverEnding-fold-content"><label for="neverEnding-fold-content"> <a href="../../../use/net/http/httputil..neverEnding*24160.html">type</a> <a href="../../../src/net/http/httputil/dump.go.html#line-53">neverEnding</a> <a href="../../builtin.html#name-byte">byte</a> <i>(basic type)</i></label><span id='neverEnding-fold-content-docs' class="fold-docs">
+
+		<input type='checkbox' class="fold" id="neverEnding-fold-methods"><label for="neverEnding-fold-methods">Methods (<i>only one, which is exported</i>)</label><span id='neverEnding-fold-methods-items' class="fold-items"><span>
+			<span class="nodocs">( T) <a href="../../../src/net/http/httputil/dump.go.html#line-55">Read</a>(p []<a href="../../builtin.html#name-byte">byte</a>) (n <a href="../../builtin.html#name-int">int</a>, err <a href="../../builtin.html#name-error">error</a>)</span></span></span>
+		<input type='checkbox' class="fold" id="neverEnding-fold-impls"><label for="neverEnding-fold-impls">Implements (<i>at least 2, both are exported</i>)</label><span id='neverEnding-fold-impls-items' class="fold-items"><span>
+			 T : github.com/jbenet/go-context/io.<a href="../../github.com/jbenet/go-context/io.html#name-Reader">Reader</a></span><span>
+			 T : io.<a href="../../io.html#name-Reader">Reader</a></span></span>
+
+</span></div><div class="anchor type-res hidden" id="name-switchProtocolCopier" data-popularity="100">	<input type='checkbox' class="fold" id="switchProtocolCopier-fold-content"><label for="switchProtocolCopier-fold-content"> <a href="../../../use/net/http/httputil..switchProtocolCopier*91764.html">type</a> <a href="../../../src/net/http/httputil/reverseproxy.go.html#line-605">switchProtocolCopier</a> <i>(struct)</i></label><span id='switchProtocolCopier-fold-content-docs' class="fold-docs">
+		switchProtocolCopier exists so goroutines proxying data back and
+		forth have nice names in stacks.
+
+		<input type='checkbox' class="fold" id="switchProtocolCopier-fold-fields"><label for="switchProtocolCopier-fold-fields">Fields (<i>total 2, neither is exported</i>)</label><span id='switchProtocolCopier-fold-fields-items' class="fold-items">
+			<input type='checkbox' checked class="showhide" id="switchProtocolCopier-showhide-fields"><i><label for="switchProtocolCopier-showhide-fields" class="show-inline">/* 2 unexporteds ... */</label><label for="switchProtocolCopier-showhide-fields" class="hide-inline">/* 2 unexporteds: */</label></i><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/net/http/httputil/reverseproxy.go.html#line-606">backend</a> <i><a href="../../io.html">io</a>.<a href="../../io.html#name-ReadWriter">ReadWriter</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/net/http/httputil/reverseproxy.go.html#line-606">user</a> <i><a href="../../io.html">io</a>.<a href="../../io.html#name-ReadWriter">ReadWriter</a></i></span></i></span></span>
+		<input type='checkbox' class="fold" id="switchProtocolCopier-fold-methods"><label for="switchProtocolCopier-fold-methods">Methods (<i>total 2, neither is exported</i>)</label><span id='switchProtocolCopier-fold-methods-items' class="fold-items">
+			<input type='checkbox' checked class="showhide" id="switchProtocolCopier-showhide-methods"><i><label for="switchProtocolCopier-showhide-methods" class="show-inline">/* 2 unexporteds ... */</label><label for="switchProtocolCopier-showhide-methods" class="hide-inline">/* 2 unexporteds: */</label></i><span class="hidden"><i>
+			<span class="nodocs">( T) <a href="../../../src/net/http/httputil/reverseproxy.go.html#line-609">copyFromBackend</a>(errc chan&lt;- <a href="../../builtin.html#name-error">error</a>)</span></i></span><span class="hidden"><i>
+			<span class="nodocs">( T) <a href="../../../src/net/http/httputil/reverseproxy.go.html#line-614">copyToBackend</a>(errc chan&lt;- <a href="../../builtin.html#name-error">error</a>)</span></i></span></span>
+
+</span></div><div class="anchor type-res hidden" id="name-writeFlusher" data-popularity="1050">	<input type='checkbox' class="fold" id="writeFlusher-fold-content"><label for="writeFlusher-fold-content"> <a href="../../../use/net/http/httputil..writeFlusher*d84e1.html">type</a> <a href="../../../src/net/http/httputil/reverseproxy.go.html#line-484">writeFlusher</a> <b><i>(interface)</i></b></label><span id='writeFlusher-fold-content-docs' class="fold-docs">
+
+		<input type='checkbox' class="fold" id="writeFlusher-fold-methods"><label for="writeFlusher-fold-methods">Methods (<i>total 2, both are exported</i>)</label><span id='writeFlusher-fold-methods-items' class="fold-items"><span>
+			<input type='checkbox' class="fold" id="writeFlusher-fold-method-Flush"><label for="writeFlusher-fold-method-Flush">( T) <a href="../../../src/net/http/server.go.html#line-170">Flush</a>()</label><span id='writeFlusher-fold-method-Flush-docs' class="fold-docs">
+				Flush sends any buffered data to the client.
+</span></span><span>
+			<span class="nodocs">( T) <a href="../../../src/io/io.go.html#line-97">Write</a>(p []<a href="../../builtin.html#name-byte">byte</a>) (n <a href="../../builtin.html#name-int">int</a>, err <a href="../../builtin.html#name-error">error</a>)</span></span></span>
+		<input type='checkbox' class="fold" id="writeFlusher-fold-impledby"><label for="writeFlusher-fold-impledby">Implemented By (<i>at least 5, in which 1 are exported</i>)</label><span id='writeFlusher-fold-impledby-items' class="fold-items"><span>
+			*net/http/httptest.<a href="httptest.html#name-ResponseRecorder">ResponseRecorder</a></span>
+			<input type='checkbox' checked class="showhide" id="writeFlusher-showhide-impedBys"><i><label for="writeFlusher-showhide-impedBys" class="show-inline">/* 4+ unexporteds ... */</label><label for="writeFlusher-showhide-impedBys" class="hide-inline">/* 4+ unexporteds: */</label></i><span class="hidden"><i>
+			*net/http.<a href="../http.html#name-http2responseWriter">http2responseWriter</a></i></span><span class="hidden"><i>
+			*net/http.<a href="../http.html#name-response">response</a></i></span><span class="hidden"><i>
+			 github.com/prometheus/client_golang/prometheus/promhttp.<a href="../../github.com/prometheus/client_golang/prometheus/promhttp.html#name-flusherDelegator">flusherDelegator</a></i></span><span class="hidden"><i>
+			*golang.org/x/net/http2.<a href="../../golang.org/x/net/http2.html#name-responseWriter">responseWriter</a></i></span></span>
+		<input type='checkbox' class="fold" id="writeFlusher-fold-impls"><label for="writeFlusher-fold-impls">Implements (<i>at least 4, all are exported</i>)</label><span id='writeFlusher-fold-impls-items' class="fold-items"><span>
+			 T : net/http.<a href="../http.html#name-Flusher">Flusher</a></span><span>
+			 T : github.com/go-git/go-git/v5/plumbing/protocol/packp/sideband.<a href="../../github.com/go-git/go-git/v5/plumbing/protocol/packp/sideband.html#name-Progress">Progress</a></span><span>
+			 T : github.com/jbenet/go-context/io.<a href="../../github.com/jbenet/go-context/io.html#name-Writer">Writer</a></span><span>
+			 T : io.<a href="../../io.html#name-Writer">Writer</a></span></span>
+
+</span></div></div>
+<div id="exported-functions"><span class="title">Package-Level Functions<span class="title-stat"><i> (total 18, in which 9 are exported)</i></span></span>
+
+<div class="anchor value-res" id="name-DumpRequest">	<input type='checkbox' class="fold" id="DumpRequest-fold-content"><label for="DumpRequest-fold-content"> <a href="../../../use/net/http/httputil..DumpRequest.html">func</a> <a href="../../../src/net/http/httputil/dump.go.html#line-218">DumpRequest</a>(req *<a href="../http.html">http</a>.<a href="../http.html#name-Request">Request</a>, body <a href="../../builtin.html#name-bool">bool</a>) ([]<a href="../../builtin.html#name-byte">byte</a>, <a href="../../builtin.html#name-error">error</a>)</label><span id='DumpRequest-fold-content-docs' class="fold-docs">
+		DumpRequest returns the given request in its HTTP/1.x wire
+		representation. It should only be used by servers to debug client
+		requests. The returned representation is an approximation only;
+		some details of the initial request are lost while parsing it into
+		an http.Request. In particular, the order and case of header field
+		names are lost. The order of values in multi-valued headers is kept
+		intact. HTTP/2 requests are dumped in HTTP/1.x form, not in their
+		original binary representations.
+
+		If body is true, DumpRequest also returns the body. To do so, it
+		consumes req.Body and then replaces it with a new io.ReadCloser
+		that yields the same bytes. If DumpRequest returns an error,
+		the state of req is undefined.
+
+		The documentation for http.Request.Write details which fields
+		of req are included in the dump.
+
+</span></div><div class="anchor value-res" id="name-DumpRequestOut">	<input type='checkbox' class="fold" id="DumpRequestOut-fold-content"><label for="DumpRequestOut-fold-content"> <a href="../../../use/net/http/httputil..DumpRequestOut.html">func</a> <a href="../../../src/net/http/httputil/dump.go.html#line-77">DumpRequestOut</a>(req *<a href="../http.html">http</a>.<a href="../http.html#name-Request">Request</a>, body <a href="../../builtin.html#name-bool">bool</a>) ([]<a href="../../builtin.html#name-byte">byte</a>, <a href="../../builtin.html#name-error">error</a>)</label><span id='DumpRequestOut-fold-content-docs' class="fold-docs">
+		DumpRequestOut is like DumpRequest but for outgoing client requests. It
+		includes any headers that the standard http.Transport adds, such as
+		User-Agent.
+
+</span></div><div class="anchor value-res" id="name-DumpResponse">	<input type='checkbox' class="fold" id="DumpResponse-fold-content"><label for="DumpResponse-fold-content"> <a href="../../../use/net/http/httputil..DumpResponse.html">func</a> <a href="../../../src/net/http/httputil/dump.go.html#line-308">DumpResponse</a>(resp *<a href="../http.html">http</a>.<a href="../http.html#name-Response">Response</a>, body <a href="../../builtin.html#name-bool">bool</a>) ([]<a href="../../builtin.html#name-byte">byte</a>, <a href="../../builtin.html#name-error">error</a>)</label><span id='DumpResponse-fold-content-docs' class="fold-docs">
+		DumpResponse is like DumpRequest but dumps a response.
+
+</span></div><div class="anchor value-res" id="name-NewChunkedReader">	<input type='checkbox' class="fold" id="NewChunkedReader-fold-content"><label for="NewChunkedReader-fold-content"> <a href="../../../use/net/http/httputil..NewChunkedReader.html">func</a> <a href="../../../src/net/http/httputil/httputil.go.html#line-20">NewChunkedReader</a>(r <a href="../../io.html">io</a>.<a href="../../io.html#name-Reader">Reader</a>) <a href="../../io.html">io</a>.<a href="../../io.html#name-Reader">Reader</a></label><span id='NewChunkedReader-fold-content-docs' class="fold-docs">
+		NewChunkedReader returns a new chunkedReader that translates the data read from r
+		out of HTTP "chunked" format before returning it.
+		The chunkedReader returns io.EOF when the final 0-length chunk is read.
+
+		NewChunkedReader is not needed by normal applications. The http package
+		automatically decodes chunking when reading response bodies.
+
+</span></div><div class="anchor value-res" id="name-NewChunkedWriter">	<input type='checkbox' class="fold" id="NewChunkedWriter-fold-content"><label for="NewChunkedWriter-fold-content"> <a href="../../../use/net/http/httputil..NewChunkedWriter.html">func</a> <a href="../../../src/net/http/httputil/httputil.go.html#line-35">NewChunkedWriter</a>(w <a href="../../io.html">io</a>.<a href="../../io.html#name-Writer">Writer</a>) <a href="../../io.html">io</a>.<a href="../../io.html#name-WriteCloser">WriteCloser</a></label><span id='NewChunkedWriter-fold-content-docs' class="fold-docs">
+		NewChunkedWriter returns a new chunkedWriter that translates writes into HTTP
+		"chunked" format before writing them to w. Closing the returned chunkedWriter
+		sends the final 0-length chunk that marks the end of the stream but does
+		not send the final CRLF that appears after trailers; trailers and the last
+		CRLF must be written separately.
+
+		NewChunkedWriter is not needed by normal applications. The http
+		package adds chunking automatically if handlers don't set a
+		Content-Length header. Using NewChunkedWriter inside a handler
+		would result in double chunking or chunking with a Content-Length
+		length, both of which are wrong.
+
+</span></div><div class="anchor value-res" id="name-NewClientConn">	<input type='checkbox' class="fold" id="NewClientConn-fold-content"><label for="NewClientConn-fold-content"> <a href="../../../use/net/http/httputil..NewClientConn.html">func</a> <a href="../../../src/net/http/httputil/persist.go.html#line-248">NewClientConn</a>(c <a href="../../net.html">net</a>.<a href="../../net.html#name-Conn">Conn</a>, r *<a href="../../bufio.html">bufio</a>.<a href="../../bufio.html#name-Reader">Reader</a>) *<a href="#name-ClientConn">ClientConn</a></label><span id='NewClientConn-fold-content-docs' class="fold-docs">
+		NewClientConn is an artifact of Go's early HTTP implementation.
+		It is low-level, old, and unused by Go's current HTTP stack.
+		We should have deleted it before Go 1.
+
+		Deprecated: Use the Client or Transport in package net/http instead.
+
+</span></div><div class="anchor value-res" id="name-NewProxyClientConn">	<input type='checkbox' class="fold" id="NewProxyClientConn-fold-content"><label for="NewProxyClientConn-fold-content"> <a href="../../../use/net/http/httputil..NewProxyClientConn.html">func</a> <a href="../../../src/net/http/httputil/persist.go.html#line-265">NewProxyClientConn</a>(c <a href="../../net.html">net</a>.<a href="../../net.html#name-Conn">Conn</a>, r *<a href="../../bufio.html">bufio</a>.<a href="../../bufio.html#name-Reader">Reader</a>) *<a href="#name-ClientConn">ClientConn</a></label><span id='NewProxyClientConn-fold-content-docs' class="fold-docs">
+		NewProxyClientConn is an artifact of Go's early HTTP implementation.
+		It is low-level, old, and unused by Go's current HTTP stack.
+		We should have deleted it before Go 1.
+
+		Deprecated: Use the Client or Transport in package net/http instead.
+
+</span></div><div class="anchor value-res" id="name-NewServerConn">	<input type='checkbox' class="fold" id="NewServerConn-fold-content"><label for="NewServerConn-fold-content"> <a href="../../../use/net/http/httputil..NewServerConn.html">func</a> <a href="../../../src/net/http/httputil/persist.go.html#line-54">NewServerConn</a>(c <a href="../../net.html">net</a>.<a href="../../net.html#name-Conn">Conn</a>, r *<a href="../../bufio.html">bufio</a>.<a href="../../bufio.html#name-Reader">Reader</a>) *<a href="#name-ServerConn">ServerConn</a></label><span id='NewServerConn-fold-content-docs' class="fold-docs">
+		NewServerConn is an artifact of Go's early HTTP implementation.
+		It is low-level, old, and unused by Go's current HTTP stack.
+		We should have deleted it before Go 1.
+
+		Deprecated: Use the Server in package net/http instead.
+
+</span></div><div class="anchor value-res" id="name-NewSingleHostReverseProxy">	<input type='checkbox' class="fold" id="NewSingleHostReverseProxy-fold-content"><label for="NewSingleHostReverseProxy-fold-content"> <a href="../../../use/net/http/httputil..NewSingleHostReverseProxy.html">func</a> <a href="../../../src/net/http/httputil/reverseproxy.go.html#line-142">NewSingleHostReverseProxy</a>(target *<a href="../url.html">url</a>.<a href="../url.html#name-URL">URL</a>) *<a href="#name-ReverseProxy">ReverseProxy</a></label><span id='NewSingleHostReverseProxy-fold-content-docs' class="fold-docs">
+		NewSingleHostReverseProxy returns a new ReverseProxy that routes
+		URLs to the scheme, host, and base path provided in target. If the
+		target's path is "/base" and the incoming request was for "/dir",
+		the target request will be for /base/dir.
+		NewSingleHostReverseProxy does not rewrite the Host header.
+		To rewrite Host headers, use ReverseProxy directly with a custom
+		Director policy.
+
+</span></div>	<input type='checkbox' class="showhide" id="unexported-functions-showhide"><i><label for="unexported-functions-showhide" class="show-inline">/* 9 unexporteds ... */</label><label for="unexported-functions-showhide" class="hide-inline">/* 9 unexporteds: */</label></i><div class="anchor value-res hidden" id="name-copyHeader"><i>	<span class="nodocs"> <a href="../../../use/net/http/httputil..copyHeader*7ded1.html">func</a> <a href="../../../src/net/http/httputil/reverseproxy.go.html#line-161">copyHeader</a>(dst, src <a href="../http.html">http</a>.<a href="../http.html#name-Header">Header</a>)</span></i></div><div class="anchor value-res hidden" id="name-drainBody"><i>	<input type='checkbox' class="fold" id="drainBody-fold-content"><label for="drainBody-fold-content"> <a href="../../../use/net/http/httputil..drainBody*ddb80.html">func</a> <a href="../../../src/net/http/httputil/dump.go.html#line-25">drainBody</a>(b <a href="../../io.html">io</a>.<a href="../../io.html#name-ReadCloser">ReadCloser</a>) (r1, r2 <a href="../../io.html">io</a>.<a href="../../io.html#name-ReadCloser">ReadCloser</a>, err <a href="../../builtin.html#name-error">error</a>)</label><span id='drainBody-fold-content-docs' class="fold-docs">
+		drainBody reads all of b to memory and then returns two equivalent
+		ReadClosers yielding the same bytes.
+
+		It returns an error if the initial slurp of all bytes fails. It does not attempt
+		to make the returned ReadClosers have identical error-matching behavior.
+
+</span></i></div><div class="anchor value-res hidden" id="name-joinURLPath"><i>	<span class="nodocs"> <a href="../../../use/net/http/httputil..joinURLPath*58d22.html">func</a> <a href="../../../src/net/http/httputil/reverseproxy.go.html#line-114">joinURLPath</a>(a, b *<a href="../url.html">url</a>.<a href="../url.html#name-URL">URL</a>) (path, rawpath <a href="../../builtin.html#name-string">string</a>)</span></i></div><div class="anchor value-res hidden" id="name-outgoingLength"><i>	<input type='checkbox' class="fold" id="outgoingLength-fold-content"><label for="outgoingLength-fold-content"> <a href="../../../use/net/http/httputil..outgoingLength*de6eb.html">func</a> <a href="../../../src/net/http/httputil/dump.go.html#line-64">outgoingLength</a>(req *<a href="../http.html">http</a>.<a href="../http.html#name-Request">Request</a>) <a href="../../builtin.html#name-int64">int64</a></label><span id='outgoingLength-fold-content-docs' class="fold-docs">
+		outGoingLength is a copy of the unexported
+		(*http.Request).outgoingLength method.
+
+</span></i></div><div class="anchor value-res hidden" id="name-removeConnectionHeaders"><i>	<input type='checkbox' class="fold" id="removeConnectionHeaders-fold-content"><label for="removeConnectionHeaders-fold-content"> <a href="../../../use/net/http/httputil..removeConnectionHeaders*be099.html">func</a> <a href="../../../src/net/http/httputil/reverseproxy.go.html#line-388">removeConnectionHeaders</a>(h <a href="../http.html">http</a>.<a href="../http.html#name-Header">Header</a>)</label><span id='removeConnectionHeaders-fold-content-docs' class="fold-docs">
+		removeConnectionHeaders removes hop-by-hop headers listed in the "Connection" header of h.
+		See RFC 7230, section 6.1
+
+</span></i></div><div class="anchor value-res hidden" id="name-shouldPanicOnCopyError"><i>	<input type='checkbox' class="fold" id="shouldPanicOnCopyError-fold-content"><label for="shouldPanicOnCopyError-fold-content"> <a href="../../../use/net/http/httputil..shouldPanicOnCopyError*6e37c.html">func</a> <a href="../../../src/net/http/httputil/reverseproxy.go.html#line-371">shouldPanicOnCopyError</a>(req *<a href="../http.html">http</a>.<a href="../http.html#name-Request">Request</a>) <a href="../../builtin.html#name-bool">bool</a></label><span id='shouldPanicOnCopyError-fold-content-docs' class="fold-docs">
+		shouldPanicOnCopyError reports whether the reverse proxy should
+		panic with http.ErrAbortHandler. This is the right thing to do by
+		default, but Go 1.10 and earlier did not, so existing unit tests
+		weren't expecting panics. Only panic in our own tests, or when
+		running under the HTTP server.
+
+</span></i></div><div class="anchor value-res hidden" id="name-singleJoiningSlash"><i>	<span class="nodocs"> <a href="../../../use/net/http/httputil..singleJoiningSlash*1d3f0.html">func</a> <a href="../../../src/net/http/httputil/reverseproxy.go.html#line-102">singleJoiningSlash</a>(a, b <a href="../../builtin.html#name-string">string</a>) <a href="../../builtin.html#name-string">string</a></span></i></div><div class="anchor value-res hidden" id="name-upgradeType"><i>	<span class="nodocs"> <a href="../../../use/net/http/httputil..upgradeType*283d9.html">func</a> <a href="../../../src/net/http/httputil/reverseproxy.go.html#line-537">upgradeType</a>(h <a href="../http.html">http</a>.<a href="../http.html#name-Header">Header</a>) <a href="../../builtin.html#name-string">string</a></span></i></div><div class="anchor value-res hidden" id="name-valueOrDefault"><i>	<input type='checkbox' class="fold" id="valueOrDefault-fold-content"><label for="valueOrDefault-fold-content"> <a href="../../../use/net/http/httputil..valueOrDefault*fb3da.html">func</a> <a href="../../../src/net/http/httputil/dump.go.html#line-189">valueOrDefault</a>(value, def <a href="../../builtin.html#name-string">string</a>) <a href="../../builtin.html#name-string">string</a></label><span id='valueOrDefault-fold-content-docs' class="fold-docs">
+		Return value if nonempty, def otherwise.
+
+</span></i></div></div>
+<div id="exported-variables"><span class="title">Package-Level Variables<span class="title-stat"><i> (total 10, in which 4 are exported)</i></span></span>
+
+<div class="anchor value-res" id="name-ErrClosed">	<input type='checkbox' class="fold" id="ErrClosed-fold-content"><label for="ErrClosed-fold-content">  <a href="../../../use/net/http/httputil..ErrClosed.html">var</a> <a href="../../../src/net/http/httputil/persist.go.html#line-22">ErrClosed</a> *<a href="../http.html">http</a>.<a href="../http.html#name-ProtocolError">ProtocolError</a></label><span id='ErrClosed-fold-content-docs' class="fold-docs">
+		Deprecated: No longer used.
+
+</span></div><div class="anchor value-res" id="name-ErrLineTooLong">	<input type='checkbox' class="fold" id="ErrLineTooLong-fold-content"><label for="ErrLineTooLong-fold-content">  <a href="../../../use/net/http/httputil..ErrLineTooLong.html">var</a> <a href="../../../src/net/http/httputil/httputil.go.html#line-41">ErrLineTooLong</a> <a href="../../builtin.html#name-error">error</a></label><span id='ErrLineTooLong-fold-content-docs' class="fold-docs">
+		ErrLineTooLong is returned when reading malformed chunked data
+		with lines that are too long.
+
+</span></div><div class="anchor value-res" id="name-ErrPersistEOF">	<input type='checkbox' class="fold" id="ErrPersistEOF-fold-content"><label for="ErrPersistEOF-fold-content">  <a href="../../../use/net/http/httputil..ErrPersistEOF.html">var</a> <a href="../../../src/net/http/httputil/persist.go.html#line-19">ErrPersistEOF</a> *<a href="../http.html">http</a>.<a href="../http.html#name-ProtocolError">ProtocolError</a></label><span id='ErrPersistEOF-fold-content-docs' class="fold-docs">
+		Deprecated: No longer used.
+
+</span></div><div class="anchor value-res" id="name-ErrPipeline">	<input type='checkbox' class="fold" id="ErrPipeline-fold-content"><label for="ErrPipeline-fold-content">  <a href="../../../use/net/http/httputil..ErrPipeline.html">var</a> <a href="../../../src/net/http/httputil/persist.go.html#line-25">ErrPipeline</a> *<a href="../http.html">http</a>.<a href="../http.html#name-ProtocolError">ProtocolError</a></label><span id='ErrPipeline-fold-content-docs' class="fold-docs">
+		Deprecated: No longer used.
+
+</span></div>	<input type='checkbox' class="showhide" id="unexported-variables-showhide"><i><label for="unexported-variables-showhide" class="show-inline">/* 6 unexporteds ... */</label><label for="unexported-variables-showhide" class="hide-inline">/* 6 unexporteds: */</label></i><div class="anchor value-res hidden" id="name-emptyBody"><i>	<input type='checkbox' class="fold" id="emptyBody-fold-content"><label for="emptyBody-fold-content">  <a href="../../../use/net/http/httputil..emptyBody*b6c77.html">var</a> <a href="../../../src/net/http/httputil/dump.go.html#line-305">emptyBody</a> <a href="../../io.html">io</a>.<a href="../../io.html#name-ReadCloser">ReadCloser</a></label><span id='emptyBody-fold-content-docs' class="fold-docs">
+		emptyBody is an instance of empty reader.
+
+</span></i></div><div class="anchor value-res hidden" id="name-errClosed"><i>	<input type='checkbox' class="fold" id="errClosed-fold-content"><label for="errClosed-fold-content">  <a href="../../../use/net/http/httputil..errClosed*f1bfa.html">var</a> <a href="../../../src/net/http/httputil/persist.go.html#line-30">errClosed</a> <a href="../../builtin.html#name-error">error</a></label><span id='errClosed-fold-content-docs' class="fold-docs">
+		This is an API usage error - the local side is closed.
+		ErrPersistEOF (above) reports that the remote side is closed.
+
+</span></i></div><div class="anchor value-res hidden" id="name-errNoBody"><i>	<input type='checkbox' class="fold" id="errNoBody-fold-content"><label for="errNoBody-fold-content">  <a href="../../../use/net/http/httputil..errNoBody*7a39a.html">var</a> <a href="../../../src/net/http/httputil/dump.go.html#line-293">errNoBody</a> <a href="../../builtin.html#name-error">error</a></label><span id='errNoBody-fold-content-docs' class="fold-docs">
+		errNoBody is a sentinel error value used by failureToReadBody so we
+		can detect that the lack of body was intentional.
+
+</span></i></div><div class="anchor value-res hidden" id="name-hopHeaders"><i>	<input type='checkbox' class="fold" id="hopHeaders-fold-content"><label for="hopHeaders-fold-content">  <a href="../../../use/net/http/httputil..hopHeaders*decf9.html">var</a> <a href="../../../src/net/http/httputil/reverseproxy.go.html#line-174">hopHeaders</a> []<a href="../../builtin.html#name-string">string</a></label><span id='hopHeaders-fold-content-docs' class="fold-docs">
+		Hop-by-hop headers. These are removed when sent to the backend.
+		As of RFC 7230, hop-by-hop headers are required to appear in the
+		Connection header field. These are the headers defined by the
+		obsoleted RFC 2616 (section 13.5.1) and are used for backward
+		compatibility.
+
+</span></i></div><div class="anchor value-res hidden" id="name-inOurTests"><i>	<span class="nodocs">  <a href="../../../use/net/http/httputil..inOurTests*9e421.html">var</a> <a href="../../../src/net/http/httputil/reverseproxy.go.html#line-364">inOurTests</a> <a href="../../builtin.html#name-bool">bool</a> // whether we're in our own tests</span></i></div><div class="anchor value-res hidden" id="name-reqWriteExcludeHeaderDump"><i>	<span class="nodocs">  <a href="../../../use/net/http/httputil..reqWriteExcludeHeaderDump*a067f.html">var</a> <a href="../../../src/net/http/httputil/dump.go.html#line-196">reqWriteExcludeHeaderDump</a> map[<a href="../../builtin.html#name-string">string</a>]<a href="../../builtin.html#name-bool">bool</a></span></i></div></div></code></pre><pre id="footer">
+<table><tr><td><img src="../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

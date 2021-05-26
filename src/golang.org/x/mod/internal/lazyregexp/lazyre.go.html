@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: lazyre.go in package golang.org/x/mod/internal/lazyregexp</title>
+<link href="../../../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	lazyre.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../../../pkg/golang.org/x/mod/internal/lazyregexp.html">golang.org/x/mod/internal/lazyregexp</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16],
+input[id=r17]:checked ~pre label[for=r17],
+input[id=r18]:checked ~pre label[for=r18],
+input[id=r19]:checked ~pre label[for=r19],
+input[id=r20]:checked ~pre label[for=r20],
+input[id=r21]:checked ~pre label[for=r21],
+input[id=r22]:checked ~pre label[for=r22],
+input[id=r23]:checked ~pre label[for=r23],
+input[id=r24]:checked ~pre label[for=r24],
+input[id=r25]:checked ~pre label[for=r25],
+input[id=r26]:checked ~pre label[for=r26],
+input[id=r27]:checked ~pre label[for=r27],
+input[id=r28]:checked ~pre label[for=r28],
+input[id=r29]:checked ~pre label[for=r29],
+input[id=r30]:checked ~pre label[for=r30],
+input[id=r31]:checked ~pre label[for=r31]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1,
+input[id=i2]:checked ~pre .i2,
+input[id=i3]:checked ~pre .i3
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="r17" type="radio" name="g"/>
+<input id="r18" type="radio" name="g"/>
+<input id="r19" type="radio" name="g"/>
+<input id="r20" type="radio" name="g"/>
+<input id="r21" type="radio" name="g"/>
+<input id="r22" type="radio" name="g"/>
+<input id="r23" type="radio" name="g"/>
+<input id="r24" type="radio" name="g"/>
+<input id="r25" type="radio" name="g"/>
+<input id="r26" type="radio" name="g"/>
+<input id="r27" type="radio" name="g"/>
+<input id="r28" type="radio" name="g"/>
+<input id="r29" type="radio" name="g"/>
+<input id="r30" type="radio" name="g"/>
+<input id="r31" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<input id="i2" type="radio" name="i"/>
+<input id="i3" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2018 The Go Authors. All rights reserved.</span><span class="comment"> Use of this source code is governed by a BSD-style</span><span class="comment"> license that can be found in the LICENSE file.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Package lazyregexp is a thin wrapper over regexp, allowing the use of global</span><span class="comment"> regexp variables without forcing them to be compiled at init.</span></div>
+<div class="code"><pre><code><span class="keyword">package</span> lazyregexp
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"os"</span></label>
+	<label for="i1"><span class="lit-string i1">"regexp"</span></label>
+	<label for="i2"><span class="lit-string i2">"strings"</span></label>
+	<label for="i3"><span class="lit-string i3">"sync"</span></label>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Regexp is a wrapper around regexp.Regexp, where the underlying regexp will be</span><span class="comment"> compiled the first time it is needed.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../../pkg/golang.org/x/mod/internal/lazyregexp.html#name-Regexp" class="ident">Regexp</a> <span class="keyword">struct</span> {
+	<a href="../../../../../../use/golang.org/x/mod/internal/lazyregexp..Regexp.str*8c25c.html" class="ident">str</a>  <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../../use/golang.org/x/mod/internal/lazyregexp..Regexp.once*20065.html" class="ident">once</a> <a href="../../../../../../pkg/sync.html" class="ident i3">sync</a>.<a href="../../../../../sync/once.go.html#line-14" class="ident">Once</a>
+	<a href="../../../../../../use/golang.org/x/mod/internal/lazyregexp..Regexp.rx*501bd.html" class="ident">rx</a>   *<a href="../../../../../../pkg/regexp.html" class="ident i1">regexp</a>.<a href="../../../../../regexp/regexp.go.html#line-82" class="ident">Regexp</a>
+}
+
+<span class="keyword">func</span> (<label for="r0" class="ident">r</label> *<a href="#line-18" class="ident">Regexp</a>) <label for="r1" class="ident"><a href="../../../../../../use/golang.org/x/mod/internal/lazyregexp..Regexp.re*3ac1e.html" class="ident">re</a></label>() *<a href="../../../../../../pkg/regexp.html" class="ident i1">regexp</a>.<a href="../../../../../regexp/regexp.go.html#line-82" class="ident">Regexp</a> {
+	<label for="r0" class="ident">r</label>.<a href="#line-20" class="ident">once</a>.<a href="../../../../../sync/once.go.html#line-42" class="ident">Do</a>(<label for="r0" class="ident">r</label>.<a href="#line-29" class="ident">build</a>)
+	<span class="keyword">return</span> <label for="r0" class="ident">r</label>.<a href="#line-21" class="ident">rx</a>
+}
+
+<span class="keyword">func</span> (<label for="r2" class="ident">r</label> *<a href="#line-18" class="ident">Regexp</a>) <label for="r3" class="ident"><a href="../../../../../../use/golang.org/x/mod/internal/lazyregexp..Regexp.build*44575.html" class="ident">build</a></label>() {
+	<label for="r2" class="ident">r</label>.<a href="#line-21" class="ident">rx</a> = <a href="../../../../../../pkg/regexp.html" class="ident i1">regexp</a>.<a href="../../../../../regexp/regexp.go.html#line-308" class="ident">MustCompile</a>(<label for="r2" class="ident">r</label>.<a href="#line-19" class="ident">str</a>)
+	<label for="r2" class="ident">r</label>.<a href="#line-19" class="ident">str</a> = <span class="lit-string">""</span>
+}
+
+<span class="keyword">func</span> (<label for="r4" class="ident">r</label> *<a href="#line-18" class="ident">Regexp</a>) <label for="r5" class="ident"><a href="../../../../../../use/golang.org/x/mod/internal/lazyregexp..Regexp.FindSubmatch.html" class="ident">FindSubmatch</a></label>(<label for="r6" class="ident">s</label> []<a href="../../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>) [][]<a href="../../../../../../pkg/builtin.html#name-byte" class="ident">byte</a> {
+	<span class="keyword">return</span> <label for="r4" class="ident">r</label>.<a href="#line-24" class="ident">re</a>().<a href="../../../../../regexp/regexp.go.html#line-880" class="ident">FindSubmatch</a>(<label for="r6" class="ident">s</label>)
+}
+
+<span class="keyword">func</span> (<label for="r7" class="ident">r</label> *<a href="#line-18" class="ident">Regexp</a>) <label for="r8" class="ident"><a href="../../../../../../use/golang.org/x/mod/internal/lazyregexp..Regexp.FindStringSubmatch.html" class="ident">FindStringSubmatch</a></label>(<label for="r9" class="ident">s</label> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>) []<a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a> {
+	<span class="keyword">return</span> <label for="r7" class="ident">r</label>.<a href="#line-24" class="ident">re</a>().<a href="../../../../../regexp/regexp.go.html#line-1037" class="ident">FindStringSubmatch</a>(<label for="r9" class="ident">s</label>)
+}
+
+<span class="keyword">func</span> (<label for="r10" class="ident">r</label> *<a href="#line-18" class="ident">Regexp</a>) <label for="r11" class="ident"><a href="../../../../../../use/golang.org/x/mod/internal/lazyregexp..Regexp.FindStringSubmatchIndex.html" class="ident">FindStringSubmatchIndex</a></label>(<label for="r12" class="ident">s</label> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>) []<a href="../../../../../../pkg/builtin.html#name-int" class="ident">int</a> {
+	<span class="keyword">return</span> <label for="r10" class="ident">r</label>.<a href="#line-24" class="ident">re</a>().<a href="../../../../../regexp/regexp.go.html#line-1057" class="ident">FindStringSubmatchIndex</a>(<label for="r12" class="ident">s</label>)
+}
+
+<span class="keyword">func</span> (<label for="r13" class="ident">r</label> *<a href="#line-18" class="ident">Regexp</a>) <label for="r14" class="ident"><a href="../../../../../../use/golang.org/x/mod/internal/lazyregexp..Regexp.ReplaceAllString.html" class="ident">ReplaceAllString</a></label>(<label for="r15" class="ident">src</label>, <label for="r16" class="ident">repl</label> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>) <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a> {
+	<span class="keyword">return</span> <label for="r13" class="ident">r</label>.<a href="#line-24" class="ident">re</a>().<a href="../../../../../regexp/regexp.go.html#line-570" class="ident">ReplaceAllString</a>(<label for="r15" class="ident">src</label>, <label for="r16" class="ident">repl</label>)
+}
+
+<span class="keyword">func</span> (<label for="r17" class="ident">r</label> *<a href="#line-18" class="ident">Regexp</a>) <label for="r18" class="ident"><a href="../../../../../../use/golang.org/x/mod/internal/lazyregexp..Regexp.FindString.html" class="ident">FindString</a></label>(<label for="r19" class="ident">s</label> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>) <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a> {
+	<span class="keyword">return</span> <label for="r17" class="ident">r</label>.<a href="#line-24" class="ident">re</a>().<a href="../../../../../regexp/regexp.go.html#line-841" class="ident">FindString</a>(<label for="r19" class="ident">s</label>)
+}
+
+<span class="keyword">func</span> (<label for="r20" class="ident">r</label> *<a href="#line-18" class="ident">Regexp</a>) <label for="r21" class="ident"><a href="../../../../../../use/golang.org/x/mod/internal/lazyregexp..Regexp.FindAllString.html" class="ident">FindAllString</a></label>(<label for="r22" class="ident">s</label> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>, <label for="r23" class="ident">n</label> <a href="../../../../../../pkg/builtin.html#name-int" class="ident">int</a>) []<a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a> {
+	<span class="keyword">return</span> <label for="r20" class="ident">r</label>.<a href="#line-24" class="ident">re</a>().<a href="../../../../../regexp/regexp.go.html#line-1112" class="ident">FindAllString</a>(<label for="r22" class="ident">s</label>, <label for="r23" class="ident">n</label>)
+}
+
+<span class="keyword">func</span> (<label for="r24" class="ident">r</label> *<a href="#line-18" class="ident">Regexp</a>) <label for="r25" class="ident"><a href="../../../../../../use/golang.org/x/mod/internal/lazyregexp..Regexp.MatchString.html" class="ident">MatchString</a></label>(<label for="r26" class="ident">s</label> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>) <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> {
+	<span class="keyword">return</span> <label for="r24" class="ident">r</label>.<a href="#line-24" class="ident">re</a>().<a href="../../../../../regexp/regexp.go.html#line-524" class="ident">MatchString</a>(<label for="r26" class="ident">s</label>)
+}
+
+<span class="keyword">func</span> (<label for="r27" class="ident">r</label> *<a href="#line-18" class="ident">Regexp</a>) <label for="r28" class="ident"><a href="../../../../../../use/golang.org/x/mod/internal/lazyregexp..Regexp.SubexpNames.html" class="ident">SubexpNames</a></label>() []<a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a> {
+	<span class="keyword">return</span> <label for="r27" class="ident">r</label>.<a href="#line-24" class="ident">re</a>().<a href="../../../../../regexp/regexp.go.html#line-344" class="ident">SubexpNames</a>()
+}
+
+<span class="keyword">var</span> <a href="../../../../../../pkg/golang.org/x/mod/internal/lazyregexp.html#name-inTest" class="ident">inTest</a> = <a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<a href="../../../../../../pkg/os.html" class="ident i0">os</a>.<a href="../../../../../os/proc.go.html#line-16" class="ident">Args</a>) &gt; <span class="lit-number">0</span> &amp;&amp; <a href="../../../../../../pkg/strings.html" class="ident i2">strings</a>.<a href="../../../../../strings/strings.go.html#line-449" class="ident">HasSuffix</a>(<a href="../../../../../../pkg/strings.html" class="ident i2">strings</a>.<a href="../../../../../strings/strings.go.html#line-911" class="ident">TrimSuffix</a>(<a href="../../../../../../pkg/os.html" class="ident i0">os</a>.<a href="../../../../../os/proc.go.html#line-16" class="ident">Args</a>[<span class="lit-number">0</span>], <span class="lit-string">".exe"</span>), <span class="lit-string">".test"</span>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> New creates a new lazy regexp, delaying the compiling work until it is first</span><span class="comment"> needed. If the code is being run as part of tests, the regexp compiling will</span><span class="comment"> happen immediately.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r29" class="ident"><a href="../../../../../../pkg/golang.org/x/mod/internal/lazyregexp.html#name-New" class="ident">New</a></label>(<label for="r30" class="ident">str</label> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>) *<a href="#line-18" class="ident">Regexp</a> {
+	<label for="r31" class="ident">lr</label> := &amp;<a href="#line-18" class="ident">Regexp</a>{<a href="#line-19" class="ident">str</a>: <label for="r30" class="ident">str</label>}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> In tests, always compile the regexps early.</span></div>
+<div class="code"><pre><code>		<label for="r31" class="ident">lr</label>.<a href="#line-24" class="ident">re</a>()
+	}
+	<span class="keyword">return</span> <label for="r31" class="ident">lr</label>
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: worker.go in package go.opencensus.io/stats/view</title>
+<link href="../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	worker.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../pkg/go.opencensus.io/stats/view.html">go.opencensus.io/stats/view</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16],
+input[id=r17]:checked ~pre label[for=r17],
+input[id=r18]:checked ~pre label[for=r18],
+input[id=r19]:checked ~pre label[for=r19],
+input[id=r20]:checked ~pre label[for=r20],
+input[id=r21]:checked ~pre label[for=r21],
+input[id=r22]:checked ~pre label[for=r22],
+input[id=r23]:checked ~pre label[for=r23],
+input[id=r24]:checked ~pre label[for=r24],
+input[id=r25]:checked ~pre label[for=r25],
+input[id=r26]:checked ~pre label[for=r26],
+input[id=r27]:checked ~pre label[for=r27],
+input[id=r28]:checked ~pre label[for=r28],
+input[id=r29]:checked ~pre label[for=r29],
+input[id=r30]:checked ~pre label[for=r30],
+input[id=r31]:checked ~pre label[for=r31],
+input[id=r32]:checked ~pre label[for=r32],
+input[id=r33]:checked ~pre label[for=r33],
+input[id=r34]:checked ~pre label[for=r34],
+input[id=r35]:checked ~pre label[for=r35],
+input[id=r36]:checked ~pre label[for=r36],
+input[id=r37]:checked ~pre label[for=r37],
+input[id=r38]:checked ~pre label[for=r38],
+input[id=r39]:checked ~pre label[for=r39],
+input[id=r40]:checked ~pre label[for=r40],
+input[id=r41]:checked ~pre label[for=r41],
+input[id=r42]:checked ~pre label[for=r42],
+input[id=r43]:checked ~pre label[for=r43],
+input[id=r44]:checked ~pre label[for=r44],
+input[id=r45]:checked ~pre label[for=r45],
+input[id=r46]:checked ~pre label[for=r46],
+input[id=r47]:checked ~pre label[for=r47],
+input[id=r48]:checked ~pre label[for=r48],
+input[id=r49]:checked ~pre label[for=r49],
+input[id=r50]:checked ~pre label[for=r50],
+input[id=r51]:checked ~pre label[for=r51],
+input[id=r52]:checked ~pre label[for=r52],
+input[id=r53]:checked ~pre label[for=r53],
+input[id=r54]:checked ~pre label[for=r54],
+input[id=r55]:checked ~pre label[for=r55],
+input[id=r56]:checked ~pre label[for=r56],
+input[id=r57]:checked ~pre label[for=r57],
+input[id=r58]:checked ~pre label[for=r58],
+input[id=r59]:checked ~pre label[for=r59],
+input[id=r60]:checked ~pre label[for=r60],
+input[id=r61]:checked ~pre label[for=r61],
+input[id=r62]:checked ~pre label[for=r62],
+input[id=r63]:checked ~pre label[for=r63],
+input[id=r64]:checked ~pre label[for=r64],
+input[id=r65]:checked ~pre label[for=r65],
+input[id=r66]:checked ~pre label[for=r66],
+input[id=r67]:checked ~pre label[for=r67],
+input[id=r68]:checked ~pre label[for=r68],
+input[id=r69]:checked ~pre label[for=r69],
+input[id=r70]:checked ~pre label[for=r70],
+input[id=r71]:checked ~pre label[for=r71],
+input[id=r72]:checked ~pre label[for=r72],
+input[id=r73]:checked ~pre label[for=r73],
+input[id=r74]:checked ~pre label[for=r74],
+input[id=r75]:checked ~pre label[for=r75],
+input[id=r76]:checked ~pre label[for=r76],
+input[id=r77]:checked ~pre label[for=r77],
+input[id=r78]:checked ~pre label[for=r78],
+input[id=r79]:checked ~pre label[for=r79],
+input[id=r80]:checked ~pre label[for=r80],
+input[id=r81]:checked ~pre label[for=r81],
+input[id=r82]:checked ~pre label[for=r82],
+input[id=r83]:checked ~pre label[for=r83],
+input[id=r84]:checked ~pre label[for=r84],
+input[id=r85]:checked ~pre label[for=r85],
+input[id=r86]:checked ~pre label[for=r86],
+input[id=r87]:checked ~pre label[for=r87],
+input[id=r88]:checked ~pre label[for=r88],
+input[id=r89]:checked ~pre label[for=r89],
+input[id=r90]:checked ~pre label[for=r90],
+input[id=r91]:checked ~pre label[for=r91],
+input[id=r92]:checked ~pre label[for=r92],
+input[id=r93]:checked ~pre label[for=r93],
+input[id=r94]:checked ~pre label[for=r94],
+input[id=r95]:checked ~pre label[for=r95],
+input[id=r96]:checked ~pre label[for=r96],
+input[id=r97]:checked ~pre label[for=r97],
+input[id=r98]:checked ~pre label[for=r98],
+input[id=r99]:checked ~pre label[for=r99],
+input[id=r100]:checked ~pre label[for=r100],
+input[id=r101]:checked ~pre label[for=r101],
+input[id=r102]:checked ~pre label[for=r102],
+input[id=r103]:checked ~pre label[for=r103],
+input[id=r104]:checked ~pre label[for=r104],
+input[id=r105]:checked ~pre label[for=r105]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1,
+input[id=i2]:checked ~pre .i2,
+input[id=i3]:checked ~pre .i3,
+input[id=i4]:checked ~pre .i4,
+input[id=i5]:checked ~pre .i5,
+input[id=i6]:checked ~pre .i6,
+input[id=i7]:checked ~pre .i7,
+input[id=i8]:checked ~pre .i8
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="r17" type="radio" name="g"/>
+<input id="r18" type="radio" name="g"/>
+<input id="r19" type="radio" name="g"/>
+<input id="r20" type="radio" name="g"/>
+<input id="r21" type="radio" name="g"/>
+<input id="r22" type="radio" name="g"/>
+<input id="r23" type="radio" name="g"/>
+<input id="r24" type="radio" name="g"/>
+<input id="r25" type="radio" name="g"/>
+<input id="r26" type="radio" name="g"/>
+<input id="r27" type="radio" name="g"/>
+<input id="r28" type="radio" name="g"/>
+<input id="r29" type="radio" name="g"/>
+<input id="r30" type="radio" name="g"/>
+<input id="r31" type="radio" name="g"/>
+<input id="r32" type="radio" name="g"/>
+<input id="r33" type="radio" name="g"/>
+<input id="r34" type="radio" name="g"/>
+<input id="r35" type="radio" name="g"/>
+<input id="r36" type="radio" name="g"/>
+<input id="r37" type="radio" name="g"/>
+<input id="r38" type="radio" name="g"/>
+<input id="r39" type="radio" name="g"/>
+<input id="r40" type="radio" name="g"/>
+<input id="r41" type="radio" name="g"/>
+<input id="r42" type="radio" name="g"/>
+<input id="r43" type="radio" name="g"/>
+<input id="r44" type="radio" name="g"/>
+<input id="r45" type="radio" name="g"/>
+<input id="r46" type="radio" name="g"/>
+<input id="r47" type="radio" name="g"/>
+<input id="r48" type="radio" name="g"/>
+<input id="r49" type="radio" name="g"/>
+<input id="r50" type="radio" name="g"/>
+<input id="r51" type="radio" name="g"/>
+<input id="r52" type="radio" name="g"/>
+<input id="r53" type="radio" name="g"/>
+<input id="r54" type="radio" name="g"/>
+<input id="r55" type="radio" name="g"/>
+<input id="r56" type="radio" name="g"/>
+<input id="r57" type="radio" name="g"/>
+<input id="r58" type="radio" name="g"/>
+<input id="r59" type="radio" name="g"/>
+<input id="r60" type="radio" name="g"/>
+<input id="r61" type="radio" name="g"/>
+<input id="r62" type="radio" name="g"/>
+<input id="r63" type="radio" name="g"/>
+<input id="r64" type="radio" name="g"/>
+<input id="r65" type="radio" name="g"/>
+<input id="r66" type="radio" name="g"/>
+<input id="r67" type="radio" name="g"/>
+<input id="r68" type="radio" name="g"/>
+<input id="r69" type="radio" name="g"/>
+<input id="r70" type="radio" name="g"/>
+<input id="r71" type="radio" name="g"/>
+<input id="r72" type="radio" name="g"/>
+<input id="r73" type="radio" name="g"/>
+<input id="r74" type="radio" name="g"/>
+<input id="r75" type="radio" name="g"/>
+<input id="r76" type="radio" name="g"/>
+<input id="r77" type="radio" name="g"/>
+<input id="r78" type="radio" name="g"/>
+<input id="r79" type="radio" name="g"/>
+<input id="r80" type="radio" name="g"/>
+<input id="r81" type="radio" name="g"/>
+<input id="r82" type="radio" name="g"/>
+<input id="r83" type="radio" name="g"/>
+<input id="r84" type="radio" name="g"/>
+<input id="r85" type="radio" name="g"/>
+<input id="r86" type="radio" name="g"/>
+<input id="r87" type="radio" name="g"/>
+<input id="r88" type="radio" name="g"/>
+<input id="r89" type="radio" name="g"/>
+<input id="r90" type="radio" name="g"/>
+<input id="r91" type="radio" name="g"/>
+<input id="r92" type="radio" name="g"/>
+<input id="r93" type="radio" name="g"/>
+<input id="r94" type="radio" name="g"/>
+<input id="r95" type="radio" name="g"/>
+<input id="r96" type="radio" name="g"/>
+<input id="r97" type="radio" name="g"/>
+<input id="r98" type="radio" name="g"/>
+<input id="r99" type="radio" name="g"/>
+<input id="r100" type="radio" name="g"/>
+<input id="r101" type="radio" name="g"/>
+<input id="r102" type="radio" name="g"/>
+<input id="r103" type="radio" name="g"/>
+<input id="r104" type="radio" name="g"/>
+<input id="r105" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<input id="i2" type="radio" name="i"/>
+<input id="i3" type="radio" name="i"/>
+<input id="i4" type="radio" name="i"/>
+<input id="i5" type="radio" name="i"/>
+<input id="i6" type="radio" name="i"/>
+<input id="i7" type="radio" name="i"/>
+<input id="i8" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2017, OpenCensus Authors</span><span class="comment"></span><span class="comment"> Licensed under the Apache License, Version 2.0 (the "License");</span><span class="comment"> you may not use this file except in compliance with the License.</span><span class="comment"> You may obtain a copy of the License at</span><span class="comment"></span><span class="comment">     http://www.apache.org/licenses/LICENSE-2.0</span><span class="comment"></span><span class="comment"> Unless required by applicable law or agreed to in writing, software</span><span class="comment"> distributed under the License is distributed on an "AS IS" BASIS,</span><span class="comment"> WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span><span class="comment"> See the License for the specific language governing permissions and</span><span class="comment"> limitations under the License.</span><span class="comment"></span></div>
+<div class="code"><pre><code>
+<span class="keyword">package</span> view
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"fmt"</span></label>
+	<label for="i1"><span class="lit-string i1">"sync"</span></label>
+	<label for="i2"><span class="lit-string i2">"time"</span></label>
+
+	<label for="i3"><span class="lit-string i3">"go.opencensus.io/resource"</span></label>
+
+	<label for="i4"><span class="lit-string i4">"go.opencensus.io/metric/metricdata"</span></label>
+	<label for="i5"><span class="lit-string i5">"go.opencensus.io/metric/metricproducer"</span></label>
+	<label for="i6"><span class="lit-string i6">"go.opencensus.io/stats"</span></label>
+	<label for="i7"><span class="lit-string i7">"go.opencensus.io/stats/internal"</span></label>
+	<label for="i8"><span class="lit-string i8">"go.opencensus.io/tag"</span></label>
+)
+
+<span class="keyword">func</span> <label for="r0" class="ident"><a href="../../../../pkg/go.opencensus.io/stats/view.html#name-init" class="ident">init</a></label>() {
+	<a href="#line-115" class="ident">defaultWorker</a> = <a href="#line-245" class="ident">NewMeter</a>().(*<a href="#line-43" class="ident">worker</a>)
+	<span class="keyword">go</span> <a href="#line-115" class="ident">defaultWorker</a>.<a href="#line-271" class="ident">start</a>()
+	<a href="../../../../pkg/go.opencensus.io/stats/internal.html" class="ident i7">internal</a>.<a href="../internal/record.go.html#line-22" class="ident">DefaultRecorder</a> = <a href="#line-198" class="ident">record</a>
+}
+
+<span class="keyword">type</span> <a href="../../../../pkg/go.opencensus.io/stats/view.html#name-measureRef" class="ident">measureRef</a> <span class="keyword">struct</span> {
+	<a href="../../../../use/go.opencensus.io/stats/view..measureRef*d29f3.measure*15016.html" class="ident">measure</a> <a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../use/go.opencensus.io/stats/view..measureRef*d29f3.views*74883.html" class="ident">views</a>   <span class="keyword">map</span>[*<a href="view.go.html#line-119" class="ident">viewInternal</a>]<span class="keyword">struct</span>{}
+}
+
+<span class="keyword">type</span> <a href="../../../../pkg/go.opencensus.io/stats/view.html#name-worker" class="ident">worker</a> <span class="keyword">struct</span> {
+	<a href="../../../../use/go.opencensus.io/stats/view..worker*87eba.measures*372ea.html" class="ident">measures</a>   <span class="keyword">map</span>[<a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>]*<a href="#line-38" class="ident">measureRef</a>
+	<a href="../../../../use/go.opencensus.io/stats/view..worker*87eba.views*74883.html" class="ident">views</a>      <span class="keyword">map</span>[<a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>]*<a href="view.go.html#line-119" class="ident">viewInternal</a>
+	<a href="../../../../use/go.opencensus.io/stats/view..worker*87eba.startTimes*f2619.html" class="ident">startTimes</a> <span class="keyword">map</span>[*<a href="view.go.html#line-119" class="ident">viewInternal</a>]<a href="../../../../pkg/time.html" class="ident i2">time</a>.<a href="../../../time/time.go.html#line-127" class="ident">Time</a>
+
+	<a href="../../../../use/go.opencensus.io/stats/view..worker*87eba.timer*cd94e.html" class="ident">timer</a>      *<a href="../../../../pkg/time.html" class="ident i2">time</a>.<a href="../../../time/tick.go.html#line-11" class="ident">Ticker</a>
+	<a href="../../../../use/go.opencensus.io/stats/view..worker*87eba.c*2e7d2.html" class="ident">c</a>          <span class="keyword">chan</span> <a href="worker_commands.go.html#line-29" class="ident">command</a>
+	<a href="../../../../use/go.opencensus.io/stats/view..worker*87eba.quit*8577d.html" class="ident">quit</a>, <a href="../../../../use/go.opencensus.io/stats/view..worker*87eba.done*a4c3e.html" class="ident">done</a> <span class="keyword">chan</span> <a href="../../../../pkg/builtin.html#name-bool" class="ident">bool</a>
+	<a href="../../../../use/go.opencensus.io/stats/view..worker*87eba.mu*19503.html" class="ident">mu</a>         <a href="../../../../pkg/sync.html" class="ident i1">sync</a>.<a href="../../../sync/rwmutex.go.html#line-28" class="ident">RWMutex</a>
+	<a href="../../../../use/go.opencensus.io/stats/view..worker*87eba.r*45434.html" class="ident">r</a>          *<a href="../../../../pkg/go.opencensus.io/resource.html" class="ident i3">resource</a>.<a href="../../resource/resource.go.html#line-37" class="ident">Resource</a>
+
+	<a href="../../../../use/go.opencensus.io/stats/view..worker*87eba.exportersMu*3e575.html" class="ident">exportersMu</a> <a href="../../../../pkg/sync.html" class="ident i1">sync</a>.<a href="../../../sync/rwmutex.go.html#line-28" class="ident">RWMutex</a>
+	<a href="../../../../use/go.opencensus.io/stats/view..worker*87eba.exporters*54121.html" class="ident">exporters</a>   <span class="keyword">map</span>[<a href="export.go.html#line-27" class="ident">Exporter</a>]<span class="keyword">struct</span>{}
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Meter defines an interface which allows a single process to maintain</span><span class="comment"> multiple sets of metrics exports (intended for the advanced case where a</span><span class="comment"> single process wants to report metrics about multiple objects, such as</span><span class="comment"> multiple databases or HTTP services).</span><span class="comment"></span><span class="comment"> Note that this is an advanced use case, and the static functions in this</span><span class="comment"> module should cover the common use cases.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../pkg/go.opencensus.io/stats/view.html#name-Meter" class="ident">Meter</a> <span class="keyword">interface</span> {
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Find returns a registered view associated with this name.</span><span class="comment">	 If no registered view is found, nil is returned.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Register begins collecting data for the given views.</span><span class="comment">	 Once a view is registered, it reports data to the registered exporters.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Unregister the given views. Data will not longer be exported for these views</span><span class="comment">	 after Unregister returns.</span><span class="comment">	 It is not necessary to unregister from views you expect to collect for the</span><span class="comment">	 duration of your program execution.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> SetReportingPeriod sets the interval between reporting aggregated views in</span><span class="comment">	 the program. If duration is less than or equal to zero, it enables the</span><span class="comment">	 default behavior.</span><span class="comment">	</span><span class="comment">	 Note: each exporter makes different promises about what the lowest supported</span><span class="comment">	 duration is. For example, the Stackdriver exporter recommends a value no</span><span class="comment">	 lower than 1 minute. Consult each exporter per your needs.</span></div>
+<div class="code"><pre><code>	SetReportingPeriod(<a href="../../../../pkg/time.html" class="ident i2">time</a>.<a href="../../../time/time.go.html#line-583" class="ident">Duration</a>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> RegisterExporter registers an exporter.</span><span class="comment">	 Collected data will be reported via all the</span><span class="comment">	 registered exporters. Once you no longer</span><span class="comment">	 want data to be exported, invoke UnregisterExporter</span><span class="comment">	 with the previously registered exporter.</span><span class="comment">	</span><span class="comment">	 Binaries can register exporters, libraries shouldn't register exporters.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> UnregisterExporter unregisters an exporter.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> SetResource may be used to set the Resource associated with this registry.</span><span class="comment">	 This is intended to be used in cases where a single process exports metrics</span><span class="comment">	 for multiple Resources, typically in a multi-tenant situation.</span></div>
+<div class="code"><pre><code>	SetResource(*<a href="../../../../pkg/go.opencensus.io/resource.html" class="ident i3">resource</a>.<a href="../../resource/resource.go.html#line-37" class="ident">Resource</a>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Start causes the Meter to start processing Record calls and aggregating</span><span class="comment">	 statistics as well as exporting data.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Stop causes the Meter to stop processing calls and terminate data export.</span></div>
+<div class="code"><pre><code>	Stop()
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> RetrieveData gets a snapshot of the data collected for the the view registered</span><span class="comment">	 with the given name. It is intended for testing only.</span></div>
+<div class="code"><pre><code>	RetrieveData(viewName <a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>) ([]*<a href="view.go.html#line-173" class="ident">Row</a>, <a href="../../../../pkg/builtin.html#name-error" class="ident">error</a>)
+}
+
+<span class="keyword">var</span> _ <a href="#line-65" class="ident">Meter</a> = (*<a href="#line-43" class="ident">worker</a>)(<a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a>)
+
+<span class="keyword">var</span> <a href="../../../../pkg/go.opencensus.io/stats/view.html#name-defaultWorker" class="ident">defaultWorker</a> *<a href="#line-43" class="ident">worker</a>
+
+<span class="keyword">var</span> <a href="../../../../pkg/go.opencensus.io/stats/view.html#name-defaultReportingDuration" class="ident">defaultReportingDuration</a> = <span class="lit-number">10</span> * <a href="../../../../pkg/time.html" class="ident i2">time</a>.<a href="../../../time/time.go.html#line-605" class="ident">Second</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Find returns a registered view associated with this name.</span><span class="comment"> If no registered view is found, nil is returned.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r1" class="ident"><a href="../../../../pkg/go.opencensus.io/stats/view.html#name-Find" class="ident">Find</a></label>(<label for="r2" class="ident">name</label> <a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>) (<label for="r3" class="ident">v</label> *<a href="view.go.html#line-35" class="ident">View</a>) {
+	<span class="keyword">return</span> <a href="#line-115" class="ident">defaultWorker</a>.<a href="#line-127" class="ident">Find</a>(<label for="r2" class="ident">name</label>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Find returns a registered view associated with this name.</span><span class="comment"> If no registered view is found, nil is returned.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r4" class="ident">w</label> *<a href="#line-43" class="ident">worker</a>) <label for="r5" class="ident"><a href="../../../../use/go.opencensus.io/stats/view..worker*87eba.Find.html" class="ident">Find</a></label>(<label for="r6" class="ident">name</label> <a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>) (<label for="r7" class="ident">v</label> *<a href="view.go.html#line-35" class="ident">View</a>) {
+	<label for="r8" class="ident">req</label> := &amp;<a href="worker_commands.go.html#line-34" class="ident">getViewByNameReq</a>{
+		<a href="worker_commands.go.html#line-35" class="ident">name</a>: <label for="r6" class="ident">name</label>,
+		<a href="worker_commands.go.html#line-36" class="ident">c</a>:    <a href="../../../runtime/chan.go.html#line-71">make</a>(<span class="keyword">chan</span> *<a href="worker_commands.go.html#line-39" class="ident">getViewByNameResp</a>),
+	}
+	<label for="r4" class="ident">w</label>.<a href="#line-49" class="ident">c</a> &lt;- <label for="r8" class="ident">req</label>
+	<label for="r9" class="ident">resp</label> := &lt;-<label for="r8" class="ident">req</label>.<a href="worker_commands.go.html#line-36" class="ident">c</a>
+	<span class="keyword">return</span> <label for="r9" class="ident">resp</label>.<a href="worker_commands.go.html#line-40" class="ident">v</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Register begins collecting data for the given views.</span><span class="comment"> Once a view is registered, it reports data to the registered exporters.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r10" class="ident"><a href="../../../../pkg/go.opencensus.io/stats/view.html#name-Register" class="ident">Register</a></label>(<label for="r11" class="ident">views</label> ...*<a href="view.go.html#line-35" class="ident">View</a>) <a href="../../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<span class="keyword">return</span> <a href="#line-115" class="ident">defaultWorker</a>.<a href="#line-145" class="ident">Register</a>(<label for="r11" class="ident">views</label>...)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Register begins collecting data for the given views.</span><span class="comment"> Once a view is registered, it reports data to the registered exporters.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r12" class="ident">w</label> *<a href="#line-43" class="ident">worker</a>) <label for="r13" class="ident"><a href="../../../../use/go.opencensus.io/stats/view..worker*87eba.Register.html" class="ident">Register</a></label>(<label for="r14" class="ident">views</label> ...*<a href="view.go.html#line-35" class="ident">View</a>) <a href="../../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<label for="r15" class="ident">req</label> := &amp;<a href="worker_commands.go.html#line-53" class="ident">registerViewReq</a>{
+		<a href="worker_commands.go.html#line-54" class="ident">views</a>: <label for="r14" class="ident">views</label>,
+		<a href="worker_commands.go.html#line-55" class="ident">err</a>:   <a href="../../../runtime/chan.go.html#line-71">make</a>(<span class="keyword">chan</span> <a href="../../../../pkg/builtin.html#name-error" class="ident">error</a>),
+	}
+	<label for="r12" class="ident">w</label>.<a href="#line-49" class="ident">c</a> &lt;- <label for="r15" class="ident">req</label>
+	<span class="keyword">return</span> &lt;-<label for="r15" class="ident">req</label>.<a href="worker_commands.go.html#line-55" class="ident">err</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Unregister the given views. Data will not longer be exported for these views</span><span class="comment"> after Unregister returns.</span><span class="comment"> It is not necessary to unregister from views you expect to collect for the</span><span class="comment"> duration of your program execution.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r16" class="ident"><a href="../../../../pkg/go.opencensus.io/stats/view.html#name-Unregister" class="ident">Unregister</a></label>(<label for="r17" class="ident">views</label> ...*<a href="view.go.html#line-35" class="ident">View</a>) {
+	<a href="#line-115" class="ident">defaultWorker</a>.<a href="#line-166" class="ident">Unregister</a>(<label for="r17" class="ident">views</label>...)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Unregister the given views. Data will not longer be exported for these views</span><span class="comment"> after Unregister returns.</span><span class="comment"> It is not necessary to unregister from views you expect to collect for the</span><span class="comment"> duration of your program execution.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r18" class="ident">w</label> *<a href="#line-43" class="ident">worker</a>) <label for="r19" class="ident"><a href="../../../../use/go.opencensus.io/stats/view..worker*87eba.Unregister.html" class="ident">Unregister</a></label>(<label for="r20" class="ident">views</label> ...*<a href="view.go.html#line-35" class="ident">View</a>) {
+	<label for="r21" class="ident">names</label> := <a href="../../../../pkg/builtin.html#name-make" class="ident">make</a>([]<a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>, <a href="../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r20" class="ident">views</label>))
+	<span class="keyword">for</span> <label for="r22" class="ident">i</label> := <span class="keyword">range</span> <label for="r20" class="ident">views</label> {
+		<label for="r21" class="ident">names</label>[<label for="r22" class="ident">i</label>] = <label for="r20" class="ident">views</label>[<label for="r22" class="ident">i</label>].<a href="view.go.html#line-36" class="ident">Name</a>
+	}
+	<label for="r23" class="ident">req</label> := &amp;<a href="worker_commands.go.html#line-85" class="ident">unregisterFromViewReq</a>{
+		<a href="worker_commands.go.html#line-86" class="ident">views</a>: <label for="r21" class="ident">names</label>,
+		<a href="worker_commands.go.html#line-87" class="ident">done</a>:  <a href="../../../runtime/chan.go.html#line-71">make</a>(<span class="keyword">chan</span> <span class="keyword">struct</span>{}),
+	}
+	<label for="r18" class="ident">w</label>.<a href="#line-49" class="ident">c</a> &lt;- <label for="r23" class="ident">req</label>
+	&lt;-<label for="r23" class="ident">req</label>.<a href="worker_commands.go.html#line-87" class="ident">done</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> RetrieveData gets a snapshot of the data collected for the the view registered</span><span class="comment"> with the given name. It is intended for testing only.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r24" class="ident"><a href="../../../../pkg/go.opencensus.io/stats/view.html#name-RetrieveData" class="ident">RetrieveData</a></label>(<label for="r25" class="ident">viewName</label> <a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>) ([]*<a href="view.go.html#line-173" class="ident">Row</a>, <a href="../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<span class="keyword">return</span> <a href="#line-115" class="ident">defaultWorker</a>.<a href="#line-187" class="ident">RetrieveData</a>(<label for="r25" class="ident">viewName</label>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> RetrieveData gets a snapshot of the data collected for the the view registered</span><span class="comment"> with the given name. It is intended for testing only.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r26" class="ident">w</label> *<a href="#line-43" class="ident">worker</a>) <label for="r27" class="ident"><a href="../../../../use/go.opencensus.io/stats/view..worker*87eba.RetrieveData.html" class="ident">RetrieveData</a></label>(<label for="r28" class="ident">viewName</label> <a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>) ([]*<a href="view.go.html#line-173" class="ident">Row</a>, <a href="../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<label for="r29" class="ident">req</label> := &amp;<a href="worker_commands.go.html#line-112" class="ident">retrieveDataReq</a>{
+		<a href="worker_commands.go.html#line-113" class="ident">now</a>: <a href="../../../../pkg/time.html" class="ident i2">time</a>.<a href="../../../time/time.go.html#line-1066" class="ident">Now</a>(),
+		<a href="worker_commands.go.html#line-114" class="ident">v</a>:   <label for="r28" class="ident">viewName</label>,
+		<a href="worker_commands.go.html#line-115" class="ident">c</a>:   <a href="../../../runtime/chan.go.html#line-71">make</a>(<span class="keyword">chan</span> *<a href="worker_commands.go.html#line-118" class="ident">retrieveDataResp</a>),
+	}
+	<label for="r26" class="ident">w</label>.<a href="#line-49" class="ident">c</a> &lt;- <label for="r29" class="ident">req</label>
+	<label for="r30" class="ident">resp</label> := &lt;-<label for="r29" class="ident">req</label>.<a href="worker_commands.go.html#line-115" class="ident">c</a>
+	<span class="keyword">return</span> <label for="r30" class="ident">resp</label>.<a href="worker_commands.go.html#line-119" class="ident">rows</a>, <label for="r30" class="ident">resp</label>.<a href="worker_commands.go.html#line-120" class="ident">err</a>
+}
+
+<span class="keyword">func</span> <label for="r31" class="ident"><a href="../../../../pkg/go.opencensus.io/stats/view.html#name-record" class="ident">record</a></label>(<label for="r32" class="ident">tags</label> *<a href="../../../../pkg/go.opencensus.io/tag.html" class="ident i8">tag</a>.<a href="../../tag/map.go.html#line-38" class="ident">Map</a>, <label for="r33" class="ident">ms</label> <span class="keyword">interface</span>{}, <label for="r34" class="ident">attachments</label> <span class="keyword">map</span>[<a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>]<span class="keyword">interface</span>{}) {
+	<a href="#line-115" class="ident">defaultWorker</a>.<a href="#line-203" class="ident">Record</a>(<label for="r32" class="ident">tags</label>, <label for="r33" class="ident">ms</label>, <label for="r34" class="ident">attachments</label>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Record records a set of measurements ms associated with the given tags and attachments.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r35" class="ident">w</label> *<a href="#line-43" class="ident">worker</a>) <label for="r36" class="ident"><a href="../../../../use/go.opencensus.io/stats/view..worker*87eba.Record.html" class="ident">Record</a></label>(<label for="r37" class="ident">tags</label> *<a href="../../../../pkg/go.opencensus.io/tag.html" class="ident i8">tag</a>.<a href="../../tag/map.go.html#line-38" class="ident">Map</a>, <label for="r38" class="ident">ms</label> <span class="keyword">interface</span>{}, <label for="r39" class="ident">attachments</label> <span class="keyword">map</span>[<a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>]<span class="keyword">interface</span>{}) {
+	<label for="r40" class="ident">req</label> := &amp;<a href="worker_commands.go.html#line-150" class="ident">recordReq</a>{
+		<a href="worker_commands.go.html#line-151" class="ident">tm</a>:          <label for="r37" class="ident">tags</label>,
+		<a href="worker_commands.go.html#line-152" class="ident">ms</a>:          <label for="r38" class="ident">ms</label>.([]<a href="../../../../pkg/go.opencensus.io/stats.html" class="ident i6">stats</a>.<a href="../measure.go.html#line-95" class="ident">Measurement</a>),
+		<a href="worker_commands.go.html#line-153" class="ident">attachments</a>: <label for="r39" class="ident">attachments</label>,
+		<a href="worker_commands.go.html#line-154" class="ident">t</a>:           <a href="../../../../pkg/time.html" class="ident i2">time</a>.<a href="../../../time/time.go.html#line-1066" class="ident">Now</a>(),
+	}
+	<label for="r35" class="ident">w</label>.<a href="#line-49" class="ident">c</a> &lt;- <label for="r40" class="ident">req</label>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> SetReportingPeriod sets the interval between reporting aggregated views in</span><span class="comment"> the program. If duration is less than or equal to zero, it enables the</span><span class="comment"> default behavior.</span><span class="comment"></span><span class="comment"> Note: each exporter makes different promises about what the lowest supported</span><span class="comment"> duration is. For example, the Stackdriver exporter recommends a value no</span><span class="comment"> lower than 1 minute. Consult each exporter per your needs.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r41" class="ident"><a href="../../../../pkg/go.opencensus.io/stats/view.html#name-SetReportingPeriod" class="ident">SetReportingPeriod</a></label>(<label for="r42" class="ident">d</label> <a href="../../../../pkg/time.html" class="ident i2">time</a>.<a href="../../../time/time.go.html#line-583" class="ident">Duration</a>) {
+	<a href="#line-115" class="ident">defaultWorker</a>.<a href="#line-231" class="ident">SetReportingPeriod</a>(<label for="r42" class="ident">d</label>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> SetReportingPeriod sets the interval between reporting aggregated views in</span><span class="comment"> the program. If duration is less than or equal to zero, it enables the</span><span class="comment"> default behavior.</span><span class="comment"></span><span class="comment"> Note: each exporter makes different promises about what the lowest supported</span><span class="comment"> duration is. For example, the Stackdriver exporter recommends a value no</span><span class="comment"> lower than 1 minute. Consult each exporter per your needs.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> TODO(acetechnologist): ensure that the duration d is more than a certain</span><span class="comment">	 value. e.g. 1s</span></div>
+<div class="code"><pre><code>	<label for="r46" class="ident">req</label> := &amp;<a href="worker_commands.go.html#line-173" class="ident">setReportingPeriodReq</a>{
+		<a href="worker_commands.go.html#line-174" class="ident">d</a>: <label for="r45" class="ident">d</label>,
+		<a href="worker_commands.go.html#line-175" class="ident">c</a>: <a href="../../../runtime/chan.go.html#line-71">make</a>(<span class="keyword">chan</span> <a href="../../../../pkg/builtin.html#name-bool" class="ident">bool</a>),
+	}
+	<label for="r43" class="ident">w</label>.<a href="#line-49" class="ident">c</a> &lt;- <label for="r46" class="ident">req</label>
+	&lt;-<label for="r46" class="ident">req</label>.<a href="worker_commands.go.html#line-175" class="ident">c</a> <span class="comment">// don't return until the timer is set to the new duration.</span>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> NewMeter constructs a Meter instance. You should only need to use this if</span><span class="comment"> you need to separate out Measurement recordings and View aggregations within</span><span class="comment"> a single process.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r47" class="ident"><a href="../../../../pkg/go.opencensus.io/stats/view.html#name-NewMeter" class="ident">NewMeter</a></label>() <a href="#line-65" class="ident">Meter</a> {
+	<span class="keyword">return</span> &amp;<a href="#line-43" class="ident">worker</a>{
+		<a href="#line-44" class="ident">measures</a>:   <a href="../../../../pkg/builtin.html#name-make" class="ident">make</a>(<span class="keyword">map</span>[<a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>]*<a href="#line-38" class="ident">measureRef</a>),
+		<a href="#line-45" class="ident">views</a>:      <a href="../../../../pkg/builtin.html#name-make" class="ident">make</a>(<span class="keyword">map</span>[<a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>]*<a href="view.go.html#line-119" class="ident">viewInternal</a>),
+		<a href="#line-46" class="ident">startTimes</a>: <a href="../../../../pkg/builtin.html#name-make" class="ident">make</a>(<span class="keyword">map</span>[*<a href="view.go.html#line-119" class="ident">viewInternal</a>]<a href="../../../../pkg/time.html" class="ident i2">time</a>.<a href="../../../time/time.go.html#line-127" class="ident">Time</a>),
+		<a href="#line-48" class="ident">timer</a>:      <a href="../../../../pkg/time.html" class="ident i2">time</a>.<a href="../../../time/tick.go.html#line-22" class="ident">NewTicker</a>(<a href="#line-117" class="ident">defaultReportingDuration</a>),
+		<a href="#line-49" class="ident">c</a>:          <a href="../../../runtime/chan.go.html#line-71">make</a>(<span class="keyword">chan</span> <a href="worker_commands.go.html#line-29" class="ident">command</a>, <span class="lit-number">1024</span>),
+		<a href="#line-50" class="ident">quit</a>:       <a href="../../../runtime/chan.go.html#line-71">make</a>(<span class="keyword">chan</span> <a href="../../../../pkg/builtin.html#name-bool" class="ident">bool</a>),
+		<a href="#line-50" class="ident">done</a>:       <a href="../../../runtime/chan.go.html#line-71">make</a>(<span class="keyword">chan</span> <a href="../../../../pkg/builtin.html#name-bool" class="ident">bool</a>),
+
+		<a href="#line-55" class="ident">exporters</a>: <a href="../../../../pkg/builtin.html#name-make" class="ident">make</a>(<span class="keyword">map</span>[<a href="export.go.html#line-27" class="ident">Exporter</a>]<span class="keyword">struct</span>{}),
+	}
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> SetResource associates all data collected by this Meter with the specified</span><span class="comment"> resource. This resource is reported when using metricexport.ReadAndExport;</span><span class="comment"> it is not provided when used with ExportView/RegisterExporter, because that</span><span class="comment"> interface does not provide a means for reporting the Resource.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r48" class="ident">w</label> *<a href="#line-43" class="ident">worker</a>) <label for="r49" class="ident"><a href="../../../../use/go.opencensus.io/stats/view..worker*87eba.SetResource.html" class="ident">SetResource</a></label>(<label for="r50" class="ident">r</label> *<a href="../../../../pkg/go.opencensus.io/resource.html" class="ident i3">resource</a>.<a href="../../resource/resource.go.html#line-37" class="ident">Resource</a>) {
+	<label for="r48" class="ident">w</label>.<a href="#line-52" class="ident">r</a> = <label for="r50" class="ident">r</label>
+}
+
+<span class="keyword">func</span> (<label for="r51" class="ident">w</label> *<a href="#line-43" class="ident">worker</a>) <label for="r52" class="ident"><a href="../../../../use/go.opencensus.io/stats/view..worker*87eba.Start.html" class="ident">Start</a></label>() {
+	<span class="keyword">go</span> <label for="r51" class="ident">w</label>.<a href="#line-271" class="ident">start</a>()
+}
+
+<span class="keyword">func</span> (<label for="r53" class="ident">w</label> *<a href="#line-43" class="ident">worker</a>) <label for="r54" class="ident"><a href="../../../../use/go.opencensus.io/stats/view..worker*87eba.start*cced2.html" class="ident">start</a></label>() {
+	<label for="r55" class="ident">prodMgr</label> := <a href="../../../../pkg/go.opencensus.io/metric/metricproducer.html" class="ident i5">metricproducer</a>.<a href="../../metric/metricproducer/manager.go.html#line-35" class="ident">GlobalManager</a>()
+	<label for="r55" class="ident">prodMgr</label>.<a href="../../metric/metricproducer/manager.go.html#line-44" class="ident">AddProducer</a>(<label for="r53" class="ident">w</label>)
+
+	<span class="keyword">for</span> {
+		<a href="../../../runtime/select.go.html#line-121"><span class="keyword">select</span></a> {
+		<span class="keyword">case</span> <label for="r56" class="ident">cmd</label> := <a href="../../../runtime/chan.go.html#line-438">&lt;-</a><label for="r53" class="ident">w</label>.<a href="#line-49" class="ident">c</a>:
+			<label for="r56" class="ident">cmd</label>.<a href="worker_commands.go.html#line-30" class="ident">handleCommand</a>(<label for="r53" class="ident">w</label>)
+		<span class="keyword">case</span> <a href="../../../runtime/chan.go.html#line-438">&lt;-</a><label for="r53" class="ident">w</label>.<a href="#line-48" class="ident">timer</a>.<a href="../../../time/tick.go.html#line-12" class="ident">C</a>:
+			<label for="r53" class="ident">w</label>.<a href="#line-361" class="ident">reportUsage</a>()
+		<span class="keyword">case</span> <a href="../../../runtime/chan.go.html#line-438">&lt;-</a><label for="r53" class="ident">w</label>.<a href="#line-50" class="ident">quit</a>:
+			<label for="r53" class="ident">w</label>.<a href="#line-48" class="ident">timer</a>.<a href="../../../time/tick.go.html#line-46" class="ident">Stop</a>()
+			<a href="../../../../pkg/builtin.html#name-close" class="ident">close</a>(<label for="r53" class="ident">w</label>.<a href="#line-49" class="ident">c</a>)
+			<label for="r53" class="ident">w</label>.<a href="#line-50" class="ident">done</a> &lt;- <a href="../../../../pkg/builtin.html#name-true" class="ident">true</a>
+			<span class="keyword">return</span>
+		}
+	}
+}
+
+<span class="keyword">func</span> (<label for="r57" class="ident">w</label> *<a href="#line-43" class="ident">worker</a>) <label for="r58" class="ident"><a href="../../../../use/go.opencensus.io/stats/view..worker*87eba.Stop.html" class="ident">Stop</a></label>() {
+	<label for="r59" class="ident">prodMgr</label> := <a href="../../../../pkg/go.opencensus.io/metric/metricproducer.html" class="ident i5">metricproducer</a>.<a href="../../metric/metricproducer/manager.go.html#line-35" class="ident">GlobalManager</a>()
+	<label for="r59" class="ident">prodMgr</label>.<a href="../../metric/metricproducer/manager.go.html#line-54" class="ident">DeleteProducer</a>(<label for="r57" class="ident">w</label>)
+
+	<label for="r57" class="ident">w</label>.<a href="#line-50" class="ident">quit</a> &lt;- <a href="../../../../pkg/builtin.html#name-true" class="ident">true</a>
+	&lt;-<label for="r57" class="ident">w</label>.<a href="#line-50" class="ident">done</a>
+}
+
+<span class="keyword">func</span> (<label for="r60" class="ident">w</label> *<a href="#line-43" class="ident">worker</a>) <label for="r61" class="ident"><a href="../../../../use/go.opencensus.io/stats/view..worker*87eba.getMeasureRef*21375.html" class="ident">getMeasureRef</a></label>(<label for="r62" class="ident">name</label> <a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>) *<a href="#line-38" class="ident">measureRef</a> {
+	<span class="keyword">if</span> <label for="r63" class="ident">mr</label>, <label for="r64" class="ident">ok</label> := <label for="r60" class="ident">w</label>.<a href="#line-44" class="ident">measures</a>[<label for="r62" class="ident">name</label>]; <label for="r64" class="ident">ok</label> {
+		<span class="keyword">return</span> <label for="r63" class="ident">mr</label>
+	}
+	<label for="r65" class="ident">mr</label> := &amp;<a href="#line-38" class="ident">measureRef</a>{
+		<a href="#line-39" class="ident">measure</a>: <label for="r62" class="ident">name</label>,
+		<a href="#line-40" class="ident">views</a>:   <a href="../../../../pkg/builtin.html#name-make" class="ident">make</a>(<span class="keyword">map</span>[*<a href="view.go.html#line-119" class="ident">viewInternal</a>]<span class="keyword">struct</span>{}),
+	}
+	<label for="r60" class="ident">w</label>.<a href="#line-44" class="ident">measures</a>[<label for="r62" class="ident">name</label>] = <label for="r65" class="ident">mr</label>
+	<span class="keyword">return</span> <label for="r65" class="ident">mr</label>
+}
+
+<span class="keyword">func</span> (<label for="r66" class="ident">w</label> *<a href="#line-43" class="ident">worker</a>) <label for="r67" class="ident"><a href="../../../../use/go.opencensus.io/stats/view..worker*87eba.tryRegisterView*0691b.html" class="ident">tryRegisterView</a></label>(<label for="r68" class="ident">v</label> *<a href="view.go.html#line-35" class="ident">View</a>) (*<a href="view.go.html#line-119" class="ident">viewInternal</a>, <a href="../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<label for="r66" class="ident">w</label>.<a href="#line-51" class="ident">mu</a>.<a href="../../../sync/rwmutex.go.html#line-105" class="ident">Lock</a>()
+	<span class="keyword">defer</span> <label for="r66" class="ident">w</label>.<a href="#line-51" class="ident">mu</a>.<a href="../../../sync/rwmutex.go.html#line-131" class="ident">Unlock</a>()
+	<label for="r69" class="ident">vi</label>, <label for="r70" class="ident">err</label> := <a href="view.go.html#line-126" class="ident">newViewInternal</a>(<label for="r68" class="ident">v</label>)
+	<span class="keyword">if</span> <label for="r70" class="ident">err</label> != <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <label for="r70" class="ident">err</label>
+	}
+	<span class="keyword">if</span> <label for="r71" class="ident">x</label>, <label for="r72" class="ident">ok</label> := <label for="r66" class="ident">w</label>.<a href="#line-45" class="ident">views</a>[<label for="r69" class="ident">vi</label>.<a href="view.go.html#line-120" class="ident">view</a>.<a href="view.go.html#line-36" class="ident">Name</a>]; <label for="r72" class="ident">ok</label> {
+		<span class="keyword">if</span> !<label for="r71" class="ident">x</label>.<a href="view.go.html#line-120" class="ident">view</a>.<a href="view.go.html#line-60" class="ident">same</a>(<label for="r69" class="ident">vi</label>.<a href="view.go.html#line-120" class="ident">view</a>) {
+			<span class="keyword">return</span> <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="../../../../pkg/fmt.html" class="ident i0">fmt</a>.<a href="../../../fmt/errors.go.html#line-17" class="ident">Errorf</a>(<span class="lit-string">"cannot register view %q; a different view with the same name is already registered"</span>, <label for="r68" class="ident">v</label>.<a href="view.go.html#line-36" class="ident">Name</a>)
+		}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> the view is already registered so there is nothing to do and the</span><span class="comment">		 command is considered successful.</span></div>
+<div class="code"><pre><code>		<span class="keyword">return</span> <label for="r71" class="ident">x</label>, <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+	}
+	<label for="r66" class="ident">w</label>.<a href="#line-45" class="ident">views</a>[<label for="r69" class="ident">vi</label>.<a href="view.go.html#line-120" class="ident">view</a>.<a href="view.go.html#line-36" class="ident">Name</a>] = <label for="r69" class="ident">vi</label>
+	<label for="r66" class="ident">w</label>.<a href="#line-46" class="ident">startTimes</a>[<label for="r69" class="ident">vi</label>] = <a href="../../../../pkg/time.html" class="ident i2">time</a>.<a href="../../../time/time.go.html#line-1066" class="ident">Now</a>()
+	<label for="r73" class="ident">ref</label> := <label for="r66" class="ident">w</label>.<a href="#line-298" class="ident">getMeasureRef</a>(<label for="r69" class="ident">vi</label>.<a href="view.go.html#line-120" class="ident">view</a>.<a href="view.go.html#line-44" class="ident">Measure</a>.<a href="../measure.go.html#line-39" class="ident">Name</a>())
+	<label for="r73" class="ident">ref</label>.<a href="#line-40" class="ident">views</a>[<label for="r69" class="ident">vi</label>] = <span class="keyword">struct</span>{}{}
+	<span class="keyword">return</span> <label for="r69" class="ident">vi</label>, <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+}
+
+<span class="keyword">func</span> (<label for="r74" class="ident">w</label> *<a href="#line-43" class="ident">worker</a>) <label for="r75" class="ident"><a href="../../../../use/go.opencensus.io/stats/view..worker*87eba.unregisterView*ab81a.html" class="ident">unregisterView</a></label>(<label for="r76" class="ident">v</label> *<a href="view.go.html#line-119" class="ident">viewInternal</a>) {
+	<label for="r74" class="ident">w</label>.<a href="#line-51" class="ident">mu</a>.<a href="../../../sync/rwmutex.go.html#line-105" class="ident">Lock</a>()
+	<span class="keyword">defer</span> <label for="r74" class="ident">w</label>.<a href="#line-51" class="ident">mu</a>.<a href="../../../sync/rwmutex.go.html#line-131" class="ident">Unlock</a>()
+	<a href="../../../../pkg/builtin.html#name-delete" class="ident">delete</a>(<label for="r74" class="ident">w</label>.<a href="#line-45" class="ident">views</a>, <label for="r76" class="ident">v</label>.<a href="view.go.html#line-120" class="ident">view</a>.<a href="view.go.html#line-36" class="ident">Name</a>)
+	<a href="../../../../pkg/builtin.html#name-delete" class="ident">delete</a>(<label for="r74" class="ident">w</label>.<a href="#line-46" class="ident">startTimes</a>, <label for="r76" class="ident">v</label>)
+	<span class="keyword">if</span> <label for="r77" class="ident">measure</label> := <label for="r74" class="ident">w</label>.<a href="#line-44" class="ident">measures</a>[<label for="r76" class="ident">v</label>.<a href="view.go.html#line-120" class="ident">view</a>.<a href="view.go.html#line-44" class="ident">Measure</a>.<a href="../measure.go.html#line-39" class="ident">Name</a>()]; <label for="r77" class="ident">measure</label> != <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<a href="../../../../pkg/builtin.html#name-delete" class="ident">delete</a>(<label for="r77" class="ident">measure</label>.<a href="#line-40" class="ident">views</a>, <label for="r76" class="ident">v</label>)
+	}
+}
+
+<span class="keyword">func</span> (<label for="r78" class="ident">w</label> *<a href="#line-43" class="ident">worker</a>) <label for="r79" class="ident"><a href="../../../../use/go.opencensus.io/stats/view..worker*87eba.reportView*95bff.html" class="ident">reportView</a></label>(<label for="r80" class="ident">v</label> *<a href="view.go.html#line-119" class="ident">viewInternal</a>) {
+	<span class="keyword">if</span> !<label for="r80" class="ident">v</label>.<a href="view.go.html#line-144" class="ident">isSubscribed</a>() {
+		<span class="keyword">return</span>
+	}
+	<label for="r81" class="ident">rows</label> := <label for="r80" class="ident">v</label>.<a href="view.go.html#line-152" class="ident">collectedRows</a>()
+	<label for="r82" class="ident">viewData</label> := &amp;<a href="view.go.html#line-166" class="ident">Data</a>{
+		<a href="view.go.html#line-167" class="ident">View</a>:  <label for="r80" class="ident">v</label>.<a href="view.go.html#line-120" class="ident">view</a>,
+		<a href="view.go.html#line-168" class="ident">Start</a>: <label for="r78" class="ident">w</label>.<a href="#line-46" class="ident">startTimes</a>[<label for="r80" class="ident">v</label>],
+		<a href="view.go.html#line-168" class="ident">End</a>:   <a href="../../../../pkg/time.html" class="ident i2">time</a>.<a href="../../../time/time.go.html#line-1066" class="ident">Now</a>(),
+		<a href="view.go.html#line-169" class="ident">Rows</a>:  <label for="r81" class="ident">rows</label>,
+	}
+	<label for="r78" class="ident">w</label>.<a href="#line-54" class="ident">exportersMu</a>.<a href="../../../sync/rwmutex.go.html#line-105" class="ident">Lock</a>()
+	<span class="keyword">defer</span> <label for="r78" class="ident">w</label>.<a href="#line-54" class="ident">exportersMu</a>.<a href="../../../sync/rwmutex.go.html#line-131" class="ident">Unlock</a>()
+	<span class="keyword">for</span> <label for="r83" class="ident">e</label> := <span class="keyword">range</span> <label for="r78" class="ident">w</label>.<a href="#line-55" class="ident">exporters</a> {
+		<label for="r83" class="ident">e</label>.<a href="export.go.html#line-28" class="ident">ExportView</a>(<label for="r82" class="ident">viewData</label>)
+	}
+}
+
+<span class="keyword">func</span> (<label for="r84" class="ident">w</label> *<a href="#line-43" class="ident">worker</a>) <label for="r85" class="ident"><a href="../../../../use/go.opencensus.io/stats/view..worker*87eba.reportUsage*ed929.html" class="ident">reportUsage</a></label>() {
+	<label for="r84" class="ident">w</label>.<a href="#line-51" class="ident">mu</a>.<a href="../../../sync/rwmutex.go.html#line-105" class="ident">Lock</a>()
+	<span class="keyword">defer</span> <label for="r84" class="ident">w</label>.<a href="#line-51" class="ident">mu</a>.<a href="../../../sync/rwmutex.go.html#line-131" class="ident">Unlock</a>()
+	<span class="keyword">for</span> <label for="r86" class="ident">_</label>, <label for="r87" class="ident">v</label> := <span class="keyword">range</span> <label for="r84" class="ident">w</label>.<a href="#line-45" class="ident">views</a> {
+		<label for="r84" class="ident">w</label>.<a href="#line-343" class="ident">reportView</a>(<label for="r87" class="ident">v</label>)
+	}
+}
+
+<span class="keyword">func</span> (<label for="r88" class="ident">w</label> *<a href="#line-43" class="ident">worker</a>) <label for="r89" class="ident"><a href="../../../../use/go.opencensus.io/stats/view..worker*87eba.toMetric*45a65.html" class="ident">toMetric</a></label>(<label for="r90" class="ident">v</label> *<a href="view.go.html#line-119" class="ident">viewInternal</a>, <label for="r91" class="ident">now</label> <a href="../../../../pkg/time.html" class="ident i2">time</a>.<a href="../../../time/time.go.html#line-127" class="ident">Time</a>) *<a href="../../../../pkg/go.opencensus.io/metric/metricdata.html" class="ident i4">metricdata</a>.<a href="../../metric/metricdata/metric.go.html#line-34" class="ident">Metric</a> {
+	<span class="keyword">if</span> !<label for="r90" class="ident">v</label>.<a href="view.go.html#line-144" class="ident">isSubscribed</a>() {
+		<span class="keyword">return</span> <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+	}
+
+	<span class="keyword">var</span> <label for="r92" class="ident">startTime</label> <a href="../../../../pkg/time.html" class="ident i2">time</a>.<a href="../../../time/time.go.html#line-127" class="ident">Time</a>
+	<span class="keyword">if</span> <label for="r90" class="ident">v</label>.<a href="view.go.html#line-123" class="ident">metricDescriptor</a>.<a href="../../metric/metricdata/metric.go.html#line-28" class="ident">Type</a> == <a href="../../../../pkg/go.opencensus.io/metric/metricdata.html" class="ident i4">metricdata</a>.<a href="../../metric/metricdata/point.go.html#line-186" class="ident">TypeGaugeInt64</a> ||
+		<label for="r90" class="ident">v</label>.<a href="view.go.html#line-123" class="ident">metricDescriptor</a>.<a href="../../metric/metricdata/metric.go.html#line-28" class="ident">Type</a> == <a href="../../../../pkg/go.opencensus.io/metric/metricdata.html" class="ident i4">metricdata</a>.<a href="../../metric/metricdata/point.go.html#line-187" class="ident">TypeGaugeFloat64</a> {
+		<label for="r92" class="ident">startTime</label> = <a href="../../../../pkg/time.html" class="ident i2">time</a>.<a href="../../../time/time.go.html#line-127" class="ident">Time</a>{}
+	} <span class="keyword">else</span> {
+		<label for="r92" class="ident">startTime</label> = <label for="r88" class="ident">w</label>.<a href="#line-46" class="ident">startTimes</a>[<label for="r90" class="ident">v</label>]
+	}
+
+	<span class="keyword">return</span> <a href="view_to_metric.go.html#line-130" class="ident">viewToMetric</a>(<label for="r90" class="ident">v</label>, <label for="r88" class="ident">w</label>.<a href="#line-52" class="ident">r</a>, <label for="r91" class="ident">now</label>, <label for="r92" class="ident">startTime</label>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Read reads all view data and returns them as metrics.</span><span class="comment"> It is typically invoked by metric reader to export stats in metric format.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r93" class="ident">w</label> *<a href="#line-43" class="ident">worker</a>) <label for="r94" class="ident"><a href="../../../../use/go.opencensus.io/stats/view..worker*87eba.Read.html" class="ident">Read</a></label>() []*<a href="../../../../pkg/go.opencensus.io/metric/metricdata.html" class="ident i4">metricdata</a>.<a href="../../metric/metricdata/metric.go.html#line-34" class="ident">Metric</a> {
+	<label for="r93" class="ident">w</label>.<a href="#line-51" class="ident">mu</a>.<a href="../../../sync/rwmutex.go.html#line-105" class="ident">Lock</a>()
+	<span class="keyword">defer</span> <label for="r93" class="ident">w</label>.<a href="#line-51" class="ident">mu</a>.<a href="../../../sync/rwmutex.go.html#line-131" class="ident">Unlock</a>()
+	<label for="r95" class="ident">now</label> := <a href="../../../../pkg/time.html" class="ident i2">time</a>.<a href="../../../time/time.go.html#line-1066" class="ident">Now</a>()
+	<label for="r96" class="ident">metrics</label> := <a href="../../../../pkg/builtin.html#name-make" class="ident">make</a>([]*<a href="../../../../pkg/go.opencensus.io/metric/metricdata.html" class="ident i4">metricdata</a>.<a href="../../metric/metricdata/metric.go.html#line-34" class="ident">Metric</a>, <span class="lit-number">0</span>, <a href="../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r93" class="ident">w</label>.<a href="#line-45" class="ident">views</a>))
+	<span class="keyword">for</span> <label for="r97" class="ident">_</label>, <label for="r98" class="ident">v</label> := <span class="keyword">range</span> <label for="r93" class="ident">w</label>.<a href="#line-45" class="ident">views</a> {
+		<label for="r99" class="ident">metric</label> := <label for="r93" class="ident">w</label>.<a href="#line-369" class="ident">toMetric</a>(<label for="r98" class="ident">v</label>, <label for="r95" class="ident">now</label>)
+		<span class="keyword">if</span> <label for="r99" class="ident">metric</label> != <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<label for="r96" class="ident">metrics</label> = <a href="../../../../pkg/builtin.html#name-append" class="ident">append</a>(<label for="r96" class="ident">metrics</label>, <label for="r99" class="ident">metric</label>)
+		}
+	}
+	<span class="keyword">return</span> <label for="r96" class="ident">metrics</label>
+}
+
+<span class="keyword">func</span> (<label for="r100" class="ident">w</label> *<a href="#line-43" class="ident">worker</a>) <label for="r101" class="ident"><a href="../../../../use/go.opencensus.io/stats/view..worker*87eba.RegisterExporter.html" class="ident">RegisterExporter</a></label>(<label for="r102" class="ident">e</label> <a href="export.go.html#line-27" class="ident">Exporter</a>) {
+	<label for="r100" class="ident">w</label>.<a href="#line-54" class="ident">exportersMu</a>.<a href="../../../sync/rwmutex.go.html#line-105" class="ident">Lock</a>()
+	<span class="keyword">defer</span> <label for="r100" class="ident">w</label>.<a href="#line-54" class="ident">exportersMu</a>.<a href="../../../sync/rwmutex.go.html#line-131" class="ident">Unlock</a>()
+
+	<label for="r100" class="ident">w</label>.<a href="#line-55" class="ident">exporters</a>[<label for="r102" class="ident">e</label>] = <span class="keyword">struct</span>{}{}
+}
+
+<span class="keyword">func</span> (<label for="r103" class="ident">w</label> *<a href="#line-43" class="ident">worker</a>) <label for="r104" class="ident"><a href="../../../../use/go.opencensus.io/stats/view..worker*87eba.UnregisterExporter.html" class="ident">UnregisterExporter</a></label>(<label for="r105" class="ident">e</label> <a href="export.go.html#line-27" class="ident">Exporter</a>) {
+	<label for="r103" class="ident">w</label>.<a href="#line-54" class="ident">exportersMu</a>.<a href="../../../sync/rwmutex.go.html#line-105" class="ident">Lock</a>()
+	<span class="keyword">defer</span> <label for="r103" class="ident">w</label>.<a href="#line-54" class="ident">exportersMu</a>.<a href="../../../sync/rwmutex.go.html#line-131" class="ident">Unlock</a>()
+
+	<a href="../../../../pkg/builtin.html#name-delete" class="ident">delete</a>(<label for="r103" class="ident">w</label>.<a href="#line-55" class="ident">exporters</a>, <label for="r105" class="ident">e</label>)
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

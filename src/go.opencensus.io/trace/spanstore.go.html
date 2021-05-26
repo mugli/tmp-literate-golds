@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: spanstore.go in package go.opencensus.io/trace</title>
+<link href="../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	spanstore.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../pkg/go.opencensus.io/trace.html">go.opencensus.io/trace</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16],
+input[id=r17]:checked ~pre label[for=r17],
+input[id=r18]:checked ~pre label[for=r18],
+input[id=r19]:checked ~pre label[for=r19],
+input[id=r20]:checked ~pre label[for=r20],
+input[id=r21]:checked ~pre label[for=r21],
+input[id=r22]:checked ~pre label[for=r22],
+input[id=r23]:checked ~pre label[for=r23],
+input[id=r24]:checked ~pre label[for=r24],
+input[id=r25]:checked ~pre label[for=r25],
+input[id=r26]:checked ~pre label[for=r26],
+input[id=r27]:checked ~pre label[for=r27],
+input[id=r28]:checked ~pre label[for=r28],
+input[id=r29]:checked ~pre label[for=r29],
+input[id=r30]:checked ~pre label[for=r30],
+input[id=r31]:checked ~pre label[for=r31],
+input[id=r32]:checked ~pre label[for=r32],
+input[id=r33]:checked ~pre label[for=r33],
+input[id=r34]:checked ~pre label[for=r34],
+input[id=r35]:checked ~pre label[for=r35],
+input[id=r36]:checked ~pre label[for=r36],
+input[id=r37]:checked ~pre label[for=r37],
+input[id=r38]:checked ~pre label[for=r38],
+input[id=r39]:checked ~pre label[for=r39],
+input[id=r40]:checked ~pre label[for=r40],
+input[id=r41]:checked ~pre label[for=r41],
+input[id=r42]:checked ~pre label[for=r42],
+input[id=r43]:checked ~pre label[for=r43],
+input[id=r44]:checked ~pre label[for=r44],
+input[id=r45]:checked ~pre label[for=r45],
+input[id=r46]:checked ~pre label[for=r46],
+input[id=r47]:checked ~pre label[for=r47],
+input[id=r48]:checked ~pre label[for=r48],
+input[id=r49]:checked ~pre label[for=r49],
+input[id=r50]:checked ~pre label[for=r50],
+input[id=r51]:checked ~pre label[for=r51],
+input[id=r52]:checked ~pre label[for=r52],
+input[id=r53]:checked ~pre label[for=r53],
+input[id=r54]:checked ~pre label[for=r54],
+input[id=r55]:checked ~pre label[for=r55],
+input[id=r56]:checked ~pre label[for=r56],
+input[id=r57]:checked ~pre label[for=r57],
+input[id=r58]:checked ~pre label[for=r58],
+input[id=r59]:checked ~pre label[for=r59],
+input[id=r60]:checked ~pre label[for=r60],
+input[id=r61]:checked ~pre label[for=r61],
+input[id=r62]:checked ~pre label[for=r62],
+input[id=r63]:checked ~pre label[for=r63],
+input[id=r64]:checked ~pre label[for=r64],
+input[id=r65]:checked ~pre label[for=r65],
+input[id=r66]:checked ~pre label[for=r66],
+input[id=r67]:checked ~pre label[for=r67],
+input[id=r68]:checked ~pre label[for=r68],
+input[id=r69]:checked ~pre label[for=r69],
+input[id=r70]:checked ~pre label[for=r70],
+input[id=r71]:checked ~pre label[for=r71],
+input[id=r72]:checked ~pre label[for=r72],
+input[id=r73]:checked ~pre label[for=r73],
+input[id=r74]:checked ~pre label[for=r74],
+input[id=r75]:checked ~pre label[for=r75],
+input[id=r76]:checked ~pre label[for=r76],
+input[id=r77]:checked ~pre label[for=r77],
+input[id=r78]:checked ~pre label[for=r78],
+input[id=r79]:checked ~pre label[for=r79],
+input[id=r80]:checked ~pre label[for=r80],
+input[id=r81]:checked ~pre label[for=r81],
+input[id=r82]:checked ~pre label[for=r82],
+input[id=r83]:checked ~pre label[for=r83],
+input[id=r84]:checked ~pre label[for=r84],
+input[id=r85]:checked ~pre label[for=r85],
+input[id=r86]:checked ~pre label[for=r86],
+input[id=r87]:checked ~pre label[for=r87],
+input[id=r88]:checked ~pre label[for=r88],
+input[id=r89]:checked ~pre label[for=r89],
+input[id=r90]:checked ~pre label[for=r90]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1,
+input[id=i2]:checked ~pre .i2
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="r17" type="radio" name="g"/>
+<input id="r18" type="radio" name="g"/>
+<input id="r19" type="radio" name="g"/>
+<input id="r20" type="radio" name="g"/>
+<input id="r21" type="radio" name="g"/>
+<input id="r22" type="radio" name="g"/>
+<input id="r23" type="radio" name="g"/>
+<input id="r24" type="radio" name="g"/>
+<input id="r25" type="radio" name="g"/>
+<input id="r26" type="radio" name="g"/>
+<input id="r27" type="radio" name="g"/>
+<input id="r28" type="radio" name="g"/>
+<input id="r29" type="radio" name="g"/>
+<input id="r30" type="radio" name="g"/>
+<input id="r31" type="radio" name="g"/>
+<input id="r32" type="radio" name="g"/>
+<input id="r33" type="radio" name="g"/>
+<input id="r34" type="radio" name="g"/>
+<input id="r35" type="radio" name="g"/>
+<input id="r36" type="radio" name="g"/>
+<input id="r37" type="radio" name="g"/>
+<input id="r38" type="radio" name="g"/>
+<input id="r39" type="radio" name="g"/>
+<input id="r40" type="radio" name="g"/>
+<input id="r41" type="radio" name="g"/>
+<input id="r42" type="radio" name="g"/>
+<input id="r43" type="radio" name="g"/>
+<input id="r44" type="radio" name="g"/>
+<input id="r45" type="radio" name="g"/>
+<input id="r46" type="radio" name="g"/>
+<input id="r47" type="radio" name="g"/>
+<input id="r48" type="radio" name="g"/>
+<input id="r49" type="radio" name="g"/>
+<input id="r50" type="radio" name="g"/>
+<input id="r51" type="radio" name="g"/>
+<input id="r52" type="radio" name="g"/>
+<input id="r53" type="radio" name="g"/>
+<input id="r54" type="radio" name="g"/>
+<input id="r55" type="radio" name="g"/>
+<input id="r56" type="radio" name="g"/>
+<input id="r57" type="radio" name="g"/>
+<input id="r58" type="radio" name="g"/>
+<input id="r59" type="radio" name="g"/>
+<input id="r60" type="radio" name="g"/>
+<input id="r61" type="radio" name="g"/>
+<input id="r62" type="radio" name="g"/>
+<input id="r63" type="radio" name="g"/>
+<input id="r64" type="radio" name="g"/>
+<input id="r65" type="radio" name="g"/>
+<input id="r66" type="radio" name="g"/>
+<input id="r67" type="radio" name="g"/>
+<input id="r68" type="radio" name="g"/>
+<input id="r69" type="radio" name="g"/>
+<input id="r70" type="radio" name="g"/>
+<input id="r71" type="radio" name="g"/>
+<input id="r72" type="radio" name="g"/>
+<input id="r73" type="radio" name="g"/>
+<input id="r74" type="radio" name="g"/>
+<input id="r75" type="radio" name="g"/>
+<input id="r76" type="radio" name="g"/>
+<input id="r77" type="radio" name="g"/>
+<input id="r78" type="radio" name="g"/>
+<input id="r79" type="radio" name="g"/>
+<input id="r80" type="radio" name="g"/>
+<input id="r81" type="radio" name="g"/>
+<input id="r82" type="radio" name="g"/>
+<input id="r83" type="radio" name="g"/>
+<input id="r84" type="radio" name="g"/>
+<input id="r85" type="radio" name="g"/>
+<input id="r86" type="radio" name="g"/>
+<input id="r87" type="radio" name="g"/>
+<input id="r88" type="radio" name="g"/>
+<input id="r89" type="radio" name="g"/>
+<input id="r90" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<input id="i2" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2017, OpenCensus Authors</span><span class="comment"></span><span class="comment"> Licensed under the Apache License, Version 2.0 (the "License");</span><span class="comment"> you may not use this file except in compliance with the License.</span><span class="comment"> You may obtain a copy of the License at</span><span class="comment"></span><span class="comment">     http://www.apache.org/licenses/LICENSE-2.0</span><span class="comment"></span><span class="comment"> Unless required by applicable law or agreed to in writing, software</span><span class="comment"> distributed under the License is distributed on an "AS IS" BASIS,</span><span class="comment"> WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span><span class="comment"> See the License for the specific language governing permissions and</span><span class="comment"> limitations under the License.</span></div>
+<div class="code"><pre><code>
+<span class="keyword">package</span> trace
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"sync"</span></label>
+	<label for="i1"><span class="lit-string i1">"time"</span></label>
+
+	<label for="i2"><span class="lit-string i2">"go.opencensus.io/internal"</span></label>
+)
+
+<span class="keyword">const</span> (
+	<a href="../../../pkg/go.opencensus.io/trace.html#name-maxBucketSize" class="ident">maxBucketSize</a>     = <span class="lit-number">100000</span>
+	<a href="../../../pkg/go.opencensus.io/trace.html#name-defaultBucketSize" class="ident">defaultBucketSize</a> = <span class="lit-number">10</span>
+)
+
+<span class="keyword">var</span> (
+	<a href="../../../pkg/go.opencensus.io/trace.html#name-ssmu" class="ident">ssmu</a>       <a href="../../../pkg/sync.html" class="ident i0">sync</a>.<a href="../../sync/rwmutex.go.html#line-28" class="ident">RWMutex</a> <span class="comment">// protects spanStores</span>
+	<a href="../../../pkg/go.opencensus.io/trace.html#name-spanStores" class="ident">spanStores</a> = <a href="../../../pkg/builtin.html#name-make" class="ident">make</a>(<span class="keyword">map</span>[<a href="../../../pkg/builtin.html#name-string" class="ident">string</a>]*<a href="#line-186" class="ident">spanStore</a>)
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> This exists purely to avoid exposing internal methods used by z-Pages externally.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../pkg/go.opencensus.io/trace.html#name-internalOnly" class="ident">internalOnly</a> <span class="keyword">struct</span>{}
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">TODO(#412): remove</span></div>
+<div class="code"><pre><code>	<a href="../../../pkg/go.opencensus.io/internal.html" class="ident i2">internal</a>.<a href="../internal/traceinternals.go.html#line-23" class="ident">Trace</a> = &amp;<a href="#line-35" class="ident">internalOnly</a>{}
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ReportActiveSpans returns the active spans for the given name.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r1" class="ident">i</label> <a href="#line-35" class="ident">internalOnly</a>) <label for="r2" class="ident"><a href="../../../use/go.opencensus.io/trace..internalOnly*3d0a7.ReportActiveSpans.html" class="ident">ReportActiveSpans</a></label>(<label for="r3" class="ident">name</label> <a href="../../../pkg/builtin.html#name-string" class="ident">string</a>) []*<a href="export.go.html#line-74" class="ident">SpanData</a> {
+	<label for="r4" class="ident">s</label> := <a href="#line-210" class="ident">spanStoreForName</a>(<label for="r3" class="ident">name</label>)
+	<span class="keyword">if</span> <label for="r4" class="ident">s</label> == <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+	}
+	<span class="keyword">var</span> <label for="r5" class="ident">out</label> []*<a href="export.go.html#line-74" class="ident">SpanData</a>
+	<label for="r4" class="ident">s</label>.<a href="#line-187" class="ident">mu</a>.<a href="../../sync/mutex.go.html#line-72" class="ident">Lock</a>()
+	<span class="keyword">defer</span> <label for="r4" class="ident">s</label>.<a href="#line-187" class="ident">mu</a>.<a href="../../sync/mutex.go.html#line-179" class="ident">Unlock</a>()
+	<span class="keyword">for</span> <label for="r6" class="ident">span</label> := <span class="keyword">range</span> <label for="r4" class="ident">s</label>.<a href="#line-188" class="ident">active</a> {
+		<label for="r5" class="ident">out</label> = <a href="../../../pkg/builtin.html#name-append" class="ident">append</a>(<label for="r5" class="ident">out</label>, <label for="r6" class="ident">span</label>.<a href="trace.go.html#line-295" class="ident">makeSpanData</a>())
+	}
+	<span class="keyword">return</span> <label for="r5" class="ident">out</label>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ReportSpansByError returns a sample of error spans.</span><span class="comment"></span><span class="comment"> If code is nonzero, only spans with that status code are returned.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r7" class="ident">i</label> <a href="#line-35" class="ident">internalOnly</a>) <label for="r8" class="ident"><a href="../../../use/go.opencensus.io/trace..internalOnly*3d0a7.ReportSpansByError.html" class="ident">ReportSpansByError</a></label>(<label for="r9" class="ident">name</label> <a href="../../../pkg/builtin.html#name-string" class="ident">string</a>, <label for="r10" class="ident">code</label> <a href="../../../pkg/builtin.html#name-int32" class="ident">int32</a>) []*<a href="export.go.html#line-74" class="ident">SpanData</a> {
+	<label for="r11" class="ident">s</label> := <a href="#line-210" class="ident">spanStoreForName</a>(<label for="r9" class="ident">name</label>)
+	<span class="keyword">if</span> <label for="r11" class="ident">s</label> == <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+	}
+	<span class="keyword">var</span> <label for="r12" class="ident">out</label> []*<a href="export.go.html#line-74" class="ident">SpanData</a>
+	<label for="r11" class="ident">s</label>.<a href="#line-187" class="ident">mu</a>.<a href="../../sync/mutex.go.html#line-72" class="ident">Lock</a>()
+	<span class="keyword">defer</span> <label for="r11" class="ident">s</label>.<a href="#line-187" class="ident">mu</a>.<a href="../../sync/mutex.go.html#line-179" class="ident">Unlock</a>()
+	<span class="keyword">if</span> <label for="r10" class="ident">code</label> != <span class="lit-number">0</span> {
+		<span class="keyword">if</span> <label for="r13" class="ident">b</label>, <label for="r14" class="ident">ok</label> := <label for="r11" class="ident">s</label>.<a href="#line-189" class="ident">errors</a>[<label for="r10" class="ident">code</label>]; <label for="r14" class="ident">ok</label> {
+			<span class="keyword">for</span> <label for="r15" class="ident">_</label>, <label for="r16" class="ident">sd</label> := <span class="keyword">range</span> <label for="r13" class="ident">b</label>.<a href="spanbucket.go.html#line-40" class="ident">buffer</a> {
+				<span class="keyword">if</span> <label for="r16" class="ident">sd</label> == <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+					<span class="keyword">break</span>
+				}
+				<label for="r12" class="ident">out</label> = <a href="../../../pkg/builtin.html#name-append" class="ident">append</a>(<label for="r12" class="ident">out</label>, <label for="r16" class="ident">sd</label>)
+			}
+		}
+	} <span class="keyword">else</span> {
+		<span class="keyword">for</span> <label for="r17" class="ident">_</label>, <label for="r18" class="ident">b</label> := <span class="keyword">range</span> <label for="r11" class="ident">s</label>.<a href="#line-189" class="ident">errors</a> {
+			<span class="keyword">for</span> <label for="r19" class="ident">_</label>, <label for="r20" class="ident">sd</label> := <span class="keyword">range</span> <label for="r18" class="ident">b</label>.<a href="spanbucket.go.html#line-40" class="ident">buffer</a> {
+				<span class="keyword">if</span> <label for="r20" class="ident">sd</label> == <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+					<span class="keyword">break</span>
+				}
+				<label for="r12" class="ident">out</label> = <a href="../../../pkg/builtin.html#name-append" class="ident">append</a>(<label for="r12" class="ident">out</label>, <label for="r20" class="ident">sd</label>)
+			}
+		}
+	}
+	<span class="keyword">return</span> <label for="r12" class="ident">out</label>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ConfigureBucketSizes sets the number of spans to keep per latency and error</span><span class="comment"> bucket for different span names.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r21" class="ident">i</label> <a href="#line-35" class="ident">internalOnly</a>) <label for="r22" class="ident"><a href="../../../use/go.opencensus.io/trace..internalOnly*3d0a7.ConfigureBucketSizes.html" class="ident">ConfigureBucketSizes</a></label>(<label for="r23" class="ident">bcs</label> []<a href="../../../pkg/go.opencensus.io/internal.html" class="ident i2">internal</a>.<a href="../internal/traceinternals.go.html#line-30" class="ident">BucketConfiguration</a>) {
+	<span class="keyword">for</span> <label for="r24" class="ident">_</label>, <label for="r25" class="ident">bc</label> := <span class="keyword">range</span> <label for="r23" class="ident">bcs</label> {
+		<label for="r26" class="ident">latencyBucketSize</label> := <label for="r25" class="ident">bc</label>.<a href="../internal/traceinternals.go.html#line-32" class="ident">MaxRequestsSucceeded</a>
+		<span class="keyword">if</span> <label for="r26" class="ident">latencyBucketSize</label> &lt; <span class="lit-number">0</span> {
+			<label for="r26" class="ident">latencyBucketSize</label> = <span class="lit-number">0</span>
+		}
+		<span class="keyword">if</span> <label for="r26" class="ident">latencyBucketSize</label> &gt; <a href="#line-25" class="ident">maxBucketSize</a> {
+			<label for="r26" class="ident">latencyBucketSize</label> = <a href="#line-25" class="ident">maxBucketSize</a>
+		}
+		<label for="r27" class="ident">errorBucketSize</label> := <label for="r25" class="ident">bc</label>.<a href="../internal/traceinternals.go.html#line-33" class="ident">MaxRequestsErrors</a>
+		<span class="keyword">if</span> <label for="r27" class="ident">errorBucketSize</label> &lt; <span class="lit-number">0</span> {
+			<label for="r27" class="ident">errorBucketSize</label> = <span class="lit-number">0</span>
+		}
+		<span class="keyword">if</span> <label for="r27" class="ident">errorBucketSize</label> &gt; <a href="#line-25" class="ident">maxBucketSize</a> {
+			<label for="r27" class="ident">errorBucketSize</label> = <a href="#line-25" class="ident">maxBucketSize</a>
+		}
+		<a href="#line-242" class="ident">spanStoreSetSize</a>(<label for="r25" class="ident">bc</label>.<a href="../internal/traceinternals.go.html#line-31" class="ident">Name</a>, <label for="r26" class="ident">latencyBucketSize</label>, <label for="r27" class="ident">errorBucketSize</label>)
+	}
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ReportSpansPerMethod returns a summary of what spans are being stored for each span name.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r28" class="ident">i</label> <a href="#line-35" class="ident">internalOnly</a>) <label for="r29" class="ident"><a href="../../../use/go.opencensus.io/trace..internalOnly*3d0a7.ReportSpansPerMethod.html" class="ident">ReportSpansPerMethod</a></label>() <span class="keyword">map</span>[<a href="../../../pkg/builtin.html#name-string" class="ident">string</a>]<a href="../../../pkg/go.opencensus.io/internal.html" class="ident i2">internal</a>.<a href="../internal/traceinternals.go.html#line-37" class="ident">PerMethodSummary</a> {
+	<label for="r30" class="ident">out</label> := <a href="../../../pkg/builtin.html#name-make" class="ident">make</a>(<span class="keyword">map</span>[<a href="../../../pkg/builtin.html#name-string" class="ident">string</a>]<a href="../../../pkg/go.opencensus.io/internal.html" class="ident i2">internal</a>.<a href="../internal/traceinternals.go.html#line-37" class="ident">PerMethodSummary</a>)
+	<a href="#line-30" class="ident">ssmu</a>.<a href="../../sync/rwmutex.go.html#line-56" class="ident">RLock</a>()
+	<span class="keyword">defer</span> <a href="#line-30" class="ident">ssmu</a>.<a href="../../sync/rwmutex.go.html#line-75" class="ident">RUnlock</a>()
+	<span class="keyword">for</span> <label for="r31" class="ident">name</label>, <label for="r32" class="ident">s</label> := <span class="keyword">range</span> <a href="#line-31" class="ident">spanStores</a> {
+		<label for="r32" class="ident">s</label>.<a href="#line-187" class="ident">mu</a>.<a href="../../sync/mutex.go.html#line-72" class="ident">Lock</a>()
+		<label for="r33" class="ident">p</label> := <a href="../../../pkg/go.opencensus.io/internal.html" class="ident i2">internal</a>.<a href="../internal/traceinternals.go.html#line-37" class="ident">PerMethodSummary</a>{
+			<a href="../internal/traceinternals.go.html#line-38" class="ident">Active</a>: <a href="../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r32" class="ident">s</label>.<a href="#line-188" class="ident">active</a>),
+		}
+		<span class="keyword">for</span> <label for="r34" class="ident">code</label>, <label for="r35" class="ident">b</label> := <span class="keyword">range</span> <label for="r32" class="ident">s</label>.<a href="#line-189" class="ident">errors</a> {
+			<label for="r33" class="ident">p</label>.<a href="../internal/traceinternals.go.html#line-40" class="ident">ErrorBuckets</a> = <a href="../../../pkg/builtin.html#name-append" class="ident">append</a>(<label for="r33" class="ident">p</label>.<a href="../internal/traceinternals.go.html#line-40" class="ident">ErrorBuckets</a>, <a href="../../../pkg/go.opencensus.io/internal.html" class="ident i2">internal</a>.<a href="../internal/traceinternals.go.html#line-50" class="ident">ErrorBucketSummary</a>{
+				<a href="../internal/traceinternals.go.html#line-51" class="ident">ErrorCode</a>: <label for="r34" class="ident">code</label>,
+				<a href="../internal/traceinternals.go.html#line-52" class="ident">Size</a>:      <label for="r35" class="ident">b</label>.<a href="spanbucket.go.html#line-69" class="ident">size</a>(),
+			})
+		}
+		<span class="keyword">for</span> <label for="r36" class="ident">i</label>, <label for="r37" class="ident">b</label> := <span class="keyword">range</span> <label for="r32" class="ident">s</label>.<a href="#line-190" class="ident">latency</a> {
+			<label for="r38" class="ident">min</label>, <label for="r39" class="ident">max</label> := <a href="spanbucket.go.html#line-122" class="ident">latencyBucketBounds</a>(<label for="r36" class="ident">i</label>)
+			<label for="r33" class="ident">p</label>.<a href="../internal/traceinternals.go.html#line-39" class="ident">LatencyBuckets</a> = <a href="../../../pkg/builtin.html#name-append" class="ident">append</a>(<label for="r33" class="ident">p</label>.<a href="../internal/traceinternals.go.html#line-39" class="ident">LatencyBuckets</a>, <a href="../../../pkg/go.opencensus.io/internal.html" class="ident i2">internal</a>.<a href="../internal/traceinternals.go.html#line-44" class="ident">LatencyBucketSummary</a>{
+				<a href="../internal/traceinternals.go.html#line-45" class="ident">MinLatency</a>: <label for="r38" class="ident">min</label>,
+				<a href="../internal/traceinternals.go.html#line-45" class="ident">MaxLatency</a>: <label for="r39" class="ident">max</label>,
+				<a href="../internal/traceinternals.go.html#line-46" class="ident">Size</a>:       <label for="r37" class="ident">b</label>.<a href="spanbucket.go.html#line-69" class="ident">size</a>(),
+			})
+		}
+		<label for="r32" class="ident">s</label>.<a href="#line-187" class="ident">mu</a>.<a href="../../sync/mutex.go.html#line-179" class="ident">Unlock</a>()
+		<label for="r30" class="ident">out</label>[<label for="r31" class="ident">name</label>] = <label for="r33" class="ident">p</label>
+	}
+	<span class="keyword">return</span> <label for="r30" class="ident">out</label>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ReportSpansByLatency returns a sample of successful spans.</span><span class="comment"></span><span class="comment"> minLatency is the minimum latency of spans to be returned.</span><span class="comment"> maxLatency, if nonzero, is the maximum latency of spans to be returned.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r40" class="ident">i</label> <a href="#line-35" class="ident">internalOnly</a>) <label for="r41" class="ident"><a href="../../../use/go.opencensus.io/trace..internalOnly*3d0a7.ReportSpansByLatency.html" class="ident">ReportSpansByLatency</a></label>(<label for="r42" class="ident">name</label> <a href="../../../pkg/builtin.html#name-string" class="ident">string</a>, <label for="r43" class="ident">minLatency</label>, <label for="r44" class="ident">maxLatency</label> <a href="../../../pkg/time.html" class="ident i1">time</a>.<a href="../../time/time.go.html#line-583" class="ident">Duration</a>) []*<a href="export.go.html#line-74" class="ident">SpanData</a> {
+	<label for="r45" class="ident">s</label> := <a href="#line-210" class="ident">spanStoreForName</a>(<label for="r42" class="ident">name</label>)
+	<span class="keyword">if</span> <label for="r45" class="ident">s</label> == <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+	}
+	<span class="keyword">var</span> <label for="r46" class="ident">out</label> []*<a href="export.go.html#line-74" class="ident">SpanData</a>
+	<label for="r45" class="ident">s</label>.<a href="#line-187" class="ident">mu</a>.<a href="../../sync/mutex.go.html#line-72" class="ident">Lock</a>()
+	<span class="keyword">defer</span> <label for="r45" class="ident">s</label>.<a href="#line-187" class="ident">mu</a>.<a href="../../sync/mutex.go.html#line-179" class="ident">Unlock</a>()
+	<span class="keyword">for</span> <label for="r47" class="ident">i</label>, <label for="r48" class="ident">b</label> := <span class="keyword">range</span> <label for="r45" class="ident">s</label>.<a href="#line-190" class="ident">latency</a> {
+		<label for="r49" class="ident">min</label>, <label for="r50" class="ident">max</label> := <a href="spanbucket.go.html#line-122" class="ident">latencyBucketBounds</a>(<label for="r47" class="ident">i</label>)
+		<span class="keyword">if</span> <label for="r47" class="ident">i</label>+<span class="lit-number">1</span> != <a href="../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r45" class="ident">s</label>.<a href="#line-190" class="ident">latency</a>) &amp;&amp; <label for="r50" class="ident">max</label> &lt;= <label for="r43" class="ident">minLatency</label> {
+			<span class="keyword">continue</span>
+		}
+		<span class="keyword">if</span> <label for="r44" class="ident">maxLatency</label> != <span class="lit-number">0</span> &amp;&amp; <label for="r44" class="ident">maxLatency</label> &lt; <label for="r49" class="ident">min</label> {
+			<span class="keyword">continue</span>
+		}
+		<span class="keyword">for</span> <label for="r51" class="ident">_</label>, <label for="r52" class="ident">sd</label> := <span class="keyword">range</span> <label for="r48" class="ident">b</label>.<a href="spanbucket.go.html#line-40" class="ident">buffer</a> {
+			<span class="keyword">if</span> <label for="r52" class="ident">sd</label> == <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+				<span class="keyword">break</span>
+			}
+			<span class="keyword">if</span> <label for="r43" class="ident">minLatency</label> != <span class="lit-number">0</span> || <label for="r44" class="ident">maxLatency</label> != <span class="lit-number">0</span> {
+				<label for="r53" class="ident">d</label> := <label for="r52" class="ident">sd</label>.<a href="export.go.html#line-82" class="ident">EndTime</a>.<a href="../../time/time.go.html#line-841" class="ident">Sub</a>(<label for="r52" class="ident">sd</label>.<a href="export.go.html#line-79" class="ident">StartTime</a>)
+				<span class="keyword">if</span> <label for="r53" class="ident">d</label> &lt; <label for="r43" class="ident">minLatency</label> {
+					<span class="keyword">continue</span>
+				}
+				<span class="keyword">if</span> <label for="r44" class="ident">maxLatency</label> != <span class="lit-number">0</span> &amp;&amp; <label for="r53" class="ident">d</label> &gt; <label for="r44" class="ident">maxLatency</label> {
+					<span class="keyword">continue</span>
+				}
+			}
+			<label for="r46" class="ident">out</label> = <a href="../../../pkg/builtin.html#name-append" class="ident">append</a>(<label for="r46" class="ident">out</label>, <label for="r52" class="ident">sd</label>)
+		}
+	}
+	<span class="keyword">return</span> <label for="r46" class="ident">out</label>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> spanStore keeps track of spans stored for a particular span name.</span><span class="comment"></span><span class="comment"> It contains all active spans; a sample of spans for failed requests,</span><span class="comment"> categorized by error code; and a sample of spans for successful requests,</span><span class="comment"> bucketed by latency.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../pkg/go.opencensus.io/trace.html#name-spanStore" class="ident">spanStore</a> <span class="keyword">struct</span> {
+	<a href="../../../use/go.opencensus.io/trace..spanStore*7c221.mu*19503.html" class="ident">mu</a>                     <a href="../../../pkg/sync.html" class="ident i0">sync</a>.<a href="../../sync/mutex.go.html#line-25" class="ident">Mutex</a> <span class="comment">// protects everything below.</span>
+	<a href="../../../use/go.opencensus.io/trace..spanStore*7c221.active*96879.html" class="ident">active</a>                 <span class="keyword">map</span>[*<a href="trace.go.html#line-36" class="ident">Span</a>]<span class="keyword">struct</span>{}
+	<a href="../../../use/go.opencensus.io/trace..spanStore*7c221.errors*be4bd.html" class="ident">errors</a>                 <span class="keyword">map</span>[<a href="../../../pkg/builtin.html#name-int32" class="ident">int32</a>]*<a href="spanbucket.go.html#line-38" class="ident">bucket</a>
+	<a href="../../../use/go.opencensus.io/trace..spanStore*7c221.latency*3fdb7.html" class="ident">latency</a>                []<a href="spanbucket.go.html#line-38" class="ident">bucket</a>
+	<a href="../../../use/go.opencensus.io/trace..spanStore*7c221.maxSpansPerErrorBucket*ad8b2.html" class="ident">maxSpansPerErrorBucket</a> <a href="../../../pkg/builtin.html#name-int" class="ident">int</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> newSpanStore creates a span store.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r54" class="ident"><a href="../../../pkg/go.opencensus.io/trace.html#name-newSpanStore" class="ident">newSpanStore</a></label>(<label for="r55" class="ident">name</label> <a href="../../../pkg/builtin.html#name-string" class="ident">string</a>, <label for="r56" class="ident">latencyBucketSize</label> <a href="../../../pkg/builtin.html#name-int" class="ident">int</a>, <label for="r57" class="ident">errorBucketSize</label> <a href="../../../pkg/builtin.html#name-int" class="ident">int</a>) *<a href="#line-186" class="ident">spanStore</a> {
+	<label for="r58" class="ident">s</label> := &amp;<a href="#line-186" class="ident">spanStore</a>{
+		<a href="#line-188" class="ident">active</a>:                 <a href="../../../pkg/builtin.html#name-make" class="ident">make</a>(<span class="keyword">map</span>[*<a href="trace.go.html#line-36" class="ident">Span</a>]<span class="keyword">struct</span>{}),
+		<a href="#line-190" class="ident">latency</a>:                <a href="../../../pkg/builtin.html#name-make" class="ident">make</a>([]<a href="spanbucket.go.html#line-38" class="ident">bucket</a>, <a href="../../../pkg/builtin.html#name-len" class="ident">len</a>(<a href="spanbucket.go.html#line-26" class="ident">defaultLatencies</a>)+<span class="lit-number">1</span>),
+		<a href="#line-191" class="ident">maxSpansPerErrorBucket</a>: <label for="r57" class="ident">errorBucketSize</label>,
+	}
+	<span class="keyword">for</span> <label for="r59" class="ident">i</label> := <span class="keyword">range</span> <label for="r58" class="ident">s</label>.<a href="#line-190" class="ident">latency</a> {
+		<label for="r58" class="ident">s</label>.<a href="#line-190" class="ident">latency</a>[<label for="r59" class="ident">i</label>] = <a href="spanbucket.go.html#line-45" class="ident">makeBucket</a>(<label for="r56" class="ident">latencyBucketSize</label>)
+	}
+	<span class="keyword">return</span> <label for="r58" class="ident">s</label>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> spanStoreForName returns the spanStore for the given name.</span><span class="comment"></span><span class="comment"> It returns nil if it doesn't exist.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r60" class="ident"><a href="../../../pkg/go.opencensus.io/trace.html#name-spanStoreForName" class="ident">spanStoreForName</a></label>(<label for="r61" class="ident">name</label> <a href="../../../pkg/builtin.html#name-string" class="ident">string</a>) *<a href="#line-186" class="ident">spanStore</a> {
+	<span class="keyword">var</span> <label for="r62" class="ident">s</label> *<a href="#line-186" class="ident">spanStore</a>
+	<a href="#line-30" class="ident">ssmu</a>.<a href="../../sync/rwmutex.go.html#line-56" class="ident">RLock</a>()
+	<label for="r62" class="ident">s</label>, _ = <a href="#line-31" class="ident">spanStores</a>[<label for="r61" class="ident">name</label>]
+	<a href="#line-30" class="ident">ssmu</a>.<a href="../../sync/rwmutex.go.html#line-75" class="ident">RUnlock</a>()
+	<span class="keyword">return</span> <label for="r62" class="ident">s</label>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> spanStoreForNameCreateIfNew returns the spanStore for the given name.</span><span class="comment"></span><span class="comment"> It creates it if it didn't exist.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r63" class="ident"><a href="../../../pkg/go.opencensus.io/trace.html#name-spanStoreForNameCreateIfNew" class="ident">spanStoreForNameCreateIfNew</a></label>(<label for="r64" class="ident">name</label> <a href="../../../pkg/builtin.html#name-string" class="ident">string</a>) *<a href="#line-186" class="ident">spanStore</a> {
+	<a href="#line-30" class="ident">ssmu</a>.<a href="../../sync/rwmutex.go.html#line-56" class="ident">RLock</a>()
+	<label for="r65" class="ident">s</label>, <label for="r66" class="ident">ok</label> := <a href="#line-31" class="ident">spanStores</a>[<label for="r64" class="ident">name</label>]
+	<a href="#line-30" class="ident">ssmu</a>.<a href="../../sync/rwmutex.go.html#line-75" class="ident">RUnlock</a>()
+	<span class="keyword">if</span> <label for="r66" class="ident">ok</label> {
+		<span class="keyword">return</span> <label for="r65" class="ident">s</label>
+	}
+	<a href="#line-30" class="ident">ssmu</a>.<a href="../../sync/rwmutex.go.html#line-105" class="ident">Lock</a>()
+	<span class="keyword">defer</span> <a href="#line-30" class="ident">ssmu</a>.<a href="../../sync/rwmutex.go.html#line-131" class="ident">Unlock</a>()
+	<label for="r65" class="ident">s</label>, <label for="r66" class="ident">ok</label> = <a href="#line-31" class="ident">spanStores</a>[<label for="r64" class="ident">name</label>]
+	<span class="keyword">if</span> <label for="r66" class="ident">ok</label> {
+		<span class="keyword">return</span> <label for="r65" class="ident">s</label>
+	}
+	<label for="r65" class="ident">s</label> = <a href="#line-195" class="ident">newSpanStore</a>(<label for="r64" class="ident">name</label>, <a href="#line-26" class="ident">defaultBucketSize</a>, <a href="#line-26" class="ident">defaultBucketSize</a>)
+	<a href="#line-31" class="ident">spanStores</a>[<label for="r64" class="ident">name</label>] = <label for="r65" class="ident">s</label>
+	<span class="keyword">return</span> <label for="r65" class="ident">s</label>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> spanStoreSetSize resizes the spanStore for the given name.</span><span class="comment"></span><span class="comment"> It creates it if it didn't exist.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r67" class="ident"><a href="../../../pkg/go.opencensus.io/trace.html#name-spanStoreSetSize" class="ident">spanStoreSetSize</a></label>(<label for="r68" class="ident">name</label> <a href="../../../pkg/builtin.html#name-string" class="ident">string</a>, <label for="r69" class="ident">latencyBucketSize</label> <a href="../../../pkg/builtin.html#name-int" class="ident">int</a>, <label for="r70" class="ident">errorBucketSize</label> <a href="../../../pkg/builtin.html#name-int" class="ident">int</a>) {
+	<a href="#line-30" class="ident">ssmu</a>.<a href="../../sync/rwmutex.go.html#line-56" class="ident">RLock</a>()
+	<label for="r71" class="ident">s</label>, <label for="r72" class="ident">ok</label> := <a href="#line-31" class="ident">spanStores</a>[<label for="r68" class="ident">name</label>]
+	<a href="#line-30" class="ident">ssmu</a>.<a href="../../sync/rwmutex.go.html#line-75" class="ident">RUnlock</a>()
+	<span class="keyword">if</span> <label for="r72" class="ident">ok</label> {
+		<label for="r71" class="ident">s</label>.<a href="#line-261" class="ident">resize</a>(<label for="r69" class="ident">latencyBucketSize</label>, <label for="r70" class="ident">errorBucketSize</label>)
+		<span class="keyword">return</span>
+	}
+	<a href="#line-30" class="ident">ssmu</a>.<a href="../../sync/rwmutex.go.html#line-105" class="ident">Lock</a>()
+	<span class="keyword">defer</span> <a href="#line-30" class="ident">ssmu</a>.<a href="../../sync/rwmutex.go.html#line-131" class="ident">Unlock</a>()
+	<label for="r71" class="ident">s</label>, <label for="r72" class="ident">ok</label> = <a href="#line-31" class="ident">spanStores</a>[<label for="r68" class="ident">name</label>]
+	<span class="keyword">if</span> <label for="r72" class="ident">ok</label> {
+		<label for="r71" class="ident">s</label>.<a href="#line-261" class="ident">resize</a>(<label for="r69" class="ident">latencyBucketSize</label>, <label for="r70" class="ident">errorBucketSize</label>)
+		<span class="keyword">return</span>
+	}
+	<label for="r71" class="ident">s</label> = <a href="#line-195" class="ident">newSpanStore</a>(<label for="r68" class="ident">name</label>, <label for="r69" class="ident">latencyBucketSize</label>, <label for="r70" class="ident">errorBucketSize</label>)
+	<a href="#line-31" class="ident">spanStores</a>[<label for="r68" class="ident">name</label>] = <label for="r71" class="ident">s</label>
+}
+
+<span class="keyword">func</span> (<label for="r73" class="ident">s</label> *<a href="#line-186" class="ident">spanStore</a>) <label for="r74" class="ident"><a href="../../../use/go.opencensus.io/trace..spanStore*7c221.resize*acd53.html" class="ident">resize</a></label>(<label for="r75" class="ident">latencyBucketSize</label> <a href="../../../pkg/builtin.html#name-int" class="ident">int</a>, <label for="r76" class="ident">errorBucketSize</label> <a href="../../../pkg/builtin.html#name-int" class="ident">int</a>) {
+	<label for="r73" class="ident">s</label>.<a href="#line-187" class="ident">mu</a>.<a href="../../sync/mutex.go.html#line-72" class="ident">Lock</a>()
+	<span class="keyword">for</span> <label for="r77" class="ident">i</label> := <span class="keyword">range</span> <label for="r73" class="ident">s</label>.<a href="#line-190" class="ident">latency</a> {
+		<label for="r73" class="ident">s</label>.<a href="#line-190" class="ident">latency</a>[<label for="r77" class="ident">i</label>].<a href="spanbucket.go.html#line-88" class="ident">resize</a>(<label for="r75" class="ident">latencyBucketSize</label>)
+	}
+	<span class="keyword">for</span> <label for="r78" class="ident">_</label>, <label for="r79" class="ident">b</label> := <span class="keyword">range</span> <label for="r73" class="ident">s</label>.<a href="#line-189" class="ident">errors</a> {
+		<label for="r79" class="ident">b</label>.<a href="spanbucket.go.html#line-88" class="ident">resize</a>(<label for="r76" class="ident">errorBucketSize</label>)
+	}
+	<label for="r73" class="ident">s</label>.<a href="#line-191" class="ident">maxSpansPerErrorBucket</a> = <label for="r76" class="ident">errorBucketSize</label>
+	<label for="r73" class="ident">s</label>.<a href="#line-187" class="ident">mu</a>.<a href="../../sync/mutex.go.html#line-179" class="ident">Unlock</a>()
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> add adds a span to the active bucket of the spanStore.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r80" class="ident">s</label> *<a href="#line-186" class="ident">spanStore</a>) <label for="r81" class="ident"><a href="../../../use/go.opencensus.io/trace..spanStore*7c221.add*7e9e5.html" class="ident">add</a></label>(<label for="r82" class="ident">span</label> *<a href="trace.go.html#line-36" class="ident">Span</a>) {
+	<label for="r80" class="ident">s</label>.<a href="#line-187" class="ident">mu</a>.<a href="../../sync/mutex.go.html#line-72" class="ident">Lock</a>()
+	<label for="r80" class="ident">s</label>.<a href="#line-188" class="ident">active</a>[<label for="r82" class="ident">span</label>] = <span class="keyword">struct</span>{}{}
+	<label for="r80" class="ident">s</label>.<a href="#line-187" class="ident">mu</a>.<a href="../../sync/mutex.go.html#line-179" class="ident">Unlock</a>()
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> finished removes a span from the active set, and adds a corresponding</span><span class="comment"> SpanData to a latency or error bucket.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r83" class="ident">s</label> *<a href="#line-186" class="ident">spanStore</a>) <label for="r84" class="ident"><a href="../../../use/go.opencensus.io/trace..spanStore*7c221.finished*05343.html" class="ident">finished</a></label>(<label for="r85" class="ident">span</label> *<a href="trace.go.html#line-36" class="ident">Span</a>, <label for="r86" class="ident">sd</label> *<a href="export.go.html#line-74" class="ident">SpanData</a>) {
+	<label for="r87" class="ident">latency</label> := <label for="r86" class="ident">sd</label>.<a href="export.go.html#line-82" class="ident">EndTime</a>.<a href="../../time/time.go.html#line-841" class="ident">Sub</a>(<label for="r86" class="ident">sd</label>.<a href="export.go.html#line-79" class="ident">StartTime</a>)
+	<span class="keyword">if</span> <label for="r87" class="ident">latency</label> &lt; <span class="lit-number">0</span> {
+		<label for="r87" class="ident">latency</label> = <span class="lit-number">0</span>
+	}
+	<label for="r88" class="ident">code</label> := <label for="r86" class="ident">sd</label>.<a href="export.go.html#line-87" class="ident">Status</a>.<a href="basetypes.go.html#line-117" class="ident">Code</a>
+
+	<label for="r83" class="ident">s</label>.<a href="#line-187" class="ident">mu</a>.<a href="../../sync/mutex.go.html#line-72" class="ident">Lock</a>()
+	<a href="../../../pkg/builtin.html#name-delete" class="ident">delete</a>(<label for="r83" class="ident">s</label>.<a href="#line-188" class="ident">active</a>, <label for="r85" class="ident">span</label>)
+	<span class="keyword">if</span> <label for="r88" class="ident">code</label> == <span class="lit-number">0</span> {
+		<label for="r83" class="ident">s</label>.<a href="#line-190" class="ident">latency</a>[<a href="spanbucket.go.html#line-109" class="ident">latencyBucket</a>(<label for="r87" class="ident">latency</label>)].<a href="spanbucket.go.html#line-52" class="ident">add</a>(<label for="r86" class="ident">sd</label>)
+	} <span class="keyword">else</span> {
+		<span class="keyword">if</span> <label for="r83" class="ident">s</label>.<a href="#line-189" class="ident">errors</a> == <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<label for="r83" class="ident">s</label>.<a href="#line-189" class="ident">errors</a> = <a href="../../../pkg/builtin.html#name-make" class="ident">make</a>(<span class="keyword">map</span>[<a href="../../../pkg/builtin.html#name-int32" class="ident">int32</a>]*<a href="spanbucket.go.html#line-38" class="ident">bucket</a>)
+		}
+		<span class="keyword">if</span> <label for="r89" class="ident">b</label> := <label for="r83" class="ident">s</label>.<a href="#line-189" class="ident">errors</a>[<label for="r88" class="ident">code</label>]; <label for="r89" class="ident">b</label> != <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<label for="r89" class="ident">b</label>.<a href="spanbucket.go.html#line-52" class="ident">add</a>(<label for="r86" class="ident">sd</label>)
+		} <span class="keyword">else</span> {
+			<label for="r90" class="ident">b</label> := <a href="spanbucket.go.html#line-45" class="ident">makeBucket</a>(<label for="r83" class="ident">s</label>.<a href="#line-191" class="ident">maxSpansPerErrorBucket</a>)
+			<label for="r83" class="ident">s</label>.<a href="#line-189" class="ident">errors</a>[<label for="r88" class="ident">code</label>] = &amp;<label for="r90" class="ident">b</label>
+			<label for="r90" class="ident">b</label>.<a href="spanbucket.go.html#line-52" class="ident">add</a>(<label for="r86" class="ident">sd</label>)
+		}
+	}
+	<label for="r83" class="ident">s</label>.<a href="#line-187" class="ident">mu</a>.<a href="../../sync/mutex.go.html#line-179" class="ident">Unlock</a>()
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

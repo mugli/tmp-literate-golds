@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: tracestate.go in package go.opencensus.io/trace/tracestate</title>
+<link href="../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	tracestate.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../pkg/go.opencensus.io/trace/tracestate.html">go.opencensus.io/trace/tracestate</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16],
+input[id=r17]:checked ~pre label[for=r17],
+input[id=r18]:checked ~pre label[for=r18],
+input[id=r19]:checked ~pre label[for=r19],
+input[id=r20]:checked ~pre label[for=r20],
+input[id=r21]:checked ~pre label[for=r21],
+input[id=r22]:checked ~pre label[for=r22],
+input[id=r23]:checked ~pre label[for=r23],
+input[id=r24]:checked ~pre label[for=r24],
+input[id=r25]:checked ~pre label[for=r25],
+input[id=r26]:checked ~pre label[for=r26],
+input[id=r27]:checked ~pre label[for=r27],
+input[id=r28]:checked ~pre label[for=r28],
+input[id=r29]:checked ~pre label[for=r29],
+input[id=r30]:checked ~pre label[for=r30],
+input[id=r31]:checked ~pre label[for=r31],
+input[id=r32]:checked ~pre label[for=r32],
+input[id=r33]:checked ~pre label[for=r33]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="r17" type="radio" name="g"/>
+<input id="r18" type="radio" name="g"/>
+<input id="r19" type="radio" name="g"/>
+<input id="r20" type="radio" name="g"/>
+<input id="r21" type="radio" name="g"/>
+<input id="r22" type="radio" name="g"/>
+<input id="r23" type="radio" name="g"/>
+<input id="r24" type="radio" name="g"/>
+<input id="r25" type="radio" name="g"/>
+<input id="r26" type="radio" name="g"/>
+<input id="r27" type="radio" name="g"/>
+<input id="r28" type="radio" name="g"/>
+<input id="r29" type="radio" name="g"/>
+<input id="r30" type="radio" name="g"/>
+<input id="r31" type="radio" name="g"/>
+<input id="r32" type="radio" name="g"/>
+<input id="r33" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2018, OpenCensus Authors</span><span class="comment"></span><span class="comment"> Licensed under the Apache License, Version 2.0 (the "License");</span><span class="comment"> you may not use this file except in compliance with the License.</span><span class="comment"> You may obtain a copy of the License at</span><span class="comment"></span><span class="comment">     http://www.apache.org/licenses/LICENSE-2.0</span><span class="comment"></span><span class="comment"> Unless required by applicable law or agreed to in writing, software</span><span class="comment"> distributed under the License is distributed on an "AS IS" BASIS,</span><span class="comment"> WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span><span class="comment"> See the License for the specific language governing permissions and</span><span class="comment"> limitations under the License.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Package tracestate implements support for the Tracestate header of the</span><span class="comment"> W3C TraceContext propagation format.</span></div>
+<div class="code"><pre><code><span class="keyword">package</span> tracestate
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"fmt"</span></label>
+	<label for="i1"><span class="lit-string i1">"regexp"</span></label>
+)
+
+<span class="keyword">const</span> (
+	<a href="../../../../pkg/go.opencensus.io/trace/tracestate.html#name-keyMaxSize" class="ident">keyMaxSize</a>       = <span class="lit-number">256</span>
+	<a href="../../../../pkg/go.opencensus.io/trace/tracestate.html#name-valueMaxSize" class="ident">valueMaxSize</a>     = <span class="lit-number">256</span>
+	<a href="../../../../pkg/go.opencensus.io/trace/tracestate.html#name-maxKeyValuePairs" class="ident">maxKeyValuePairs</a> = <span class="lit-number">32</span>
+)
+
+<span class="keyword">const</span> (
+	<a href="../../../../pkg/go.opencensus.io/trace/tracestate.html#name-keyWithoutVendorFormat" class="ident">keyWithoutVendorFormat</a> = <span class="lit-string">`[a-z][_0-9a-z\-\*\/]{0,255}`</span>
+	<a href="../../../../pkg/go.opencensus.io/trace/tracestate.html#name-keyWithVendorFormat" class="ident">keyWithVendorFormat</a>    = <span class="lit-string">`[a-z][_0-9a-z\-\*\/]{0,240}@[a-z][_0-9a-z\-\*\/]{0,13}`</span>
+	<a href="../../../../pkg/go.opencensus.io/trace/tracestate.html#name-keyFormat" class="ident">keyFormat</a>              = <span class="lit-string">`(`</span> + <a href="#line-31" class="ident">keyWithoutVendorFormat</a> + <span class="lit-string">`)|(`</span> + <a href="#line-32" class="ident">keyWithVendorFormat</a> + <span class="lit-string">`)`</span>
+	<a href="../../../../pkg/go.opencensus.io/trace/tracestate.html#name-valueFormat" class="ident">valueFormat</a>            = <span class="lit-string">`[\x20-\x2b\x2d-\x3c\x3e-\x7e]{0,255}[\x21-\x2b\x2d-\x3c\x3e-\x7e]`</span>
+)
+
+<span class="keyword">var</span> <a href="../../../../pkg/go.opencensus.io/trace/tracestate.html#name-keyValidationRegExp" class="ident">keyValidationRegExp</a> = <a href="../../../../pkg/regexp.html" class="ident i1">regexp</a>.<a href="../../../regexp/regexp.go.html#line-308" class="ident">MustCompile</a>(<span class="lit-string">`^(`</span> + <a href="#line-33" class="ident">keyFormat</a> + <span class="lit-string">`)$`</span>)
+<span class="keyword">var</span> <a href="../../../../pkg/go.opencensus.io/trace/tracestate.html#name-valueValidationRegExp" class="ident">valueValidationRegExp</a> = <a href="../../../../pkg/regexp.html" class="ident i1">regexp</a>.<a href="../../../regexp/regexp.go.html#line-308" class="ident">MustCompile</a>(<span class="lit-string">`^(`</span> + <a href="#line-34" class="ident">valueFormat</a> + <span class="lit-string">`)$`</span>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Tracestate represents tracing-system specific context in a list of key-value pairs. Tracestate allows different</span><span class="comment"> vendors propagate additional information and inter-operate with their legacy Id formats.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../pkg/go.opencensus.io/trace/tracestate.html#name-Tracestate" class="ident">Tracestate</a> <span class="keyword">struct</span> {
+	<a href="../../../../use/go.opencensus.io/trace/tracestate..Tracestate.entries*87d05.html" class="ident">entries</a> []<a href="#line-47" class="ident">Entry</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Entry represents one key-value pair in a list of key-value pair of Tracestate.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Key is an opaque string up to 256 characters printable. It MUST begin with a lowercase letter,</span><span class="comment">	 and can only contain lowercase letters a-z, digits 0-9, underscores _, dashes -, asterisks *, and</span><span class="comment">	 forward slashes /.</span></div>
+<div class="code"><pre><code>	<a href="../../../../use/go.opencensus.io/trace/tracestate..Entry.Key.html" class="ident">Key</a> <a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Value is an opaque string up to 256 characters printable ASCII RFC0020 characters (i.e., the</span><span class="comment">	 range 0x20 to 0x7E) except comma , and =.</span></div>
+<div class="code"><pre><code>	<a href="../../../../use/go.opencensus.io/trace/tracestate..Entry.Value.html" class="ident">Value</a> <a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Entries returns a slice of Entry.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r0" class="ident">ts</label> *<a href="#line-42" class="ident">Tracestate</a>) <label for="r1" class="ident"><a href="../../../../use/go.opencensus.io/trace/tracestate..Tracestate.Entries.html" class="ident">Entries</a></label>() []<a href="#line-47" class="ident">Entry</a> {
+	<span class="keyword">if</span> <label for="r0" class="ident">ts</label> == <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+	}
+	<span class="keyword">return</span> <label for="r0" class="ident">ts</label>.<a href="#line-43" class="ident">entries</a>
+}
+
+<span class="keyword">func</span> (<label for="r2" class="ident">ts</label> *<a href="#line-42" class="ident">Tracestate</a>) <label for="r3" class="ident"><a href="../../../../use/go.opencensus.io/trace/tracestate..Tracestate.remove*7e560.html" class="ident">remove</a></label>(<label for="r4" class="ident">key</label> <a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>) *<a href="#line-47" class="ident">Entry</a> {
+	<span class="keyword">for</span> <label for="r5" class="ident">index</label>, <label for="r6" class="ident">entry</label> := <span class="keyword">range</span> <label for="r2" class="ident">ts</label>.<a href="#line-43" class="ident">entries</a> {
+		<span class="keyword">if</span> <label for="r6" class="ident">entry</label>.<a href="#line-51" class="ident">Key</a> == <label for="r4" class="ident">key</label> {
+			<label for="r2" class="ident">ts</label>.<a href="#line-43" class="ident">entries</a> = <a href="../../../../pkg/builtin.html#name-append" class="ident">append</a>(<label for="r2" class="ident">ts</label>.<a href="#line-43" class="ident">entries</a>[:<label for="r5" class="ident">index</label>], <label for="r2" class="ident">ts</label>.<a href="#line-43" class="ident">entries</a>[<label for="r5" class="ident">index</label>+<span class="lit-number">1</span>:]...)
+			<span class="keyword">return</span> &amp;<label for="r6" class="ident">entry</label>
+		}
+	}
+	<span class="keyword">return</span> <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+}
+
+<span class="keyword">func</span> (<label for="r7" class="ident">ts</label> *<a href="#line-42" class="ident">Tracestate</a>) <label for="r8" class="ident"><a href="../../../../use/go.opencensus.io/trace/tracestate..Tracestate.add*7e9e5.html" class="ident">add</a></label>(<label for="r9" class="ident">entries</label> []<a href="#line-47" class="ident">Entry</a>) <a href="../../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<span class="keyword">for</span> <label for="r10" class="ident">_</label>, <label for="r11" class="ident">entry</label> := <span class="keyword">range</span> <label for="r9" class="ident">entries</label> {
+		<label for="r7" class="ident">ts</label>.<a href="#line-66" class="ident">remove</a>(<label for="r11" class="ident">entry</label>.<a href="#line-51" class="ident">Key</a>)
+	}
+	<span class="keyword">if</span> <a href="../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r7" class="ident">ts</label>.<a href="#line-43" class="ident">entries</a>)+<a href="../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r9" class="ident">entries</label>) &gt; <a href="#line-27" class="ident">maxKeyValuePairs</a> {
+		<span class="keyword">return</span> <a href="../../../../pkg/fmt.html" class="ident i0">fmt</a>.<a href="../../../fmt/errors.go.html#line-17" class="ident">Errorf</a>(<span class="lit-string">"adding %d key-value pairs to current %d pairs exceeds the limit of %d"</span>,
+			<a href="../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r9" class="ident">entries</label>), <a href="../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r7" class="ident">ts</label>.<a href="#line-43" class="ident">entries</a>), <a href="#line-27" class="ident">maxKeyValuePairs</a>)
+	}
+	<label for="r7" class="ident">ts</label>.<a href="#line-43" class="ident">entries</a> = <a href="../../../../pkg/builtin.html#name-append" class="ident">append</a>(<label for="r9" class="ident">entries</label>, <label for="r7" class="ident">ts</label>.<a href="#line-43" class="ident">entries</a>...)
+	<span class="keyword">return</span> <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+}
+
+<span class="keyword">func</span> <label for="r12" class="ident"><a href="../../../../pkg/go.opencensus.io/trace/tracestate.html#name-isValid" class="ident">isValid</a></label>(<label for="r13" class="ident">entry</label> <a href="#line-47" class="ident">Entry</a>) <a href="../../../../pkg/builtin.html#name-bool" class="ident">bool</a> {
+	<span class="keyword">return</span> <a href="#line-37" class="ident">keyValidationRegExp</a>.<a href="../../../regexp/regexp.go.html#line-524" class="ident">MatchString</a>(<label for="r13" class="ident">entry</label>.<a href="#line-51" class="ident">Key</a>) &amp;&amp;
+		<a href="#line-38" class="ident">valueValidationRegExp</a>.<a href="../../../regexp/regexp.go.html#line-524" class="ident">MatchString</a>(<label for="r13" class="ident">entry</label>.<a href="#line-55" class="ident">Value</a>)
+}
+
+<span class="keyword">func</span> <label for="r14" class="ident"><a href="../../../../pkg/go.opencensus.io/trace/tracestate.html#name-containsDuplicateKey" class="ident">containsDuplicateKey</a></label>(<label for="r15" class="ident">entries</label> ...<a href="#line-47" class="ident">Entry</a>) (<a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>, <a href="../../../../pkg/builtin.html#name-bool" class="ident">bool</a>) {
+	<label for="r16" class="ident">keyMap</label> := <a href="../../../../pkg/builtin.html#name-make" class="ident">make</a>(<span class="keyword">map</span>[<a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>]<a href="../../../../pkg/builtin.html#name-int" class="ident">int</a>)
+	<span class="keyword">for</span> <label for="r17" class="ident">_</label>, <label for="r18" class="ident">entry</label> := <span class="keyword">range</span> <label for="r15" class="ident">entries</label> {
+		<span class="keyword">if</span> <label for="r19" class="ident">_</label>, <label for="r20" class="ident">ok</label> := <label for="r16" class="ident">keyMap</label>[<label for="r18" class="ident">entry</label>.<a href="#line-51" class="ident">Key</a>]; <label for="r20" class="ident">ok</label> {
+			<span class="keyword">return</span> <label for="r18" class="ident">entry</label>.<a href="#line-51" class="ident">Key</a>, <a href="../../../../pkg/builtin.html#name-true" class="ident">true</a>
+		}
+		<label for="r16" class="ident">keyMap</label>[<label for="r18" class="ident">entry</label>.<a href="#line-51" class="ident">Key</a>] = <span class="lit-number">1</span>
+	}
+	<span class="keyword">return</span> <span class="lit-string">""</span>, <a href="../../../../pkg/builtin.html#name-false" class="ident">false</a>
+}
+
+<span class="keyword">func</span> <label for="r21" class="ident"><a href="../../../../pkg/go.opencensus.io/trace/tracestate.html#name-areEntriesValid" class="ident">areEntriesValid</a></label>(<label for="r22" class="ident">entries</label> ...<a href="#line-47" class="ident">Entry</a>) (*<a href="#line-47" class="ident">Entry</a>, <a href="../../../../pkg/builtin.html#name-bool" class="ident">bool</a>) {
+	<span class="keyword">for</span> <label for="r23" class="ident">_</label>, <label for="r24" class="ident">entry</label> := <span class="keyword">range</span> <label for="r22" class="ident">entries</label> {
+		<span class="keyword">if</span> !<a href="#line-88" class="ident">isValid</a>(<label for="r24" class="ident">entry</label>) {
+			<span class="keyword">return</span> &amp;<label for="r24" class="ident">entry</label>, <a href="../../../../pkg/builtin.html#name-false" class="ident">false</a>
+		}
+	}
+	<span class="keyword">return</span> <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="../../../../pkg/builtin.html#name-true" class="ident">true</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> New creates a Tracestate object from a parent and/or entries (key-value pair).</span><span class="comment"> Entries from the parent are copied if present. The entries passed to this function</span><span class="comment"> are inserted in front of those copied from the parent. If an entry copied from the</span><span class="comment"> parent contains the same key as one of the entry in entries then the entry copied</span><span class="comment"> from the parent is removed. See add func.</span><span class="comment"></span><span class="comment"> An error is returned with nil Tracestate if</span><span class="comment">  1. one or more entry in entries is invalid.</span><span class="comment">  2. two or more entries in the input entries have the same key.</span><span class="comment">  3. the number of entries combined from the parent and the input entries exceeds maxKeyValuePairs.</span><span class="comment">     (duplicate entry is counted only once).</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r25" class="ident"><a href="../../../../pkg/go.opencensus.io/trace/tracestate.html#name-New" class="ident">New</a></label>(<label for="r26" class="ident">parent</label> *<a href="#line-42" class="ident">Tracestate</a>, <label for="r27" class="ident">entries</label> ...<a href="#line-47" class="ident">Entry</a>) (*<a href="#line-42" class="ident">Tracestate</a>, <a href="../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<span class="keyword">if</span> <label for="r26" class="ident">parent</label> == <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a> &amp;&amp; <a href="../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r27" class="ident">entries</label>) == <span class="lit-number">0</span> {
+		<span class="keyword">return</span> <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+	}
+	<span class="keyword">if</span> <label for="r28" class="ident">entry</label>, <label for="r29" class="ident">ok</label> := <a href="#line-104" class="ident">areEntriesValid</a>(<label for="r27" class="ident">entries</label>...); !<label for="r29" class="ident">ok</label> {
+		<span class="keyword">return</span> <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="../../../../pkg/fmt.html" class="ident i0">fmt</a>.<a href="../../../fmt/errors.go.html#line-17" class="ident">Errorf</a>(<span class="lit-string">"key-value pair {%s, %s} is invalid"</span>, <label for="r28" class="ident">entry</label>.<a href="#line-51" class="ident">Key</a>, <label for="r28" class="ident">entry</label>.<a href="#line-55" class="ident">Value</a>)
+	}
+
+	<span class="keyword">if</span> <label for="r30" class="ident">key</label>, <label for="r31" class="ident">duplicate</label> := <a href="#line-93" class="ident">containsDuplicateKey</a>(<label for="r27" class="ident">entries</label>...); <label for="r31" class="ident">duplicate</label> {
+		<span class="keyword">return</span> <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="../../../../pkg/fmt.html" class="ident i0">fmt</a>.<a href="../../../fmt/errors.go.html#line-17" class="ident">Errorf</a>(<span class="lit-string">"contains duplicate keys (%s)"</span>, <label for="r30" class="ident">key</label>)
+	}
+
+	<label for="r32" class="ident">tracestate</label> := <a href="#line-42" class="ident">Tracestate</a>{}
+
+	<span class="keyword">if</span> <label for="r26" class="ident">parent</label> != <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a> &amp;&amp; <a href="../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r26" class="ident">parent</label>.<a href="#line-43" class="ident">entries</a>) &gt; <span class="lit-number">0</span> {
+		<label for="r32" class="ident">tracestate</label>.<a href="#line-43" class="ident">entries</a> = <a href="../../../../pkg/builtin.html#name-append" class="ident">append</a>([]<a href="#line-47" class="ident">Entry</a>{}, <label for="r26" class="ident">parent</label>.<a href="#line-43" class="ident">entries</a>...)
+	}
+
+	<label for="r33" class="ident">err</label> := <label for="r32" class="ident">tracestate</label>.<a href="#line-76" class="ident">add</a>(<label for="r27" class="ident">entries</label>)
+	<span class="keyword">if</span> <label for="r33" class="ident">err</label> != <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <label for="r33" class="ident">err</label>
+	}
+	<span class="keyword">return</span> &amp;<label for="r32" class="ident">tracestate</label>, <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Package: github.com/microcosm-cc/bluemonday</title>
+<link href="../../../css/light-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="package-details"><code><span style="font-size:xx-large;">package <b>bluemonday</b></span>
+
+<span class="title">Import Path</span>
+	<a href="../../../index.html#pkg-github.com/microcosm-cc/bluemonday">github.com/microcosm-cc/bluemonday</a><i> (on <a href="https://pkg.go.dev/github.com/microcosm-cc/bluemonday" target="_blank">go.dev</a>)</i>
+
+<span class="title">Dependency Relation</span>
+	imports <a href="../../../dep/github.com/microcosm-cc/bluemonday.html">7 packages</a>, and imported by <a href="../../../dep/github.com/microcosm-cc/bluemonday.html#imported-by">one package</a>
+
+<div id="files"><span class="title">Involved Source Files</span>
+
+	<input type='checkbox' checked class="fold" id="file-0-fold-content"><label for="file-0-fold-content">   <a href="../../../src/github.com/microcosm-cc/bluemonday/doc.go.html#doc">d➜</a> <a href="../../../src/github.com/microcosm-cc/bluemonday/doc.go.html">doc.go</a></label><span id='file-0-fold-content-items' class="fold-items">
+		Package bluemonday provides a way of describing a whitelist of HTML elements
+		and attributes as a policy, and for that policy to be applied to untrusted
+		strings from users that may contain markup. All elements and attributes not on
+		the whitelist will be stripped.
+
+		The default bluemonday.UGCPolicy().Sanitize() turns this:
+
+		    Hello &lt;STYLE&gt;.XSS{background-image:url("javascript:alert('XSS')");}&lt;/STYLE&gt;&lt;A CLASS=XSS&gt;&lt;/A&gt;World
+
+		Into the more harmless:
+
+		    Hello World
+
+		And it turns this:
+
+		    &lt;a href="javascript:alert('XSS1')" onmouseover="alert('XSS2')"&gt;XSS&lt;a&gt;
+
+		Into this:
+
+		    XSS
+
+		Whilst still allowing this:
+
+		    &lt;a href="http://www.google.com/"&gt;
+		      &lt;img src="https://ssl.gstatic.com/accounts/ui/logo_2x.png"/&gt;
+		    &lt;/a&gt;
+
+		To pass through mostly unaltered (it gained a rel="nofollow"):
+
+		    &lt;a href="http://www.google.com/" rel="nofollow"&gt;
+		      &lt;img src="https://ssl.gstatic.com/accounts/ui/logo_2x.png"/&gt;
+		    &lt;/a&gt;
+
+		The primary purpose of bluemonday is to take potentially unsafe user generated
+		content (from things like Markdown, HTML WYSIWYG tools, etc) and make it safe
+		for you to put on your website.
+
+		It protects sites against XSS (http://en.wikipedia.org/wiki/Cross-site_scripting)
+		and other malicious content that a user interface may deliver. There are many
+		vectors for an XSS attack (https://www.owasp.org/index.php/XSS_Filter_Evasion_Cheat_Sheet)
+		and the safest thing to do is to sanitize user input against a known safe list
+		of HTML elements and attributes.
+
+		Note: You should always run bluemonday after any other processing.
+
+		If you use blackfriday (https://github.com/russross/blackfriday) or
+		Pandoc (http://johnmacfarlane.net/pandoc/) then bluemonday should be run after
+		these steps. This ensures that no insecure HTML is introduced later in your
+		process.
+
+		bluemonday is heavily inspired by both the OWASP Java HTML Sanitizer
+		(https://code.google.com/p/owasp-java-html-sanitizer/) and the HTML Purifier
+		(http://htmlpurifier.org/).
+
+		We ship two default policies, one is bluemonday.StrictPolicy() and can be
+		thought of as equivalent to stripping all HTML elements and their attributes as
+		it has nothing on its whitelist.
+
+		The other is bluemonday.UGCPolicy() and allows a broad selection of HTML
+		elements and attributes that are safe for user generated content. Note that
+		this policy does not whitelist iframes, object, embed, styles, script, etc.
+
+		The essence of building a policy is to determine which HTML elements and
+		attributes are considered safe for your scenario. OWASP provide an XSS
+		prevention cheat sheet ( https://www.google.com/search?q=xss+prevention+cheat+sheet )
+		to help explain the risks, but essentially:
+
+		    1. Avoid whitelisting anything other than plain HTML elements
+		    2. Avoid whitelisting `script`, `style`, `iframe`, `object`, `embed`, `base`
+		       elements
+		    3. Avoid whitelisting anything other than plain HTML elements with simple
+		       values that you can match to a regexp
+</span>
+	<span class="nodocs">      <a href="../../../src/github.com/microcosm-cc/bluemonday/helpers.go.html">helpers.go</a></span>
+	<span class="nodocs">      <a href="../../../src/github.com/microcosm-cc/bluemonday/policies.go.html">policies.go</a></span>
+	<span class="nodocs">      <a href="../../../src/github.com/microcosm-cc/bluemonday/policy.go.html">policy.go</a></span>
+	<span class="nodocs">      <a href="../../../src/github.com/microcosm-cc/bluemonday/sanitize.go.html">sanitize.go</a></span></div>
+<div id="examples"><span class="title">Code Examples</span>
+
+	<input type='checkbox' class="fold" id="example-0-fold-content"><label for="example-0-fold-content"></label><span id='example-0-fold-content-items' class="fold-items">
+		package main
+		
+		import (
+			"fmt"
+			"github.com/microcosm-cc/bluemonday"
+			"regexp"
+		)
+		
+		func main() {
+			// Create a new policy
+			p := bluemonday.NewPolicy()
+		
+			// Add elements to a policy without attributes
+			p.AllowElements("b", "strong")
+		
+			// Add elements as a virtue of adding an attribute
+			p.AllowAttrs("nowrap").OnElements("td", "th")
+		
+			// Attributes can either be added to all elements
+			p.AllowAttrs("dir").Globally()
+		
+			//Or attributes can be added to specific elements
+			p.AllowAttrs("value").OnElements("li")
+		
+			// It is ALWAYS recommended that an attribute be made to match a pattern
+			// XSS in HTML attributes is a very easy attack vector
+		
+			// \p{L} matches unicode letters, \p{N} matches unicode numbers
+			p.AllowAttrs("title").Matching(regexp.MustCompile(`[\p{L}\p{N}\s\-_',:\[\]!\./\\\(\)&]*`)).Globally()
+		
+			// You can stop at any time and call .Sanitize()
+		
+			// Assumes that string htmlIn was passed in from a HTTP POST and contains
+			// untrusted user generated content
+			htmlIn := `untrusted user generated content <body onload="alert('XSS')">`
+			fmt.Println(p.Sanitize(htmlIn))
+		
+			// And you can take any existing policy and extend it
+			p = bluemonday.UGCPolicy()
+			p.AllowElements("fieldset", "select", "option")
+		
+			// Links are complex beasts and one of the biggest attack vectors for
+			// malicious content so we have included features specifically to help here.
+		
+			// This is not recommended:
+			p = bluemonday.NewPolicy()
+			p.AllowAttrs("href").Matching(regexp.MustCompile(`(?i)mailto|https?`)).OnElements("a")
+		
+			// The regexp is insufficient in this case to have prevented a malformed
+			// value doing something unexpected.
+		
+			// This will ensure that URLs are not considered invalid by Go's net/url
+			// package.
+			p.RequireParseableURLs(true)
+		
+			// If you have enabled parseable URLs then the following option will allow
+			// relative URLs. By default this is disabled and will prevent all local and
+			// schema relative URLs (i.e. `href="//www.google.com"` is schema relative).
+			p.AllowRelativeURLs(true)
+		
+			// If you have enabled parseable URLs then you can whitelist the schemas
+			// that are permitted. Bear in mind that allowing relative URLs in the above
+			// option allows for blank schemas.
+			p.AllowURLSchemes("mailto", "http", "https")
+		
+			// Regardless of whether you have enabled parseable URLs, you can force all
+			// URLs to have a rel="nofollow" attribute. This will be added if it does
+			// not exist.
+		
+			// This applies to "a" "area" "link" elements that have a "href" attribute
+			p.RequireNoFollowOnLinks(true)
+		
+			// We provide a convenience function that applies all of the above, but you
+			// will still need to whitelist the linkable elements:
+			p = bluemonday.NewPolicy()
+			p.AllowStandardURLs()
+			p.AllowAttrs("cite").OnElements("blockquote")
+			p.AllowAttrs("href").OnElements("a", "area")
+			p.AllowAttrs("src").OnElements("img")
+		
+			// Policy Building Helpers
+		
+			// If you've got this far and you're bored already, we also bundle some
+			// other convenience functions
+			p = bluemonday.NewPolicy()
+			p.AllowStandardAttributes()
+			p.AllowImages()
+			p.AllowLists()
+			p.AllowTables()
+		}
+
+</span>
+	<input type='checkbox' class="fold" id="example-1-fold-content"><label for="example-1-fold-content">NewPolicy</label><span id='example-1-fold-content-items' class="fold-items">
+		package main
+		
+		import (
+			"fmt"
+			"github.com/microcosm-cc/bluemonday"
+		)
+		
+		func main() {
+			// NewPolicy is a blank policy and we need to explicitly whitelist anything
+			// that we wish to allow through
+			p := bluemonday.NewPolicy()
+		
+			// We ensure any URLs are parseable and have rel="nofollow" where applicable
+			p.AllowStandardURLs()
+		
+			// AllowStandardURLs already ensures that the href will be valid, and so we
+			// can skip the .Matching()
+			p.AllowAttrs("href").OnElements("a")
+		
+			// We allow paragraphs too
+			p.AllowElements("p")
+		
+			html := p.Sanitize(
+				`<p><a onblur="alert(secret)" href="http://www.google.com">Google</a></p>`,
+			)
+		
+			fmt.Println(html)
+		
+		}
+
+</span>
+	<input type='checkbox' class="fold" id="example-2-fold-content"><label for="example-2-fold-content">Policy_AllowAttrs</label><span id='example-2-fold-content-items' class="fold-items">
+		package main
+		
+		import (
+			"github.com/microcosm-cc/bluemonday"
+		)
+		
+		func main() {
+			p := bluemonday.NewPolicy()
+		
+			// Allow the 'title' attribute on every HTML element that has been
+			// whitelisted
+			p.AllowAttrs("title").Matching(bluemonday.Paragraph).Globally()
+		
+			// Allow the 'abbr' attribute on only the 'td' and 'th' elements.
+			p.AllowAttrs("abbr").Matching(bluemonday.Paragraph).OnElements("td", "th")
+		
+			// Allow the 'colspan' and 'rowspan' attributes, matching a positive integer
+			// pattern, on only the 'td' and 'th' elements.
+			p.AllowAttrs("colspan", "rowspan").Matching(
+				bluemonday.Integer,
+			).OnElements("td", "th")
+		}
+
+</span>
+	<input type='checkbox' class="fold" id="example-3-fold-content"><label for="example-3-fold-content">Policy_AllowElements</label><span id='example-3-fold-content-items' class="fold-items">
+		package main
+		
+		import (
+			"github.com/microcosm-cc/bluemonday"
+		)
+		
+		func main() {
+			p := bluemonday.NewPolicy()
+		
+			// Allow styling elements without attributes
+			p.AllowElements("br", "div", "hr", "p", "span")
+		}
+
+</span>
+	<input type='checkbox' class="fold" id="example-4-fold-content"><label for="example-4-fold-content">Policy_Sanitize</label><span id='example-4-fold-content-items' class="fold-items">
+		package main
+		
+		import (
+			"fmt"
+			"github.com/microcosm-cc/bluemonday"
+		)
+		
+		func main() {
+			// UGCPolicy is a convenience policy for user generated content.
+			p := bluemonday.UGCPolicy()
+		
+			// string in, string out
+			html := p.Sanitize(`<a onblur="alert(secret)" href="http://www.google.com">Google</a>`)
+		
+			fmt.Println(html)
+		
+		}
+
+</span>
+	<input type='checkbox' class="fold" id="example-5-fold-content"><label for="example-5-fold-content">Policy_SanitizeBytes</label><span id='example-5-fold-content-items' class="fold-items">
+		package main
+		
+		import (
+			"fmt"
+			"github.com/microcosm-cc/bluemonday"
+		)
+		
+		func main() {
+			// UGCPolicy is a convenience policy for user generated content.
+			p := bluemonday.UGCPolicy()
+		
+			// []byte in, []byte out
+			b := []byte(`<a onblur="alert(secret)" href="http://www.google.com">Google</a>`)
+			b = p.SanitizeBytes(b)
+		
+			fmt.Println(string(b))
+		
+		}
+
+</span>
+	<input type='checkbox' class="fold" id="example-6-fold-content"><label for="example-6-fold-content">Policy_SanitizeReader</label><span id='example-6-fold-content-items' class="fold-items">
+		package main
+		
+		import (
+			"fmt"
+			"github.com/microcosm-cc/bluemonday"
+			"strings"
+		)
+		
+		func main() {
+			// UGCPolicy is a convenience policy for user generated content.
+			p := bluemonday.UGCPolicy()
+		
+			// io.Reader in, bytes.Buffer out
+			r := strings.NewReader(`<a onblur="alert(secret)" href="http://www.google.com">Google</a>`)
+			buf := p.SanitizeReader(r)
+		
+			fmt.Println(buf.String())
+		
+		}
+
+</span>
+	<input type='checkbox' class="fold" id="example-7-fold-content"><label for="example-7-fold-content">StrictPolicy</label><span id='example-7-fold-content-items' class="fold-items">
+		package main
+		
+		import (
+			"fmt"
+			"github.com/microcosm-cc/bluemonday"
+		)
+		
+		func main() {
+			// StrictPolicy is equivalent to NewPolicy and as nothing else is declared
+			// we are stripping all elements (and their attributes)
+			p := bluemonday.StrictPolicy()
+		
+			html := p.Sanitize(
+				`Goodbye <a onblur="alert(secret)" href="http://en.wikipedia.org/wiki/Goodbye_Cruel_World_(Pink_Floyd_song)">Cruel</a> World`,
+			)
+		
+			fmt.Println(html)
+		
+		}
+
+</span>
+	<input type='checkbox' class="fold" id="example-8-fold-content"><label for="example-8-fold-content">UGCPolicy</label><span id='example-8-fold-content-items' class="fold-items">
+		package main
+		
+		import (
+			"fmt"
+			"github.com/microcosm-cc/bluemonday"
+		)
+		
+		func main() {
+			// UGCPolicy is a convenience policy for user generated content.
+			p := bluemonday.UGCPolicy()
+		
+			html := p.Sanitize(
+				`<a onblur="alert(secret)" href="http://www.google.com">Google</a>`,
+			)
+		
+			fmt.Println(html)
+		
+		}
+</span>
+</div>
+<div id="exported-types"><span class="title">Package-Level Type Names<span class="title-stat"><i> (total 4, in which 1 are exported)</i></span></span>
+
+<div id="exported-types-buttons" class="js-on">	/* sort exporteds by: <label id="sort-types-by-alphabet" class="button">alphabet</label> | <label id="sort-types-by-popularity" class="button">popularity</label> */</div><div class="anchor type-res" id="name-Policy" data-popularity="2675">	<input type='checkbox' class="fold" id="Policy-fold-content"><label for="Policy-fold-content"> <a href="../../../use/github.com/microcosm-cc/bluemonday..Policy.html">type</a> <a href="../../../src/github.com/microcosm-cc/bluemonday/policy.go.html#line-43">Policy</a> <i>(struct)</i></label><span id='Policy-fold-content-docs' class="fold-docs">
+		Policy encapsulates the whitelist of HTML elements and attributes that will
+		be applied to the sanitised HTML.
+
+		You should use bluemonday.NewPolicy() to create a blank policy as the
+		unexported fields contain maps that need to be initialized.
+
+		<input type='checkbox' class="fold" id="Policy-fold-fields"><label for="Policy-fold-fields">Fields (<i>total 13, none are exported</i>)</label><span id='Policy-fold-fields-items' class="fold-items">
+			<input type='checkbox' class="showhide" id="Policy-showhide-fields"><i><label for="Policy-showhide-fields" class="show-inline">/* 13 unexporteds ... */</label><label for="Policy-showhide-fields" class="hide-inline">/* 13 unexporteds: */</label></i><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="Policy-fold-field-addSpaces"><label for="Policy-fold-field-addSpaces"><a href="../../../src/github.com/microcosm-cc/bluemonday/policy.go.html#line-52">addSpaces</a> <i><a href="../../builtin.html#name-bool">bool</a></i></label><span id='Policy-fold-field-addSpaces-docs' class="fold-docs">
+				If true then we add spaces when stripping tags, specifically the closing
+				tag is replaced by a space character.
+</span></i></span><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="Policy-fold-field-addTargetBlankToFullyQualifiedLinks"><label for="Policy-fold-field-addTargetBlankToFullyQualifiedLinks"><a href="../../../src/github.com/microcosm-cc/bluemonday/policy.go.html#line-65">addTargetBlankToFullyQualifiedLinks</a> <i><a href="../../builtin.html#name-bool">bool</a></i></label><span id='Policy-fold-field-addTargetBlankToFullyQualifiedLinks-docs' class="fold-docs">
+				When true add target="_blank" to fully qualified links
+				Will add for href="http://foo"
+				Will skip for href="/foo" or href="foo"
+</span></i></span><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="Policy-fold-field-allowDataAttributes"><label for="Policy-fold-field-allowDataAttributes"><a href="../../../src/github.com/microcosm-cc/bluemonday/policy.go.html#line-74">allowDataAttributes</a> <i><a href="../../builtin.html#name-bool">bool</a></i></label><span id='Policy-fold-field-allowDataAttributes-docs' class="fold-docs">
+				When true, allow data attributes.
+</span></i></span><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="Policy-fold-field-allowRelativeURLs"><label for="Policy-fold-field-allowRelativeURLs"><a href="../../../src/github.com/microcosm-cc/bluemonday/policy.go.html#line-71">allowRelativeURLs</a> <i><a href="../../builtin.html#name-bool">bool</a></i></label><span id='Policy-fold-field-allowRelativeURLs-docs' class="fold-docs">
+				When true, u, _ := url.Parse("url"); !u.IsAbs() is permitted
+</span></i></span><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="Policy-fold-field-allowURLSchemes"><label for="Policy-fold-field-allowURLSchemes"><a href="../../../src/github.com/microcosm-cc/bluemonday/policy.go.html#line-85">allowURLSchemes</a> <i>map[<a href="../../builtin.html#name-string">string</a>]<a href="#name-urlPolicy">urlPolicy</a></i></label><span id='Policy-fold-field-allowURLSchemes-docs' class="fold-docs">
+				If urlPolicy is nil, all URLs with matching schema are allowed.
+				Otherwise, only the URLs with matching schema and urlPolicy(url)
+				returning true are allowed.
+</span></i></span><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="Policy-fold-field-elsAndAttrs"><label for="Policy-fold-field-elsAndAttrs"><a href="../../../src/github.com/microcosm-cc/bluemonday/policy.go.html#line-77">elsAndAttrs</a> <i>map[<a href="../../builtin.html#name-string">string</a>]map[<a href="../../builtin.html#name-string">string</a>]<a href="#name-attrPolicy">attrPolicy</a></i></label><span id='Policy-fold-field-elsAndAttrs-docs' class="fold-docs">
+				map[htmlElementName]map[htmlAttributeName]attrPolicy
+</span></i></span><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="Policy-fold-field-globalAttrs"><label for="Policy-fold-field-globalAttrs"><a href="../../../src/github.com/microcosm-cc/bluemonday/policy.go.html#line-80">globalAttrs</a> <i>map[<a href="../../builtin.html#name-string">string</a>]<a href="#name-attrPolicy">attrPolicy</a></i></label><span id='Policy-fold-field-globalAttrs-docs' class="fold-docs">
+				map[htmlAttributeName]attrPolicy
+</span></i></span><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="Policy-fold-field-initialized"><label for="Policy-fold-field-initialized"><a href="../../../src/github.com/microcosm-cc/bluemonday/policy.go.html#line-48">initialized</a> <i><a href="../../builtin.html#name-bool">bool</a></i></label><span id='Policy-fold-field-initialized-docs' class="fold-docs">
+				Declares whether the maps have been initialized, used as a cheap check to
+				ensure that those using Policy{} directly won't cause nil pointer
+				exceptions
+</span></i></span><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="Policy-fold-field-requireNoFollow"><label for="Policy-fold-field-requireNoFollow"><a href="../../../src/github.com/microcosm-cc/bluemonday/policy.go.html#line-55">requireNoFollow</a> <i><a href="../../builtin.html#name-bool">bool</a></i></label><span id='Policy-fold-field-requireNoFollow-docs' class="fold-docs">
+				When true, add rel="nofollow" to HTML anchors
+</span></i></span><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="Policy-fold-field-requireNoFollowFullyQualifiedLinks"><label for="Policy-fold-field-requireNoFollowFullyQualifiedLinks"><a href="../../../src/github.com/microcosm-cc/bluemonday/policy.go.html#line-60">requireNoFollowFullyQualifiedLinks</a> <i><a href="../../builtin.html#name-bool">bool</a></i></label><span id='Policy-fold-field-requireNoFollowFullyQualifiedLinks-docs' class="fold-docs">
+				When true, add rel="nofollow" to HTML anchors
+				Will add for href="http://foo"
+				Will skip for href="/foo" or href="foo"
+</span></i></span><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="Policy-fold-field-requireParseableURLs"><label for="Policy-fold-field-requireParseableURLs"><a href="../../../src/github.com/microcosm-cc/bluemonday/policy.go.html#line-68">requireParseableURLs</a> <i><a href="../../builtin.html#name-bool">bool</a></i></label><span id='Policy-fold-field-requireParseableURLs-docs' class="fold-docs">
+				When true, URLs must be parseable by "net/url" url.Parse()
+</span></i></span><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="Policy-fold-field-setOfElementsAllowedWithoutAttrs"><label for="Policy-fold-field-setOfElementsAllowedWithoutAttrs"><a href="../../../src/github.com/microcosm-cc/bluemonday/policy.go.html#line-94">setOfElementsAllowedWithoutAttrs</a> <i>map[<a href="../../builtin.html#name-string">string</a>]struct{}</i></label><span id='Policy-fold-field-setOfElementsAllowedWithoutAttrs-docs' class="fold-docs">
+				If an element has had all attributes removed as a result of a policy
+				being applied, then the element would be removed from the output.
+
+				However some elements are valid and have strong layout meaning without
+				any attributes, i.e. &lt;table&gt;. To prevent those being removed we maintain
+				a list of elements that are allowed to have no attributes and that will
+				be maintained in the output HTML.
+</span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/github.com/microcosm-cc/bluemonday/policy.go.html#line-96">setOfElementsToSkipContent</a> <i>map[<a href="../../builtin.html#name-string">string</a>]struct{}</i></span></i></span></span>
+		<input type='checkbox' class="fold" id="Policy-fold-methods"><label for="Policy-fold-methods">Methods (<i>total 31, in which 24 are exported</i>)</label><span id='Policy-fold-methods-items' class="fold-items"><span>
+			<input type='checkbox' class="fold" id="Policy-fold-method-AddSpaceWhenStrippingTag"><label for="Policy-fold-method-AddSpaceWhenStrippingTag">(*T) <a href="../../../src/github.com/microcosm-cc/bluemonday/policy.go.html#line-397">AddSpaceWhenStrippingTag</a>(allow <a href="../../builtin.html#name-bool">bool</a>) *<b>Policy</b></label><span id='Policy-fold-method-AddSpaceWhenStrippingTag-docs' class="fold-docs">
+				AddSpaceWhenStrippingTag states whether to add a single space " " when
+				removing tags that are not whitelisted by the policy.
+
+				This is useful if you expect to strip tags in dense markup and may lose the
+				value of whitespace.
+
+				For example: "&lt;p&gt;Hello&lt;/p&gt;&lt;p&gt;World&lt;/p&gt;"" would be sanitized to "HelloWorld"
+				with the default value of false, but you may wish to sanitize this to
+				" Hello  World " by setting AddSpaceWhenStrippingTag to true as this would
+				retain the intent of the text.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Policy-fold-method-AddTargetBlankToFullyQualifiedLinks"><label for="Policy-fold-method-AddTargetBlankToFullyQualifiedLinks">(*T) <a href="../../../src/github.com/microcosm-cc/bluemonday/policy.go.html#line-315">AddTargetBlankToFullyQualifiedLinks</a>(require <a href="../../builtin.html#name-bool">bool</a>) *<b>Policy</b></label><span id='Policy-fold-method-AddTargetBlankToFullyQualifiedLinks-docs' class="fold-docs">
+				AddTargetBlankToFullyQualifiedLinks will result in all &lt;a&gt; tags that point
+				to a non-local destination (i.e. starts with a protocol and has a host)
+				having a target="_blank" added to them if one does not already exist
+
+				Note: This requires p.RequireParseableURLs(true) and will enable it.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Policy-fold-method-AllowAttrs"><label for="Policy-fold-method-AllowAttrs">(*T) <a href="../../../src/github.com/microcosm-cc/bluemonday/policy.go.html#line-148">AllowAttrs</a>(attrNames ...<a href="../../builtin.html#name-string">string</a>) *<a href="#name-attrPolicyBuilder">attrPolicyBuilder</a></label><span id='Policy-fold-method-AllowAttrs-docs' class="fold-docs">
+				AllowAttrs takes a range of HTML attribute names and returns an
+				attribute policy builder that allows you to specify the pattern and scope of
+				the whitelisted attribute.
+
+				The attribute policy is only added to the core policy when either Globally()
+				or OnElements(...) are called.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Policy-fold-method-AllowDataAttributes"><label for="Policy-fold-method-AllowDataAttributes">(*T) <a href="../../../src/github.com/microcosm-cc/bluemonday/policy.go.html#line-175">AllowDataAttributes</a>()</label><span id='Policy-fold-method-AllowDataAttributes-docs' class="fold-docs">
+				AllowDataAttributes whitelists all data attributes. We can't specify the name
+				of each attribute exactly as they are customized.
+
+				NOTE: These values are not sanitized and applications that evaluate or process
+				them without checking and verification of the input may be at risk if this option
+				is enabled. This is a 'caveat emptor' option and the person enabling this option
+				needs to fully understand the potential impact with regards to whatever application
+				will be consuming the sanitized HTML afterwards, i.e. if you know you put a link in a
+				data attribute and use that to automatically load some new window then you're giving
+				the author of a HTML fragment the means to open a malicious destination automatically.
+				Use with care!
+</span></span><span>
+			<input type='checkbox' class="fold" id="Policy-fold-method-AllowDataURIImages"><label for="Policy-fold-method-AllowDataURIImages">(*T) <a href="../../../src/github.com/microcosm-cc/bluemonday/helpers.go.html#line-205">AllowDataURIImages</a>()</label><span id='Policy-fold-method-AllowDataURIImages-docs' class="fold-docs">
+				AllowDataURIImages permits the use of inline images defined in RFC2397
+				http://tools.ietf.org/html/rfc2397
+				http://en.wikipedia.org/wiki/Data_URI_scheme
+
+				Images must have a mimetype matching:
+				  image/gif
+				  image/jpeg
+				  image/png
+				  image/webp
+
+				NOTE: There is a potential security risk to allowing data URIs and you should
+				only permit them on content you already trust.
+				http://palizine.plynt.com/issues/2010Oct/bypass-xss-filters/
+				https://capec.mitre.org/data/definitions/244.html
+</span></span><span>
+			<input type='checkbox' class="fold" id="Policy-fold-method-AllowElements"><label for="Policy-fold-method-AllowElements">(*T) <a href="../../../src/github.com/microcosm-cc/bluemonday/policy.go.html#line-271">AllowElements</a>(names ...<a href="../../builtin.html#name-string">string</a>) *<b>Policy</b></label><span id='Policy-fold-method-AllowElements-docs' class="fold-docs">
+				AllowElements will append HTML elements to the whitelist without applying an
+				attribute policy to those elements (the elements are permitted
+				sans-attributes)
+</span></span><span>
+			<input type='checkbox' class="fold" id="Policy-fold-method-AllowElementsContent"><label for="Policy-fold-method-AllowElementsContent">(*T) <a href="../../../src/github.com/microcosm-cc/bluemonday/policy.go.html#line-423">AllowElementsContent</a>(names ...<a href="../../builtin.html#name-string">string</a>) *<b>Policy</b></label><span id='Policy-fold-method-AllowElementsContent-docs' class="fold-docs">
+				AllowElementsContent marks the HTML elements whose content should be
+				retained after removing the tag.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Policy-fold-method-AllowImages"><label for="Policy-fold-method-AllowImages">(*T) <a href="../../../src/github.com/microcosm-cc/bluemonday/helpers.go.html#line-179">AllowImages</a>()</label><span id='Policy-fold-method-AllowImages-docs' class="fold-docs">
+				AllowImages enables the img element and some popular attributes. It will also
+				ensure that URL values are parseable. This helper does not enable data URI
+				images, for that you should also use the AllowDataURIImages() helper.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Policy-fold-method-AllowLists"><label for="Policy-fold-method-AllowLists">(*T) <a href="../../../src/github.com/microcosm-cc/bluemonday/helpers.go.html#line-235">AllowLists</a>()</label><span id='Policy-fold-method-AllowLists-docs' class="fold-docs">
+				AllowLists will enabled ordered and unordered lists, as well as definition
+				lists
+</span></span><span>
+			<input type='checkbox' class="fold" id="Policy-fold-method-AllowNoAttrs"><label for="Policy-fold-method-AllowNoAttrs">(*T) <a href="../../../src/github.com/microcosm-cc/bluemonday/policy.go.html#line-183">AllowNoAttrs</a>() *<a href="#name-attrPolicyBuilder">attrPolicyBuilder</a></label><span id='Policy-fold-method-AllowNoAttrs-docs' class="fold-docs">
+				AllowNoAttrs says that attributes on element are optional.
+
+				The attribute policy is only added to the core policy when OnElements(...)
+				are called.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Policy-fold-method-AllowRelativeURLs"><label for="Policy-fold-method-AllowRelativeURLs">(*T) <a href="../../../src/github.com/microcosm-cc/bluemonday/policy.go.html#line-342">AllowRelativeURLs</a>(require <a href="../../builtin.html#name-bool">bool</a>) *<b>Policy</b></label><span id='Policy-fold-method-AllowRelativeURLs-docs' class="fold-docs">
+				AllowRelativeURLs enables RequireParseableURLs and then permits URLs that
+				are parseable, have no schema information and url.IsAbs() returns false
+				This permits local URLs
+</span></span><span>
+			<input type='checkbox' class="fold" id="Policy-fold-method-AllowStandardAttributes"><label for="Policy-fold-method-AllowStandardAttributes">(*T) <a href="../../../src/github.com/microcosm-cc/bluemonday/helpers.go.html#line-145">AllowStandardAttributes</a>()</label><span id='Policy-fold-method-AllowStandardAttributes-docs' class="fold-docs">
+				AllowStandardAttributes will enable "id", "title" and the language specific
+				attributes "dir" and "lang" on all elements that are whitelisted
+</span></span><span>
+			<input type='checkbox' class="fold" id="Policy-fold-method-AllowStandardURLs"><label for="Policy-fold-method-AllowStandardURLs">(*T) <a href="../../../src/github.com/microcosm-cc/bluemonday/helpers.go.html#line-128">AllowStandardURLs</a>()</label><span id='Policy-fold-method-AllowStandardURLs-docs' class="fold-docs">
+				AllowStandardURLs is a convenience function that will enable rel="nofollow"
+				on "a", "area" and "link" (if you have allowed those elements) and will
+				ensure that the URL values are parseable and either relative or belong to the
+				"mailto", "http", or "https" schemes
+</span></span><span>
+			<input type='checkbox' class="fold" id="Policy-fold-method-AllowStyling"><label for="Policy-fold-method-AllowStyling">(*T) <a href="../../../src/github.com/microcosm-cc/bluemonday/helpers.go.html#line-170">AllowStyling</a>()</label><span id='Policy-fold-method-AllowStyling-docs' class="fold-docs">
+				AllowStyling presently enables the class attribute globally.
+
+				Note: When bluemonday ships a CSS parser and we can safely sanitise that,
+				this will also allow sanitized styling of elements via the style attribute.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Policy-fold-method-AllowTables"><label for="Policy-fold-method-AllowTables">(*T) <a href="../../../src/github.com/microcosm-cc/bluemonday/helpers.go.html#line-249">AllowTables</a>()</label><span id='Policy-fold-method-AllowTables-docs' class="fold-docs">
+				AllowTables will enable a rich set of elements and attributes to describe
+				HTML tables
+</span></span><span>
+			<input type='checkbox' class="fold" id="Policy-fold-method-AllowURLSchemeWithCustomPolicy"><label for="Policy-fold-method-AllowURLSchemeWithCustomPolicy">(*T) <a href="../../../src/github.com/microcosm-cc/bluemonday/policy.go.html#line-371">AllowURLSchemeWithCustomPolicy</a>(scheme <a href="../../builtin.html#name-string">string</a>, urlPolicy func(url *<a href="../../net/url.html">url</a>.<a href="../../net/url.html#name-URL">URL</a>) (allowUrl <a href="../../builtin.html#name-bool">bool</a>)) *<b>Policy</b></label><span id='Policy-fold-method-AllowURLSchemeWithCustomPolicy-docs' class="fold-docs">
+				AllowURLSchemeWithCustomPolicy will append URL schemes with
+				a custom URL policy to the whitelist.
+				Only the URLs with matching schema and urlPolicy(url)
+				returning true will be allowed.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Policy-fold-method-AllowURLSchemes"><label for="Policy-fold-method-AllowURLSchemes">(*T) <a href="../../../src/github.com/microcosm-cc/bluemonday/policy.go.html#line-352">AllowURLSchemes</a>(schemes ...<a href="../../builtin.html#name-string">string</a>) *<b>Policy</b></label><span id='Policy-fold-method-AllowURLSchemes-docs' class="fold-docs">
+				AllowURLSchemes will append URL schemes to the whitelist
+				Example: p.AllowURLSchemes("mailto", "http", "https")
+</span></span><span>
+			<input type='checkbox' class="fold" id="Policy-fold-method-RequireNoFollowOnFullyQualifiedLinks"><label for="Policy-fold-method-RequireNoFollowOnFullyQualifiedLinks">(*T) <a href="../../../src/github.com/microcosm-cc/bluemonday/policy.go.html#line-302">RequireNoFollowOnFullyQualifiedLinks</a>(require <a href="../../builtin.html#name-bool">bool</a>) *<b>Policy</b></label><span id='Policy-fold-method-RequireNoFollowOnFullyQualifiedLinks-docs' class="fold-docs">
+				RequireNoFollowOnFullyQualifiedLinks will result in all &lt;a&gt; tags that point
+				to a non-local destination (i.e. starts with a protocol and has a host)
+				having a rel="nofollow" added to them if one does not already exist
+
+				Note: This requires p.RequireParseableURLs(true) and will enable it.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Policy-fold-method-RequireNoFollowOnLinks"><label for="Policy-fold-method-RequireNoFollowOnLinks">(*T) <a href="../../../src/github.com/microcosm-cc/bluemonday/policy.go.html#line-289">RequireNoFollowOnLinks</a>(require <a href="../../builtin.html#name-bool">bool</a>) *<b>Policy</b></label><span id='Policy-fold-method-RequireNoFollowOnLinks-docs' class="fold-docs">
+				RequireNoFollowOnLinks will result in all &lt;a&gt; tags having a rel="nofollow"
+				added to them if one does not already exist
+
+				Note: This requires p.RequireParseableURLs(true) and will enable it.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Policy-fold-method-RequireParseableURLs"><label for="Policy-fold-method-RequireParseableURLs">(*T) <a href="../../../src/github.com/microcosm-cc/bluemonday/policy.go.html#line-332">RequireParseableURLs</a>(require <a href="../../builtin.html#name-bool">bool</a>) *<b>Policy</b></label><span id='Policy-fold-method-RequireParseableURLs-docs' class="fold-docs">
+				RequireParseableURLs will result in all URLs requiring that they be parseable
+				by "net/url" url.Parse()
+				This applies to:
+				- a.href
+				- area.href
+				- blockquote.cite
+				- img.src
+				- link.href
+				- script.src
+</span></span><span>
+			<input type='checkbox' class="fold" id="Policy-fold-method-Sanitize"><label for="Policy-fold-method-Sanitize">(*T) <a href="../../../src/github.com/microcosm-cc/bluemonday/sanitize.go.html#line-54">Sanitize</a>(s <a href="../../builtin.html#name-string">string</a>) <a href="../../builtin.html#name-string">string</a></label><span id='Policy-fold-method-Sanitize-docs' class="fold-docs">
+				Sanitize takes a string that contains a HTML fragment or document and applies
+				the given policy whitelist.
+
+				It returns a HTML string that has been sanitized by the policy or an empty
+				string if an error has occurred (most likely as a consequence of extremely
+				malformed input)
+</span></span><span>
+			<input type='checkbox' class="fold" id="Policy-fold-method-SanitizeBytes"><label for="Policy-fold-method-SanitizeBytes">(*T) <a href="../../../src/github.com/microcosm-cc/bluemonday/sanitize.go.html#line-68">SanitizeBytes</a>(b []<a href="../../builtin.html#name-byte">byte</a>) []<a href="../../builtin.html#name-byte">byte</a></label><span id='Policy-fold-method-SanitizeBytes-docs' class="fold-docs">
+				SanitizeBytes takes a []byte that contains a HTML fragment or document and applies
+				the given policy whitelist.
+
+				It returns a []byte containing the HTML that has been sanitized by the policy
+				or an empty []byte if an error has occurred (most likely as a consequence of
+				extremely malformed input)
+</span></span><span>
+			<input type='checkbox' class="fold" id="Policy-fold-method-SanitizeReader"><label for="Policy-fold-method-SanitizeReader">(*T) <a href="../../../src/github.com/microcosm-cc/bluemonday/sanitize.go.html#line-81">SanitizeReader</a>(r <a href="../../io.html">io</a>.<a href="../../io.html#name-Reader">Reader</a>) *<a href="../../bytes.html">bytes</a>.<a href="../../bytes.html#name-Buffer">Buffer</a></label><span id='Policy-fold-method-SanitizeReader-docs' class="fold-docs">
+				SanitizeReader takes an io.Reader that contains a HTML fragment or document
+				and applies the given policy whitelist.
+
+				It returns a bytes.Buffer containing the HTML that has been sanitized by the
+				policy. Errors during sanitization will merely return an empty result.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Policy-fold-method-SkipElementsContent"><label for="Policy-fold-method-SkipElementsContent">(*T) <a href="../../../src/github.com/microcosm-cc/bluemonday/policy.go.html#line-406">SkipElementsContent</a>(names ...<a href="../../builtin.html#name-string">string</a>) *<b>Policy</b></label><span id='Policy-fold-method-SkipElementsContent-docs' class="fold-docs">
+				SkipElementsContent adds the HTML elements whose tags is needed to be removed
+				with its content.
+</span></span>
+			<input type='checkbox' class="showhide" id="Policy-showhide-methods"><i><label for="Policy-showhide-methods" class="show-inline">/* 7 unexporteds ... */</label><label for="Policy-showhide-methods" class="hide-inline">/* 7 unexporteds: */</label></i><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="Policy-fold-method-addDefaultElementsWithoutAttrs"><label for="Policy-fold-method-addDefaultElementsWithoutAttrs">(*T) <a href="../../../src/github.com/microcosm-cc/bluemonday/policy.go.html#line-438">addDefaultElementsWithoutAttrs</a>()</label><span id='Policy-fold-method-addDefaultElementsWithoutAttrs-docs' class="fold-docs">
+				addDefaultElementsWithoutAttrs adds the HTML elements that we know are valid
+				without any attributes to an internal map.
+				i.e. we know that &lt;table&gt; is valid, but &lt;bdo&gt; isn't valid as the "dir" attr
+				is mandatory
+</span></i></span><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="Policy-fold-method-addDefaultSkipElementContent"><label for="Policy-fold-method-addDefaultSkipElementContent">(*T) <a href="../../../src/github.com/microcosm-cc/bluemonday/policy.go.html#line-538">addDefaultSkipElementContent</a>()</label><span id='Policy-fold-method-addDefaultSkipElementContent-docs' class="fold-docs">
+				addDefaultSkipElementContent adds the HTML elements that we should skip
+				rendering the character content of, if the element itself is not allowed.
+				This is all character data that the end user would not normally see.
+				i.e. if we exclude a &lt;script&gt; tag then we shouldn't render the JavaScript or
+				anything else until we encounter the closing &lt;/script&gt; tag.
+</span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../src/github.com/microcosm-cc/bluemonday/sanitize.go.html#line-504">allowNoAttrs</a>(elementName <a href="../../builtin.html#name-string">string</a>) <a href="../../builtin.html#name-bool">bool</a></span></i></span><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="Policy-fold-method-init"><label for="Policy-fold-method-init">(*T) <a href="../../../src/github.com/microcosm-cc/bluemonday/policy.go.html#line-117">init</a>()</label><span id='Policy-fold-method-init-docs' class="fold-docs">
+				init initializes the maps if this has not been done already
+</span></i></span><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="Policy-fold-method-sanitize"><label for="Policy-fold-method-sanitize">(*T) <a href="../../../src/github.com/microcosm-cc/bluemonday/sanitize.go.html#line-86">sanitize</a>(r <a href="../../io.html">io</a>.<a href="../../io.html#name-Reader">Reader</a>) *<a href="../../bytes.html">bytes</a>.<a href="../../bytes.html#name-Buffer">Buffer</a></label><span id='Policy-fold-method-sanitize-docs' class="fold-docs">
+				Performs the actual sanitization process.
+</span></i></span><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="Policy-fold-method-sanitizeAttrs"><label for="Policy-fold-method-sanitizeAttrs">(*T) <a href="../../../src/github.com/microcosm-cc/bluemonday/sanitize.go.html#line-255">sanitizeAttrs</a>(elementName <a href="../../builtin.html#name-string">string</a>, attrs []<a href="../../golang.org/x/net/html.html">html</a>.<a href="../../golang.org/x/net/html.html#name-Attribute">Attribute</a>, aps map[<a href="../../builtin.html#name-string">string</a>]<a href="#name-attrPolicy">attrPolicy</a>) []<a href="../../golang.org/x/net/html.html">html</a>.<a href="../../golang.org/x/net/html.html#name-Attribute">Attribute</a></label><span id='Policy-fold-method-sanitizeAttrs-docs' class="fold-docs">
+				sanitizeAttrs takes a set of element attribute policies and the global
+				attribute policies and applies them to the []html.Attribute returning a set
+				of html.Attributes that match the policies
+</span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../src/github.com/microcosm-cc/bluemonday/sanitize.go.html#line-509">validURL</a>(rawurl <a href="../../builtin.html#name-string">string</a>) (<a href="../../builtin.html#name-string">string</a>, <a href="../../builtin.html#name-bool">bool</a>)</span></i></span></span>
+		<input type='checkbox' class="fold" id="Policy-fold-results"><label for="Policy-fold-results">As Outputs Of (<i>at least 15, all are exported</i>)</label><span id='Policy-fold-results-items' class="fold-items"><span>
+			func <a href="#name-NewPolicy">NewPolicy</a>() *<b>Policy</b></span><span>
+			func <a href="#name-StrictPolicy">StrictPolicy</a>() *<b>Policy</b></span><span>
+			func <a href="#name-StripTagsPolicy">StripTagsPolicy</a>() *<b>Policy</b></span><span>
+			func <a href="#name-UGCPolicy">UGCPolicy</a>() *<b>Policy</b></span><span>
+			func (*Policy).<a href="../../../src/github.com/microcosm-cc/bluemonday/policy.go.html#line-397">AddSpaceWhenStrippingTag</a>(allow <a href="../../builtin.html#name-bool">bool</a>) *<b>Policy</b></span><span>
+			func (*Policy).<a href="../../../src/github.com/microcosm-cc/bluemonday/policy.go.html#line-315">AddTargetBlankToFullyQualifiedLinks</a>(require <a href="../../builtin.html#name-bool">bool</a>) *<b>Policy</b></span><span>
+			func (*Policy).<a href="../../../src/github.com/microcosm-cc/bluemonday/policy.go.html#line-271">AllowElements</a>(names ...<a href="../../builtin.html#name-string">string</a>) *<b>Policy</b></span><span>
+			func (*Policy).<a href="../../../src/github.com/microcosm-cc/bluemonday/policy.go.html#line-423">AllowElementsContent</a>(names ...<a href="../../builtin.html#name-string">string</a>) *<b>Policy</b></span><span>
+			func (*Policy).<a href="../../../src/github.com/microcosm-cc/bluemonday/policy.go.html#line-342">AllowRelativeURLs</a>(require <a href="../../builtin.html#name-bool">bool</a>) *<b>Policy</b></span><span>
+			func (*Policy).<a href="../../../src/github.com/microcosm-cc/bluemonday/policy.go.html#line-352">AllowURLSchemes</a>(schemes ...<a href="../../builtin.html#name-string">string</a>) *<b>Policy</b></span><span>
+			func (*Policy).<a href="../../../src/github.com/microcosm-cc/bluemonday/policy.go.html#line-371">AllowURLSchemeWithCustomPolicy</a>(scheme <a href="../../builtin.html#name-string">string</a>, urlPolicy func(url *<a href="../../net/url.html">url</a>.<a href="../../net/url.html#name-URL">URL</a>) (allowUrl <a href="../../builtin.html#name-bool">bool</a>)) *<b>Policy</b></span><span>
+			func (*Policy).<a href="../../../src/github.com/microcosm-cc/bluemonday/policy.go.html#line-302">RequireNoFollowOnFullyQualifiedLinks</a>(require <a href="../../builtin.html#name-bool">bool</a>) *<b>Policy</b></span><span>
+			func (*Policy).<a href="../../../src/github.com/microcosm-cc/bluemonday/policy.go.html#line-289">RequireNoFollowOnLinks</a>(require <a href="../../builtin.html#name-bool">bool</a>) *<b>Policy</b></span><span>
+			func (*Policy).<a href="../../../src/github.com/microcosm-cc/bluemonday/policy.go.html#line-332">RequireParseableURLs</a>(require <a href="../../builtin.html#name-bool">bool</a>) *<b>Policy</b></span><span>
+			func (*Policy).<a href="../../../src/github.com/microcosm-cc/bluemonday/policy.go.html#line-406">SkipElementsContent</a>(names ...<a href="../../builtin.html#name-string">string</a>) *<b>Policy</b></span></span>
+
+</span></div></div><div>	<input type='checkbox' class="showhide" id="unexported-typenames-showhide"><i><label for="unexported-typenames-showhide" class="show-inline">/* 3 unexporteds ... */</label><label for="unexported-typenames-showhide" class="hide-inline">/* 3 unexporteds: */</label></i><div class="anchor type-res hidden" id="name-attrPolicy" data-popularity="35">	<input type='checkbox' class="fold" id="attrPolicy-fold-content"><label for="attrPolicy-fold-content"> <a href="../../../use/github.com/microcosm-cc/bluemonday..attrPolicy*9b583.html">type</a> <a href="../../../src/github.com/microcosm-cc/bluemonday/policy.go.html#line-99">attrPolicy</a> <i>(struct)</i></label><span id='attrPolicy-fold-content-docs' class="fold-docs">
+
+		<input type='checkbox' class="fold" id="attrPolicy-fold-fields"><label for="attrPolicy-fold-fields">Fields (<i>only one, which is unexported</i>)</label><span id='attrPolicy-fold-fields-items' class="fold-items">
+			<input type='checkbox' checked class="showhide" id="attrPolicy-showhide-fields"><i><label for="attrPolicy-showhide-fields" class="show-inline">/* one unexported ... */</label><label for="attrPolicy-showhide-fields" class="hide-inline">/* one unexported: */</label></i><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="attrPolicy-fold-field-regexp"><label for="attrPolicy-fold-field-regexp"><a href="../../../src/github.com/microcosm-cc/bluemonday/policy.go.html#line-103">regexp</a> <i>*<a href="../../regexp.html">regexp</a>.<a href="../../regexp.html#name-Regexp">Regexp</a></i></label><span id='attrPolicy-fold-field-regexp-docs' class="fold-docs">
+				optional pattern to match, when not nil the regexp needs to match
+				otherwise the attribute is removed
+</span></i></span></span>
+		<input type='checkbox' class="fold" id="attrPolicy-fold-params"><label for="attrPolicy-fold-params">As Inputs Of (<i>at least one unexported</i>)</label><span id='attrPolicy-fold-params-items' class="fold-items">
+			<input type='checkbox' checked class="showhide" id="attrPolicy-showhide-outputofs"><i><label for="attrPolicy-showhide-outputofs" class="show-inline">/* at least one unexported ... */</label><label for="attrPolicy-showhide-outputofs" class="hide-inline">/* at least one unexported: */</label></i><span class="hidden"><i>
+			func (*<a href="#name-Policy">Policy</a>).<a href="../../../src/github.com/microcosm-cc/bluemonday/sanitize.go.html#line-255">sanitizeAttrs</a>(elementName <a href="../../builtin.html#name-string">string</a>, attrs []<a href="../../golang.org/x/net/html.html">html</a>.<a href="../../golang.org/x/net/html.html#name-Attribute">Attribute</a>, aps map[<a href="../../builtin.html#name-string">string</a>]<b>attrPolicy</b>) []<a href="../../golang.org/x/net/html.html">html</a>.<a href="../../golang.org/x/net/html.html#name-Attribute">Attribute</a></i></span></span>
+
+</span></div><div class="anchor type-res hidden" id="name-attrPolicyBuilder" data-popularity="350">	<input type='checkbox' class="fold" id="attrPolicyBuilder-fold-content"><label for="attrPolicyBuilder-fold-content"> <a href="../../../use/github.com/microcosm-cc/bluemonday..attrPolicyBuilder*9a88f.html">type</a> <a href="../../../src/github.com/microcosm-cc/bluemonday/policy.go.html#line-106">attrPolicyBuilder</a> <i>(struct)</i></label><span id='attrPolicyBuilder-fold-content-docs' class="fold-docs">
+
+		<input type='checkbox' class="fold" id="attrPolicyBuilder-fold-fields"><label for="attrPolicyBuilder-fold-fields">Fields (<i>total 4, none are exported</i>)</label><span id='attrPolicyBuilder-fold-fields-items' class="fold-items">
+			<input type='checkbox' checked class="showhide" id="attrPolicyBuilder-showhide-fields"><i><label for="attrPolicyBuilder-showhide-fields" class="show-inline">/* 4 unexporteds ... */</label><label for="attrPolicyBuilder-showhide-fields" class="hide-inline">/* 4 unexporteds: */</label></i><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/github.com/microcosm-cc/bluemonday/policy.go.html#line-111">allowEmpty</a> <i><a href="../../builtin.html#name-bool">bool</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/github.com/microcosm-cc/bluemonday/policy.go.html#line-109">attrNames</a> <i>[]<a href="../../builtin.html#name-string">string</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/github.com/microcosm-cc/bluemonday/policy.go.html#line-107">p</a> <i>*<a href="#name-Policy">Policy</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/github.com/microcosm-cc/bluemonday/policy.go.html#line-110">regexp</a> <i>*<a href="../../regexp.html">regexp</a>.<a href="../../regexp.html#name-Regexp">Regexp</a></i></span></i></span></span>
+		<input type='checkbox' class="fold" id="attrPolicyBuilder-fold-methods"><label for="attrPolicyBuilder-fold-methods">Methods (<i>total 4, all are exported</i>)</label><span id='attrPolicyBuilder-fold-methods-items' class="fold-items"><span>
+			<input type='checkbox' class="fold" id="attrPolicyBuilder-fold-method-AllowNoAttrs"><label for="attrPolicyBuilder-fold-method-AllowNoAttrs">(*T) <a href="../../../src/github.com/microcosm-cc/bluemonday/policy.go.html#line-198">AllowNoAttrs</a>() *<b>attrPolicyBuilder</b></label><span id='attrPolicyBuilder-fold-method-AllowNoAttrs-docs' class="fold-docs">
+				AllowNoAttrs says that attributes on element are optional.
+
+				The attribute policy is only added to the core policy when OnElements(...)
+				are called.
+</span></span><span>
+			<input type='checkbox' class="fold" id="attrPolicyBuilder-fold-method-Globally"><label for="attrPolicyBuilder-fold-method-Globally">(*T) <a href="../../../src/github.com/microcosm-cc/bluemonday/policy.go.html#line-250">Globally</a>() *<a href="#name-Policy">Policy</a></label><span id='attrPolicyBuilder-fold-method-Globally-docs' class="fold-docs">
+				Globally will bind an attribute policy to all HTML elements and return the
+				updated policy
+</span></span><span>
+			<input type='checkbox' class="fold" id="attrPolicyBuilder-fold-method-Matching"><label for="attrPolicyBuilder-fold-method-Matching">(*T) <a href="../../../src/github.com/microcosm-cc/bluemonday/policy.go.html#line-208">Matching</a>(regex *<a href="../../regexp.html">regexp</a>.<a href="../../regexp.html#name-Regexp">Regexp</a>) *<b>attrPolicyBuilder</b></label><span id='attrPolicyBuilder-fold-method-Matching-docs' class="fold-docs">
+				Matching allows a regular expression to be applied to a nascent attribute
+				policy, and returns the attribute policy. Calling this more than once will
+				replace the existing regexp.
+</span></span><span>
+			<input type='checkbox' class="fold" id="attrPolicyBuilder-fold-method-OnElements"><label for="attrPolicyBuilder-fold-method-OnElements">(*T) <a href="../../../src/github.com/microcosm-cc/bluemonday/policy.go.html#line-217">OnElements</a>(elements ...<a href="../../builtin.html#name-string">string</a>) *<a href="#name-Policy">Policy</a></label><span id='attrPolicyBuilder-fold-method-OnElements-docs' class="fold-docs">
+				OnElements will bind an attribute policy to a given range of HTML elements
+				and return the updated policy
+</span></span></span>
+		<input type='checkbox' class="fold" id="attrPolicyBuilder-fold-results"><label for="attrPolicyBuilder-fold-results">As Outputs Of (<i>at least 2, both are exported</i>)</label><span id='attrPolicyBuilder-fold-results-items' class="fold-items"><span>
+			func (*<a href="#name-Policy">Policy</a>).<a href="../../../src/github.com/microcosm-cc/bluemonday/policy.go.html#line-148">AllowAttrs</a>(attrNames ...<a href="../../builtin.html#name-string">string</a>) *<b>attrPolicyBuilder</b></span><span>
+			func (*<a href="#name-Policy">Policy</a>).<a href="../../../src/github.com/microcosm-cc/bluemonday/policy.go.html#line-183">AllowNoAttrs</a>() *<b>attrPolicyBuilder</b></span></span>
+
+</span></div><div class="anchor type-res hidden" id="name-urlPolicy" data-popularity="0">	<span class="nodocs"> <a href="../../../use/github.com/microcosm-cc/bluemonday..urlPolicy*38fee.html">type</a> <a href="../../../src/github.com/microcosm-cc/bluemonday/policy.go.html#line-114">urlPolicy</a> <i>(func)</i></span></div></div>
+<div id="exported-functions"><span class="title">Package-Level Functions<span class="title-stat"><i> (total 6, in which 4 are exported)</i></span></span>
+
+<div class="anchor value-res" id="name-NewPolicy">	<input type='checkbox' class="fold" id="NewPolicy-fold-content"><label for="NewPolicy-fold-content"> <a href="../../../use/github.com/microcosm-cc/bluemonday..NewPolicy.html">func</a> <a href="../../../src/github.com/microcosm-cc/bluemonday/policy.go.html#line-132">NewPolicy</a>() *<a href="#name-Policy">Policy</a></label><span id='NewPolicy-fold-content-docs' class="fold-docs">
+		NewPolicy returns a blank policy with nothing whitelisted or permitted. This
+		is the recommended way to start building a policy and you should now use
+		AllowAttrs() and/or AllowElements() to construct the whitelist of HTML
+		elements and attributes.
+
+</span></div><div class="anchor value-res" id="name-StrictPolicy">	<input type='checkbox' class="fold" id="StrictPolicy-fold-content"><label for="StrictPolicy-fold-content"> <a href="../../../use/github.com/microcosm-cc/bluemonday..StrictPolicy.html">func</a> <a href="../../../src/github.com/microcosm-cc/bluemonday/policies.go.html#line-38">StrictPolicy</a>() *<a href="#name-Policy">Policy</a></label><span id='StrictPolicy-fold-content-docs' class="fold-docs">
+		StrictPolicy returns an empty policy, which will effectively strip all HTML
+		elements and their attributes from a document.
+
+</span></div><div class="anchor value-res" id="name-StripTagsPolicy">	<input type='checkbox' class="fold" id="StripTagsPolicy-fold-content"><label for="StripTagsPolicy-fold-content"> <a href="../../../use/github.com/microcosm-cc/bluemonday..StripTagsPolicy.html">func</a> <a href="../../../src/github.com/microcosm-cc/bluemonday/policies.go.html#line-43">StripTagsPolicy</a>() *<a href="#name-Policy">Policy</a></label><span id='StripTagsPolicy-fold-content-docs' class="fold-docs">
+		StripTagsPolicy is DEPRECATED. Use StrictPolicy instead.
+
+</span></div><div class="anchor value-res" id="name-UGCPolicy">	<input type='checkbox' class="fold" id="UGCPolicy-fold-content"><label for="UGCPolicy-fold-content"> <a href="../../../use/github.com/microcosm-cc/bluemonday..UGCPolicy.html">func</a> <a href="../../../src/github.com/microcosm-cc/bluemonday/policies.go.html#line-54">UGCPolicy</a>() *<a href="#name-Policy">Policy</a></label><span id='UGCPolicy-fold-content-docs' class="fold-docs">
+		UGCPolicy returns a policy aimed at user generated content that is a result
+		of HTML WYSIWYG tools and Markdown conversions.
+
+		This is expected to be a fairly rich document where as much markup as
+		possible should be retained. Markdown permits raw HTML so we are basically
+		providing a policy to sanitise HTML5 documents safely but with the
+		least intrusion on the formatting expectations of the user.
+
+</span></div>	<input type='checkbox' class="showhide" id="unexported-functions-showhide"><i><label for="unexported-functions-showhide" class="show-inline">/* 2 unexporteds ... */</label><label for="unexported-functions-showhide" class="hide-inline">/* 2 unexporteds: */</label></i><div class="anchor value-res hidden" id="name-isDataAttribute"><i>	<span class="nodocs"> <a href="../../../use/github.com/microcosm-cc/bluemonday..isDataAttribute*bb0be.html">func</a> <a href="../../../src/github.com/microcosm-cc/bluemonday/sanitize.go.html#line-564">isDataAttribute</a>(val <a href="../../builtin.html#name-string">string</a>) <a href="../../builtin.html#name-bool">bool</a></span></i></div><div class="anchor value-res hidden" id="name-linkable"><i>	<span class="nodocs"> <a href="../../../use/github.com/microcosm-cc/bluemonday..linkable*12681.html">func</a> <a href="../../../src/github.com/microcosm-cc/bluemonday/sanitize.go.html#line-555">linkable</a>(elementName <a href="../../builtin.html#name-string">string</a>) <a href="../../builtin.html#name-bool">bool</a></span></i></div></div>
+<div id="exported-variables"><span class="title">Package-Level Variables<span class="title-stat"><i> (total 15, in which 11 are exported)</i></span></span>
+
+<div class="anchor value-res" id="name-CellAlign">	<input type='checkbox' class="fold" id="CellAlign-fold-content"><label for="CellAlign-fold-content">  <a href="../../../use/github.com/microcosm-cc/bluemonday..CellAlign.html">var</a> <a href="../../../src/github.com/microcosm-cc/bluemonday/helpers.go.html#line-43">CellAlign</a> *<a href="../../regexp.html">regexp</a>.<a href="../../regexp.html#name-Regexp">Regexp</a></label><span id='CellAlign-fold-content-docs' class="fold-docs">
+		CellAlign handles the `align` attribute
+		https://developer.mozilla.org/en-US/docs/Web/HTML/Element/td#attr-align
+
+</span></div><div class="anchor value-res" id="name-CellVerticalAlign">	<input type='checkbox' class="fold" id="CellVerticalAlign-fold-content"><label for="CellVerticalAlign-fold-content">  <a href="../../../use/github.com/microcosm-cc/bluemonday..CellVerticalAlign.html">var</a> <a href="../../../src/github.com/microcosm-cc/bluemonday/helpers.go.html#line-47">CellVerticalAlign</a> *<a href="../../regexp.html">regexp</a>.<a href="../../regexp.html#name-Regexp">Regexp</a></label><span id='CellVerticalAlign-fold-content-docs' class="fold-docs">
+		CellVerticalAlign handles the `valign` attribute
+		https://developer.mozilla.org/en-US/docs/Web/HTML/Element/td#attr-valign
+
+</span></div><div class="anchor value-res" id="name-Direction">	<input type='checkbox' class="fold" id="Direction-fold-content"><label for="Direction-fold-content">  <a href="../../../use/github.com/microcosm-cc/bluemonday..Direction.html">var</a> <a href="../../../src/github.com/microcosm-cc/bluemonday/helpers.go.html#line-51">Direction</a> *<a href="../../regexp.html">regexp</a>.<a href="../../regexp.html#name-Regexp">Regexp</a></label><span id='Direction-fold-content-docs' class="fold-docs">
+		Direction handles the `dir` attribute
+		https://developer.mozilla.org/en-US/docs/Web/HTML/Element/bdo#attr-dir
+
+</span></div><div class="anchor value-res" id="name-ImageAlign">	<input type='checkbox' class="fold" id="ImageAlign-fold-content"><label for="ImageAlign-fold-content">  <a href="../../../use/github.com/microcosm-cc/bluemonday..ImageAlign.html">var</a> <a href="../../../src/github.com/microcosm-cc/bluemonday/helpers.go.html#line-55">ImageAlign</a> *<a href="../../regexp.html">regexp</a>.<a href="../../regexp.html#name-Regexp">Regexp</a></label><span id='ImageAlign-fold-content-docs' class="fold-docs">
+		ImageAlign handles the `align` attribute on the `image` tag
+		http://www.w3.org/MarkUp/Test/Img/imgtest.html
+
+</span></div><div class="anchor value-res" id="name-Integer">	<input type='checkbox' class="fold" id="Integer-fold-content"><label for="Integer-fold-content">  <a href="../../../use/github.com/microcosm-cc/bluemonday..Integer.html">var</a> <a href="../../../src/github.com/microcosm-cc/bluemonday/helpers.go.html#line-62">Integer</a> *<a href="../../regexp.html">regexp</a>.<a href="../../regexp.html#name-Regexp">Regexp</a></label><span id='Integer-fold-content-docs' class="fold-docs">
+		Integer describes whole positive integers (including 0) used in places
+		like td.colspan
+		https://developer.mozilla.org/en-US/docs/Web/HTML/Element/td#attr-colspan
+
+</span></div><div class="anchor value-res" id="name-ISO8601">	<input type='checkbox' class="fold" id="ISO8601-fold-content"><label for="ISO8601-fold-content">  <a href="../../../use/github.com/microcosm-cc/bluemonday..ISO8601.html">var</a> <a href="../../../src/github.com/microcosm-cc/bluemonday/helpers.go.html#line-84">ISO8601</a> *<a href="../../regexp.html">regexp</a>.<a href="../../regexp.html#name-Regexp">Regexp</a></label><span id='ISO8601-fold-content-docs' class="fold-docs">
+		ISO8601 according to the W3 group is only a subset of the ISO8601
+		standard: http://www.w3.org/TR/NOTE-datetime
+
+		Used in places like time.datetime
+		https://developer.mozilla.org/en-US/docs/Web/HTML/Element/time#attr-datetime
+
+		Matches patterns:
+		 Year:
+		    YYYY (eg 1997)
+		 Year and month:
+		    YYYY-MM (eg 1997-07)
+		 Complete date:
+		    YYYY-MM-DD (eg 1997-07-16)
+		 Complete date plus hours and minutes:
+		    YYYY-MM-DDThh:mmTZD (eg 1997-07-16T19:20+01:00)
+		 Complete date plus hours, minutes and seconds:
+		    YYYY-MM-DDThh:mm:ssTZD (eg 1997-07-16T19:20:30+01:00)
+		 Complete date plus hours, minutes, seconds and a decimal fraction of a
+		 second
+		     YYYY-MM-DDThh:mm:ss.sTZD (eg 1997-07-16T19:20:30.45+01:00)
+
+</span></div><div class="anchor value-res" id="name-ListType">	<input type='checkbox' class="fold" id="ListType-fold-content"><label for="ListType-fold-content">  <a href="../../../use/github.com/microcosm-cc/bluemonday..ListType.html">var</a> <a href="../../../src/github.com/microcosm-cc/bluemonday/helpers.go.html#line-92">ListType</a> *<a href="../../regexp.html">regexp</a>.<a href="../../regexp.html#name-Regexp">Regexp</a></label><span id='ListType-fold-content-docs' class="fold-docs">
+		ListType encapsulates the common value as well as the latest spec
+		values for lists
+		https://developer.mozilla.org/en-US/docs/Web/HTML/Element/ol#attr-type
+
+</span></div><div class="anchor value-res" id="name-Number">	<input type='checkbox' class="fold" id="Number-fold-content"><label for="Number-fold-content">  <a href="../../../use/github.com/microcosm-cc/bluemonday..Number.html">var</a> <a href="../../../src/github.com/microcosm-cc/bluemonday/helpers.go.html#line-102">Number</a> *<a href="../../regexp.html">regexp</a>.<a href="../../regexp.html#name-Regexp">Regexp</a></label><span id='Number-fold-content-docs' class="fold-docs">
+		Number is a double value used on HTML5 meter and progress elements
+		http://www.whatwg.org/specs/web-apps/current-work/multipage/the-button-element.html#the-meter-element
+
+</span></div><div class="anchor value-res" id="name-NumberOrPercent">	<input type='checkbox' class="fold" id="NumberOrPercent-fold-content"><label for="NumberOrPercent-fold-content">  <a href="../../../use/github.com/microcosm-cc/bluemonday..NumberOrPercent.html">var</a> <a href="../../../src/github.com/microcosm-cc/bluemonday/helpers.go.html#line-107">NumberOrPercent</a> *<a href="../../regexp.html">regexp</a>.<a href="../../regexp.html#name-Regexp">Regexp</a></label><span id='NumberOrPercent-fold-content-docs' class="fold-docs">
+		NumberOrPercent is used predominantly as units of measurement in width
+		and height attributes
+		https://developer.mozilla.org/en-US/docs/Web/HTML/Element/img#attr-height
+
+</span></div><div class="anchor value-res" id="name-Paragraph">	<input type='checkbox' class="fold" id="Paragraph-fold-content"><label for="Paragraph-fold-content">  <a href="../../../use/github.com/microcosm-cc/bluemonday..Paragraph.html">var</a> <a href="../../../src/github.com/microcosm-cc/bluemonday/helpers.go.html#line-112">Paragraph</a> *<a href="../../regexp.html">regexp</a>.<a href="../../regexp.html#name-Regexp">Regexp</a></label><span id='Paragraph-fold-content-docs' class="fold-docs">
+		Paragraph of text in an attribute such as *.'title', img.alt, etc
+		https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes#attr-title
+		Note that we are not allowing chars that could close tags like '&gt;'
+
+</span></div><div class="anchor value-res" id="name-SpaceSeparatedTokens">	<input type='checkbox' class="fold" id="SpaceSeparatedTokens-fold-content"><label for="SpaceSeparatedTokens-fold-content">  <a href="../../../use/github.com/microcosm-cc/bluemonday..SpaceSeparatedTokens.html">var</a> <a href="../../../src/github.com/microcosm-cc/bluemonday/helpers.go.html#line-98">SpaceSeparatedTokens</a> *<a href="../../regexp.html">regexp</a>.<a href="../../regexp.html#name-Regexp">Regexp</a></label><span id='SpaceSeparatedTokens-fold-content-docs' class="fold-docs">
+		SpaceSeparatedTokens is used in places like `a.rel` and the common attribute
+		`class` which both contain space delimited lists of data tokens
+		http://www.w3.org/TR/html-markup/datatypes.html#common.data.tokens-def
+		Regexp: \p{L} matches unicode letters, \p{N} matches unicode numbers
+
+</span></div>	<input type='checkbox' class="showhide" id="unexported-variables-showhide"><i><label for="unexported-variables-showhide" class="show-inline">/* 4 unexporteds ... */</label><label for="unexported-variables-showhide" class="hide-inline">/* 4 unexporteds: */</label></i><div class="anchor value-res hidden" id="name-dataAttribute"><i>	<span class="nodocs">  <a href="../../../use/github.com/microcosm-cc/bluemonday..dataAttribute*b760c.html">var</a> <a href="../../../src/github.com/microcosm-cc/bluemonday/sanitize.go.html#line-43">dataAttribute</a> *<a href="../../regexp.html">regexp</a>.<a href="../../regexp.html#name-Regexp">Regexp</a></span></i></div><div class="anchor value-res hidden" id="name-dataAttributeInvalidChars"><i>	<span class="nodocs">  <a href="../../../use/github.com/microcosm-cc/bluemonday..dataAttributeInvalidChars*6aec4.html">var</a> <a href="../../../src/github.com/microcosm-cc/bluemonday/sanitize.go.html#line-45">dataAttributeInvalidChars</a> *<a href="../../regexp.html">regexp</a>.<a href="../../regexp.html#name-Regexp">Regexp</a></span></i></div><div class="anchor value-res hidden" id="name-dataAttributeXMLPrefix"><i>	<span class="nodocs">  <a href="../../../use/github.com/microcosm-cc/bluemonday..dataAttributeXMLPrefix*a9aeb.html">var</a> <a href="../../../src/github.com/microcosm-cc/bluemonday/sanitize.go.html#line-44">dataAttributeXMLPrefix</a> *<a href="../../regexp.html">regexp</a>.<a href="../../regexp.html#name-Regexp">Regexp</a></span></i></div><div class="anchor value-res hidden" id="name-dataURIImagePrefix"><i>	<input type='checkbox' class="fold" id="dataURIImagePrefix-fold-content"><label for="dataURIImagePrefix-fold-content">  <a href="../../../use/github.com/microcosm-cc/bluemonday..dataURIImagePrefix*6a37c.html">var</a> <a href="../../../src/github.com/microcosm-cc/bluemonday/helpers.go.html#line-119">dataURIImagePrefix</a> *<a href="../../regexp.html">regexp</a>.<a href="../../regexp.html#name-Regexp">Regexp</a></label><span id='dataURIImagePrefix-fold-content-docs' class="fold-docs">
+		dataURIImagePrefix is used by AllowDataURIImages to define the acceptable
+		prefix of data URIs that contain common web image formats.
+
+		This is not exported as it's not useful by itself, and only has value
+		within the AllowDataURIImages func
+
+</span></i></div></div></code></pre><pre id="footer">
+<table><tr><td><img src="../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

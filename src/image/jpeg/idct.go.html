@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: idct.go in package image/jpeg</title>
+<link href="../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	idct.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../pkg/image/jpeg.html">image/jpeg</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16],
+input[id=r17]:checked ~pre label[for=r17],
+input[id=r18]:checked ~pre label[for=r18],
+input[id=r19]:checked ~pre label[for=r19],
+input[id=r20]:checked ~pre label[for=r20],
+input[id=r21]:checked ~pre label[for=r21],
+input[id=r22]:checked ~pre label[for=r22],
+input[id=r23]:checked ~pre label[for=r23],
+input[id=r24]:checked ~pre label[for=r24],
+input[id=r25]:checked ~pre label[for=r25]
+{background: #226; color: #ff8;}
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="r17" type="radio" name="g"/>
+<input id="r18" type="radio" name="g"/>
+<input id="r19" type="radio" name="g"/>
+<input id="r20" type="radio" name="g"/>
+<input id="r21" type="radio" name="g"/>
+<input id="r22" type="radio" name="g"/>
+<input id="r23" type="radio" name="g"/>
+<input id="r24" type="radio" name="g"/>
+<input id="r25" type="radio" name="g"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2009 The Go Authors. All rights reserved.</span><span class="comment"> Use of this source code is governed by a BSD-style</span><span class="comment"> license that can be found in the LICENSE file.</span></div>
+<div class="code"><pre><code>
+<span class="keyword">package</span> jpeg
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> This is a Go translation of idct.c from</span><span class="comment"></span><span class="comment"> http://standards.iso.org/ittf/PubliclyAvailableStandards/ISO_IEC_13818-4_2004_Conformance_Testing/Video/verifier/mpeg2decode_960109.tar.gz</span><span class="comment"></span><span class="comment"> which carries the following notice:</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Copyright (C) 1996, MPEG Software Simulation Group. All Rights Reserved. </span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"></span><span class="comment"> * Disclaimer of Warranty</span><span class="comment"> *</span><span class="comment"> * These software programs are available to the user without any license fee or</span><span class="comment"> * royalty on an "as is" basis.  The MPEG Software Simulation Group disclaims</span><span class="comment"> * any and all warranties, whether express, implied, or statuary, including any</span><span class="comment"> * implied warranties or merchantability or of fitness for a particular</span><span class="comment"> * purpose.  In no event shall the copyright-holder be liable for any</span><span class="comment"> * incidental, punitive, or consequential damages of any kind whatsoever</span><span class="comment"> * arising from the use of these programs.</span><span class="comment"> *</span><span class="comment"> * This disclaimer of warranty extends to the user of these programs and user's</span><span class="comment"> * customers, employees, agents, transferees, successors, and assigns.</span><span class="comment"> *</span><span class="comment"> * The MPEG Software Simulation Group does not represent or warrant that the</span><span class="comment"> * programs furnished hereunder are free of infringement of any third-party</span><span class="comment"> * patents.</span><span class="comment"> *</span><span class="comment"> * Commercial implementations of MPEG-1 and MPEG-2 video, including shareware,</span><span class="comment"> * are subject to royalty fees to patent holders.  Many of these patents are</span><span class="comment"> * general enough such that they are unavoidable regardless of implementation</span><span class="comment"> * design.</span><span class="comment"> *</span><span class="comment"> </span></div>
+<div class="code"><pre><code>
+<span class="keyword">const</span> <a href="../../../pkg/image/jpeg.html#name-blockSize" class="ident">blockSize</a> = <span class="lit-number">64</span> <span class="comment">// A DCT block is 8x8.</span>
+
+<span class="keyword">type</span> <a href="../../../pkg/image/jpeg.html#name-block" class="ident">block</a> [<a href="#line-40" class="ident">blockSize</a>]<a href="../../../pkg/builtin.html#name-int32" class="ident">int32</a>
+
+<span class="keyword">const</span> (
+	<a href="../../../pkg/image/jpeg.html#name-w1" class="ident">w1</a> = <span class="lit-number">2841</span> <span class="comment">// 2048*sqrt(2)*cos(1*pi/16)</span>
+	<a href="../../../pkg/image/jpeg.html#name-w2" class="ident">w2</a> = <span class="lit-number">2676</span> <span class="comment">// 2048*sqrt(2)*cos(2*pi/16)</span>
+	<a href="../../../pkg/image/jpeg.html#name-w3" class="ident">w3</a> = <span class="lit-number">2408</span> <span class="comment">// 2048*sqrt(2)*cos(3*pi/16)</span>
+	<a href="../../../pkg/image/jpeg.html#name-w5" class="ident">w5</a> = <span class="lit-number">1609</span> <span class="comment">// 2048*sqrt(2)*cos(5*pi/16)</span>
+	<a href="../../../pkg/image/jpeg.html#name-w6" class="ident">w6</a> = <span class="lit-number">1108</span> <span class="comment">// 2048*sqrt(2)*cos(6*pi/16)</span>
+	<a href="../../../pkg/image/jpeg.html#name-w7" class="ident">w7</a> = <span class="lit-number">565</span>  <span class="comment">// 2048*sqrt(2)*cos(7*pi/16)</span>
+
+	<a href="../../../pkg/image/jpeg.html#name-w1pw7" class="ident">w1pw7</a> = <a href="#line-45" class="ident">w1</a> + <a href="#line-50" class="ident">w7</a>
+	<a href="../../../pkg/image/jpeg.html#name-w1mw7" class="ident">w1mw7</a> = <a href="#line-45" class="ident">w1</a> - <a href="#line-50" class="ident">w7</a>
+	<a href="../../../pkg/image/jpeg.html#name-w2pw6" class="ident">w2pw6</a> = <a href="#line-46" class="ident">w2</a> + <a href="#line-49" class="ident">w6</a>
+	<a href="../../../pkg/image/jpeg.html#name-w2mw6" class="ident">w2mw6</a> = <a href="#line-46" class="ident">w2</a> - <a href="#line-49" class="ident">w6</a>
+	<a href="../../../pkg/image/jpeg.html#name-w3pw5" class="ident">w3pw5</a> = <a href="#line-47" class="ident">w3</a> + <a href="#line-48" class="ident">w5</a>
+	<a href="../../../pkg/image/jpeg.html#name-w3mw5" class="ident">w3mw5</a> = <a href="#line-47" class="ident">w3</a> - <a href="#line-48" class="ident">w5</a>
+
+	<a href="../../../pkg/image/jpeg.html#name-r2" class="ident">r2</a> = <span class="lit-number">181</span> <span class="comment">// 256/sqrt(2)</span>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> idct performs a 2-D Inverse Discrete Cosine Transformation.</span><span class="comment"></span><span class="comment"> The input coefficients should already have been multiplied by the</span><span class="comment"> appropriate quantization table. We use fixed-point computation, with the</span><span class="comment"> number of bits for the fractional component varying over the intermediate</span><span class="comment"> stages.</span><span class="comment"></span><span class="comment"> For more on the actual algorithm, see Z. Wang, "Fast algorithms for the</span><span class="comment"> discrete W transform and for the discrete Fourier transform", IEEE Trans. on</span><span class="comment"> ASSP, Vol. ASSP- 32, pp. 803-816, Aug. 1984.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Horizontal 1-D IDCT.</span></div>
+<div class="code"><pre><code>	<span class="keyword">for</span> <label for="r2" class="ident">y</label> := <span class="lit-number">0</span>; <label for="r2" class="ident">y</label> &lt; <span class="lit-number">8</span>; <label for="r2" class="ident">y</label>++ {
+		<label for="r3" class="ident">y8</label> := <label for="r2" class="ident">y</label> * <span class="lit-number">8</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> If all the AC components are zero, then the IDCT is trivial.</span></div>
+<div class="code"><pre><code>		<span class="keyword">if</span> <label for="r4" class="ident">s</label>[<span class="lit-number">1</span>] == <span class="lit-number">0</span> &amp;&amp; <label for="r4" class="ident">s</label>[<span class="lit-number">2</span>] == <span class="lit-number">0</span> &amp;&amp; <label for="r4" class="ident">s</label>[<span class="lit-number">3</span>] == <span class="lit-number">0</span> &amp;&amp;
+			<label for="r4" class="ident">s</label>[<span class="lit-number">4</span>] == <span class="lit-number">0</span> &amp;&amp; <label for="r4" class="ident">s</label>[<span class="lit-number">5</span>] == <span class="lit-number">0</span> &amp;&amp; <label for="r4" class="ident">s</label>[<span class="lit-number">6</span>] == <span class="lit-number">0</span> &amp;&amp; <label for="r4" class="ident">s</label>[<span class="lit-number">7</span>] == <span class="lit-number">0</span> {
+			<label for="r5" class="ident">dc</label> := <label for="r4" class="ident">s</label>[<span class="lit-number">0</span>] &lt;&lt; <span class="lit-number">3</span>
+			<label for="r4" class="ident">s</label>[<span class="lit-number">0</span>] = <label for="r5" class="ident">dc</label>
+			<label for="r4" class="ident">s</label>[<span class="lit-number">1</span>] = <label for="r5" class="ident">dc</label>
+			<label for="r4" class="ident">s</label>[<span class="lit-number">2</span>] = <label for="r5" class="ident">dc</label>
+			<label for="r4" class="ident">s</label>[<span class="lit-number">3</span>] = <label for="r5" class="ident">dc</label>
+			<label for="r4" class="ident">s</label>[<span class="lit-number">4</span>] = <label for="r5" class="ident">dc</label>
+			<label for="r4" class="ident">s</label>[<span class="lit-number">5</span>] = <label for="r5" class="ident">dc</label>
+			<label for="r4" class="ident">s</label>[<span class="lit-number">6</span>] = <label for="r5" class="ident">dc</label>
+			<label for="r4" class="ident">s</label>[<span class="lit-number">7</span>] = <label for="r5" class="ident">dc</label>
+			<span class="keyword">continue</span>
+		}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Prescale.</span></div>
+<div class="code"><pre><code>		<label for="r6" class="ident">x0</label> := (<label for="r4" class="ident">s</label>[<span class="lit-number">0</span>] &lt;&lt; <span class="lit-number">11</span>) + <span class="lit-number">128</span>
+		<label for="r7" class="ident">x1</label> := <label for="r4" class="ident">s</label>[<span class="lit-number">4</span>] &lt;&lt; <span class="lit-number">11</span>
+		<label for="r8" class="ident">x2</label> := <label for="r4" class="ident">s</label>[<span class="lit-number">6</span>]
+		<label for="r9" class="ident">x3</label> := <label for="r4" class="ident">s</label>[<span class="lit-number">2</span>]
+		<label for="r10" class="ident">x4</label> := <label for="r4" class="ident">s</label>[<span class="lit-number">1</span>]
+		<label for="r11" class="ident">x5</label> := <label for="r4" class="ident">s</label>[<span class="lit-number">7</span>]
+		<label for="r12" class="ident">x6</label> := <label for="r4" class="ident">s</label>[<span class="lit-number">5</span>]
+		<label for="r13" class="ident">x7</label> := <label for="r4" class="ident">s</label>[<span class="lit-number">3</span>]
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Stage 1.</span></div>
+<div class="code"><pre><code>		<label for="r14" class="ident">x8</label> := <a href="#line-50" class="ident">w7</a> * (<label for="r10" class="ident">x4</label> + <label for="r11" class="ident">x5</label>)
+		<label for="r10" class="ident">x4</label> = <label for="r14" class="ident">x8</label> + <a href="#line-53" class="ident">w1mw7</a>*<label for="r10" class="ident">x4</label>
+		<label for="r11" class="ident">x5</label> = <label for="r14" class="ident">x8</label> - <a href="#line-52" class="ident">w1pw7</a>*<label for="r11" class="ident">x5</label>
+		<label for="r14" class="ident">x8</label> = <a href="#line-47" class="ident">w3</a> * (<label for="r12" class="ident">x6</label> + <label for="r13" class="ident">x7</label>)
+		<label for="r12" class="ident">x6</label> = <label for="r14" class="ident">x8</label> - <a href="#line-57" class="ident">w3mw5</a>*<label for="r12" class="ident">x6</label>
+		<label for="r13" class="ident">x7</label> = <label for="r14" class="ident">x8</label> - <a href="#line-56" class="ident">w3pw5</a>*<label for="r13" class="ident">x7</label>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Stage 2.</span></div>
+<div class="code"><pre><code>		<label for="r14" class="ident">x8</label> = <label for="r6" class="ident">x0</label> + <label for="r7" class="ident">x1</label>
+		<label for="r6" class="ident">x0</label> -= <label for="r7" class="ident">x1</label>
+		<label for="r7" class="ident">x1</label> = <a href="#line-49" class="ident">w6</a> * (<label for="r9" class="ident">x3</label> + <label for="r8" class="ident">x2</label>)
+		<label for="r8" class="ident">x2</label> = <label for="r7" class="ident">x1</label> - <a href="#line-54" class="ident">w2pw6</a>*<label for="r8" class="ident">x2</label>
+		<label for="r9" class="ident">x3</label> = <label for="r7" class="ident">x1</label> + <a href="#line-55" class="ident">w2mw6</a>*<label for="r9" class="ident">x3</label>
+		<label for="r7" class="ident">x1</label> = <label for="r10" class="ident">x4</label> + <label for="r12" class="ident">x6</label>
+		<label for="r10" class="ident">x4</label> -= <label for="r12" class="ident">x6</label>
+		<label for="r12" class="ident">x6</label> = <label for="r11" class="ident">x5</label> + <label for="r13" class="ident">x7</label>
+		<label for="r11" class="ident">x5</label> -= <label for="r13" class="ident">x7</label>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Stage 3.</span></div>
+<div class="code"><pre><code>		<label for="r13" class="ident">x7</label> = <label for="r14" class="ident">x8</label> + <label for="r9" class="ident">x3</label>
+		<label for="r14" class="ident">x8</label> -= <label for="r9" class="ident">x3</label>
+		<label for="r9" class="ident">x3</label> = <label for="r6" class="ident">x0</label> + <label for="r8" class="ident">x2</label>
+		<label for="r6" class="ident">x0</label> -= <label for="r8" class="ident">x2</label>
+		<label for="r8" class="ident">x2</label> = (<a href="#line-59" class="ident">r2</a>*(<label for="r10" class="ident">x4</label>+<label for="r11" class="ident">x5</label>) + <span class="lit-number">128</span>) &gt;&gt; <span class="lit-number">8</span>
+		<label for="r10" class="ident">x4</label> = (<a href="#line-59" class="ident">r2</a>*(<label for="r10" class="ident">x4</label>-<label for="r11" class="ident">x5</label>) + <span class="lit-number">128</span>) &gt;&gt; <span class="lit-number">8</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Stage 4.</span></div>
+<div class="code"><pre><code>		<label for="r4" class="ident">s</label>[<span class="lit-number">0</span>] = (<label for="r13" class="ident">x7</label> + <label for="r7" class="ident">x1</label>) &gt;&gt; <span class="lit-number">8</span>
+		<label for="r4" class="ident">s</label>[<span class="lit-number">1</span>] = (<label for="r9" class="ident">x3</label> + <label for="r8" class="ident">x2</label>) &gt;&gt; <span class="lit-number">8</span>
+		<label for="r4" class="ident">s</label>[<span class="lit-number">2</span>] = (<label for="r6" class="ident">x0</label> + <label for="r10" class="ident">x4</label>) &gt;&gt; <span class="lit-number">8</span>
+		<label for="r4" class="ident">s</label>[<span class="lit-number">3</span>] = (<label for="r14" class="ident">x8</label> + <label for="r12" class="ident">x6</label>) &gt;&gt; <span class="lit-number">8</span>
+		<label for="r4" class="ident">s</label>[<span class="lit-number">4</span>] = (<label for="r14" class="ident">x8</label> - <label for="r12" class="ident">x6</label>) &gt;&gt; <span class="lit-number">8</span>
+		<label for="r4" class="ident">s</label>[<span class="lit-number">5</span>] = (<label for="r6" class="ident">x0</label> - <label for="r10" class="ident">x4</label>) &gt;&gt; <span class="lit-number">8</span>
+		<label for="r4" class="ident">s</label>[<span class="lit-number">6</span>] = (<label for="r9" class="ident">x3</label> - <label for="r8" class="ident">x2</label>) &gt;&gt; <span class="lit-number">8</span>
+		<label for="r4" class="ident">s</label>[<span class="lit-number">7</span>] = (<label for="r13" class="ident">x7</label> - <label for="r7" class="ident">x1</label>) &gt;&gt; <span class="lit-number">8</span>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Vertical 1-D IDCT.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Similar to the horizontal 1-D IDCT case, if all the AC components are zero, then the IDCT is trivial.</span><span class="comment">		 However, after performing the horizontal 1-D IDCT, there are typically non-zero AC components, so</span><span class="comment">		 we do not bother to check for the all-zero case.</span></div>
+<div class="code"><pre><code>		<label for="r16" class="ident">s</label> := <label for="r1" class="ident">src</label>[<label for="r15" class="ident">x</label> : <label for="r15" class="ident">x</label>+<span class="lit-number">57</span> : <label for="r15" class="ident">x</label>+<span class="lit-number">57</span>] <span class="comment">// Small cap improves performance, see https://golang.org/issue/27857</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Prescale.</span></div>
+<div class="code"><pre><code>		<label for="r17" class="ident">y0</label> := (<label for="r16" class="ident">s</label>[<span class="lit-number">8</span>*<span class="lit-number">0</span>] &lt;&lt; <span class="lit-number">8</span>) + <span class="lit-number">8192</span>
+		<label for="r18" class="ident">y1</label> := <label for="r16" class="ident">s</label>[<span class="lit-number">8</span>*<span class="lit-number">4</span>] &lt;&lt; <span class="lit-number">8</span>
+		<label for="r19" class="ident">y2</label> := <label for="r16" class="ident">s</label>[<span class="lit-number">8</span>*<span class="lit-number">6</span>]
+		<label for="r20" class="ident">y3</label> := <label for="r16" class="ident">s</label>[<span class="lit-number">8</span>*<span class="lit-number">2</span>]
+		<label for="r21" class="ident">y4</label> := <label for="r16" class="ident">s</label>[<span class="lit-number">8</span>*<span class="lit-number">1</span>]
+		<label for="r22" class="ident">y5</label> := <label for="r16" class="ident">s</label>[<span class="lit-number">8</span>*<span class="lit-number">7</span>]
+		<label for="r23" class="ident">y6</label> := <label for="r16" class="ident">s</label>[<span class="lit-number">8</span>*<span class="lit-number">5</span>]
+		<label for="r24" class="ident">y7</label> := <label for="r16" class="ident">s</label>[<span class="lit-number">8</span>*<span class="lit-number">3</span>]
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Stage 1.</span></div>
+<div class="code"><pre><code>		<label for="r25" class="ident">y8</label> := <a href="#line-50" class="ident">w7</a>*(<label for="r21" class="ident">y4</label>+<label for="r22" class="ident">y5</label>) + <span class="lit-number">4</span>
+		<label for="r21" class="ident">y4</label> = (<label for="r25" class="ident">y8</label> + <a href="#line-53" class="ident">w1mw7</a>*<label for="r21" class="ident">y4</label>) &gt;&gt; <span class="lit-number">3</span>
+		<label for="r22" class="ident">y5</label> = (<label for="r25" class="ident">y8</label> - <a href="#line-52" class="ident">w1pw7</a>*<label for="r22" class="ident">y5</label>) &gt;&gt; <span class="lit-number">3</span>
+		<label for="r25" class="ident">y8</label> = <a href="#line-47" class="ident">w3</a>*(<label for="r23" class="ident">y6</label>+<label for="r24" class="ident">y7</label>) + <span class="lit-number">4</span>
+		<label for="r23" class="ident">y6</label> = (<label for="r25" class="ident">y8</label> - <a href="#line-57" class="ident">w3mw5</a>*<label for="r23" class="ident">y6</label>) &gt;&gt; <span class="lit-number">3</span>
+		<label for="r24" class="ident">y7</label> = (<label for="r25" class="ident">y8</label> - <a href="#line-56" class="ident">w3pw5</a>*<label for="r24" class="ident">y7</label>) &gt;&gt; <span class="lit-number">3</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Stage 2.</span></div>
+<div class="code"><pre><code>		<label for="r25" class="ident">y8</label> = <label for="r17" class="ident">y0</label> + <label for="r18" class="ident">y1</label>
+		<label for="r17" class="ident">y0</label> -= <label for="r18" class="ident">y1</label>
+		<label for="r18" class="ident">y1</label> = <a href="#line-49" class="ident">w6</a>*(<label for="r20" class="ident">y3</label>+<label for="r19" class="ident">y2</label>) + <span class="lit-number">4</span>
+		<label for="r19" class="ident">y2</label> = (<label for="r18" class="ident">y1</label> - <a href="#line-54" class="ident">w2pw6</a>*<label for="r19" class="ident">y2</label>) &gt;&gt; <span class="lit-number">3</span>
+		<label for="r20" class="ident">y3</label> = (<label for="r18" class="ident">y1</label> + <a href="#line-55" class="ident">w2mw6</a>*<label for="r20" class="ident">y3</label>) &gt;&gt; <span class="lit-number">3</span>
+		<label for="r18" class="ident">y1</label> = <label for="r21" class="ident">y4</label> + <label for="r23" class="ident">y6</label>
+		<label for="r21" class="ident">y4</label> -= <label for="r23" class="ident">y6</label>
+		<label for="r23" class="ident">y6</label> = <label for="r22" class="ident">y5</label> + <label for="r24" class="ident">y7</label>
+		<label for="r22" class="ident">y5</label> -= <label for="r24" class="ident">y7</label>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Stage 3.</span></div>
+<div class="code"><pre><code>		<label for="r24" class="ident">y7</label> = <label for="r25" class="ident">y8</label> + <label for="r20" class="ident">y3</label>
+		<label for="r25" class="ident">y8</label> -= <label for="r20" class="ident">y3</label>
+		<label for="r20" class="ident">y3</label> = <label for="r17" class="ident">y0</label> + <label for="r19" class="ident">y2</label>
+		<label for="r17" class="ident">y0</label> -= <label for="r19" class="ident">y2</label>
+		<label for="r19" class="ident">y2</label> = (<a href="#line-59" class="ident">r2</a>*(<label for="r21" class="ident">y4</label>+<label for="r22" class="ident">y5</label>) + <span class="lit-number">128</span>) &gt;&gt; <span class="lit-number">8</span>
+		<label for="r21" class="ident">y4</label> = (<a href="#line-59" class="ident">r2</a>*(<label for="r21" class="ident">y4</label>-<label for="r22" class="ident">y5</label>) + <span class="lit-number">128</span>) &gt;&gt; <span class="lit-number">8</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Stage 4.</span></div>
+<div class="code"><pre><code>		<label for="r16" class="ident">s</label>[<span class="lit-number">8</span>*<span class="lit-number">0</span>] = (<label for="r24" class="ident">y7</label> + <label for="r18" class="ident">y1</label>) &gt;&gt; <span class="lit-number">14</span>
+		<label for="r16" class="ident">s</label>[<span class="lit-number">8</span>*<span class="lit-number">1</span>] = (<label for="r20" class="ident">y3</label> + <label for="r19" class="ident">y2</label>) &gt;&gt; <span class="lit-number">14</span>
+		<label for="r16" class="ident">s</label>[<span class="lit-number">8</span>*<span class="lit-number">2</span>] = (<label for="r17" class="ident">y0</label> + <label for="r21" class="ident">y4</label>) &gt;&gt; <span class="lit-number">14</span>
+		<label for="r16" class="ident">s</label>[<span class="lit-number">8</span>*<span class="lit-number">3</span>] = (<label for="r25" class="ident">y8</label> + <label for="r23" class="ident">y6</label>) &gt;&gt; <span class="lit-number">14</span>
+		<label for="r16" class="ident">s</label>[<span class="lit-number">8</span>*<span class="lit-number">4</span>] = (<label for="r25" class="ident">y8</label> - <label for="r23" class="ident">y6</label>) &gt;&gt; <span class="lit-number">14</span>
+		<label for="r16" class="ident">s</label>[<span class="lit-number">8</span>*<span class="lit-number">5</span>] = (<label for="r17" class="ident">y0</label> - <label for="r21" class="ident">y4</label>) &gt;&gt; <span class="lit-number">14</span>
+		<label for="r16" class="ident">s</label>[<span class="lit-number">8</span>*<span class="lit-number">6</span>] = (<label for="r20" class="ident">y3</label> - <label for="r19" class="ident">y2</label>) &gt;&gt; <span class="lit-number">14</span>
+		<label for="r16" class="ident">s</label>[<span class="lit-number">8</span>*<span class="lit-number">7</span>] = (<label for="r24" class="ident">y7</label> - <label for="r18" class="ident">y1</label>) &gt;&gt; <span class="lit-number">14</span>
+	}
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

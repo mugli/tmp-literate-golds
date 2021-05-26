@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: doc.go in package github.com/jackc/pgx/v4</title>
+<link href="../../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	doc.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../../pkg/github.com/jackc/pgx/v4.html">github.com/jackc/pgx/v4</a>
+</code></pre>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Package pgx is a PostgreSQL database driver.</span><span class="comment"></span><span class="comment">pgx provides lower level access to PostgreSQL than the standard database/sql. It remains as similar to the database/sql</span><span class="comment">interface as possible while providing better speed and access to PostgreSQL specific features. Import</span><span class="comment">github.com/jackc/pgx/v4/stdlib to use pgx as a database/sql compatible driver.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Establishing a Connection</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">The primary way of establishing a connection is with `pgx.Connect`.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">    conn, err := pgx.Connect(context.Background(), os.Getenv("DATABASE_URL"))</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">The database connection string can be in URL or DSN format. Both PostgreSQL settings and pgx settings can be specified</span><span class="comment">here. In addition, a config struct can be created by `ParseConfig` and modified before establishing the connection with</span><span class="comment">`ConnectConfig`.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">    config, err := pgx.ParseConfig(os.Getenv("DATABASE_URL"))</span><span class="comment">    if err != nil {</span><span class="comment">         ...</span><span class="comment">    }</span><span class="comment">    config.Logger = log15adapter.NewLogger(log.New("module", "pgx"))</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">    conn, err := pgx.ConnectConfig(context.Background(), config)</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Connection Pool</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">`*pgx.Conn` represents a single connection to the database and is not concurrency safe. Use sub-package pgxpool for a</span><span class="comment">concurrency safe connection pool.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Query Interface</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">pgx implements Query and Scan in the familiar database/sql style.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">    var sum int32</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">     Send the query to the server. The returned rows MUST be closed</span><span class="comment">     before conn can be used again.</span><span class="comment">    rows, err := conn.Query(context.Background(), "select generate_series(1,$1)", 10)</span><span class="comment">    if err != nil {</span><span class="comment">        return err</span><span class="comment">    }</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">     rows.Close is called by rows.Next when all rows are read</span><span class="comment">     or an error occurs in Next or Scan. So it may optionally be</span><span class="comment">     omitted if nothing in the rows.Next loop can panic. It is</span><span class="comment">     safe to close rows multiple times.</span><span class="comment">    defer rows.Close()</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">     Iterate through the result set</span><span class="comment">    for rows.Next() {</span><span class="comment">        var n int32</span><span class="comment">        err = rows.Scan(&amp;n)</span><span class="comment">        if err != nil {</span><span class="comment">            return err</span><span class="comment">        }</span><span class="comment">        sum += n</span><span class="comment">    }</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">     Any errors encountered by rows.Next or rows.Scan will be returned here</span><span class="comment">    if rows.Err() != nil {</span><span class="comment">        return rows.Err()</span><span class="comment">    }</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">     No errors found - do something with sum</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">pgx also implements QueryRow in the same style as database/sql.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">    var name string</span><span class="comment">    var weight int64</span><span class="comment">    err := conn.QueryRow(context.Background(), "select name, weight from widgets where id=$1", 42).Scan(&amp;name, &amp;weight)</span><span class="comment">    if err != nil {</span><span class="comment">        return err</span><span class="comment">    }</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Use Exec to execute a query that does not return a result set.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">    commandTag, err := conn.Exec(context.Background(), "delete from widgets where id=$1", 42)</span><span class="comment">    if err != nil {</span><span class="comment">        return err</span><span class="comment">    }</span><span class="comment">    if commandTag.RowsAffected() != 1 {</span><span class="comment">        return errors.New("No row found to delete")</span><span class="comment">    }</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">QueryFunc can be used to execute a callback function for every row. This is often easier to use than Query.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">    var sum, n int32</span><span class="comment">	_, err = conn.QueryFunc(</span><span class="comment">		context.Background(),</span><span class="comment">		"select generate_series(1,$1)",</span><span class="comment">		[]interface{}{10},</span><span class="comment">		[]interface{}{&amp;n},</span><span class="comment">		func(pgx.QueryFuncRow) error {</span><span class="comment">            sum += n</span><span class="comment">			return nil</span><span class="comment">		},</span><span class="comment">	)</span><span class="comment">	if err != nil {</span><span class="comment">		return err</span><span class="comment">	}</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Base Type Mapping</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">pgx maps between all common base types directly between Go and PostgreSQL. In particular:</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">    Go           PostgreSQL</span><span class="comment">    -----------------------</span><span class="comment">    string       varchar</span><span class="comment">                 text</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">     Integers are automatically be converted to any other integer type if</span><span class="comment">     it can be done without overflow or underflow.</span><span class="comment">    int8</span><span class="comment">    int16        smallint</span><span class="comment">    int32        int</span><span class="comment">    int64        bigint</span><span class="comment">    int</span><span class="comment">    uint8</span><span class="comment">    uint16</span><span class="comment">    uint32</span><span class="comment">    uint64</span><span class="comment">    uint</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">     Floats are strict and do not automatically convert like integers.</span><span class="comment">    float32      float4</span><span class="comment">    float64      float8</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">    time.Time   date</span><span class="comment">                timestamp</span><span class="comment">                timestamptz</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">    []byte      bytea</span></div>
+<div class="code"><pre><code>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Null Mapping</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">pgx can map nulls in two ways. The first is package pgtype provides types that have a data field and a status field.</span><span class="comment">They work in a similar fashion to database/sql. The second is to use a pointer to a pointer.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">    var foo pgtype.Varchar</span><span class="comment">    var bar *string</span><span class="comment">    err := conn.QueryRow("select foo, bar from widgets where id=$1", 42).Scan(&amp;foo, &amp;bar)</span><span class="comment">    if err != nil {</span><span class="comment">        return err</span><span class="comment">    }</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Array Mapping</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">pgx maps between int16, int32, int64, float32, float64, and string Go slices and the equivalent PostgreSQL array type.</span><span class="comment">Go slices of native types do not support nulls, so if a PostgreSQL array that contains a null is read into a native Go</span><span class="comment">slice an error will occur. The pgtype package includes many more array types for PostgreSQL types that do not directly</span><span class="comment">map to native Go types.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">JSON and JSONB Mapping</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">pgx includes built-in support to marshal and unmarshal between Go types and the PostgreSQL JSON and JSONB.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Inet and CIDR Mapping</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">pgx encodes from net.IPNet to and from inet and cidr PostgreSQL types. In addition, as a convenience pgx will encode</span><span class="comment">from a net.IP; it will assume a /32 netmask for IPv4 and a /128 for IPv6.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Custom Type Support</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">pgx includes support for the common data types like integers, floats, strings, dates, and times that have direct</span><span class="comment">mappings between Go and SQL. In addition, pgx uses the github.com/jackc/pgtype library to support more types. See</span><span class="comment">documention for that library for instructions on how to implement custom types.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">See example_custom_type_test.go for an example of a custom type for the PostgreSQL point type.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">pgx also includes support for custom types implementing the database/sql.Scanner and database/sql/driver.Valuer</span><span class="comment">interfaces.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">If pgx does cannot natively encode a type and that type is a renamed type (e.g. type MyTime time.Time) pgx will attempt</span><span class="comment">to encode the underlying type. While this is usually desired behavior it can produce surprising behavior if one the</span><span class="comment">underlying type and the renamed type each implement database/sql interfaces and the other implements pgx interfaces. It</span><span class="comment">is recommended that this situation be avoided by implementing pgx interfaces on the renamed type.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Composite types and row values</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Row values and composite types are represented as pgtype.Record (https:pkg.go.dev/github.com/jackc/pgtype?tab=doc#Record).</span><span class="comment">It is possible to get values of your custom type by implementing DecodeBinary interface. Decoding into</span><span class="comment">pgtype.Record first can simplify process by avoiding dealing with raw protocol directly.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">For example:</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">    type MyType struct {</span><span class="comment">        a int       NULL will cause decoding error</span><span class="comment">        b *string   there can be NULL in this position in SQL</span><span class="comment">    }</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">    func (t *MyType) DecodeBinary(ci *pgtype.ConnInfo, src []byte) error {</span><span class="comment">        r := pgtype.Record{</span><span class="comment">            Fields: []pgtype.Value{&amp;pgtype.Int4{}, &amp;pgtype.Text{}},</span><span class="comment">        }</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">        if err := r.DecodeBinary(ci, src); err != nil {</span><span class="comment">            return err</span><span class="comment">        }</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">        if r.Status != pgtype.Present {</span><span class="comment">            return errors.New("BUG: decoding should not be called on NULL value")</span><span class="comment">        }</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">        a := r.Fields[0].(*pgtype.Int4)</span><span class="comment">        b := r.Fields[1].(*pgtype.Text)</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">         type compatibility is checked by AssignTo</span><span class="comment">         only lossless assignments will succeed</span><span class="comment">        if err := a.AssignTo(&amp;t.a); err != nil {</span><span class="comment">            return err</span><span class="comment">        }</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">         AssignTo also deals with null value handling</span><span class="comment">        if err := b.AssignTo(&amp;t.b); err != nil {</span><span class="comment">            return err</span><span class="comment">        }</span><span class="comment">        return nil</span><span class="comment">    }</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">    result := MyType{}</span><span class="comment">    err := conn.QueryRow(context.Background(), "select row(1, 'foo'::text)", pgx.QueryResultFormats{pgx.BinaryFormatCode}).Scan(&amp;r)</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Raw Bytes Mapping</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">[]byte passed as arguments to Query, QueryRow, and Exec are passed unmodified to PostgreSQL.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Transactions</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Transactions are started by calling Begin.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">    tx, err := conn.Begin(context.Background())</span><span class="comment">    if err != nil {</span><span class="comment">        return err</span><span class="comment">    }</span><span class="comment">     Rollback is safe to call even if the tx is already closed, so if</span><span class="comment">     the tx commits successfully, this is a no-op</span><span class="comment">    defer tx.Rollback(context.Background())</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">    _, err = tx.Exec(context.Background(), "insert into foo(id) values (1)")</span><span class="comment">    if err != nil {</span><span class="comment">        return err</span><span class="comment">    }</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">    err = tx.Commit(context.Background())</span><span class="comment">    if err != nil {</span><span class="comment">        return err</span><span class="comment">    }</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">The Tx returned from Begin also implements the Begin method. This can be used to implement pseudo nested transactions.</span><span class="comment">These are internally implemented with savepoints.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Use BeginTx to control the transaction mode.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">BeginFunc and BeginTxFunc are variants that begin a transaction, execute a function, and commit or rollback the</span><span class="comment">transaction depending on the return value of the function. These can be simpler and less error prone to use.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">    err = conn.BeginFunc(context.Background(), func(tx pgx.Tx) error {</span><span class="comment">        _, err := tx.Exec(context.Background(), "insert into foo(id) values (1)")</span><span class="comment">        return err</span><span class="comment">    })</span><span class="comment">    if err != nil {</span><span class="comment">        return err</span><span class="comment">    }</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Prepared Statements</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Prepared statements can be manually created with the Prepare method. However, this is rarely necessary because pgx</span><span class="comment">includes an automatic statement cache by default. Queries run through the normal Query, QueryRow, and Exec functions are</span><span class="comment">automatically prepared on first execution and the prepared statement is reused on subsequent executions. See ParseConfig</span><span class="comment">for information on how to customize or disable the statement cache.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Copy Protocol</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Use CopyFrom to efficiently insert multiple rows at a time using the PostgreSQL copy protocol. CopyFrom accepts a</span><span class="comment">CopyFromSource interface. If the data is already in a [][]interface{} use CopyFromRows to wrap it in a CopyFromSource</span><span class="comment">interface. Or implement CopyFromSource to avoid buffering the entire data set in memory.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">    rows := [][]interface{}{</span><span class="comment">        {"John", "Smith", int32(36)},</span><span class="comment">        {"Jane", "Doe", int32(29)},</span><span class="comment">    }</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">    copyCount, err := conn.CopyFrom(</span><span class="comment">        context.Background(),</span><span class="comment">        pgx.Identifier{"people"},</span><span class="comment">        []string{"first_name", "last_name", "age"},</span><span class="comment">        pgx.CopyFromRows(rows),</span><span class="comment">    )</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">When you already have a typed array using CopyFromSlice can be more convenient.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">    rows := []User{</span><span class="comment">        {"John", "Smith", 36},</span><span class="comment">        {"Jane", "Doe", 29},</span><span class="comment">    }</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">    copyCount, err := conn.CopyFrom(</span><span class="comment">        context.Background(),</span><span class="comment">        pgx.Identifier{"people"},</span><span class="comment">        []string{"first_name", "last_name", "age"},</span><span class="comment">        pgx.CopyFromSlice(len(rows), func(i int) ([]interface{}, error) {</span><span class="comment">            return []interface{}{rows[i].FirstName, rows[i].LastName, rows[i].Age}, nil</span><span class="comment">        }),</span><span class="comment">    )</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">CopyFrom can be faster than an insert with as few as 5 rows.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Listen and Notify</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">pgx can listen to the PostgreSQL notification system with the `Conn.WaitForNotification` method. It blocks until a</span><span class="comment">context is received or the context is canceled.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">    _, err := conn.Exec(context.Background(), "listen channelname")</span><span class="comment">    if err != nil {</span><span class="comment">        return nil</span><span class="comment">    }</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">    if notification, err := conn.WaitForNotification(context.Background()); err != nil {</span><span class="comment">         do something with notification</span><span class="comment">    }</span></div>
+<div class="code"><pre><code>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Logging</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">pgx defines a simple logger interface. Connections optionally accept a logger that satisfies this interface. Set</span><span class="comment">LogLevel to control logging verbosity. Adapters for github.com/inconshreveable/log15, github.com/sirupsen/logrus,</span><span class="comment">go.uber.org/zap, github.com/rs/zerolog, and the testing log are provided in the log directory.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Lower Level PostgreSQL Functionality</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">pgx is implemented on top of github.com/jackc/pgconn a lower level PostgreSQL driver. The Conn.PgConn() method can be</span><span class="comment">used to access this lower layer.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">PgBouncer</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">pgx is compatible with PgBouncer in two modes. One is when the connection has a statement cache in "describe" mode. The</span><span class="comment">other is when the connection is using the simple protocol. This can be set with the PreferSimpleProtocol config option.</span><span class="comment"></span></div>
+<div class="code"><pre><code></code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

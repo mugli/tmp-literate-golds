@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: proc_fdinfo.go in package github.com/prometheus/procfs</title>
+<link href="../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	proc_fdinfo.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../pkg/github.com/prometheus/procfs.html">github.com/prometheus/procfs</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16],
+input[id=r17]:checked ~pre label[for=r17],
+input[id=r18]:checked ~pre label[for=r18],
+input[id=r19]:checked ~pre label[for=r19],
+input[id=r20]:checked ~pre label[for=r20],
+input[id=r21]:checked ~pre label[for=r21],
+input[id=r22]:checked ~pre label[for=r22],
+input[id=r23]:checked ~pre label[for=r23],
+input[id=r24]:checked ~pre label[for=r24],
+input[id=r25]:checked ~pre label[for=r25],
+input[id=r26]:checked ~pre label[for=r26],
+input[id=r27]:checked ~pre label[for=r27],
+input[id=r28]:checked ~pre label[for=r28],
+input[id=r29]:checked ~pre label[for=r29],
+input[id=r30]:checked ~pre label[for=r30],
+input[id=r31]:checked ~pre label[for=r31],
+input[id=r32]:checked ~pre label[for=r32],
+input[id=r33]:checked ~pre label[for=r33]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1,
+input[id=i2]:checked ~pre .i2,
+input[id=i3]:checked ~pre .i3
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="r17" type="radio" name="g"/>
+<input id="r18" type="radio" name="g"/>
+<input id="r19" type="radio" name="g"/>
+<input id="r20" type="radio" name="g"/>
+<input id="r21" type="radio" name="g"/>
+<input id="r22" type="radio" name="g"/>
+<input id="r23" type="radio" name="g"/>
+<input id="r24" type="radio" name="g"/>
+<input id="r25" type="radio" name="g"/>
+<input id="r26" type="radio" name="g"/>
+<input id="r27" type="radio" name="g"/>
+<input id="r28" type="radio" name="g"/>
+<input id="r29" type="radio" name="g"/>
+<input id="r30" type="radio" name="g"/>
+<input id="r31" type="radio" name="g"/>
+<input id="r32" type="radio" name="g"/>
+<input id="r33" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<input id="i2" type="radio" name="i"/>
+<input id="i3" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2019 The Prometheus Authors</span><span class="comment"> Licensed under the Apache License, Version 2.0 (the "License");</span><span class="comment"> you may not use this file except in compliance with the License.</span><span class="comment"> You may obtain a copy of the License at</span><span class="comment"></span><span class="comment"> http://www.apache.org/licenses/LICENSE-2.0</span><span class="comment"></span><span class="comment"> Unless required by applicable law or agreed to in writing, software</span><span class="comment"> distributed under the License is distributed on an "AS IS" BASIS,</span><span class="comment"> WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span><span class="comment"> See the License for the specific language governing permissions and</span><span class="comment"> limitations under the License.</span></div>
+<div class="code"><pre><code>
+<span class="keyword">package</span> procfs
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"bufio"</span></label>
+	<label for="i1"><span class="lit-string i1">"bytes"</span></label>
+	<label for="i2"><span class="lit-string i2">"regexp"</span></label>
+
+	<label for="i3"><span class="lit-string i3">"github.com/prometheus/procfs/internal/util"</span></label>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Regexp variables</span></div>
+<div class="code"><pre><code><span class="keyword">var</span> (
+	<a href="../../../../pkg/github.com/prometheus/procfs.html#name-rPos" class="ident">rPos</a>     = <a href="../../../../pkg/regexp.html" class="ident i2">regexp</a>.<a href="../../../regexp/regexp.go.html#line-308" class="ident">MustCompile</a>(<span class="lit-string">`^pos:\s+(\d+)$`</span>)
+	<a href="../../../../pkg/github.com/prometheus/procfs.html#name-rFlags" class="ident">rFlags</a>   = <a href="../../../../pkg/regexp.html" class="ident i2">regexp</a>.<a href="../../../regexp/regexp.go.html#line-308" class="ident">MustCompile</a>(<span class="lit-string">`^flags:\s+(\d+)$`</span>)
+	<a href="../../../../pkg/github.com/prometheus/procfs.html#name-rMntID" class="ident">rMntID</a>   = <a href="../../../../pkg/regexp.html" class="ident i2">regexp</a>.<a href="../../../regexp/regexp.go.html#line-308" class="ident">MustCompile</a>(<span class="lit-string">`^mnt_id:\s+(\d+)$`</span>)
+	<a href="../../../../pkg/github.com/prometheus/procfs.html#name-rInotify" class="ident">rInotify</a> = <a href="../../../../pkg/regexp.html" class="ident i2">regexp</a>.<a href="../../../regexp/regexp.go.html#line-308" class="ident">MustCompile</a>(<span class="lit-string">`^inotify`</span>)
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ProcFDInfo contains represents file descriptor information.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> File descriptor</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> File offset</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> File access mode and status flags</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Mount point ID</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> List of inotify lines (structed) in the fdinfo file (kernel 3.8+ only)</span></div>
+<div class="code"><pre><code>	<a href="../../../../use/github.com/prometheus/procfs..ProcFDInfo.InotifyInfos.html" class="ident">InotifyInfos</a> []<a href="#line-86" class="ident">InotifyInfo</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> FDInfo constructor. On kernels older than 3.8, InotifyInfos will always be empty.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r0" class="ident">p</label> <a href="proc.go.html#line-29" class="ident">Proc</a>) <label for="r1" class="ident"><a href="../../../../use/github.com/prometheus/procfs..Proc.FDInfo.html" class="ident">FDInfo</a></label>(<label for="r2" class="ident">fd</label> <a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>) (*<a href="#line-33" class="ident">ProcFDInfo</a>, <a href="../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<label for="r3" class="ident">data</label>, <label for="r4" class="ident">err</label> := <a href="../../../../pkg/github.com/prometheus/procfs/internal/util.html" class="ident i3">util</a>.<a href="internal/util/readfile.go.html#line-27" class="ident">ReadFileNoStat</a>(<label for="r0" class="ident">p</label>.<a href="proc.go.html#line-266" class="ident">path</a>(<span class="lit-string">"fdinfo"</span>, <label for="r2" class="ident">fd</label>))
+	<span class="keyword">if</span> <label for="r4" class="ident">err</label> != <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <label for="r4" class="ident">err</label>
+	}
+
+	<span class="keyword">var</span> <label for="r5" class="ident">text</label>, <label for="r6" class="ident">pos</label>, <label for="r7" class="ident">flags</label>, <label for="r8" class="ident">mntid</label> <a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<span class="keyword">var</span> <label for="r9" class="ident">inotify</label> []<a href="#line-86" class="ident">InotifyInfo</a>
+
+	<label for="r10" class="ident">scanner</label> := <a href="../../../../pkg/bufio.html" class="ident i0">bufio</a>.<a href="../../../bufio/scan.go.html#line-87" class="ident">NewScanner</a>(<a href="../../../../pkg/bytes.html" class="ident i1">bytes</a>.<a href="../../../bytes/reader.go.html#line-160" class="ident">NewReader</a>(<label for="r3" class="ident">data</label>))
+	<span class="keyword">for</span> <label for="r10" class="ident">scanner</label>.<a href="../../../bufio/scan.go.html#line-135" class="ident">Scan</a>() {
+		<label for="r5" class="ident">text</label> = <label for="r10" class="ident">scanner</label>.<a href="../../../bufio/scan.go.html#line-112" class="ident">Text</a>()
+		<span class="keyword">if</span> <a href="#line-26" class="ident">rPos</a>.<a href="../../../regexp/regexp.go.html#line-524" class="ident">MatchString</a>(<label for="r5" class="ident">text</label>) {
+			<label for="r6" class="ident">pos</label> = <a href="#line-26" class="ident">rPos</a>.<a href="../../../regexp/regexp.go.html#line-1037" class="ident">FindStringSubmatch</a>(<label for="r5" class="ident">text</label>)[<span class="lit-number">1</span>]
+		} <span class="keyword">else</span> <span class="keyword">if</span> <a href="#line-27" class="ident">rFlags</a>.<a href="../../../regexp/regexp.go.html#line-524" class="ident">MatchString</a>(<label for="r5" class="ident">text</label>) {
+			<label for="r7" class="ident">flags</label> = <a href="#line-27" class="ident">rFlags</a>.<a href="../../../regexp/regexp.go.html#line-1037" class="ident">FindStringSubmatch</a>(<label for="r5" class="ident">text</label>)[<span class="lit-number">1</span>]
+		} <span class="keyword">else</span> <span class="keyword">if</span> <a href="#line-28" class="ident">rMntID</a>.<a href="../../../regexp/regexp.go.html#line-524" class="ident">MatchString</a>(<label for="r5" class="ident">text</label>) {
+			<label for="r8" class="ident">mntid</label> = <a href="#line-28" class="ident">rMntID</a>.<a href="../../../regexp/regexp.go.html#line-1037" class="ident">FindStringSubmatch</a>(<label for="r5" class="ident">text</label>)[<span class="lit-number">1</span>]
+		} <span class="keyword">else</span> <span class="keyword">if</span> <a href="#line-29" class="ident">rInotify</a>.<a href="../../../regexp/regexp.go.html#line-524" class="ident">MatchString</a>(<label for="r5" class="ident">text</label>) {
+			<label for="r11" class="ident">newInotify</label>, <label for="r12" class="ident">err</label> := <a href="#line-98" class="ident">parseInotifyInfo</a>(<label for="r5" class="ident">text</label>)
+			<span class="keyword">if</span> <label for="r12" class="ident">err</label> != <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+				<span class="keyword">return</span> <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <label for="r12" class="ident">err</label>
+			}
+			<label for="r9" class="ident">inotify</label> = <a href="../../../../pkg/builtin.html#name-append" class="ident">append</a>(<label for="r9" class="ident">inotify</label>, *<label for="r11" class="ident">newInotify</label>)
+		}
+	}
+
+	<label for="r13" class="ident">i</label> := &amp;<a href="#line-33" class="ident">ProcFDInfo</a>{
+		<a href="#line-35" class="ident">FD</a>:           <label for="r2" class="ident">fd</label>,
+		<a href="#line-37" class="ident">Pos</a>:          <label for="r6" class="ident">pos</label>,
+		<a href="#line-39" class="ident">Flags</a>:        <label for="r7" class="ident">flags</label>,
+		<a href="#line-41" class="ident">MntID</a>:        <label for="r8" class="ident">mntid</label>,
+		<a href="#line-43" class="ident">InotifyInfos</a>: <label for="r9" class="ident">inotify</label>,
+	}
+
+	<span class="keyword">return</span> <label for="r13" class="ident">i</label>, <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> InotifyInfo represents a single inotify line in the fdinfo file.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Watch descriptor number</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Inode number</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Device ID</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Mask of events being monitored</span></div>
+<div class="code"><pre><code>	<a href="../../../../use/github.com/prometheus/procfs..InotifyInfo.Mask.html" class="ident">Mask</a> <a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> InotifyInfo constructor. Only available on kernel 3.8+.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r14" class="ident"><a href="../../../../pkg/github.com/prometheus/procfs.html#name-parseInotifyInfo" class="ident">parseInotifyInfo</a></label>(<label for="r15" class="ident">line</label> <a href="../../../../pkg/builtin.html#name-string" class="ident">string</a>) (*<a href="#line-86" class="ident">InotifyInfo</a>, <a href="../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<label for="r16" class="ident">r</label> := <a href="../../../../pkg/regexp.html" class="ident i2">regexp</a>.<a href="../../../regexp/regexp.go.html#line-308" class="ident">MustCompile</a>(<span class="lit-string">`^inotify\s+wd:([0-9a-f]+)\s+ino:([0-9a-f]+)\s+sdev:([0-9a-f]+)\s+mask:([0-9a-f]+)`</span>)
+	<label for="r17" class="ident">m</label> := <label for="r16" class="ident">r</label>.<a href="../../../regexp/regexp.go.html#line-1037" class="ident">FindStringSubmatch</a>(<label for="r15" class="ident">line</label>)
+	<label for="r18" class="ident">i</label> := &amp;<a href="#line-86" class="ident">InotifyInfo</a>{
+		<a href="#line-88" class="ident">WD</a>:   <label for="r17" class="ident">m</label>[<span class="lit-number">1</span>],
+		<a href="#line-90" class="ident">Ino</a>:  <label for="r17" class="ident">m</label>[<span class="lit-number">2</span>],
+		<a href="#line-92" class="ident">Sdev</a>: <label for="r17" class="ident">m</label>[<span class="lit-number">3</span>],
+		<a href="#line-94" class="ident">Mask</a>: <label for="r17" class="ident">m</label>[<span class="lit-number">4</span>],
+	}
+	<span class="keyword">return</span> <label for="r18" class="ident">i</label>, <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ProcFDInfos represents a list of ProcFDInfo structs.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../pkg/github.com/prometheus/procfs.html#name-ProcFDInfos" class="ident">ProcFDInfos</a> []<a href="#line-33" class="ident">ProcFDInfo</a>
+
+<span class="keyword">func</span> (<label for="r19" class="ident">p</label> <a href="#line-111" class="ident">ProcFDInfos</a>) <label for="r20" class="ident"><a href="../../../../use/github.com/prometheus/procfs..ProcFDInfos.Len.html" class="ident">Len</a></label>() <a href="../../../../pkg/builtin.html#name-int" class="ident">int</a>           { <span class="keyword">return</span> <a href="../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r19" class="ident">p</label>) }
+<span class="keyword">func</span> (<label for="r21" class="ident">p</label> <a href="#line-111" class="ident">ProcFDInfos</a>) <label for="r22" class="ident"><a href="../../../../use/github.com/prometheus/procfs..ProcFDInfos.Swap.html" class="ident">Swap</a></label>(<label for="r23" class="ident">i</label>, <label for="r24" class="ident">j</label> <a href="../../../../pkg/builtin.html#name-int" class="ident">int</a>)      { <label for="r21" class="ident">p</label>[<label for="r23" class="ident">i</label>], <label for="r21" class="ident">p</label>[<label for="r24" class="ident">j</label>] = <label for="r21" class="ident">p</label>[<label for="r24" class="ident">j</label>], <label for="r21" class="ident">p</label>[<label for="r23" class="ident">i</label>] }
+<span class="keyword">func</span> (<label for="r25" class="ident">p</label> <a href="#line-111" class="ident">ProcFDInfos</a>) <label for="r26" class="ident"><a href="../../../../use/github.com/prometheus/procfs..ProcFDInfos.Less.html" class="ident">Less</a></label>(<label for="r27" class="ident">i</label>, <label for="r28" class="ident">j</label> <a href="../../../../pkg/builtin.html#name-int" class="ident">int</a>) <a href="../../../../pkg/builtin.html#name-bool" class="ident">bool</a> { <span class="keyword">return</span> <label for="r25" class="ident">p</label>[<label for="r27" class="ident">i</label>].<a href="#line-35" class="ident">FD</a> &lt; <label for="r25" class="ident">p</label>[<label for="r28" class="ident">j</label>].<a href="#line-35" class="ident">FD</a> }
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> InotifyWatchLen returns the total number of inotify watches</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r29" class="ident">p</label> <a href="#line-111" class="ident">ProcFDInfos</a>) <label for="r30" class="ident"><a href="../../../../use/github.com/prometheus/procfs..ProcFDInfos.InotifyWatchLen.html" class="ident">InotifyWatchLen</a></label>() (<a href="../../../../pkg/builtin.html#name-int" class="ident">int</a>, <a href="../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<label for="r31" class="ident">length</label> := <span class="lit-number">0</span>
+	<span class="keyword">for</span> <label for="r32" class="ident">_</label>, <label for="r33" class="ident">f</label> := <span class="keyword">range</span> <label for="r29" class="ident">p</label> {
+		<label for="r31" class="ident">length</label> += <a href="../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r33" class="ident">f</label>.<a href="#line-43" class="ident">InotifyInfos</a>)
+	}
+
+	<span class="keyword">return</span> <label for="r31" class="ident">length</label>, <a href="../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

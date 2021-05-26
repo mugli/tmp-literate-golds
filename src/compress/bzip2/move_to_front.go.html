@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: move_to_front.go in package compress/bzip2</title>
+<link href="../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	move_to_front.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../pkg/compress/bzip2.html">compress/bzip2</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11]
+{background: #226; color: #ff8;}
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2011 The Go Authors. All rights reserved.</span><span class="comment"> Use of this source code is governed by a BSD-style</span><span class="comment"> license that can be found in the LICENSE file.</span></div>
+<div class="code"><pre><code>
+<span class="keyword">package</span> bzip2
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> moveToFrontDecoder implements a move-to-front list. Such a list is an</span><span class="comment"> efficient way to transform a string with repeating elements into one with</span><span class="comment"> many small valued numbers, which is suitable for entropy encoding. It works</span><span class="comment"> by starting with an initial list of symbols and references symbols by their</span><span class="comment"> index into that list. When a symbol is referenced, it's moved to the front</span><span class="comment"> of the list. Thus, a repeated symbol ends up being encoded with many zeros,</span><span class="comment"> as the symbol will be at the front of the list after the first access.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../pkg/compress/bzip2.html#name-moveToFrontDecoder" class="ident">moveToFrontDecoder</a> []<a href="../../../pkg/builtin.html#name-byte" class="ident">byte</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> newMTFDecoder creates a move-to-front decoder with an explicit initial list</span><span class="comment"> of symbols.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r0" class="ident"><a href="../../../pkg/compress/bzip2.html#name-newMTFDecoder" class="ident">newMTFDecoder</a></label>(<label for="r1" class="ident">symbols</label> []<a href="../../../pkg/builtin.html#name-byte" class="ident">byte</a>) <a href="#line-14" class="ident">moveToFrontDecoder</a> {
+	<span class="keyword">if</span> <a href="../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r1" class="ident">symbols</label>) &gt; <span class="lit-number">256</span> {
+		<a href="../../../pkg/builtin.html#name-panic" class="ident">panic</a>(<span class="lit-string">"too many symbols"</span>)
+	}
+	<span class="keyword">return</span> <a href="#line-14" class="ident">moveToFrontDecoder</a>(<label for="r1" class="ident">symbols</label>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> newMTFDecoderWithRange creates a move-to-front decoder with an initial</span><span class="comment"> symbol list of 0...n-1.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r2" class="ident"><a href="../../../pkg/compress/bzip2.html#name-newMTFDecoderWithRange" class="ident">newMTFDecoderWithRange</a></label>(<label for="r3" class="ident">n</label> <a href="../../../pkg/builtin.html#name-int" class="ident">int</a>) <a href="#line-14" class="ident">moveToFrontDecoder</a> {
+	<span class="keyword">if</span> <label for="r3" class="ident">n</label> &gt; <span class="lit-number">256</span> {
+		<a href="../../../pkg/builtin.html#name-panic" class="ident">panic</a>(<span class="lit-string">"newMTFDecoderWithRange: cannot have &gt; 256 symbols"</span>)
+	}
+
+	<label for="r4" class="ident">m</label> := <a href="../../../pkg/builtin.html#name-make" class="ident">make</a>([]<a href="../../../pkg/builtin.html#name-byte" class="ident">byte</a>, <label for="r3" class="ident">n</label>)
+	<span class="keyword">for</span> <label for="r5" class="ident">i</label> := <span class="lit-number">0</span>; <label for="r5" class="ident">i</label> &lt; <label for="r3" class="ident">n</label>; <label for="r5" class="ident">i</label>++ {
+		<label for="r4" class="ident">m</label>[<label for="r5" class="ident">i</label>] = <a href="../../../pkg/builtin.html#name-byte" class="ident">byte</a>(<label for="r5" class="ident">i</label>)
+	}
+	<span class="keyword">return</span> <a href="#line-14" class="ident">moveToFrontDecoder</a>(<label for="r4" class="ident">m</label>)
+}
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Implement move-to-front with a simple copy. This approach</span><span class="comment">	 beats more sophisticated approaches in benchmarking, probably</span><span class="comment">	 because it has high locality of reference inside of a</span><span class="comment">	 single cache line (most move-to-front operations have n &lt; 64).</span></div>
+<div class="code"><pre><code>	<label for="r9" class="ident">b</label> = <label for="r6" class="ident">m</label>[<label for="r8" class="ident">n</label>]
+	<a href="../../../pkg/builtin.html#name-copy" class="ident">copy</a>(<label for="r6" class="ident">m</label>[<span class="lit-number">1</span>:], <label for="r6" class="ident">m</label>[:<label for="r8" class="ident">n</label>])
+	<label for="r6" class="ident">m</label>[<span class="lit-number">0</span>] = <label for="r9" class="ident">b</label>
+	<span class="keyword">return</span>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> First returns the symbol at the front of the list.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r10" class="ident">m</label> <a href="#line-14" class="ident">moveToFrontDecoder</a>) <label for="r11" class="ident"><a href="../../../use/compress/bzip2..moveToFrontDecoder*e5ebf.First.html" class="ident">First</a></label>() <a href="../../../pkg/builtin.html#name-byte" class="ident">byte</a> {
+	<span class="keyword">return</span> <label for="r10" class="ident">m</label>[<span class="lit-number">0</span>]
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

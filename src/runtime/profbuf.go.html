@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: profbuf.go in package runtime</title>
+<link href="../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	profbuf.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../pkg/runtime.html">runtime</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16],
+input[id=r17]:checked ~pre label[for=r17],
+input[id=r18]:checked ~pre label[for=r18],
+input[id=r19]:checked ~pre label[for=r19],
+input[id=r20]:checked ~pre label[for=r20],
+input[id=r21]:checked ~pre label[for=r21],
+input[id=r22]:checked ~pre label[for=r22],
+input[id=r23]:checked ~pre label[for=r23],
+input[id=r24]:checked ~pre label[for=r24],
+input[id=r25]:checked ~pre label[for=r25],
+input[id=r26]:checked ~pre label[for=r26],
+input[id=r27]:checked ~pre label[for=r27],
+input[id=r28]:checked ~pre label[for=r28],
+input[id=r29]:checked ~pre label[for=r29],
+input[id=r30]:checked ~pre label[for=r30],
+input[id=r31]:checked ~pre label[for=r31],
+input[id=r32]:checked ~pre label[for=r32],
+input[id=r33]:checked ~pre label[for=r33],
+input[id=r34]:checked ~pre label[for=r34],
+input[id=r35]:checked ~pre label[for=r35],
+input[id=r36]:checked ~pre label[for=r36],
+input[id=r37]:checked ~pre label[for=r37],
+input[id=r38]:checked ~pre label[for=r38],
+input[id=r39]:checked ~pre label[for=r39],
+input[id=r40]:checked ~pre label[for=r40],
+input[id=r41]:checked ~pre label[for=r41],
+input[id=r42]:checked ~pre label[for=r42],
+input[id=r43]:checked ~pre label[for=r43],
+input[id=r44]:checked ~pre label[for=r44],
+input[id=r45]:checked ~pre label[for=r45],
+input[id=r46]:checked ~pre label[for=r46],
+input[id=r47]:checked ~pre label[for=r47],
+input[id=r48]:checked ~pre label[for=r48],
+input[id=r49]:checked ~pre label[for=r49],
+input[id=r50]:checked ~pre label[for=r50],
+input[id=r51]:checked ~pre label[for=r51],
+input[id=r52]:checked ~pre label[for=r52],
+input[id=r53]:checked ~pre label[for=r53],
+input[id=r54]:checked ~pre label[for=r54],
+input[id=r55]:checked ~pre label[for=r55],
+input[id=r56]:checked ~pre label[for=r56],
+input[id=r57]:checked ~pre label[for=r57],
+input[id=r58]:checked ~pre label[for=r58],
+input[id=r59]:checked ~pre label[for=r59],
+input[id=r60]:checked ~pre label[for=r60],
+input[id=r61]:checked ~pre label[for=r61],
+input[id=r62]:checked ~pre label[for=r62],
+input[id=r63]:checked ~pre label[for=r63],
+input[id=r64]:checked ~pre label[for=r64],
+input[id=r65]:checked ~pre label[for=r65],
+input[id=r66]:checked ~pre label[for=r66],
+input[id=r67]:checked ~pre label[for=r67],
+input[id=r68]:checked ~pre label[for=r68],
+input[id=r69]:checked ~pre label[for=r69],
+input[id=r70]:checked ~pre label[for=r70],
+input[id=r71]:checked ~pre label[for=r71],
+input[id=r72]:checked ~pre label[for=r72],
+input[id=r73]:checked ~pre label[for=r73],
+input[id=r74]:checked ~pre label[for=r74],
+input[id=r75]:checked ~pre label[for=r75],
+input[id=r76]:checked ~pre label[for=r76],
+input[id=r77]:checked ~pre label[for=r77],
+input[id=r78]:checked ~pre label[for=r78],
+input[id=r79]:checked ~pre label[for=r79],
+input[id=r80]:checked ~pre label[for=r80],
+input[id=r81]:checked ~pre label[for=r81],
+input[id=r82]:checked ~pre label[for=r82],
+input[id=r83]:checked ~pre label[for=r83],
+input[id=r84]:checked ~pre label[for=r84],
+input[id=r85]:checked ~pre label[for=r85],
+input[id=r86]:checked ~pre label[for=r86],
+input[id=r87]:checked ~pre label[for=r87],
+input[id=r88]:checked ~pre label[for=r88],
+input[id=r89]:checked ~pre label[for=r89],
+input[id=r90]:checked ~pre label[for=r90],
+input[id=r91]:checked ~pre label[for=r91],
+input[id=r92]:checked ~pre label[for=r92],
+input[id=r93]:checked ~pre label[for=r93],
+input[id=r94]:checked ~pre label[for=r94],
+input[id=r95]:checked ~pre label[for=r95],
+input[id=r96]:checked ~pre label[for=r96],
+input[id=r97]:checked ~pre label[for=r97],
+input[id=r98]:checked ~pre label[for=r98],
+input[id=r99]:checked ~pre label[for=r99],
+input[id=r100]:checked ~pre label[for=r100],
+input[id=r101]:checked ~pre label[for=r101],
+input[id=r102]:checked ~pre label[for=r102],
+input[id=r103]:checked ~pre label[for=r103],
+input[id=r104]:checked ~pre label[for=r104]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="r17" type="radio" name="g"/>
+<input id="r18" type="radio" name="g"/>
+<input id="r19" type="radio" name="g"/>
+<input id="r20" type="radio" name="g"/>
+<input id="r21" type="radio" name="g"/>
+<input id="r22" type="radio" name="g"/>
+<input id="r23" type="radio" name="g"/>
+<input id="r24" type="radio" name="g"/>
+<input id="r25" type="radio" name="g"/>
+<input id="r26" type="radio" name="g"/>
+<input id="r27" type="radio" name="g"/>
+<input id="r28" type="radio" name="g"/>
+<input id="r29" type="radio" name="g"/>
+<input id="r30" type="radio" name="g"/>
+<input id="r31" type="radio" name="g"/>
+<input id="r32" type="radio" name="g"/>
+<input id="r33" type="radio" name="g"/>
+<input id="r34" type="radio" name="g"/>
+<input id="r35" type="radio" name="g"/>
+<input id="r36" type="radio" name="g"/>
+<input id="r37" type="radio" name="g"/>
+<input id="r38" type="radio" name="g"/>
+<input id="r39" type="radio" name="g"/>
+<input id="r40" type="radio" name="g"/>
+<input id="r41" type="radio" name="g"/>
+<input id="r42" type="radio" name="g"/>
+<input id="r43" type="radio" name="g"/>
+<input id="r44" type="radio" name="g"/>
+<input id="r45" type="radio" name="g"/>
+<input id="r46" type="radio" name="g"/>
+<input id="r47" type="radio" name="g"/>
+<input id="r48" type="radio" name="g"/>
+<input id="r49" type="radio" name="g"/>
+<input id="r50" type="radio" name="g"/>
+<input id="r51" type="radio" name="g"/>
+<input id="r52" type="radio" name="g"/>
+<input id="r53" type="radio" name="g"/>
+<input id="r54" type="radio" name="g"/>
+<input id="r55" type="radio" name="g"/>
+<input id="r56" type="radio" name="g"/>
+<input id="r57" type="radio" name="g"/>
+<input id="r58" type="radio" name="g"/>
+<input id="r59" type="radio" name="g"/>
+<input id="r60" type="radio" name="g"/>
+<input id="r61" type="radio" name="g"/>
+<input id="r62" type="radio" name="g"/>
+<input id="r63" type="radio" name="g"/>
+<input id="r64" type="radio" name="g"/>
+<input id="r65" type="radio" name="g"/>
+<input id="r66" type="radio" name="g"/>
+<input id="r67" type="radio" name="g"/>
+<input id="r68" type="radio" name="g"/>
+<input id="r69" type="radio" name="g"/>
+<input id="r70" type="radio" name="g"/>
+<input id="r71" type="radio" name="g"/>
+<input id="r72" type="radio" name="g"/>
+<input id="r73" type="radio" name="g"/>
+<input id="r74" type="radio" name="g"/>
+<input id="r75" type="radio" name="g"/>
+<input id="r76" type="radio" name="g"/>
+<input id="r77" type="radio" name="g"/>
+<input id="r78" type="radio" name="g"/>
+<input id="r79" type="radio" name="g"/>
+<input id="r80" type="radio" name="g"/>
+<input id="r81" type="radio" name="g"/>
+<input id="r82" type="radio" name="g"/>
+<input id="r83" type="radio" name="g"/>
+<input id="r84" type="radio" name="g"/>
+<input id="r85" type="radio" name="g"/>
+<input id="r86" type="radio" name="g"/>
+<input id="r87" type="radio" name="g"/>
+<input id="r88" type="radio" name="g"/>
+<input id="r89" type="radio" name="g"/>
+<input id="r90" type="radio" name="g"/>
+<input id="r91" type="radio" name="g"/>
+<input id="r92" type="radio" name="g"/>
+<input id="r93" type="radio" name="g"/>
+<input id="r94" type="radio" name="g"/>
+<input id="r95" type="radio" name="g"/>
+<input id="r96" type="radio" name="g"/>
+<input id="r97" type="radio" name="g"/>
+<input id="r98" type="radio" name="g"/>
+<input id="r99" type="radio" name="g"/>
+<input id="r100" type="radio" name="g"/>
+<input id="r101" type="radio" name="g"/>
+<input id="r102" type="radio" name="g"/>
+<input id="r103" type="radio" name="g"/>
+<input id="r104" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2017 The Go Authors.  All rights reserved.</span><span class="comment"> Use of this source code is governed by a BSD-style</span><span class="comment"> license that can be found in the LICENSE file.</span></div>
+<div class="code"><pre><code>
+<span class="keyword">package</span> runtime
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"runtime/internal/atomic"</span></label>
+	<label for="i1"><span class="lit-string i1">"unsafe"</span></label>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> A profBuf is a lock-free buffer for profiling events,</span><span class="comment"> safe for concurrent use by one reader and one writer.</span><span class="comment"> The writer may be a signal handler running without a user g.</span><span class="comment"> The reader is assumed to be a user g.</span><span class="comment"></span><span class="comment"> Each logged event corresponds to a fixed size header, a list of</span><span class="comment"> uintptrs (typically a stack), and exactly one unsafe.Pointer tag.</span><span class="comment"> The header and uintptrs are stored in the circular buffer data and the</span><span class="comment"> tag is stored in a circular buffer tags, running in parallel.</span><span class="comment"> In the circular buffer data, each event takes 2+hdrsize+len(stk)</span><span class="comment"> words: the value 2+hdrsize+len(stk), then the time of the event, then</span><span class="comment"> hdrsize words giving the fixed-size header, and then len(stk) words</span><span class="comment"> for the stack.</span><span class="comment"></span><span class="comment"> The current effective offsets into the tags and data circular buffers</span><span class="comment"> for reading and writing are stored in the high 30 and low 32 bits of r and w.</span><span class="comment"> The bottom bits of the high 32 are additional flag bits in w, unused in r.</span><span class="comment"> "Effective" offsets means the total number of reads or writes, mod 2^length.</span><span class="comment"> The offset in the buffer is the effective offset mod the length of the buffer.</span><span class="comment"> To make wraparound mod 2^length match wraparound mod length of the buffer,</span><span class="comment"> the length of the buffer must be a power of two.</span><span class="comment"></span><span class="comment"> If the reader catches up to the writer, a flag passed to read controls</span><span class="comment"> whether the read blocks until more data is available. A read returns a</span><span class="comment"> pointer to the buffer data itself; the caller is assumed to be done with</span><span class="comment"> that data at the next read. The read offset rNext tracks the next offset to</span><span class="comment"> be returned by read. By definition, r ≤ rNext ≤ w (before wraparound),</span><span class="comment"> and rNext is only used by the reader, so it can be accessed without atomics.</span><span class="comment"></span><span class="comment"> If the writer gets ahead of the reader, so that the buffer fills,</span><span class="comment"> future writes are discarded and replaced in the output stream by an</span><span class="comment"> overflow entry, which has size 2+hdrsize+1, time set to the time of</span><span class="comment"> the first discarded write, a header of all zeroed words, and a "stack"</span><span class="comment"> containing one word, the number of discarded writes.</span><span class="comment"></span><span class="comment"> Between the time the buffer fills and the buffer becomes empty enough</span><span class="comment"> to hold more data, the overflow entry is stored as a pending overflow</span><span class="comment"> entry in the fields overflow and overflowTime. The pending overflow</span><span class="comment"> entry can be turned into a real record by either the writer or the</span><span class="comment"> reader. If the writer is called to write a new record and finds that</span><span class="comment"> the output buffer has room for both the pending overflow entry and the</span><span class="comment"> new record, the writer emits the pending overflow entry and the new</span><span class="comment"> record into the buffer. If the reader is called to read data and finds</span><span class="comment"> that the output buffer is empty but that there is a pending overflow</span><span class="comment"> entry, the reader will return a synthesized record for the pending</span><span class="comment"> overflow entry.</span><span class="comment"></span><span class="comment"> Only the writer can create or add to a pending overflow entry, but</span><span class="comment"> either the reader or the writer can clear the pending overflow entry.</span><span class="comment"> A pending overflow entry is indicated by the low 32 bits of 'overflow'</span><span class="comment"> holding the number of discarded writes, and overflowTime holding the</span><span class="comment"> time of the first discarded write. The high 32 bits of 'overflow'</span><span class="comment"> increment each time the low 32 bits transition from zero to non-zero</span><span class="comment"> or vice versa. This sequence number avoids ABA problems in the use of</span><span class="comment"> compare-and-swap to coordinate between reader and writer.</span><span class="comment"> The overflowTime is only written when the low 32 bits of overflow are</span><span class="comment"> zero, that is, only when there is no pending overflow entry, in</span><span class="comment"> preparation for creating a new one. The reader can therefore fetch and</span><span class="comment"> clear the entry atomically using</span><span class="comment"></span><span class="comment">	for {</span><span class="comment">		overflow = load(&amp;b.overflow)</span><span class="comment">		if uint32(overflow) == 0 {</span><span class="comment">			// no pending entry</span><span class="comment">			break</span><span class="comment">		}</span><span class="comment">		time = load(&amp;b.overflowTime)</span><span class="comment">		if cas(&amp;b.overflow, overflow, ((overflow&gt;&gt;32)+1)&lt;&lt;32) {</span><span class="comment">			// pending entry cleared</span><span class="comment">			break</span><span class="comment">		}</span><span class="comment">	}</span><span class="comment">	if uint32(overflow) &gt; 0 {</span><span class="comment">		emit entry for uint32(overflow), time</span><span class="comment">	}</span><span class="comment"></span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> accessed atomically</span></div>
+<div class="code"><pre><code>	<a href="../../use/runtime..profBuf*f8874.r*45434.html" class="ident">r</a>, <a href="../../use/runtime..profBuf*f8874.w*50e72.html" class="ident">w</a>         <a href="#line-107" class="ident">profAtomic</a>
+	<a href="../../use/runtime..profBuf*f8874.overflow*94fa3.html" class="ident">overflow</a>     <a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a>
+	<a href="../../use/runtime..profBuf*f8874.overflowTime*3b0d3.html" class="ident">overflowTime</a> <a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a>
+	<a href="../../use/runtime..profBuf*f8874.eof*22988.html" class="ident">eof</a>          <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> immutable (excluding slice content)</span></div>
+<div class="code"><pre><code>	<a href="../../use/runtime..profBuf*f8874.hdrsize*0fef6.html" class="ident">hdrsize</a> <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>
+	<a href="../../use/runtime..profBuf*f8874.data*3a6eb.html" class="ident">data</a>    []<a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a>
+	<a href="../../use/runtime..profBuf*f8874.tags*978c2.html" class="ident">tags</a>    []<a href="../../pkg/unsafe.html" class="ident i1">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> owned by reader</span></div>
+<div class="code"><pre><code>	<a href="../../use/runtime..profBuf*f8874.rNext*5a30e.html" class="ident">rNext</a>       <a href="#line-110" class="ident">profIndex</a>
+	<a href="../../use/runtime..profBuf*f8874.overflowBuf*444b3.html" class="ident">overflowBuf</a> []<a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a> <span class="comment">// for use by reader to return overflow record</span>
+	<a href="../../use/runtime..profBuf*f8874.wait*716ec.html" class="ident">wait</a>        <a href="runtime2.go.html#line-191" class="ident">note</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> A profAtomic is the atomically-accessed word holding a profIndex.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../pkg/runtime.html#name-profAtomic" class="ident">profAtomic</a> <a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> A profIndex is the packet tag and data counts and flags bits, described above.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../pkg/runtime.html#name-profIndex" class="ident">profIndex</a> <a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a>
+
+<span class="keyword">const</span> (
+	<a href="../../pkg/runtime.html#name-profReaderSleeping" class="ident">profReaderSleeping</a> <a href="#line-110" class="ident">profIndex</a> = <span class="lit-number">1</span> &lt;&lt; <span class="lit-number">32</span> <span class="comment">// reader is sleeping and must be woken up</span>
+	<a href="../../pkg/runtime.html#name-profWriteExtra" class="ident">profWriteExtra</a>     <a href="#line-110" class="ident">profIndex</a> = <span class="lit-number">1</span> &lt;&lt; <span class="lit-number">33</span> <span class="comment">// overflow or eof waiting</span>
+)
+
+<span class="keyword">func</span> (<label for="r0" class="ident">x</label> *<a href="#line-107" class="ident">profAtomic</a>) <label for="r1" class="ident"><a href="../../use/runtime..profAtomic*df6ed.load*0cf67.html" class="ident">load</a></label>() <a href="#line-110" class="ident">profIndex</a> {
+	<span class="keyword">return</span> <a href="#line-110" class="ident">profIndex</a>(<a href="../../pkg/runtime/internal/atomic.html" class="ident i0">atomic</a>.<a href="internal/atomic/atomic_amd64.go.html#line-28" class="ident">Load64</a>((*<a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a>)(<label for="r0" class="ident">x</label>)))
+}
+
+<span class="keyword">func</span> (<label for="r2" class="ident">x</label> *<a href="#line-107" class="ident">profAtomic</a>) <label for="r3" class="ident"><a href="../../use/runtime..profAtomic*df6ed.store*824d8.html" class="ident">store</a></label>(<label for="r4" class="ident">new</label> <a href="#line-110" class="ident">profIndex</a>) {
+	<a href="../../pkg/runtime/internal/atomic.html" class="ident i0">atomic</a>.<a href="internal/atomic/atomic_amd64.go.html#line-101" class="ident">Store64</a>((*<a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a>)(<label for="r2" class="ident">x</label>), <a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a>(<label for="r4" class="ident">new</label>))
+}
+
+<span class="keyword">func</span> (<label for="r5" class="ident">x</label> *<a href="#line-107" class="ident">profAtomic</a>) <label for="r6" class="ident"><a href="../../use/runtime..profAtomic*df6ed.cas*0ab2b.html" class="ident">cas</a></label>(<label for="r7" class="ident">old</label>, <label for="r8" class="ident">new</label> <a href="#line-110" class="ident">profIndex</a>) <a href="../../pkg/builtin.html#name-bool" class="ident">bool</a> {
+	<span class="keyword">return</span> <a href="../../pkg/runtime/internal/atomic.html" class="ident i0">atomic</a>.<a href="internal/atomic/atomic_amd64.go.html#line-89" class="ident">Cas64</a>((*<a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a>)(<label for="r5" class="ident">x</label>), <a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a>(<label for="r7" class="ident">old</label>), <a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a>(<label for="r8" class="ident">new</label>))
+}
+
+<span class="keyword">func</span> (<label for="r9" class="ident">x</label> <a href="#line-110" class="ident">profIndex</a>) <label for="r10" class="ident"><a href="../../use/runtime..profIndex*41ccb.dataCount*60515.html" class="ident">dataCount</a></label>() <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a> {
+	<span class="keyword">return</span> <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>(<label for="r9" class="ident">x</label>)
+}
+
+<span class="keyword">func</span> (<label for="r11" class="ident">x</label> <a href="#line-110" class="ident">profIndex</a>) <label for="r12" class="ident"><a href="../../use/runtime..profIndex*41ccb.tagCount*74b41.html" class="ident">tagCount</a></label>() <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a> {
+	<span class="keyword">return</span> <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>(<label for="r11" class="ident">x</label> &gt;&gt; <span class="lit-number">34</span>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> countSub subtracts two counts obtained from profIndex.dataCount or profIndex.tagCount,</span><span class="comment"> assuming that they are no more than 2^29 apart (guaranteed since they are never more than</span><span class="comment"> len(data) or len(tags) apart, respectively).</span><span class="comment"> tagCount wraps at 2^30, while dataCount wraps at 2^32.</span><span class="comment"> This function works for both.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> x-y is 32-bit signed or 30-bit signed; sign-extend to 32 bits and convert to int.</span></div>
+<div class="code"><pre><code>	<span class="keyword">return</span> <a href="../../pkg/builtin.html#name-int" class="ident">int</a>(<a href="../../pkg/builtin.html#name-int32" class="ident">int32</a>(<label for="r14" class="ident">x</label>-<label for="r15" class="ident">y</label>) &lt;&lt; <span class="lit-number">2</span> &gt;&gt; <span class="lit-number">2</span>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> addCountsAndClearFlags returns the packed form of "x + (data, tag) - all flags".</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r16" class="ident">x</label> <a href="#line-110" class="ident">profIndex</a>) <label for="r17" class="ident"><a href="../../use/runtime..profIndex*41ccb.addCountsAndClearFlags*106b5.html" class="ident">addCountsAndClearFlags</a></label>(<label for="r18" class="ident">data</label>, <label for="r19" class="ident">tag</label> <a href="../../pkg/builtin.html#name-int" class="ident">int</a>) <a href="#line-110" class="ident">profIndex</a> {
+	<span class="keyword">return</span> <a href="#line-110" class="ident">profIndex</a>((<a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a>(<label for="r16" class="ident">x</label>)&gt;&gt;<span class="lit-number">34</span>+<a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a>(<a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>(<label for="r19" class="ident">tag</label>)&lt;&lt;<span class="lit-number">2</span>&gt;&gt;<span class="lit-number">2</span>))&lt;&lt;<span class="lit-number">34</span> | <a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a>(<a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>(<label for="r16" class="ident">x</label>)+<a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>(<label for="r18" class="ident">data</label>)))
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> hasOverflow reports whether b has any overflow records pending.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r20" class="ident">b</label> *<a href="#line-88" class="ident">profBuf</a>) <label for="r21" class="ident"><a href="../../use/runtime..profBuf*f8874.hasOverflow*88ed5.html" class="ident">hasOverflow</a></label>() <a href="../../pkg/builtin.html#name-bool" class="ident">bool</a> {
+	<span class="keyword">return</span> <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>(<a href="../../pkg/runtime/internal/atomic.html" class="ident i0">atomic</a>.<a href="internal/atomic/atomic_amd64.go.html#line-28" class="ident">Load64</a>(&amp;<label for="r20" class="ident">b</label>.<a href="#line-91" class="ident">overflow</a>)) &gt; <span class="lit-number">0</span>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> takeOverflow consumes the pending overflow records, returning the overflow count</span><span class="comment"> and the time of the first overflow.</span><span class="comment"> When called by the reader, it is racing against incrementOverflow.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r22" class="ident">b</label> *<a href="#line-88" class="ident">profBuf</a>) <label for="r23" class="ident"><a href="../../use/runtime..profBuf*f8874.takeOverflow*0462d.html" class="ident">takeOverflow</a></label>() (<label for="r24" class="ident">count</label> <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>, <label for="r25" class="ident">time</label> <a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a>) {
+	<label for="r26" class="ident">overflow</label> := <a href="../../pkg/runtime/internal/atomic.html" class="ident i0">atomic</a>.<a href="internal/atomic/atomic_amd64.go.html#line-28" class="ident">Load64</a>(&amp;<label for="r22" class="ident">b</label>.<a href="#line-91" class="ident">overflow</a>)
+	<label for="r25" class="ident">time</label> = <a href="../../pkg/runtime/internal/atomic.html" class="ident i0">atomic</a>.<a href="internal/atomic/atomic_amd64.go.html#line-28" class="ident">Load64</a>(&amp;<label for="r22" class="ident">b</label>.<a href="#line-92" class="ident">overflowTime</a>)
+	<span class="keyword">for</span> {
+		<label for="r24" class="ident">count</label> = <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>(<label for="r26" class="ident">overflow</label>)
+		<span class="keyword">if</span> <label for="r24" class="ident">count</label> == <span class="lit-number">0</span> {
+			<label for="r25" class="ident">time</label> = <span class="lit-number">0</span>
+			<span class="keyword">break</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Increment generation, clear overflow count in low bits.</span></div>
+<div class="code"><pre><code>		<span class="keyword">if</span> <a href="../../pkg/runtime/internal/atomic.html" class="ident i0">atomic</a>.<a href="internal/atomic/atomic_amd64.go.html#line-89" class="ident">Cas64</a>(&amp;<label for="r22" class="ident">b</label>.<a href="#line-91" class="ident">overflow</a>, <label for="r26" class="ident">overflow</label>, ((<label for="r26" class="ident">overflow</label>&gt;&gt;<span class="lit-number">32</span>)+<span class="lit-number">1</span>)&lt;&lt;<span class="lit-number">32</span>) {
+			<span class="keyword">break</span>
+		}
+		<label for="r26" class="ident">overflow</label> = <a href="../../pkg/runtime/internal/atomic.html" class="ident i0">atomic</a>.<a href="internal/atomic/atomic_amd64.go.html#line-28" class="ident">Load64</a>(&amp;<label for="r22" class="ident">b</label>.<a href="#line-91" class="ident">overflow</a>)
+		<label for="r25" class="ident">time</label> = <a href="../../pkg/runtime/internal/atomic.html" class="ident i0">atomic</a>.<a href="internal/atomic/atomic_amd64.go.html#line-28" class="ident">Load64</a>(&amp;<label for="r22" class="ident">b</label>.<a href="#line-92" class="ident">overflowTime</a>)
+	}
+	<span class="keyword">return</span> <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>(<label for="r26" class="ident">overflow</label>), <label for="r25" class="ident">time</label>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> incrementOverflow records a single overflow at time now.</span><span class="comment"> It is racing against a possible takeOverflow in the reader.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r27" class="ident">b</label> *<a href="#line-88" class="ident">profBuf</a>) <label for="r28" class="ident"><a href="../../use/runtime..profBuf*f8874.incrementOverflow*6546a.html" class="ident">incrementOverflow</a></label>(<label for="r29" class="ident">now</label> <a href="../../pkg/builtin.html#name-int64" class="ident">int64</a>) {
+	<span class="keyword">for</span> {
+		<label for="r30" class="ident">overflow</label> := <a href="../../pkg/runtime/internal/atomic.html" class="ident i0">atomic</a>.<a href="internal/atomic/atomic_amd64.go.html#line-28" class="ident">Load64</a>(&amp;<label for="r27" class="ident">b</label>.<a href="#line-91" class="ident">overflow</a>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Once we see b.overflow reach 0, it's stable: no one else is changing it underfoot.</span><span class="comment">		 We need to set overflowTime if we're incrementing b.overflow from 0.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Store overflowTime first so it's always available when overflow != 0.</span></div>
+<div class="code"><pre><code>			<a href="../../pkg/runtime/internal/atomic.html" class="ident i0">atomic</a>.<a href="internal/atomic/atomic_amd64.go.html#line-101" class="ident">Store64</a>(&amp;<label for="r27" class="ident">b</label>.<a href="#line-92" class="ident">overflowTime</a>, <a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a>(<label for="r29" class="ident">now</label>))
+			<a href="../../pkg/runtime/internal/atomic.html" class="ident i0">atomic</a>.<a href="internal/atomic/atomic_amd64.go.html#line-101" class="ident">Store64</a>(&amp;<label for="r27" class="ident">b</label>.<a href="#line-91" class="ident">overflow</a>, (((<label for="r30" class="ident">overflow</label>&gt;&gt;<span class="lit-number">32</span>)+<span class="lit-number">1</span>)&lt;&lt;<span class="lit-number">32</span>)+<span class="lit-number">1</span>)
+			<span class="keyword">break</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Otherwise we're racing to increment against reader</span><span class="comment">		 who wants to set b.overflow to 0.</span><span class="comment">		 Out of paranoia, leave 2³²-1 a sticky overflow value,</span><span class="comment">		 to avoid wrapping around. Extremely unlikely.</span></div>
+<div class="code"><pre><code>		<span class="keyword">if</span> <a href="../../pkg/builtin.html#name-int32" class="ident">int32</a>(<label for="r30" class="ident">overflow</label>) == -<span class="lit-number">1</span> {
+			<span class="keyword">break</span>
+		}
+		<span class="keyword">if</span> <a href="../../pkg/runtime/internal/atomic.html" class="ident i0">atomic</a>.<a href="internal/atomic/atomic_amd64.go.html#line-89" class="ident">Cas64</a>(&amp;<label for="r27" class="ident">b</label>.<a href="#line-91" class="ident">overflow</a>, <label for="r30" class="ident">overflow</label>, <label for="r30" class="ident">overflow</label>+<span class="lit-number">1</span>) {
+			<span class="keyword">break</span>
+		}
+	}
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> newProfBuf returns a new profiling buffer with room for</span><span class="comment"> a header of hdrsize words and a buffer of at least bufwords words.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r31" class="ident"><a href="../../pkg/runtime.html#name-newProfBuf" class="ident">newProfBuf</a></label>(<label for="r32" class="ident">hdrsize</label>, <label for="r33" class="ident">bufwords</label>, <label for="r34" class="ident">tags</label> <a href="../../pkg/builtin.html#name-int" class="ident">int</a>) *<a href="#line-88" class="ident">profBuf</a> {
+	<span class="keyword">if</span> <label for="r35" class="ident">min</label> := <span class="lit-number">2</span> + <label for="r32" class="ident">hdrsize</label> + <span class="lit-number">1</span>; <label for="r33" class="ident">bufwords</label> &lt; <label for="r35" class="ident">min</label> {
+		<label for="r33" class="ident">bufwords</label> = <label for="r35" class="ident">min</label>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Buffer sizes must be power of two, so that we don't have to</span><span class="comment">	 worry about uint32 wraparound changing the effective position</span><span class="comment">	 within the buffers. We store 30 bits of count; limiting to 28</span><span class="comment">	 gives us some room for intermediate calculations.</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> <label for="r33" class="ident">bufwords</label> &gt;= <span class="lit-number">1</span>&lt;&lt;<span class="lit-number">28</span> || <label for="r34" class="ident">tags</label> &gt;= <span class="lit-number">1</span>&lt;&lt;<span class="lit-number">28</span> {
+		<a href="panic.go.html#line-1107" class="ident">throw</a>(<span class="lit-string">"newProfBuf: buffer too large"</span>)
+	}
+	<span class="keyword">var</span> <label for="r36" class="ident">i</label> <a href="../../pkg/builtin.html#name-int" class="ident">int</a>
+	<span class="keyword">for</span> <label for="r36" class="ident">i</label> = <span class="lit-number">1</span>; <label for="r36" class="ident">i</label> &lt; <label for="r33" class="ident">bufwords</label>; <label for="r36" class="ident">i</label> &lt;&lt;= <span class="lit-number">1</span> {
+	}
+	<label for="r33" class="ident">bufwords</label> = <label for="r36" class="ident">i</label>
+	<span class="keyword">for</span> <label for="r36" class="ident">i</label> = <span class="lit-number">1</span>; <label for="r36" class="ident">i</label> &lt; <label for="r34" class="ident">tags</label>; <label for="r36" class="ident">i</label> &lt;&lt;= <span class="lit-number">1</span> {
+	}
+	<label for="r34" class="ident">tags</label> = <label for="r36" class="ident">i</label>
+
+	<label for="r37" class="ident">b</label> := <a href="../../pkg/builtin.html#name-new" class="ident">new</a>(<a href="#line-88" class="ident">profBuf</a>)
+	<label for="r37" class="ident">b</label>.<a href="#line-96" class="ident">hdrsize</a> = <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<label for="r32" class="ident">hdrsize</label>)
+	<label for="r37" class="ident">b</label>.<a href="#line-97" class="ident">data</a> = <a href="../../pkg/builtin.html#name-make" class="ident">make</a>([]<a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a>, <label for="r33" class="ident">bufwords</label>)
+	<label for="r37" class="ident">b</label>.<a href="#line-98" class="ident">tags</a> = <a href="../../pkg/builtin.html#name-make" class="ident">make</a>([]<a href="../../pkg/unsafe.html" class="ident i1">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>, <label for="r34" class="ident">tags</label>)
+	<label for="r37" class="ident">b</label>.<a href="#line-102" class="ident">overflowBuf</a> = <a href="../../pkg/builtin.html#name-make" class="ident">make</a>([]<a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a>, <span class="lit-number">2</span>+<label for="r37" class="ident">b</label>.<a href="#line-96" class="ident">hdrsize</a>+<span class="lit-number">1</span>)
+	<span class="keyword">return</span> <label for="r37" class="ident">b</label>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> canWriteRecord reports whether the buffer has room</span><span class="comment"> for a single contiguous record with a stack of length nstk.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r38" class="ident">b</label> *<a href="#line-88" class="ident">profBuf</a>) <label for="r39" class="ident"><a href="../../use/runtime..profBuf*f8874.canWriteRecord*1f553.html" class="ident">canWriteRecord</a></label>(<label for="r40" class="ident">nstk</label> <a href="../../pkg/builtin.html#name-int" class="ident">int</a>) <a href="../../pkg/builtin.html#name-bool" class="ident">bool</a> {
+	<label for="r41" class="ident">br</label> := <label for="r38" class="ident">b</label>.<a href="#line-90" class="ident">r</a>.<a href="#line-117" class="ident">load</a>()
+	<label for="r42" class="ident">bw</label> := <label for="r38" class="ident">b</label>.<a href="#line-90" class="ident">w</a>.<a href="#line-117" class="ident">load</a>()
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> room for tag?</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> <a href="#line-142" class="ident">countSub</a>(<label for="r41" class="ident">br</label>.<a href="#line-133" class="ident">tagCount</a>(), <label for="r42" class="ident">bw</label>.<a href="#line-133" class="ident">tagCount</a>())+<a href="../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r38" class="ident">b</label>.<a href="#line-98" class="ident">tags</a>) &lt; <span class="lit-number">1</span> {
+		<span class="keyword">return</span> <a href="../../pkg/builtin.html#name-false" class="ident">false</a>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> room for data?</span></div>
+<div class="code"><pre><code>	<label for="r43" class="ident">nd</label> := <a href="#line-142" class="ident">countSub</a>(<label for="r41" class="ident">br</label>.<a href="#line-129" class="ident">dataCount</a>(), <label for="r42" class="ident">bw</label>.<a href="#line-129" class="ident">dataCount</a>()) + <a href="../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r38" class="ident">b</label>.<a href="#line-97" class="ident">data</a>)
+	<label for="r44" class="ident">want</label> := <span class="lit-number">2</span> + <a href="../../pkg/builtin.html#name-int" class="ident">int</a>(<label for="r38" class="ident">b</label>.<a href="#line-96" class="ident">hdrsize</a>) + <label for="r40" class="ident">nstk</label>
+	<label for="r45" class="ident">i</label> := <a href="../../pkg/builtin.html#name-int" class="ident">int</a>(<label for="r42" class="ident">bw</label>.<a href="#line-129" class="ident">dataCount</a>() % <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>(<a href="../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r38" class="ident">b</label>.<a href="#line-97" class="ident">data</a>)))
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Can't fit in trailing fragment of slice.</span><span class="comment">		 Skip over that and start over at beginning of slice.</span></div>
+<div class="code"><pre><code>		<label for="r43" class="ident">nd</label> -= <a href="../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r38" class="ident">b</label>.<a href="#line-97" class="ident">data</a>) - <label for="r45" class="ident">i</label>
+	}
+	<span class="keyword">return</span> <label for="r43" class="ident">nd</label> &gt;= <label for="r44" class="ident">want</label>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> canWriteTwoRecords reports whether the buffer has room</span><span class="comment"> for two records with stack lengths nstk1, nstk2, in that order.</span><span class="comment"> Each record must be contiguous on its own, but the two</span><span class="comment"> records need not be contiguous (one can be at the end of the buffer</span><span class="comment"> and the other can wrap around and start at the beginning of the buffer).</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r46" class="ident">b</label> *<a href="#line-88" class="ident">profBuf</a>) <label for="r47" class="ident"><a href="../../use/runtime..profBuf*f8874.canWriteTwoRecords*338f0.html" class="ident">canWriteTwoRecords</a></label>(<label for="r48" class="ident">nstk1</label>, <label for="r49" class="ident">nstk2</label> <a href="../../pkg/builtin.html#name-int" class="ident">int</a>) <a href="../../pkg/builtin.html#name-bool" class="ident">bool</a> {
+	<label for="r50" class="ident">br</label> := <label for="r46" class="ident">b</label>.<a href="#line-90" class="ident">r</a>.<a href="#line-117" class="ident">load</a>()
+	<label for="r51" class="ident">bw</label> := <label for="r46" class="ident">b</label>.<a href="#line-90" class="ident">w</a>.<a href="#line-117" class="ident">load</a>()
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> room for tag?</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> <a href="#line-142" class="ident">countSub</a>(<label for="r50" class="ident">br</label>.<a href="#line-133" class="ident">tagCount</a>(), <label for="r51" class="ident">bw</label>.<a href="#line-133" class="ident">tagCount</a>())+<a href="../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r46" class="ident">b</label>.<a href="#line-98" class="ident">tags</a>) &lt; <span class="lit-number">2</span> {
+		<span class="keyword">return</span> <a href="../../pkg/builtin.html#name-false" class="ident">false</a>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> room for data?</span></div>
+<div class="code"><pre><code>	<label for="r52" class="ident">nd</label> := <a href="#line-142" class="ident">countSub</a>(<label for="r50" class="ident">br</label>.<a href="#line-129" class="ident">dataCount</a>(), <label for="r51" class="ident">bw</label>.<a href="#line-129" class="ident">dataCount</a>()) + <a href="../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r46" class="ident">b</label>.<a href="#line-97" class="ident">data</a>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> first record</span></div>
+<div class="code"><pre><code>	<label for="r53" class="ident">want</label> := <span class="lit-number">2</span> + <a href="../../pkg/builtin.html#name-int" class="ident">int</a>(<label for="r46" class="ident">b</label>.<a href="#line-96" class="ident">hdrsize</a>) + <label for="r48" class="ident">nstk1</label>
+	<label for="r54" class="ident">i</label> := <a href="../../pkg/builtin.html#name-int" class="ident">int</a>(<label for="r51" class="ident">bw</label>.<a href="#line-129" class="ident">dataCount</a>() % <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>(<a href="../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r46" class="ident">b</label>.<a href="#line-97" class="ident">data</a>)))
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Can't fit in trailing fragment of slice.</span><span class="comment">		 Skip over that and start over at beginning of slice.</span></div>
+<div class="code"><pre><code>		<label for="r52" class="ident">nd</label> -= <a href="../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r46" class="ident">b</label>.<a href="#line-97" class="ident">data</a>) - <label for="r54" class="ident">i</label>
+		<label for="r54" class="ident">i</label> = <span class="lit-number">0</span>
+	}
+	<label for="r54" class="ident">i</label> += <label for="r53" class="ident">want</label>
+	<label for="r52" class="ident">nd</label> -= <label for="r53" class="ident">want</label>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> second record</span></div>
+<div class="code"><pre><code>	<label for="r53" class="ident">want</label> = <span class="lit-number">2</span> + <a href="../../pkg/builtin.html#name-int" class="ident">int</a>(<label for="r46" class="ident">b</label>.<a href="#line-96" class="ident">hdrsize</a>) + <label for="r49" class="ident">nstk2</label>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Can't fit in trailing fragment of slice.</span><span class="comment">		 Skip over that and start over at beginning of slice.</span></div>
+<div class="code"><pre><code>		<label for="r52" class="ident">nd</label> -= <a href="../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r46" class="ident">b</label>.<a href="#line-97" class="ident">data</a>) - <label for="r54" class="ident">i</label>
+		<label for="r54" class="ident">i</label> = <span class="lit-number">0</span>
+	}
+	<span class="keyword">return</span> <label for="r52" class="ident">nd</label> &gt;= <label for="r53" class="ident">want</label>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> write writes an entry to the profiling buffer b.</span><span class="comment"> The entry begins with a fixed hdr, which must have</span><span class="comment"> length b.hdrsize, followed by a variable-sized stack</span><span class="comment"> and a single tag pointer *tagPtr (or nil if tagPtr is nil).</span><span class="comment"> No write barriers allowed because this might be called from a signal handler.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r55" class="ident">b</label> *<a href="#line-88" class="ident">profBuf</a>) <label for="r56" class="ident"><a href="../../use/runtime..profBuf*f8874.write*10fd8.html" class="ident">write</a></label>(<label for="r57" class="ident">tagPtr</label> *<a href="../../pkg/unsafe.html" class="ident i1">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>, <label for="r58" class="ident">now</label> <a href="../../pkg/builtin.html#name-int64" class="ident">int64</a>, <label for="r59" class="ident">hdr</label> []<a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a>, <label for="r60" class="ident">stk</label> []<a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>) {
+	<span class="keyword">if</span> <label for="r55" class="ident">b</label> == <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span>
+	}
+	<span class="keyword">if</span> <a href="../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r59" class="ident">hdr</label>) &gt; <a href="../../pkg/builtin.html#name-int" class="ident">int</a>(<label for="r55" class="ident">b</label>.<a href="#line-96" class="ident">hdrsize</a>) {
+		<a href="panic.go.html#line-1107" class="ident">throw</a>(<span class="lit-string">"misuse of profBuf.write"</span>)
+	}
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Room for both an overflow record and the one being written.</span><span class="comment">		 Write the overflow record if the reader hasn't gotten to it yet.</span><span class="comment">		 Only racing against reader, not other writers.</span></div>
+<div class="code"><pre><code>		<label for="r62" class="ident">count</label>, <label for="r63" class="ident">time</label> := <label for="r55" class="ident">b</label>.<a href="#line-160" class="ident">takeOverflow</a>()
+		<span class="keyword">if</span> <label for="r62" class="ident">count</label> &gt; <span class="lit-number">0</span> {
+			<span class="keyword">var</span> <label for="r64" class="ident">stk</label> [<span class="lit-number">1</span>]<a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>
+			<label for="r64" class="ident">stk</label>[<span class="lit-number">0</span>] = <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<label for="r62" class="ident">count</label>)
+			<label for="r55" class="ident">b</label>.<label for="r56" class="ident">write</label>(<a href="../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="../../pkg/builtin.html#name-int64" class="ident">int64</a>(<label for="r63" class="ident">time</label>), <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a>, <label for="r64" class="ident">stk</label>[:])
+		}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Pending overflow without room to write overflow and new records</span><span class="comment">		 or no overflow but also no room for new record.</span></div>
+<div class="code"><pre><code>		<label for="r55" class="ident">b</label>.<a href="#line-181" class="ident">incrementOverflow</a>(<label for="r58" class="ident">now</label>)
+		<label for="r55" class="ident">b</label>.<a href="#line-408" class="ident">wakeupExtra</a>()
+		<span class="keyword">return</span>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> There's room: write the record.</span></div>
+<div class="code"><pre><code>	<label for="r65" class="ident">br</label> := <label for="r55" class="ident">b</label>.<a href="#line-90" class="ident">r</a>.<a href="#line-117" class="ident">load</a>()
+	<label for="r66" class="ident">bw</label> := <label for="r55" class="ident">b</label>.<a href="#line-90" class="ident">w</a>.<a href="#line-117" class="ident">load</a>()
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Profiling tag</span><span class="comment">	</span><span class="comment">	 The tag is a pointer, but we can't run a write barrier here.</span><span class="comment">	 We have interrupted the OS-level execution of gp, but the</span><span class="comment">	 runtime still sees gp as executing. In effect, we are running</span><span class="comment">	 in place of the real gp. Since gp is the only goroutine that</span><span class="comment">	 can overwrite gp.labels, the value of gp.labels is stable during</span><span class="comment">	 this signal handler: it will still be reachable from gp when</span><span class="comment">	 we finish executing. If a GC is in progress right now, it must</span><span class="comment">	 keep gp.labels alive, because gp.labels is reachable from gp.</span><span class="comment">	 If gp were to overwrite gp.labels, the deletion barrier would</span><span class="comment">	 still shade that pointer, which would preserve it for the</span><span class="comment">	 in-progress GC, so all is well. Any future GC will see the</span><span class="comment">	 value we copied when scanning b.tags (heap-allocated).</span><span class="comment">	 We arrange that the store here is always overwriting a nil,</span><span class="comment">	 so there is no need for a deletion barrier on b.tags[wt].</span></div>
+<div class="code"><pre><code>	<label for="r67" class="ident">wt</label> := <a href="../../pkg/builtin.html#name-int" class="ident">int</a>(<label for="r66" class="ident">bw</label>.<a href="#line-133" class="ident">tagCount</a>() % <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>(<a href="../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r55" class="ident">b</label>.<a href="#line-98" class="ident">tags</a>)))
+	<span class="keyword">if</span> <label for="r57" class="ident">tagPtr</label> != <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		*(*<a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>)(<a href="../../pkg/unsafe.html" class="ident i1">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(&amp;<label for="r55" class="ident">b</label>.<a href="#line-98" class="ident">tags</a>[<label for="r67" class="ident">wt</label>])) = <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<a href="../../pkg/unsafe.html" class="ident i1">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(*<label for="r57" class="ident">tagPtr</label>))
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Main record.</span><span class="comment">	 It has to fit in a contiguous section of the slice, so if it doesn't fit at the end,</span><span class="comment">	 leave a rewind marker (0) and start over at the beginning of the slice.</span></div>
+<div class="code"><pre><code>	<label for="r68" class="ident">wd</label> := <a href="../../pkg/builtin.html#name-int" class="ident">int</a>(<label for="r66" class="ident">bw</label>.<a href="#line-129" class="ident">dataCount</a>() % <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>(<a href="../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r55" class="ident">b</label>.<a href="#line-97" class="ident">data</a>)))
+	<label for="r69" class="ident">nd</label> := <a href="#line-142" class="ident">countSub</a>(<label for="r65" class="ident">br</label>.<a href="#line-129" class="ident">dataCount</a>(), <label for="r66" class="ident">bw</label>.<a href="#line-129" class="ident">dataCount</a>()) + <a href="../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r55" class="ident">b</label>.<a href="#line-97" class="ident">data</a>)
+	<label for="r70" class="ident">skip</label> := <span class="lit-number">0</span>
+	<span class="keyword">if</span> <label for="r68" class="ident">wd</label>+<span class="lit-number">2</span>+<a href="../../pkg/builtin.html#name-int" class="ident">int</a>(<label for="r55" class="ident">b</label>.<a href="#line-96" class="ident">hdrsize</a>)+<a href="../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r60" class="ident">stk</label>) &gt; <a href="../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r55" class="ident">b</label>.<a href="#line-97" class="ident">data</a>) {
+		<label for="r55" class="ident">b</label>.<a href="#line-97" class="ident">data</a>[<label for="r68" class="ident">wd</label>] = <span class="lit-number">0</span>
+		<label for="r70" class="ident">skip</label> = <a href="../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r55" class="ident">b</label>.<a href="#line-97" class="ident">data</a>) - <label for="r68" class="ident">wd</label>
+		<label for="r69" class="ident">nd</label> -= <label for="r70" class="ident">skip</label>
+		<label for="r68" class="ident">wd</label> = <span class="lit-number">0</span>
+	}
+	<label for="r71" class="ident">data</label> := <label for="r55" class="ident">b</label>.<a href="#line-97" class="ident">data</a>[<label for="r68" class="ident">wd</label>:]
+	<label for="r71" class="ident">data</label>[<span class="lit-number">0</span>] = <a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a>(<span class="lit-number">2</span> + <label for="r55" class="ident">b</label>.<a href="#line-96" class="ident">hdrsize</a> + <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<a href="../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r60" class="ident">stk</label>))) <span class="comment">// length</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> header, zero-padded</span></div>
+<div class="code"><pre><code>	<label for="r72" class="ident">i</label> := <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<a href="../../pkg/builtin.html#name-copy" class="ident">copy</a>(<label for="r71" class="ident">data</label>[<span class="lit-number">2</span>:<span class="lit-number">2</span>+<label for="r55" class="ident">b</label>.<a href="#line-96" class="ident">hdrsize</a>], <label for="r59" class="ident">hdr</label>))
+	<span class="keyword">for</span> ; <label for="r72" class="ident">i</label> &lt; <label for="r55" class="ident">b</label>.<a href="#line-96" class="ident">hdrsize</a>; <label for="r72" class="ident">i</label>++ {
+		<label for="r71" class="ident">data</label>[<span class="lit-number">2</span>+<label for="r72" class="ident">i</label>] = <span class="lit-number">0</span>
+	}
+	<span class="keyword">for</span> <label for="r73" class="ident">i</label>, <label for="r74" class="ident">pc</label> := <span class="keyword">range</span> <label for="r60" class="ident">stk</label> {
+		<label for="r71" class="ident">data</label>[<span class="lit-number">2</span>+<label for="r55" class="ident">b</label>.<a href="#line-96" class="ident">hdrsize</a>+<a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<label for="r73" class="ident">i</label>)] = <a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a>(<label for="r74" class="ident">pc</label>)
+	}
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Commit write.</span><span class="comment">		 Racing with reader setting flag bits in b.w, to avoid lost wakeups.</span></div>
+<div class="code"><pre><code>		<label for="r75" class="ident">old</label> := <label for="r55" class="ident">b</label>.<a href="#line-90" class="ident">w</a>.<a href="#line-117" class="ident">load</a>()
+		<label for="r76" class="ident">new</label> := <label for="r75" class="ident">old</label>.<a href="#line-148" class="ident">addCountsAndClearFlags</a>(<label for="r70" class="ident">skip</label>+<span class="lit-number">2</span>+<a href="../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r60" class="ident">stk</label>)+<a href="../../pkg/builtin.html#name-int" class="ident">int</a>(<label for="r55" class="ident">b</label>.<a href="#line-96" class="ident">hdrsize</a>), <span class="lit-number">1</span>)
+		<span class="keyword">if</span> !<label for="r55" class="ident">b</label>.<a href="#line-90" class="ident">w</a>.<a href="#line-125" class="ident">cas</a>(<label for="r75" class="ident">old</label>, <label for="r76" class="ident">new</label>) {
+			<span class="keyword">continue</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> If there was a reader, wake it up.</span></div>
+<div class="code"><pre><code>		<span class="keyword">if</span> <label for="r75" class="ident">old</label>&amp;<a href="#line-113" class="ident">profReaderSleeping</a> != <span class="lit-number">0</span> {
+			<a href="lock_sema.go.html#line-142" class="ident">notewakeup</a>(&amp;<label for="r55" class="ident">b</label>.<a href="#line-103" class="ident">wait</a>)
+		}
+		<span class="keyword">break</span>
+	}
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> close signals that there will be no more writes on the buffer.</span><span class="comment"> Once all the data has been read from the buffer, reads will return eof=true.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r77" class="ident">b</label> *<a href="#line-88" class="ident">profBuf</a>) <label for="r78" class="ident"><a href="../../use/runtime..profBuf*f8874.close*310ff.html" class="ident">close</a></label>() {
+	<span class="keyword">if</span> <a href="../../pkg/runtime/internal/atomic.html" class="ident i0">atomic</a>.<a href="internal/atomic/atomic_amd64.go.html#line-16" class="ident">Load</a>(&amp;<label for="r77" class="ident">b</label>.<a href="#line-93" class="ident">eof</a>) &gt; <span class="lit-number">0</span> {
+		<a href="panic.go.html#line-1107" class="ident">throw</a>(<span class="lit-string">"runtime: profBuf already closed"</span>)
+	}
+	<a href="../../pkg/runtime/internal/atomic.html" class="ident i0">atomic</a>.<a href="internal/atomic/atomic_amd64.go.html#line-95" class="ident">Store</a>(&amp;<label for="r77" class="ident">b</label>.<a href="#line-93" class="ident">eof</a>, <span class="lit-number">1</span>)
+	<label for="r77" class="ident">b</label>.<a href="#line-408" class="ident">wakeupExtra</a>()
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> wakeupExtra must be called after setting one of the "extra"</span><span class="comment"> atomic fields b.overflow or b.eof.</span><span class="comment"> It records the change in b.w and wakes up the reader if needed.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r79" class="ident">b</label> *<a href="#line-88" class="ident">profBuf</a>) <label for="r80" class="ident"><a href="../../use/runtime..profBuf*f8874.wakeupExtra*1e2ff.html" class="ident">wakeupExtra</a></label>() {
+	<span class="keyword">for</span> {
+		<label for="r81" class="ident">old</label> := <label for="r79" class="ident">b</label>.<a href="#line-90" class="ident">w</a>.<a href="#line-117" class="ident">load</a>()
+		<label for="r82" class="ident">new</label> := <label for="r81" class="ident">old</label> | <a href="#line-114" class="ident">profWriteExtra</a>
+		<span class="keyword">if</span> !<label for="r79" class="ident">b</label>.<a href="#line-90" class="ident">w</a>.<a href="#line-125" class="ident">cas</a>(<label for="r81" class="ident">old</label>, <label for="r82" class="ident">new</label>) {
+			<span class="keyword">continue</span>
+		}
+		<span class="keyword">if</span> <label for="r81" class="ident">old</label>&amp;<a href="#line-113" class="ident">profReaderSleeping</a> != <span class="lit-number">0</span> {
+			<a href="lock_sema.go.html#line-142" class="ident">notewakeup</a>(&amp;<label for="r79" class="ident">b</label>.<a href="#line-103" class="ident">wait</a>)
+		}
+		<span class="keyword">break</span>
+	}
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> profBufReadMode specifies whether to block when no data is available to read.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../pkg/runtime.html#name-profBufReadMode" class="ident">profBufReadMode</a> <a href="../../pkg/builtin.html#name-int" class="ident">int</a>
+
+<span class="keyword">const</span> (
+	<a href="../../pkg/runtime.html#name-profBufBlocking" class="ident">profBufBlocking</a> <a href="#line-423" class="ident">profBufReadMode</a> = <a href="../../pkg/builtin.html#name-iota" class="ident">iota</a>
+	<a href="../../pkg/runtime.html#name-profBufNonBlocking" class="ident">profBufNonBlocking</a>
+)
+
+<span class="keyword">var</span> <a href="../../pkg/runtime.html#name-overflowTag" class="ident">overflowTag</a> [<span class="lit-number">1</span>]<a href="../../pkg/unsafe.html" class="ident i1">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a> <span class="comment">// always nil</span>
+
+<span class="keyword">func</span> (<label for="r83" class="ident">b</label> *<a href="#line-88" class="ident">profBuf</a>) <label for="r84" class="ident"><a href="../../use/runtime..profBuf*f8874.read*33163.html" class="ident">read</a></label>(<label for="r85" class="ident">mode</label> <a href="#line-423" class="ident">profBufReadMode</a>) (<label for="r86" class="ident">data</label> []<a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a>, <label for="r87" class="ident">tags</label> []<a href="../../pkg/unsafe.html" class="ident i1">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>, <label for="r88" class="ident">eof</label> <a href="../../pkg/builtin.html#name-bool" class="ident">bool</a>) {
+	<span class="keyword">if</span> <label for="r83" class="ident">b</label> == <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="../../pkg/builtin.html#name-true" class="ident">true</a>
+	}
+
+	<label for="r89" class="ident">br</label> := <label for="r83" class="ident">b</label>.<a href="#line-101" class="ident">rNext</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Commit previous read, returning that part of the ring to the writer.</span><span class="comment">	 First clear tags that have now been read, both to avoid holding</span><span class="comment">	 up the memory they point at for longer than necessary</span><span class="comment">	 and so that b.write can assume it is always overwriting</span><span class="comment">	 nil tag entries (see comment in b.write).</span></div>
+<div class="code"><pre><code>	<label for="r90" class="ident">rPrev</label> := <label for="r83" class="ident">b</label>.<a href="#line-90" class="ident">r</a>.<a href="#line-117" class="ident">load</a>()
+	<span class="keyword">if</span> <label for="r90" class="ident">rPrev</label> != <label for="r89" class="ident">br</label> {
+		<label for="r91" class="ident">ntag</label> := <a href="#line-142" class="ident">countSub</a>(<label for="r89" class="ident">br</label>.<a href="#line-133" class="ident">tagCount</a>(), <label for="r90" class="ident">rPrev</label>.<a href="#line-133" class="ident">tagCount</a>())
+		<label for="r92" class="ident">ti</label> := <a href="../../pkg/builtin.html#name-int" class="ident">int</a>(<label for="r90" class="ident">rPrev</label>.<a href="#line-133" class="ident">tagCount</a>() % <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>(<a href="../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r83" class="ident">b</label>.<a href="#line-98" class="ident">tags</a>)))
+		<span class="keyword">for</span> <label for="r93" class="ident">i</label> := <span class="lit-number">0</span>; <label for="r93" class="ident">i</label> &lt; <label for="r91" class="ident">ntag</label>; <label for="r93" class="ident">i</label>++ {
+			<label for="r83" class="ident">b</label>.<a href="#line-98" class="ident">tags</a>[<label for="r92" class="ident">ti</label>] = <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a>
+			<span class="keyword">if</span> <label for="r92" class="ident">ti</label>++; <label for="r92" class="ident">ti</label> == <a href="../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r83" class="ident">b</label>.<a href="#line-98" class="ident">tags</a>) {
+				<label for="r92" class="ident">ti</label> = <span class="lit-number">0</span>
+			}
+		}
+		<label for="r83" class="ident">b</label>.<a href="#line-90" class="ident">r</a>.<a href="#line-121" class="ident">store</a>(<label for="r89" class="ident">br</label>)
+	}
+
+<label for="r94" class="ident">Read</label>:
+	<label for="r95" class="ident">bw</label> := <label for="r83" class="ident">b</label>.<a href="#line-90" class="ident">w</a>.<a href="#line-117" class="ident">load</a>()
+	<label for="r96" class="ident">numData</label> := <a href="#line-142" class="ident">countSub</a>(<label for="r95" class="ident">bw</label>.<a href="#line-129" class="ident">dataCount</a>(), <label for="r89" class="ident">br</label>.<a href="#line-129" class="ident">dataCount</a>())
+	<span class="keyword">if</span> <label for="r96" class="ident">numData</label> == <span class="lit-number">0</span> {
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> No data to read, but there is overflow to report.</span><span class="comment">			 Racing with writer flushing b.overflow into a real record.</span></div>
+<div class="code"><pre><code>			<label for="r97" class="ident">count</label>, <label for="r98" class="ident">time</label> := <label for="r83" class="ident">b</label>.<a href="#line-160" class="ident">takeOverflow</a>()
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Lost the race, go around again.</span></div>
+<div class="code"><pre><code>				<span class="keyword">goto</span> <label for="r94" class="ident">Read</label>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Won the race, report overflow.</span></div>
+<div class="code"><pre><code>			<label for="r99" class="ident">dst</label> := <label for="r83" class="ident">b</label>.<a href="#line-102" class="ident">overflowBuf</a>
+			<label for="r99" class="ident">dst</label>[<span class="lit-number">0</span>] = <a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a>(<span class="lit-number">2</span> + <label for="r83" class="ident">b</label>.<a href="#line-96" class="ident">hdrsize</a> + <span class="lit-number">1</span>)
+			<label for="r99" class="ident">dst</label>[<span class="lit-number">1</span>] = <a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a>(<label for="r98" class="ident">time</label>)
+			<span class="keyword">for</span> <label for="r100" class="ident">i</label> := <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<span class="lit-number">0</span>); <label for="r100" class="ident">i</label> &lt; <label for="r83" class="ident">b</label>.<a href="#line-96" class="ident">hdrsize</a>; <label for="r100" class="ident">i</label>++ {
+				<label for="r99" class="ident">dst</label>[<span class="lit-number">2</span>+<label for="r100" class="ident">i</label>] = <span class="lit-number">0</span>
+			}
+			<label for="r99" class="ident">dst</label>[<span class="lit-number">2</span>+<label for="r83" class="ident">b</label>.<a href="#line-96" class="ident">hdrsize</a>] = <a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a>(<label for="r97" class="ident">count</label>)
+			<span class="keyword">return</span> <label for="r99" class="ident">dst</label>[:<span class="lit-number">2</span>+<label for="r83" class="ident">b</label>.<a href="#line-96" class="ident">hdrsize</a>+<span class="lit-number">1</span>], <a href="#line-430" class="ident">overflowTag</a>[:<span class="lit-number">1</span>], <a href="../../pkg/builtin.html#name-false" class="ident">false</a>
+		}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> No data, no overflow, EOF set: done.</span></div>
+<div class="code"><pre><code>			<span class="keyword">return</span> <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="../../pkg/builtin.html#name-true" class="ident">true</a>
+		}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Writer claims to have published extra information (overflow or eof).</span><span class="comment">			 Attempt to clear notification and then check again.</span><span class="comment">			 If we fail to clear the notification it means b.w changed,</span><span class="comment">			 so we still need to check again.</span></div>
+<div class="code"><pre><code>			<label for="r83" class="ident">b</label>.<a href="#line-90" class="ident">w</a>.<a href="#line-125" class="ident">cas</a>(<label for="r95" class="ident">bw</label>, <label for="r95" class="ident">bw</label>&amp;^<a href="#line-114" class="ident">profWriteExtra</a>)
+			<span class="keyword">goto</span> <label for="r94" class="ident">Read</label>
+		}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Nothing to read right now.</span><span class="comment">		 Return or sleep according to mode.</span></div>
+<div class="code"><pre><code>		<span class="keyword">if</span> <label for="r85" class="ident">mode</label> == <a href="#line-427" class="ident">profBufNonBlocking</a> {
+			<span class="keyword">return</span> <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="../../pkg/builtin.html#name-false" class="ident">false</a>
+		}
+		<span class="keyword">if</span> !<label for="r83" class="ident">b</label>.<a href="#line-90" class="ident">w</a>.<a href="#line-125" class="ident">cas</a>(<label for="r95" class="ident">bw</label>, <label for="r95" class="ident">bw</label>|<a href="#line-113" class="ident">profReaderSleeping</a>) {
+			<span class="keyword">goto</span> <label for="r94" class="ident">Read</label>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Committed to sleeping.</span></div>
+<div class="code"><pre><code>		<a href="lock_sema.go.html#line-288" class="ident">notetsleepg</a>(&amp;<label for="r83" class="ident">b</label>.<a href="#line-103" class="ident">wait</a>, -<span class="lit-number">1</span>)
+		<a href="lock_sema.go.html#line-132" class="ident">noteclear</a>(&amp;<label for="r83" class="ident">b</label>.<a href="#line-103" class="ident">wait</a>)
+		<span class="keyword">goto</span> <label for="r94" class="ident">Read</label>
+	}
+	<label for="r86" class="ident">data</label> = <label for="r83" class="ident">b</label>.<a href="#line-97" class="ident">data</a>[<label for="r89" class="ident">br</label>.<a href="#line-129" class="ident">dataCount</a>()%<a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>(<a href="../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r83" class="ident">b</label>.<a href="#line-97" class="ident">data</a>)):]
+	<span class="keyword">if</span> <a href="../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r86" class="ident">data</label>) &gt; <label for="r96" class="ident">numData</label> {
+		<label for="r86" class="ident">data</label> = <label for="r86" class="ident">data</label>[:<label for="r96" class="ident">numData</label>]
+	} <span class="keyword">else</span> {
+		<label for="r96" class="ident">numData</label> -= <a href="../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r86" class="ident">data</label>) <span class="comment">// available in case of wraparound</span>
+	}
+	<label for="r101" class="ident">skip</label> := <span class="lit-number">0</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Wraparound record. Go back to the beginning of the ring.</span></div>
+<div class="code"><pre><code>		<label for="r101" class="ident">skip</label> = <a href="../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r86" class="ident">data</label>)
+		<label for="r86" class="ident">data</label> = <label for="r83" class="ident">b</label>.<a href="#line-97" class="ident">data</a>
+		<span class="keyword">if</span> <a href="../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r86" class="ident">data</label>) &gt; <label for="r96" class="ident">numData</label> {
+			<label for="r86" class="ident">data</label> = <label for="r86" class="ident">data</label>[:<label for="r96" class="ident">numData</label>]
+		}
+	}
+
+	<label for="r102" class="ident">ntag</label> := <a href="#line-142" class="ident">countSub</a>(<label for="r95" class="ident">bw</label>.<a href="#line-133" class="ident">tagCount</a>(), <label for="r89" class="ident">br</label>.<a href="#line-133" class="ident">tagCount</a>())
+	<span class="keyword">if</span> <label for="r102" class="ident">ntag</label> == <span class="lit-number">0</span> {
+		<a href="panic.go.html#line-1107" class="ident">throw</a>(<span class="lit-string">"runtime: malformed profBuf buffer - tag and data out of sync"</span>)
+	}
+	<label for="r87" class="ident">tags</label> = <label for="r83" class="ident">b</label>.<a href="#line-98" class="ident">tags</a>[<label for="r89" class="ident">br</label>.<a href="#line-133" class="ident">tagCount</a>()%<a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>(<a href="../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r83" class="ident">b</label>.<a href="#line-98" class="ident">tags</a>)):]
+	<span class="keyword">if</span> <a href="../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r87" class="ident">tags</label>) &gt; <label for="r102" class="ident">ntag</label> {
+		<label for="r87" class="ident">tags</label> = <label for="r87" class="ident">tags</label>[:<label for="r102" class="ident">ntag</label>]
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Count out whole data records until either data or tags is done.</span><span class="comment">	 They are always in sync in the buffer, but due to an end-of-slice</span><span class="comment">	 wraparound we might need to stop early and return the rest</span><span class="comment">	 in the next call.</span></div>
+<div class="code"><pre><code>	<label for="r103" class="ident">di</label> := <span class="lit-number">0</span>
+	<label for="r104" class="ident">ti</label> := <span class="lit-number">0</span>
+	<span class="keyword">for</span> <label for="r103" class="ident">di</label> &lt; <a href="../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r86" class="ident">data</label>) &amp;&amp; <label for="r86" class="ident">data</label>[<label for="r103" class="ident">di</label>] != <span class="lit-number">0</span> &amp;&amp; <label for="r104" class="ident">ti</label> &lt; <a href="../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r87" class="ident">tags</label>) {
+		<span class="keyword">if</span> <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<label for="r103" class="ident">di</label>)+<a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<label for="r86" class="ident">data</label>[<label for="r103" class="ident">di</label>]) &gt; <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<a href="../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r86" class="ident">data</label>)) {
+			<a href="panic.go.html#line-1107" class="ident">throw</a>(<span class="lit-string">"runtime: malformed profBuf buffer - invalid size"</span>)
+		}
+		<label for="r103" class="ident">di</label> += <a href="../../pkg/builtin.html#name-int" class="ident">int</a>(<label for="r86" class="ident">data</label>[<label for="r103" class="ident">di</label>])
+		<label for="r104" class="ident">ti</label>++
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Remember how much we returned, to commit read on next call.</span></div>
+<div class="code"><pre><code>	<label for="r83" class="ident">b</label>.<a href="#line-101" class="ident">rNext</a> = <label for="r89" class="ident">br</label>.<a href="#line-148" class="ident">addCountsAndClearFlags</a>(<label for="r101" class="ident">skip</label>+<label for="r103" class="ident">di</label>, <label for="r104" class="ident">ti</label>)
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Match racereleasemerge in runtime_setProfLabel,</span><span class="comment">		 so that the setting of the labels in runtime_setProfLabel</span><span class="comment">		 is treated as happening before any use of the labels</span><span class="comment">		 by our caller. The synchronization on labelSync itself is a fiction</span><span class="comment">		 for the race detector. The actual synchronization is handled</span><span class="comment">		 by the fact that the signal handler only reads from the current</span><span class="comment">		 goroutine and uses atomics to write the updated queue indices,</span><span class="comment">		 and then the read-out from the signal handler buffer uses</span><span class="comment">		 atomics to read those queue indices.</span></div>
+<div class="code"><pre><code>		<a href="race0.go.html#line-30" class="ident">raceacquire</a>(<a href="../../pkg/unsafe.html" class="ident i1">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(&amp;<a href="proflabel.go.html#line-9" class="ident">labelSync</a>))
+	}
+
+	<span class="keyword">return</span> <label for="r86" class="ident">data</label>[:<label for="r103" class="ident">di</label>], <label for="r87" class="ident">tags</label>[:<label for="r104" class="ident">ti</label>], <a href="../../pkg/builtin.html#name-false" class="ident">false</a>
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

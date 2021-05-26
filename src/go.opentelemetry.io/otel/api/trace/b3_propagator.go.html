@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: b3_propagator.go in package go.opentelemetry.io/otel/api/trace</title>
+<link href="../../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	b3_propagator.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../../pkg/go.opentelemetry.io/otel/api/trace.html">go.opentelemetry.io/otel/api/trace</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16],
+input[id=r17]:checked ~pre label[for=r17],
+input[id=r18]:checked ~pre label[for=r18],
+input[id=r19]:checked ~pre label[for=r19],
+input[id=r20]:checked ~pre label[for=r20],
+input[id=r21]:checked ~pre label[for=r21],
+input[id=r22]:checked ~pre label[for=r22],
+input[id=r23]:checked ~pre label[for=r23],
+input[id=r24]:checked ~pre label[for=r24],
+input[id=r25]:checked ~pre label[for=r25],
+input[id=r26]:checked ~pre label[for=r26],
+input[id=r27]:checked ~pre label[for=r27],
+input[id=r28]:checked ~pre label[for=r28],
+input[id=r29]:checked ~pre label[for=r29],
+input[id=r30]:checked ~pre label[for=r30],
+input[id=r31]:checked ~pre label[for=r31],
+input[id=r32]:checked ~pre label[for=r32],
+input[id=r33]:checked ~pre label[for=r33],
+input[id=r34]:checked ~pre label[for=r34],
+input[id=r35]:checked ~pre label[for=r35],
+input[id=r36]:checked ~pre label[for=r36],
+input[id=r37]:checked ~pre label[for=r37],
+input[id=r38]:checked ~pre label[for=r38],
+input[id=r39]:checked ~pre label[for=r39],
+input[id=r40]:checked ~pre label[for=r40],
+input[id=r41]:checked ~pre label[for=r41]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1,
+input[id=i2]:checked ~pre .i2,
+input[id=i3]:checked ~pre .i3
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="r17" type="radio" name="g"/>
+<input id="r18" type="radio" name="g"/>
+<input id="r19" type="radio" name="g"/>
+<input id="r20" type="radio" name="g"/>
+<input id="r21" type="radio" name="g"/>
+<input id="r22" type="radio" name="g"/>
+<input id="r23" type="radio" name="g"/>
+<input id="r24" type="radio" name="g"/>
+<input id="r25" type="radio" name="g"/>
+<input id="r26" type="radio" name="g"/>
+<input id="r27" type="radio" name="g"/>
+<input id="r28" type="radio" name="g"/>
+<input id="r29" type="radio" name="g"/>
+<input id="r30" type="radio" name="g"/>
+<input id="r31" type="radio" name="g"/>
+<input id="r32" type="radio" name="g"/>
+<input id="r33" type="radio" name="g"/>
+<input id="r34" type="radio" name="g"/>
+<input id="r35" type="radio" name="g"/>
+<input id="r36" type="radio" name="g"/>
+<input id="r37" type="radio" name="g"/>
+<input id="r38" type="radio" name="g"/>
+<input id="r39" type="radio" name="g"/>
+<input id="r40" type="radio" name="g"/>
+<input id="r41" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<input id="i2" type="radio" name="i"/>
+<input id="i3" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright The OpenTelemetry Authors</span><span class="comment"></span><span class="comment"> Licensed under the Apache License, Version 2.0 (the "License");</span><span class="comment"> you may not use this file except in compliance with the License.</span><span class="comment"> You may obtain a copy of the License at</span><span class="comment"></span><span class="comment">     http://www.apache.org/licenses/LICENSE-2.0</span><span class="comment"></span><span class="comment"> Unless required by applicable law or agreed to in writing, software</span><span class="comment"> distributed under the License is distributed on an "AS IS" BASIS,</span><span class="comment"> WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span><span class="comment"> See the License for the specific language governing permissions and</span><span class="comment"> limitations under the License.</span></div>
+<div class="code"><pre><code>
+<span class="keyword">package</span> trace
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"context"</span></label>
+	<label for="i1"><span class="lit-string i1">"errors"</span></label>
+	<label for="i2"><span class="lit-string i2">"strings"</span></label>
+
+	<label for="i3"><span class="lit-string i3">"go.opentelemetry.io/otel/api/propagation"</span></label>
+)
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Default B3 Header names.</span></div>
+<div class="code"><pre><code>	<a href="../../../../../pkg/go.opentelemetry.io/otel/api/trace.html#name-b3ContextHeader" class="ident">b3ContextHeader</a>      = <span class="lit-string">"b3"</span>
+	<a href="../../../../../pkg/go.opentelemetry.io/otel/api/trace.html#name-b3DebugFlagHeader" class="ident">b3DebugFlagHeader</a>    = <span class="lit-string">"x-b3-flags"</span>
+	<a href="../../../../../pkg/go.opentelemetry.io/otel/api/trace.html#name-b3TraceIDHeader" class="ident">b3TraceIDHeader</a>      = <span class="lit-string">"x-b3-traceid"</span>
+	<a href="../../../../../pkg/go.opentelemetry.io/otel/api/trace.html#name-b3SpanIDHeader" class="ident">b3SpanIDHeader</a>       = <span class="lit-string">"x-b3-spanid"</span>
+	<a href="../../../../../pkg/go.opentelemetry.io/otel/api/trace.html#name-b3SampledHeader" class="ident">b3SampledHeader</a>      = <span class="lit-string">"x-b3-sampled"</span>
+	<a href="../../../../../pkg/go.opentelemetry.io/otel/api/trace.html#name-b3ParentSpanIDHeader" class="ident">b3ParentSpanIDHeader</a> = <span class="lit-string">"x-b3-parentspanid"</span>
+
+	<a href="../../../../../pkg/go.opentelemetry.io/otel/api/trace.html#name-b3TraceIDPadding" class="ident">b3TraceIDPadding</a> = <span class="lit-string">"0000000000000000"</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> B3 Single Header encoding widths.</span></div>
+<div class="code"><pre><code>	<a href="../../../../../pkg/go.opentelemetry.io/otel/api/trace.html#name-separatorWidth" class="ident">separatorWidth</a>      = <span class="lit-number">1</span>       <span class="comment">// Single "-" character.</span>
+	<a href="../../../../../pkg/go.opentelemetry.io/otel/api/trace.html#name-samplingWidth" class="ident">samplingWidth</a>       = <span class="lit-number">1</span>       <span class="comment">// Single hex character.</span>
+	<a href="../../../../../pkg/go.opentelemetry.io/otel/api/trace.html#name-traceID64BitsWidth" class="ident">traceID64BitsWidth</a>  = <span class="lit-number">64</span> / <span class="lit-number">4</span>  <span class="comment">// 16 hex character Trace ID.</span>
+	<a href="../../../../../pkg/go.opentelemetry.io/otel/api/trace.html#name-traceID128BitsWidth" class="ident">traceID128BitsWidth</a> = <span class="lit-number">128</span> / <span class="lit-number">4</span> <span class="comment">// 32 hex character Trace ID.</span>
+	<a href="../../../../../pkg/go.opentelemetry.io/otel/api/trace.html#name-spanIDWidth" class="ident">spanIDWidth</a>         = <span class="lit-number">16</span>      <span class="comment">// 16 hex character ID.</span>
+	<a href="../../../../../pkg/go.opentelemetry.io/otel/api/trace.html#name-parentSpanIDWidth" class="ident">parentSpanIDWidth</a>   = <span class="lit-number">16</span>      <span class="comment">// 16 hex character ID.</span>
+)
+
+<span class="keyword">var</span> (
+	<a href="../../../../../pkg/go.opentelemetry.io/otel/api/trace.html#name-empty" class="ident">empty</a> = <a href="span_context.go.html#line-164" class="ident">EmptySpanContext</a>()
+
+	<a href="../../../../../pkg/go.opentelemetry.io/otel/api/trace.html#name-errInvalidSampledByte" class="ident">errInvalidSampledByte</a>        = <a href="../../../../../pkg/errors.html" class="ident i1">errors</a>.<a href="../../../../errors/errors.go.html#line-58" class="ident">New</a>(<span class="lit-string">"invalid B3 Sampled found"</span>)
+	<a href="../../../../../pkg/go.opentelemetry.io/otel/api/trace.html#name-errInvalidSampledHeader" class="ident">errInvalidSampledHeader</a>      = <a href="../../../../../pkg/errors.html" class="ident i1">errors</a>.<a href="../../../../errors/errors.go.html#line-58" class="ident">New</a>(<span class="lit-string">"invalid B3 Sampled header found"</span>)
+	<a href="../../../../../pkg/go.opentelemetry.io/otel/api/trace.html#name-errInvalidTraceIDHeader" class="ident">errInvalidTraceIDHeader</a>      = <a href="../../../../../pkg/errors.html" class="ident i1">errors</a>.<a href="../../../../errors/errors.go.html#line-58" class="ident">New</a>(<span class="lit-string">"invalid B3 TraceID header found"</span>)
+	<a href="../../../../../pkg/go.opentelemetry.io/otel/api/trace.html#name-errInvalidSpanIDHeader" class="ident">errInvalidSpanIDHeader</a>       = <a href="../../../../../pkg/errors.html" class="ident i1">errors</a>.<a href="../../../../errors/errors.go.html#line-58" class="ident">New</a>(<span class="lit-string">"invalid B3 SpanID header found"</span>)
+	<a href="../../../../../pkg/go.opentelemetry.io/otel/api/trace.html#name-errInvalidParentSpanIDHeader" class="ident">errInvalidParentSpanIDHeader</a> = <a href="../../../../../pkg/errors.html" class="ident i1">errors</a>.<a href="../../../../errors/errors.go.html#line-58" class="ident">New</a>(<span class="lit-string">"invalid B3 ParentSpanID header found"</span>)
+	<a href="../../../../../pkg/go.opentelemetry.io/otel/api/trace.html#name-errInvalidScope" class="ident">errInvalidScope</a>              = <a href="../../../../../pkg/errors.html" class="ident i1">errors</a>.<a href="../../../../errors/errors.go.html#line-58" class="ident">New</a>(<span class="lit-string">"require either both TraceID and SpanID or none"</span>)
+	<a href="../../../../../pkg/go.opentelemetry.io/otel/api/trace.html#name-errInvalidScopeParent" class="ident">errInvalidScopeParent</a>        = <a href="../../../../../pkg/errors.html" class="ident i1">errors</a>.<a href="../../../../errors/errors.go.html#line-58" class="ident">New</a>(<span class="lit-string">"ParentSpanID requires both TraceID and SpanID to be available"</span>)
+	<a href="../../../../../pkg/go.opentelemetry.io/otel/api/trace.html#name-errInvalidScopeParentSingle" class="ident">errInvalidScopeParentSingle</a>  = <a href="../../../../../pkg/errors.html" class="ident i1">errors</a>.<a href="../../../../errors/errors.go.html#line-58" class="ident">New</a>(<span class="lit-string">"ParentSpanID requires TraceID, SpanID and Sampled to be available"</span>)
+	<a href="../../../../../pkg/go.opentelemetry.io/otel/api/trace.html#name-errEmptyContext" class="ident">errEmptyContext</a>              = <a href="../../../../../pkg/errors.html" class="ident i1">errors</a>.<a href="../../../../errors/errors.go.html#line-58" class="ident">New</a>(<span class="lit-string">"empty request context"</span>)
+	<a href="../../../../../pkg/go.opentelemetry.io/otel/api/trace.html#name-errInvalidTraceIDValue" class="ident">errInvalidTraceIDValue</a>       = <a href="../../../../../pkg/errors.html" class="ident i1">errors</a>.<a href="../../../../errors/errors.go.html#line-58" class="ident">New</a>(<span class="lit-string">"invalid B3 TraceID value found"</span>)
+	<a href="../../../../../pkg/go.opentelemetry.io/otel/api/trace.html#name-errInvalidSpanIDValue" class="ident">errInvalidSpanIDValue</a>        = <a href="../../../../../pkg/errors.html" class="ident i1">errors</a>.<a href="../../../../errors/errors.go.html#line-58" class="ident">New</a>(<span class="lit-string">"invalid B3 SpanID value found"</span>)
+	<a href="../../../../../pkg/go.opentelemetry.io/otel/api/trace.html#name-errInvalidParentSpanIDValue" class="ident">errInvalidParentSpanIDValue</a>  = <a href="../../../../../pkg/errors.html" class="ident i1">errors</a>.<a href="../../../../errors/errors.go.html#line-58" class="ident">New</a>(<span class="lit-string">"invalid B3 ParentSpanID value found"</span>)
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> B3Encoding is a bitmask representation of the B3 encoding type.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../pkg/go.opentelemetry.io/otel/api/trace.html#name-B3Encoding" class="ident">B3Encoding</a> <a href="../../../../../pkg/builtin.html#name-uint8" class="ident">uint8</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> supports returns if e has o bit(s) set.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r0" class="ident">e</label> <a href="#line-63" class="ident">B3Encoding</a>) <label for="r1" class="ident"><a href="../../../../../use/go.opentelemetry.io/otel/api/trace..B3Encoding.supports*66312.html" class="ident">supports</a></label>(<label for="r2" class="ident">o</label> <a href="#line-63" class="ident">B3Encoding</a>) <a href="../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> {
+	<span class="keyword">return</span> <label for="r0" class="ident">e</label>&amp;<label for="r2" class="ident">o</label> == <label for="r2" class="ident">o</label>
+}
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> B3MultipleHeader is a B3 encoding that uses multiple headers to</span><span class="comment">	 transmit tracing information all prefixed with `x-b3-`.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> B3SingleHeader is a B3 encoding that uses a single header named `b3`</span><span class="comment">	 to transmit tracing information.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> B3Unspecified is an unspecified B3 encoding.</span></div>
+<div class="code"><pre><code>	<a href="../../../../../pkg/go.opentelemetry.io/otel/api/trace.html#name-B3Unspecified" class="ident">B3Unspecified</a> <a href="#line-63" class="ident">B3Encoding</a> = <span class="lit-number">0</span>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> B3 propagator serializes SpanContext to/from B3 Headers.</span><span class="comment"> This propagator supports both versions of B3 headers,</span><span class="comment">  1. Single Header:</span><span class="comment">    b3: {TraceId}-{SpanId}-{SamplingState}-{ParentSpanId}</span><span class="comment">  2. Multiple Headers:</span><span class="comment">    x-b3-traceid: {TraceId}</span><span class="comment">    x-b3-parentspanid: {ParentSpanId}</span><span class="comment">    x-b3-spanid: {SpanId}</span><span class="comment">    x-b3-sampled: {SamplingState}</span><span class="comment">    x-b3-flags: {DebugFlag}</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> InjectEncoding are the B3 encodings used when injecting trace</span><span class="comment">	 information. If no encoding is specified (i.e. `B3Unspecified`)</span><span class="comment">	 `B3MultipleHeader` will be used as the default.</span></div>
+<div class="code"><pre><code>	<a href="../../../../../use/go.opentelemetry.io/otel/api/trace..B3.InjectEncoding.html" class="ident">InjectEncoding</a> <a href="#line-63" class="ident">B3Encoding</a>
+}
+
+<span class="keyword">var</span> _ <a href="../../../../../pkg/go.opentelemetry.io/otel/api/propagation.html" class="ident i3">propagation</a>.<a href="../propagation/propagation.go.html#line-77" class="ident">HTTPPropagator</a> = <a href="#line-91" class="ident">B3</a>{}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Inject injects a context into the supplier as B3 headers.</span><span class="comment"> The parent span ID is omitted because it is not tracked in the</span><span class="comment"> SpanContext.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r3" class="ident">b3</label> <a href="#line-91" class="ident">B3</a>) <label for="r4" class="ident"><a href="../../../../../use/go.opentelemetry.io/otel/api/trace..B3.Inject.html" class="ident">Inject</a></label>(<label for="r5" class="ident">ctx</label> <a href="../../../../../pkg/context.html" class="ident i0">context</a>.<a href="../../../../context/context.go.html#line-62" class="ident">Context</a>, <label for="r6" class="ident">supplier</label> <a href="../../../../../pkg/go.opentelemetry.io/otel/api/propagation.html" class="ident i3">propagation</a>.<a href="../propagation/propagation.go.html#line-24" class="ident">HTTPSupplier</a>) {
+	<label for="r7" class="ident">sc</label> := <a href="context.go.html#line-35" class="ident">SpanFromContext</a>(<label for="r5" class="ident">ctx</label>).<a href="api.go.html#line-119" class="ident">SpanContext</a>()
+
+	<span class="keyword">if</span> <label for="r3" class="ident">b3</label>.<a href="#line-95" class="ident">InjectEncoding</a>.<a href="#line-66" class="ident">supports</a>(<a href="#line-76" class="ident">B3SingleHeader</a>) {
+		<label for="r8" class="ident">header</label> := []<a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>{}
+		<span class="keyword">if</span> <label for="r7" class="ident">sc</label>.<a href="span_context.go.html#line-157" class="ident">TraceID</a>.<a href="span_context.go.html#line-57" class="ident">IsValid</a>() &amp;&amp; <label for="r7" class="ident">sc</label>.<a href="span_context.go.html#line-158" class="ident">SpanID</a>.<a href="span_context.go.html#line-80" class="ident">IsValid</a>() {
+			<label for="r8" class="ident">header</label> = <a href="../../../../../pkg/builtin.html#name-append" class="ident">append</a>(<label for="r8" class="ident">header</label>, <label for="r7" class="ident">sc</label>.<a href="span_context.go.html#line-157" class="ident">TraceID</a>.<a href="span_context.go.html#line-68" class="ident">String</a>(), <label for="r7" class="ident">sc</label>.<a href="span_context.go.html#line-158" class="ident">SpanID</a>.<a href="span_context.go.html#line-91" class="ident">String</a>())
+		}
+
+		<span class="keyword">if</span> <label for="r7" class="ident">sc</label>.<a href="span_context.go.html#line-190" class="ident">isDebug</a>() {
+			<label for="r8" class="ident">header</label> = <a href="../../../../../pkg/builtin.html#name-append" class="ident">append</a>(<label for="r8" class="ident">header</label>, <span class="lit-string">"d"</span>)
+		} <span class="keyword">else</span> <span class="keyword">if</span> !<label for="r7" class="ident">sc</label>.<a href="span_context.go.html#line-185" class="ident">isDeferred</a>() {
+			<span class="keyword">if</span> <label for="r7" class="ident">sc</label>.<a href="span_context.go.html#line-195" class="ident">IsSampled</a>() {
+				<label for="r8" class="ident">header</label> = <a href="../../../../../pkg/builtin.html#name-append" class="ident">append</a>(<label for="r8" class="ident">header</label>, <span class="lit-string">"1"</span>)
+			} <span class="keyword">else</span> {
+				<label for="r8" class="ident">header</label> = <a href="../../../../../pkg/builtin.html#name-append" class="ident">append</a>(<label for="r8" class="ident">header</label>, <span class="lit-string">"0"</span>)
+			}
+		}
+
+		<label for="r6" class="ident">supplier</label>.<a href="../propagation/propagation.go.html#line-30" class="ident">Set</a>(<a href="#line-27" class="ident">b3ContextHeader</a>, <a href="../../../../../pkg/strings.html" class="ident i2">strings</a>.<a href="../../../../strings/strings.go.html#line-421" class="ident">Join</a>(<label for="r8" class="ident">header</label>, <span class="lit-string">"-"</span>))
+	}
+
+	<span class="keyword">if</span> <label for="r3" class="ident">b3</label>.<a href="#line-95" class="ident">InjectEncoding</a>.<a href="#line-66" class="ident">supports</a>(<a href="#line-73" class="ident">B3MultipleHeader</a>) || <label for="r3" class="ident">b3</label>.<a href="#line-95" class="ident">InjectEncoding</a> == <a href="#line-78" class="ident">B3Unspecified</a> {
+		<span class="keyword">if</span> <label for="r7" class="ident">sc</label>.<a href="span_context.go.html#line-157" class="ident">TraceID</a>.<a href="span_context.go.html#line-57" class="ident">IsValid</a>() &amp;&amp; <label for="r7" class="ident">sc</label>.<a href="span_context.go.html#line-158" class="ident">SpanID</a>.<a href="span_context.go.html#line-80" class="ident">IsValid</a>() {
+			<label for="r6" class="ident">supplier</label>.<a href="../propagation/propagation.go.html#line-30" class="ident">Set</a>(<a href="#line-29" class="ident">b3TraceIDHeader</a>, <label for="r7" class="ident">sc</label>.<a href="span_context.go.html#line-157" class="ident">TraceID</a>.<a href="span_context.go.html#line-68" class="ident">String</a>())
+			<label for="r6" class="ident">supplier</label>.<a href="../propagation/propagation.go.html#line-30" class="ident">Set</a>(<a href="#line-30" class="ident">b3SpanIDHeader</a>, <label for="r7" class="ident">sc</label>.<a href="span_context.go.html#line-158" class="ident">SpanID</a>.<a href="span_context.go.html#line-91" class="ident">String</a>())
+		}
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Since Debug implies deferred, don't also send "X-B3-Sampled".</span></div>
+<div class="code"><pre><code>			<label for="r6" class="ident">supplier</label>.<a href="../propagation/propagation.go.html#line-30" class="ident">Set</a>(<a href="#line-28" class="ident">b3DebugFlagHeader</a>, <span class="lit-string">"1"</span>)
+		} <span class="keyword">else</span> <span class="keyword">if</span> !<label for="r7" class="ident">sc</label>.<a href="span_context.go.html#line-185" class="ident">isDeferred</a>() {
+			<span class="keyword">if</span> <label for="r7" class="ident">sc</label>.<a href="span_context.go.html#line-195" class="ident">IsSampled</a>() {
+				<label for="r6" class="ident">supplier</label>.<a href="../propagation/propagation.go.html#line-30" class="ident">Set</a>(<a href="#line-31" class="ident">b3SampledHeader</a>, <span class="lit-string">"1"</span>)
+			} <span class="keyword">else</span> {
+				<label for="r6" class="ident">supplier</label>.<a href="../propagation/propagation.go.html#line-30" class="ident">Set</a>(<a href="#line-31" class="ident">b3SampledHeader</a>, <span class="lit-string">"0"</span>)
+			}
+		}
+	}
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Extract extracts a context from the supplier if it contains B3 headers.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r9" class="ident">b3</label> <a href="#line-91" class="ident">B3</a>) <label for="r10" class="ident"><a href="../../../../../use/go.opentelemetry.io/otel/api/trace..B3.Extract.html" class="ident">Extract</a></label>(<label for="r11" class="ident">ctx</label> <a href="../../../../../pkg/context.html" class="ident i0">context</a>.<a href="../../../../context/context.go.html#line-62" class="ident">Context</a>, <label for="r12" class="ident">supplier</label> <a href="../../../../../pkg/go.opentelemetry.io/otel/api/propagation.html" class="ident i3">propagation</a>.<a href="../propagation/propagation.go.html#line-24" class="ident">HTTPSupplier</a>) <a href="../../../../../pkg/context.html" class="ident i0">context</a>.<a href="../../../../context/context.go.html#line-62" class="ident">Context</a> {
+	<span class="keyword">var</span> (
+		<label for="r13" class="ident">sc</label>  <a href="span_context.go.html#line-156" class="ident">SpanContext</a>
+		<label for="r14" class="ident">err</label> <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a>
+	)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Default to Single Header if a valid value exists.</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> <label for="r15" class="ident">h</label> := <label for="r12" class="ident">supplier</label>.<a href="../propagation/propagation.go.html#line-26" class="ident">Get</a>(<a href="#line-27" class="ident">b3ContextHeader</a>); <label for="r15" class="ident">h</label> != <span class="lit-string">""</span> {
+		<label for="r13" class="ident">sc</label>, <label for="r14" class="ident">err</label> = <a href="#line-256" class="ident">extractSingle</a>(<label for="r15" class="ident">h</label>)
+		<span class="keyword">if</span> <label for="r14" class="ident">err</label> == <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> &amp;&amp; <label for="r13" class="ident">sc</label>.<a href="span_context.go.html#line-170" class="ident">IsValid</a>() {
+			<span class="keyword">return</span> <a href="context.go.html#line-44" class="ident">ContextWithRemoteSpanContext</a>(<label for="r11" class="ident">ctx</label>, <label for="r13" class="ident">sc</label>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> The Single Header value was invalid, fallback to Multiple Header.</span></div>
+<div class="code"><pre><code>	}
+
+	<span class="keyword">var</span> (
+		<label for="r16" class="ident">traceID</label>      = <label for="r12" class="ident">supplier</label>.<a href="../propagation/propagation.go.html#line-26" class="ident">Get</a>(<a href="#line-29" class="ident">b3TraceIDHeader</a>)
+		<label for="r17" class="ident">spanID</label>       = <label for="r12" class="ident">supplier</label>.<a href="../propagation/propagation.go.html#line-26" class="ident">Get</a>(<a href="#line-30" class="ident">b3SpanIDHeader</a>)
+		<label for="r18" class="ident">parentSpanID</label> = <label for="r12" class="ident">supplier</label>.<a href="../propagation/propagation.go.html#line-26" class="ident">Get</a>(<a href="#line-32" class="ident">b3ParentSpanIDHeader</a>)
+		<label for="r19" class="ident">sampled</label>      = <label for="r12" class="ident">supplier</label>.<a href="../propagation/propagation.go.html#line-26" class="ident">Get</a>(<a href="#line-31" class="ident">b3SampledHeader</a>)
+		<label for="r20" class="ident">debugFlag</label>    = <label for="r12" class="ident">supplier</label>.<a href="../propagation/propagation.go.html#line-26" class="ident">Get</a>(<a href="#line-28" class="ident">b3DebugFlagHeader</a>)
+	)
+	<label for="r13" class="ident">sc</label>, <label for="r14" class="ident">err</label> = <a href="#line-189" class="ident">extractMultiple</a>(<label for="r16" class="ident">traceID</label>, <label for="r17" class="ident">spanID</label>, <label for="r18" class="ident">parentSpanID</label>, <label for="r19" class="ident">sampled</label>, <label for="r20" class="ident">debugFlag</label>)
+	<span class="keyword">if</span> <label for="r14" class="ident">err</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> || !<label for="r13" class="ident">sc</label>.<a href="span_context.go.html#line-170" class="ident">IsValid</a>() {
+		<span class="keyword">return</span> <label for="r11" class="ident">ctx</label>
+	}
+	<span class="keyword">return</span> <a href="context.go.html#line-44" class="ident">ContextWithRemoteSpanContext</a>(<label for="r11" class="ident">ctx</label>, <label for="r13" class="ident">sc</label>)
+}
+
+<span class="keyword">func</span> (<label for="r21" class="ident">b3</label> <a href="#line-91" class="ident">B3</a>) <label for="r22" class="ident"><a href="../../../../../use/go.opentelemetry.io/otel/api/trace..B3.GetAllKeys.html" class="ident">GetAllKeys</a></label>() []<a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a> {
+	<label for="r23" class="ident">header</label> := []<a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>{}
+	<span class="keyword">if</span> <label for="r21" class="ident">b3</label>.<a href="#line-95" class="ident">InjectEncoding</a>.<a href="#line-66" class="ident">supports</a>(<a href="#line-76" class="ident">B3SingleHeader</a>) {
+		<label for="r23" class="ident">header</label> = <a href="../../../../../pkg/builtin.html#name-append" class="ident">append</a>(<label for="r23" class="ident">header</label>, <a href="#line-27" class="ident">b3ContextHeader</a>)
+	}
+	<span class="keyword">if</span> <label for="r21" class="ident">b3</label>.<a href="#line-95" class="ident">InjectEncoding</a>.<a href="#line-66" class="ident">supports</a>(<a href="#line-73" class="ident">B3MultipleHeader</a>) || <label for="r21" class="ident">b3</label>.<a href="#line-95" class="ident">InjectEncoding</a> == <a href="#line-78" class="ident">B3Unspecified</a> {
+		<label for="r23" class="ident">header</label> = <a href="../../../../../pkg/builtin.html#name-append" class="ident">append</a>(<label for="r23" class="ident">header</label>, <a href="#line-29" class="ident">b3TraceIDHeader</a>, <a href="#line-30" class="ident">b3SpanIDHeader</a>, <a href="#line-31" class="ident">b3SampledHeader</a>, <a href="#line-28" class="ident">b3DebugFlagHeader</a>)
+	}
+	<span class="keyword">return</span> <label for="r23" class="ident">header</label>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> extractMultiple reconstructs a SpanContext from header values based on B3</span><span class="comment"> Multiple header. It is based on the implementation found here:</span><span class="comment"> https://github.com/openzipkin/zipkin-go/blob/v0.2.2/propagation/b3/spancontext.go</span><span class="comment"> and adapted to support a SpanContext.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r24" class="ident"><a href="../../../../../pkg/go.opentelemetry.io/otel/api/trace.html#name-extractMultiple" class="ident">extractMultiple</a></label>(<label for="r25" class="ident">traceID</label>, <label for="r26" class="ident">spanID</label>, <label for="r27" class="ident">parentSpanID</label>, <label for="r28" class="ident">sampled</label>, <label for="r29" class="ident">flags</label> <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>) (<a href="span_context.go.html#line-156" class="ident">SpanContext</a>, <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<span class="keyword">var</span> (
+		<label for="r30" class="ident">err</label>           <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a>
+		<label for="r31" class="ident">requiredCount</label> <a href="../../../../../pkg/builtin.html#name-int" class="ident">int</a>
+		<label for="r32" class="ident">sc</label>            = <a href="span_context.go.html#line-156" class="ident">SpanContext</a>{}
+	)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> correct values for an existing sampled header are "0" and "1".</span><span class="comment">	 For legacy support and  being lenient to other tracing implementations we</span><span class="comment">	 allow "true" and "false" as inputs for interop purposes.</span></div>
+<div class="code"><pre><code>	<span class="keyword">switch</span> <a href="../../../../../pkg/strings.html" class="ident i2">strings</a>.<a href="../../../../strings/strings.go.html#line-580" class="ident">ToLower</a>(<label for="r28" class="ident">sampled</label>) {
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Zero value for TraceFlags sample bit is unset.</span></div>
+<div class="code"><pre><code>	<span class="keyword">case</span> <span class="lit-string">"1"</span>, <span class="lit-string">"true"</span>:
+		<label for="r32" class="ident">sc</label>.<a href="span_context.go.html#line-159" class="ident">TraceFlags</a> = <a href="span_context.go.html#line-26" class="ident">FlagsSampled</a>
+	<span class="keyword">case</span> <span class="lit-string">""</span>:
+		<label for="r32" class="ident">sc</label>.<a href="span_context.go.html#line-159" class="ident">TraceFlags</a> = <a href="span_context.go.html#line-30" class="ident">FlagsDeferred</a>
+	<span class="keyword">default</span>:
+		<span class="keyword">return</span> <a href="#line-46" class="ident">empty</a>, <a href="#line-49" class="ident">errInvalidSampledHeader</a>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> The only accepted value for Flags is "1". This will set Debug to</span><span class="comment">	 true. All other values and omission of header will be ignored.</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> <label for="r29" class="ident">flags</label> == <span class="lit-string">"1"</span> {
+		<label for="r32" class="ident">sc</label>.<a href="span_context.go.html#line-159" class="ident">TraceFlags</a> |= <a href="span_context.go.html#line-32" class="ident">FlagsDebug</a>
+	}
+
+	<span class="keyword">if</span> <label for="r25" class="ident">traceID</label> != <span class="lit-string">""</span> {
+		<label for="r31" class="ident">requiredCount</label>++
+		<label for="r33" class="ident">id</label> := <label for="r25" class="ident">traceID</label>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Pad 64-bit trace IDs.</span></div>
+<div class="code"><pre><code>			<label for="r33" class="ident">id</label> = <a href="#line-34" class="ident">b3TraceIDPadding</a> + <label for="r25" class="ident">traceID</label>
+		}
+		<span class="keyword">if</span> <label for="r32" class="ident">sc</label>.<a href="span_context.go.html#line-157" class="ident">TraceID</a>, <label for="r30" class="ident">err</label> = <a href="span_context.go.html#line-98" class="ident">IDFromHex</a>(<label for="r33" class="ident">id</label>); <label for="r30" class="ident">err</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<span class="keyword">return</span> <a href="#line-46" class="ident">empty</a>, <a href="#line-50" class="ident">errInvalidTraceIDHeader</a>
+		}
+	}
+
+	<span class="keyword">if</span> <label for="r26" class="ident">spanID</label> != <span class="lit-string">""</span> {
+		<label for="r31" class="ident">requiredCount</label>++
+		<span class="keyword">if</span> <label for="r32" class="ident">sc</label>.<a href="span_context.go.html#line-158" class="ident">SpanID</a>, <label for="r30" class="ident">err</label> = <a href="span_context.go.html#line-117" class="ident">SpanIDFromHex</a>(<label for="r26" class="ident">spanID</label>); <label for="r30" class="ident">err</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<span class="keyword">return</span> <a href="#line-46" class="ident">empty</a>, <a href="#line-51" class="ident">errInvalidSpanIDHeader</a>
+		}
+	}
+
+	<span class="keyword">if</span> <label for="r31" class="ident">requiredCount</label> != <span class="lit-number">0</span> &amp;&amp; <label for="r31" class="ident">requiredCount</label> != <span class="lit-number">2</span> {
+		<span class="keyword">return</span> <a href="#line-46" class="ident">empty</a>, <a href="#line-53" class="ident">errInvalidScope</a>
+	}
+
+	<span class="keyword">if</span> <label for="r27" class="ident">parentSpanID</label> != <span class="lit-string">""</span> {
+		<span class="keyword">if</span> <label for="r31" class="ident">requiredCount</label> == <span class="lit-number">0</span> {
+			<span class="keyword">return</span> <a href="#line-46" class="ident">empty</a>, <a href="#line-54" class="ident">errInvalidScopeParent</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Validate parent span ID but we do not use it so do not save it.</span></div>
+<div class="code"><pre><code>		<span class="keyword">if</span> _, <label for="r30" class="ident">err</label> = <a href="span_context.go.html#line-117" class="ident">SpanIDFromHex</a>(<label for="r27" class="ident">parentSpanID</label>); <label for="r30" class="ident">err</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<span class="keyword">return</span> <a href="#line-46" class="ident">empty</a>, <a href="#line-52" class="ident">errInvalidParentSpanIDHeader</a>
+		}
+	}
+
+	<span class="keyword">return</span> <label for="r32" class="ident">sc</label>, <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> extractSingle reconstructs a SpanContext from contextHeader based on a B3</span><span class="comment"> Single header. It is based on the implementation found here:</span><span class="comment"> https://github.com/openzipkin/zipkin-go/blob/v0.2.2/propagation/b3/spancontext.go</span><span class="comment"> and adapted to support a SpanContext.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r34" class="ident"><a href="../../../../../pkg/go.opentelemetry.io/otel/api/trace.html#name-extractSingle" class="ident">extractSingle</a></label>(<label for="r35" class="ident">contextHeader</label> <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>) (<a href="span_context.go.html#line-156" class="ident">SpanContext</a>, <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<span class="keyword">if</span> <label for="r35" class="ident">contextHeader</label> == <span class="lit-string">""</span> {
+		<span class="keyword">return</span> <a href="#line-46" class="ident">empty</a>, <a href="#line-56" class="ident">errEmptyContext</a>
+	}
+
+	<span class="keyword">var</span> (
+		<label for="r36" class="ident">sc</label>       = <a href="span_context.go.html#line-156" class="ident">SpanContext</a>{}
+		<label for="r37" class="ident">sampling</label> <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	)
+
+	<label for="r38" class="ident">headerLen</label> := <a href="../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r35" class="ident">contextHeader</label>)
+
+	<span class="keyword">if</span> <label for="r38" class="ident">headerLen</label> == <a href="#line-38" class="ident">samplingWidth</a> {
+		<label for="r37" class="ident">sampling</label> = <label for="r35" class="ident">contextHeader</label>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Trace ID by itself is invalid.</span></div>
+<div class="code"><pre><code>		<span class="keyword">return</span> <a href="#line-46" class="ident">empty</a>, <a href="#line-53" class="ident">errInvalidScope</a>
+	} <span class="keyword">else</span> <span class="keyword">if</span> <label for="r38" class="ident">headerLen</label> &gt;= <a href="#line-39" class="ident">traceID64BitsWidth</a>+<a href="#line-41" class="ident">spanIDWidth</a>+<a href="#line-37" class="ident">separatorWidth</a> {
+		<label for="r39" class="ident">pos</label> := <span class="lit-number">0</span>
+		<span class="keyword">var</span> <label for="r40" class="ident">traceID</label> <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> traceID must be 64 bits</span></div>
+<div class="code"><pre><code>			<label for="r39" class="ident">pos</label> += <a href="#line-39" class="ident">traceID64BitsWidth</a> <span class="comment">// {traceID}</span>
+			<label for="r40" class="ident">traceID</label> = <a href="#line-34" class="ident">b3TraceIDPadding</a> + <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>(<label for="r35" class="ident">contextHeader</label>[<span class="lit-number">0</span>:<label for="r39" class="ident">pos</label>])
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> traceID must be 128 bits</span></div>
+<div class="code"><pre><code>			<label for="r39" class="ident">pos</label> += <a href="#line-40" class="ident">traceID128BitsWidth</a> <span class="comment">// {traceID}</span>
+			<label for="r40" class="ident">traceID</label> = <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>(<label for="r35" class="ident">contextHeader</label>[<span class="lit-number">0</span>:<label for="r39" class="ident">pos</label>])
+		} <span class="keyword">else</span> {
+			<span class="keyword">return</span> <a href="#line-46" class="ident">empty</a>, <a href="#line-57" class="ident">errInvalidTraceIDValue</a>
+		}
+		<span class="keyword">var</span> <label for="r41" class="ident">err</label> <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a>
+		<label for="r36" class="ident">sc</label>.<a href="span_context.go.html#line-157" class="ident">TraceID</a>, <label for="r41" class="ident">err</label> = <a href="span_context.go.html#line-98" class="ident">IDFromHex</a>(<label for="r40" class="ident">traceID</label>)
+		<span class="keyword">if</span> <label for="r41" class="ident">err</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<span class="keyword">return</span> <a href="#line-46" class="ident">empty</a>, <a href="#line-57" class="ident">errInvalidTraceIDValue</a>
+		}
+		<label for="r39" class="ident">pos</label> += <a href="#line-37" class="ident">separatorWidth</a> <span class="comment">// {traceID}-</span>
+
+		<label for="r36" class="ident">sc</label>.<a href="span_context.go.html#line-158" class="ident">SpanID</a>, <label for="r41" class="ident">err</label> = <a href="span_context.go.html#line-117" class="ident">SpanIDFromHex</a>(<label for="r35" class="ident">contextHeader</label>[<label for="r39" class="ident">pos</label> : <label for="r39" class="ident">pos</label>+<a href="#line-41" class="ident">spanIDWidth</a>])
+		<span class="keyword">if</span> <label for="r41" class="ident">err</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<span class="keyword">return</span> <a href="#line-46" class="ident">empty</a>, <a href="#line-58" class="ident">errInvalidSpanIDValue</a>
+		}
+		<label for="r39" class="ident">pos</label> += <a href="#line-41" class="ident">spanIDWidth</a> <span class="comment">// {traceID}-{spanID}</span>
+
+		<span class="keyword">if</span> <label for="r38" class="ident">headerLen</label> &gt; <label for="r39" class="ident">pos</label> {
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> {traceID}-{spanID}- is invalid.</span></div>
+<div class="code"><pre><code>				<span class="keyword">return</span> <a href="#line-46" class="ident">empty</a>, <a href="#line-48" class="ident">errInvalidSampledByte</a>
+			}
+			<label for="r39" class="ident">pos</label> += <a href="#line-37" class="ident">separatorWidth</a> <span class="comment">// {traceID}-{spanID}-</span>
+
+			<span class="keyword">if</span> <label for="r38" class="ident">headerLen</label> == <label for="r39" class="ident">pos</label>+<a href="#line-38" class="ident">samplingWidth</a> {
+				<label for="r37" class="ident">sampling</label> = <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>(<label for="r35" class="ident">contextHeader</label>[<label for="r39" class="ident">pos</label>])
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> {traceID}-{spanID}-{parentSpanID} is invalid.</span></div>
+<div class="code"><pre><code>				<span class="keyword">return</span> <a href="#line-46" class="ident">empty</a>, <a href="#line-55" class="ident">errInvalidScopeParentSingle</a>
+			} <span class="keyword">else</span> <span class="keyword">if</span> <label for="r38" class="ident">headerLen</label> == <label for="r39" class="ident">pos</label>+<a href="#line-38" class="ident">samplingWidth</a>+<a href="#line-37" class="ident">separatorWidth</a>+<a href="#line-42" class="ident">parentSpanIDWidth</a> {
+				<label for="r37" class="ident">sampling</label> = <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>(<label for="r35" class="ident">contextHeader</label>[<label for="r39" class="ident">pos</label>])
+				<label for="r39" class="ident">pos</label> += <a href="#line-38" class="ident">samplingWidth</a> + <a href="#line-37" class="ident">separatorWidth</a> <span class="comment">// {traceID}-{spanID}-{sampling}-</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Validate parent span ID but we do not use it so do not</span><span class="comment">				 save it.</span></div>
+<div class="code"><pre><code>				_, <label for="r41" class="ident">err</label> = <a href="span_context.go.html#line-117" class="ident">SpanIDFromHex</a>(<label for="r35" class="ident">contextHeader</label>[<label for="r39" class="ident">pos</label>:])
+				<span class="keyword">if</span> <label for="r41" class="ident">err</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+					<span class="keyword">return</span> <a href="#line-46" class="ident">empty</a>, <a href="#line-59" class="ident">errInvalidParentSpanIDValue</a>
+				}
+			} <span class="keyword">else</span> {
+				<span class="keyword">return</span> <a href="#line-46" class="ident">empty</a>, <a href="#line-59" class="ident">errInvalidParentSpanIDValue</a>
+			}
+		}
+	} <span class="keyword">else</span> {
+		<span class="keyword">return</span> <a href="#line-46" class="ident">empty</a>, <a href="#line-57" class="ident">errInvalidTraceIDValue</a>
+	}
+	<span class="keyword">switch</span> <label for="r37" class="ident">sampling</label> {
+	<span class="keyword">case</span> <span class="lit-string">""</span>:
+		<label for="r36" class="ident">sc</label>.<a href="span_context.go.html#line-159" class="ident">TraceFlags</a> = <a href="span_context.go.html#line-30" class="ident">FlagsDeferred</a>
+	<span class="keyword">case</span> <span class="lit-string">"d"</span>:
+		<label for="r36" class="ident">sc</label>.<a href="span_context.go.html#line-159" class="ident">TraceFlags</a> = <a href="span_context.go.html#line-32" class="ident">FlagsDebug</a>
+	<span class="keyword">case</span> <span class="lit-string">"1"</span>:
+		<label for="r36" class="ident">sc</label>.<a href="span_context.go.html#line-159" class="ident">TraceFlags</a> = <a href="span_context.go.html#line-26" class="ident">FlagsSampled</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Zero value for TraceFlags sample bit is unset.</span></div>
+<div class="code"><pre><code>	<span class="keyword">default</span>:
+		<span class="keyword">return</span> <a href="#line-46" class="ident">empty</a>, <a href="#line-48" class="ident">errInvalidSampledByte</a>
+	}
+
+	<span class="keyword">return</span> <label for="r36" class="ident">sc</label>, <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

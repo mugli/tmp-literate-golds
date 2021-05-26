@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: netpoll.go in package runtime</title>
+<link href="../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	netpoll.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../pkg/runtime.html">runtime</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16],
+input[id=r17]:checked ~pre label[for=r17],
+input[id=r18]:checked ~pre label[for=r18],
+input[id=r19]:checked ~pre label[for=r19],
+input[id=r20]:checked ~pre label[for=r20],
+input[id=r21]:checked ~pre label[for=r21],
+input[id=r22]:checked ~pre label[for=r22],
+input[id=r23]:checked ~pre label[for=r23],
+input[id=r24]:checked ~pre label[for=r24],
+input[id=r25]:checked ~pre label[for=r25],
+input[id=r26]:checked ~pre label[for=r26],
+input[id=r27]:checked ~pre label[for=r27],
+input[id=r28]:checked ~pre label[for=r28],
+input[id=r29]:checked ~pre label[for=r29],
+input[id=r30]:checked ~pre label[for=r30],
+input[id=r31]:checked ~pre label[for=r31],
+input[id=r32]:checked ~pre label[for=r32],
+input[id=r33]:checked ~pre label[for=r33],
+input[id=r34]:checked ~pre label[for=r34],
+input[id=r35]:checked ~pre label[for=r35],
+input[id=r36]:checked ~pre label[for=r36],
+input[id=r37]:checked ~pre label[for=r37],
+input[id=r38]:checked ~pre label[for=r38],
+input[id=r39]:checked ~pre label[for=r39],
+input[id=r40]:checked ~pre label[for=r40],
+input[id=r41]:checked ~pre label[for=r41],
+input[id=r42]:checked ~pre label[for=r42],
+input[id=r43]:checked ~pre label[for=r43],
+input[id=r44]:checked ~pre label[for=r44],
+input[id=r45]:checked ~pre label[for=r45],
+input[id=r46]:checked ~pre label[for=r46],
+input[id=r47]:checked ~pre label[for=r47],
+input[id=r48]:checked ~pre label[for=r48],
+input[id=r49]:checked ~pre label[for=r49],
+input[id=r50]:checked ~pre label[for=r50],
+input[id=r51]:checked ~pre label[for=r51],
+input[id=r52]:checked ~pre label[for=r52],
+input[id=r53]:checked ~pre label[for=r53],
+input[id=r54]:checked ~pre label[for=r54],
+input[id=r55]:checked ~pre label[for=r55],
+input[id=r56]:checked ~pre label[for=r56],
+input[id=r57]:checked ~pre label[for=r57],
+input[id=r58]:checked ~pre label[for=r58],
+input[id=r59]:checked ~pre label[for=r59],
+input[id=r60]:checked ~pre label[for=r60],
+input[id=r61]:checked ~pre label[for=r61],
+input[id=r62]:checked ~pre label[for=r62],
+input[id=r63]:checked ~pre label[for=r63],
+input[id=r64]:checked ~pre label[for=r64],
+input[id=r65]:checked ~pre label[for=r65],
+input[id=r66]:checked ~pre label[for=r66],
+input[id=r67]:checked ~pre label[for=r67],
+input[id=r68]:checked ~pre label[for=r68],
+input[id=r69]:checked ~pre label[for=r69],
+input[id=r70]:checked ~pre label[for=r70],
+input[id=r71]:checked ~pre label[for=r71],
+input[id=r72]:checked ~pre label[for=r72],
+input[id=r73]:checked ~pre label[for=r73],
+input[id=r74]:checked ~pre label[for=r74],
+input[id=r75]:checked ~pre label[for=r75],
+input[id=r76]:checked ~pre label[for=r76],
+input[id=r77]:checked ~pre label[for=r77],
+input[id=r78]:checked ~pre label[for=r78],
+input[id=r79]:checked ~pre label[for=r79],
+input[id=r80]:checked ~pre label[for=r80],
+input[id=r81]:checked ~pre label[for=r81],
+input[id=r82]:checked ~pre label[for=r82],
+input[id=r83]:checked ~pre label[for=r83],
+input[id=r84]:checked ~pre label[for=r84],
+input[id=r85]:checked ~pre label[for=r85],
+input[id=r86]:checked ~pre label[for=r86],
+input[id=r87]:checked ~pre label[for=r87],
+input[id=r88]:checked ~pre label[for=r88],
+input[id=r89]:checked ~pre label[for=r89],
+input[id=r90]:checked ~pre label[for=r90],
+input[id=r91]:checked ~pre label[for=r91],
+input[id=r92]:checked ~pre label[for=r92],
+input[id=r93]:checked ~pre label[for=r93],
+input[id=r94]:checked ~pre label[for=r94],
+input[id=r95]:checked ~pre label[for=r95],
+input[id=r96]:checked ~pre label[for=r96],
+input[id=r97]:checked ~pre label[for=r97],
+input[id=r98]:checked ~pre label[for=r98]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="r17" type="radio" name="g"/>
+<input id="r18" type="radio" name="g"/>
+<input id="r19" type="radio" name="g"/>
+<input id="r20" type="radio" name="g"/>
+<input id="r21" type="radio" name="g"/>
+<input id="r22" type="radio" name="g"/>
+<input id="r23" type="radio" name="g"/>
+<input id="r24" type="radio" name="g"/>
+<input id="r25" type="radio" name="g"/>
+<input id="r26" type="radio" name="g"/>
+<input id="r27" type="radio" name="g"/>
+<input id="r28" type="radio" name="g"/>
+<input id="r29" type="radio" name="g"/>
+<input id="r30" type="radio" name="g"/>
+<input id="r31" type="radio" name="g"/>
+<input id="r32" type="radio" name="g"/>
+<input id="r33" type="radio" name="g"/>
+<input id="r34" type="radio" name="g"/>
+<input id="r35" type="radio" name="g"/>
+<input id="r36" type="radio" name="g"/>
+<input id="r37" type="radio" name="g"/>
+<input id="r38" type="radio" name="g"/>
+<input id="r39" type="radio" name="g"/>
+<input id="r40" type="radio" name="g"/>
+<input id="r41" type="radio" name="g"/>
+<input id="r42" type="radio" name="g"/>
+<input id="r43" type="radio" name="g"/>
+<input id="r44" type="radio" name="g"/>
+<input id="r45" type="radio" name="g"/>
+<input id="r46" type="radio" name="g"/>
+<input id="r47" type="radio" name="g"/>
+<input id="r48" type="radio" name="g"/>
+<input id="r49" type="radio" name="g"/>
+<input id="r50" type="radio" name="g"/>
+<input id="r51" type="radio" name="g"/>
+<input id="r52" type="radio" name="g"/>
+<input id="r53" type="radio" name="g"/>
+<input id="r54" type="radio" name="g"/>
+<input id="r55" type="radio" name="g"/>
+<input id="r56" type="radio" name="g"/>
+<input id="r57" type="radio" name="g"/>
+<input id="r58" type="radio" name="g"/>
+<input id="r59" type="radio" name="g"/>
+<input id="r60" type="radio" name="g"/>
+<input id="r61" type="radio" name="g"/>
+<input id="r62" type="radio" name="g"/>
+<input id="r63" type="radio" name="g"/>
+<input id="r64" type="radio" name="g"/>
+<input id="r65" type="radio" name="g"/>
+<input id="r66" type="radio" name="g"/>
+<input id="r67" type="radio" name="g"/>
+<input id="r68" type="radio" name="g"/>
+<input id="r69" type="radio" name="g"/>
+<input id="r70" type="radio" name="g"/>
+<input id="r71" type="radio" name="g"/>
+<input id="r72" type="radio" name="g"/>
+<input id="r73" type="radio" name="g"/>
+<input id="r74" type="radio" name="g"/>
+<input id="r75" type="radio" name="g"/>
+<input id="r76" type="radio" name="g"/>
+<input id="r77" type="radio" name="g"/>
+<input id="r78" type="radio" name="g"/>
+<input id="r79" type="radio" name="g"/>
+<input id="r80" type="radio" name="g"/>
+<input id="r81" type="radio" name="g"/>
+<input id="r82" type="radio" name="g"/>
+<input id="r83" type="radio" name="g"/>
+<input id="r84" type="radio" name="g"/>
+<input id="r85" type="radio" name="g"/>
+<input id="r86" type="radio" name="g"/>
+<input id="r87" type="radio" name="g"/>
+<input id="r88" type="radio" name="g"/>
+<input id="r89" type="radio" name="g"/>
+<input id="r90" type="radio" name="g"/>
+<input id="r91" type="radio" name="g"/>
+<input id="r92" type="radio" name="g"/>
+<input id="r93" type="radio" name="g"/>
+<input id="r94" type="radio" name="g"/>
+<input id="r95" type="radio" name="g"/>
+<input id="r96" type="radio" name="g"/>
+<input id="r97" type="radio" name="g"/>
+<input id="r98" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2013 The Go Authors. All rights reserved.</span><span class="comment"> Use of this source code is governed by a BSD-style</span><span class="comment"> license that can be found in the LICENSE file.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> +build aix darwin dragonfly freebsd js,wasm linux netbsd openbsd solaris windows</span></div>
+<div class="code"><pre><code>
+<span class="keyword">package</span> runtime
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"runtime/internal/atomic"</span></label>
+	<label for="i1"><span class="lit-string i1">"unsafe"</span></label>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Integrated network poller (platform-independent part).</span><span class="comment"> A particular implementation (epoll/kqueue/port/AIX/Windows)</span><span class="comment"> must define the following functions:</span><span class="comment"></span><span class="comment"> func netpollinit()</span><span class="comment">     Initialize the poller. Only called once.</span><span class="comment"></span><span class="comment"> func netpollopen(fd uintptr, pd *pollDesc) int32</span><span class="comment">     Arm edge-triggered notifications for fd. The pd argument is to pass</span><span class="comment">     back to netpollready when fd is ready. Return an errno value.</span><span class="comment"></span><span class="comment"> func netpoll(delta int64) gList</span><span class="comment">     Poll the network. If delta &lt; 0, block indefinitely. If delta == 0,</span><span class="comment">     poll without blocking. If delta &gt; 0, block for up to delta nanoseconds.</span><span class="comment">     Return a list of goroutines built by calling netpollready.</span><span class="comment"></span><span class="comment"> func netpollBreak()</span><span class="comment">     Wake up the network poller, assumed to be blocked in netpoll.</span><span class="comment"></span><span class="comment"> func netpollIsPollDescriptor(fd uintptr) bool</span><span class="comment">     Reports whether fd is a file descriptor used by the poller.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Error codes returned by runtime_pollReset and runtime_pollWait.</span><span class="comment"> These must match the values in internal/poll/fd_poll_runtime.go.</span></div>
+<div class="code"><pre><code><span class="keyword">const</span> (
+	<a href="../../pkg/runtime.html#name-pollNoError" class="ident">pollNoError</a>        = <span class="lit-number">0</span> <span class="comment">// no error</span>
+	<a href="../../pkg/runtime.html#name-pollErrClosing" class="ident">pollErrClosing</a>     = <span class="lit-number">1</span> <span class="comment">// descriptor is closed</span>
+	<a href="../../pkg/runtime.html#name-pollErrTimeout" class="ident">pollErrTimeout</a>     = <span class="lit-number">2</span> <span class="comment">// I/O timeout</span>
+	<a href="../../pkg/runtime.html#name-pollErrNotPollable" class="ident">pollErrNotPollable</a> = <span class="lit-number">3</span> <span class="comment">// general error polling descriptor</span>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> pollDesc contains 2 binary semaphores, rg and wg, to park reader and writer</span><span class="comment"> goroutines respectively. The semaphore can be in the following states:</span><span class="comment"> pdReady - io readiness notification is pending;</span><span class="comment">           a goroutine consumes the notification by changing the state to nil.</span><span class="comment"> pdWait - a goroutine prepares to park on the semaphore, but not yet parked;</span><span class="comment">          the goroutine commits to park by changing the state to G pointer,</span><span class="comment">          or, alternatively, concurrent io notification changes the state to pdReady,</span><span class="comment">          or, alternatively, concurrent timeout/close changes the state to nil.</span><span class="comment"> G pointer - the goroutine is blocked on the semaphore;</span><span class="comment">             io notification or timeout/close changes the state to pdReady or nil respectively</span><span class="comment">             and unparks the goroutine.</span><span class="comment"> nil - none of the above.</span></div>
+<div class="code"><pre><code><span class="keyword">const</span> (
+	<a href="../../pkg/runtime.html#name-pdReady" class="ident">pdReady</a> <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a> = <span class="lit-number">1</span>
+	<a href="../../pkg/runtime.html#name-pdWait" class="ident">pdWait</a>  <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a> = <span class="lit-number">2</span>
+)
+
+<span class="keyword">const</span> <a href="../../pkg/runtime.html#name-pollBlockSize" class="ident">pollBlockSize</a> = <span class="lit-number">4</span> * <span class="lit-number">1024</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Network poller descriptor.</span><span class="comment"></span><span class="comment"> No heap pointers.</span><span class="comment"></span><span class="comment">go:notinheap</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../pkg/runtime.html#name-pollDesc" class="ident">pollDesc</a> <span class="keyword">struct</span> {
+	<a href="../../use/runtime..pollDesc*ae5b4.link*b1b1b.html" class="ident">link</a> *<a href="#line-69" class="ident">pollDesc</a> <span class="comment">// in pollcache, protected by pollcache.lock</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> The lock protects pollOpen, pollSetDeadline, pollUnblock and deadlineimpl operations.</span><span class="comment">	 This fully covers seq, rt and wt variables. fd is constant throughout the PollDesc lifetime.</span><span class="comment">	 pollReset, pollWait, pollWaitCanceled and runtime·netpollready (IO readiness notification)</span><span class="comment">	 proceed w/o taking the lock. So closing, everr, rg, rd, wg and wd are manipulated</span><span class="comment">	 in a lock-free way by all operations.</span><span class="comment">	 NOTE(dvyukov): the following code uses uintptr to store *g (rg/wg),</span><span class="comment">	 that will blow up when GC starts moving objects.</span></div>
+<div class="code"><pre><code>	<a href="../../use/runtime..pollDesc*ae5b4.lock*0c030.html" class="ident">lock</a>    <a href="runtime2.go.html#line-162" class="ident">mutex</a> <span class="comment">// protects the following fields</span>
+	<a href="../../use/runtime..pollDesc*ae5b4.fd*8bd57.html" class="ident">fd</a>      <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>
+	<a href="../../use/runtime..pollDesc*ae5b4.closing*6f9a4.html" class="ident">closing</a> <a href="../../pkg/builtin.html#name-bool" class="ident">bool</a>
+	<a href="../../use/runtime..pollDesc*ae5b4.everr*5f5e9.html" class="ident">everr</a>   <a href="../../pkg/builtin.html#name-bool" class="ident">bool</a>      <span class="comment">// marks event scanning error happened</span>
+	<a href="../../use/runtime..pollDesc*ae5b4.user*04f89.html" class="ident">user</a>    <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>    <span class="comment">// user settable cookie</span>
+	<a href="../../use/runtime..pollDesc*ae5b4.rseq*70ade.html" class="ident">rseq</a>    <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>   <span class="comment">// protects from stale read timers</span>
+	<a href="../../use/runtime..pollDesc*ae5b4.rg*5a500.html" class="ident">rg</a>      <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>   <span class="comment">// pdReady, pdWait, G waiting for read or nil</span>
+	<a href="../../use/runtime..pollDesc*ae5b4.rt*cdffd.html" class="ident">rt</a>      <a href="time.go.html#line-17" class="ident">timer</a>     <span class="comment">// read deadline timer (set if rt.f != nil)</span>
+	<a href="../../use/runtime..pollDesc*ae5b4.rd*4573a.html" class="ident">rd</a>      <a href="../../pkg/builtin.html#name-int64" class="ident">int64</a>     <span class="comment">// read deadline</span>
+	<a href="../../use/runtime..pollDesc*ae5b4.wseq*1fb66.html" class="ident">wseq</a>    <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>   <span class="comment">// protects from stale write timers</span>
+	<a href="../../use/runtime..pollDesc*ae5b4.wg*99d38.html" class="ident">wg</a>      <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>   <span class="comment">// pdReady, pdWait, G waiting for write or nil</span>
+	<a href="../../use/runtime..pollDesc*ae5b4.wt*a721d.html" class="ident">wt</a>      <a href="time.go.html#line-17" class="ident">timer</a>     <span class="comment">// write deadline timer</span>
+	<a href="../../use/runtime..pollDesc*ae5b4.wd*aeefb.html" class="ident">wd</a>      <a href="../../pkg/builtin.html#name-int64" class="ident">int64</a>     <span class="comment">// write deadline</span>
+	<a href="../../use/runtime..pollDesc*ae5b4.self*06c60.html" class="ident">self</a>    *<a href="#line-69" class="ident">pollDesc</a> <span class="comment">// storage for indirect interface. See (*pollDesc).makeArg.</span>
+}
+
+<span class="keyword">type</span> <a href="../../pkg/runtime.html#name-pollCache" class="ident">pollCache</a> <span class="keyword">struct</span> {
+	<a href="../../use/runtime..pollCache*aeff3.lock*0c030.html" class="ident">lock</a>  <a href="runtime2.go.html#line-162" class="ident">mutex</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> PollDesc objects must be type-stable,</span><span class="comment">	 because we can get ready notification from epoll/kqueue</span><span class="comment">	 after the descriptor is closed/reused.</span><span class="comment">	 Stale notifications are detected using seq variable,</span><span class="comment">	 seq is incremented when deadlines are changed or descriptor is reused.</span></div>
+<div class="code"><pre><code>}
+
+<span class="keyword">var</span> (
+	<a href="../../pkg/runtime.html#name-netpollInitLock" class="ident">netpollInitLock</a> <a href="runtime2.go.html#line-162" class="ident">mutex</a>
+	<a href="../../pkg/runtime.html#name-netpollInited" class="ident">netpollInited</a>   <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>
+
+	<a href="../../pkg/runtime.html#name-pollcache" class="ident">pollcache</a>      <a href="#line-95" class="ident">pollCache</a>
+	<a href="../../pkg/runtime.html#name-netpollWaiters" class="ident">netpollWaiters</a> <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">go:linkname poll_runtime_pollServerInit internal/poll.runtime_pollServerInit</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r0" class="ident"><a href="../../pkg/runtime.html#name-poll_runtime_pollServerInit" class="ident">poll_runtime_pollServerInit</a></label>() {
+	<a href="#line-118" class="ident">netpollGenericInit</a>()
+}
+
+<span class="keyword">func</span> <label for="r1" class="ident"><a href="../../pkg/runtime.html#name-netpollGenericInit" class="ident">netpollGenericInit</a></label>() {
+	<span class="keyword">if</span> <a href="../../pkg/runtime/internal/atomic.html" class="ident i0">atomic</a>.<a href="internal/atomic/atomic_amd64.go.html#line-16" class="ident">Load</a>(&amp;<a href="#line-107" class="ident">netpollInited</a>) == <span class="lit-number">0</span> {
+		<a href="lockrank_off.go.html#line-14" class="ident">lockInit</a>(&amp;<a href="#line-106" class="ident">netpollInitLock</a>, <a href="lockrank.go.html#line-65" class="ident">lockRankNetpollInit</a>)
+		<a href="lock_sema.go.html#line-35" class="ident">lock</a>(&amp;<a href="#line-106" class="ident">netpollInitLock</a>)
+		<span class="keyword">if</span> <a href="#line-107" class="ident">netpollInited</a> == <span class="lit-number">0</span> {
+			<a href="netpoll_kqueue.go.html#line-24" class="ident">netpollinit</a>()
+			<a href="../../pkg/runtime/internal/atomic.html" class="ident i0">atomic</a>.<a href="internal/atomic/atomic_amd64.go.html#line-95" class="ident">Store</a>(&amp;<a href="#line-107" class="ident">netpollInited</a>, <span class="lit-number">1</span>)
+		}
+		<a href="lock_sema.go.html#line-96" class="ident">unlock</a>(&amp;<a href="#line-106" class="ident">netpollInitLock</a>)
+	}
+}
+
+<span class="keyword">func</span> <label for="r2" class="ident"><a href="../../pkg/runtime.html#name-netpollinited" class="ident">netpollinited</a></label>() <a href="../../pkg/builtin.html#name-bool" class="ident">bool</a> {
+	<span class="keyword">return</span> <a href="../../pkg/runtime/internal/atomic.html" class="ident i0">atomic</a>.<a href="internal/atomic/atomic_amd64.go.html#line-16" class="ident">Load</a>(&amp;<a href="#line-107" class="ident">netpollInited</a>) != <span class="lit-number">0</span>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">go:linkname poll_runtime_isPollServerDescriptor internal/poll.runtime_isPollServerDescriptor</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> poll_runtime_isPollServerDescriptor reports whether fd is a</span><span class="comment"> descriptor being used by netpoll.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r3" class="ident"><a href="../../pkg/runtime.html#name-poll_runtime_isPollServerDescriptor" class="ident">poll_runtime_isPollServerDescriptor</a></label>(<label for="r4" class="ident">fd</label> <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>) <a href="../../pkg/builtin.html#name-bool" class="ident">bool</a> {
+	<span class="keyword">return</span> <a href="netpoll_kqueue.go.html#line-50" class="ident">netpollIsPollDescriptor</a>(<label for="r4" class="ident">fd</label>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">go:linkname poll_runtime_pollOpen internal/poll.runtime_pollOpen</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r5" class="ident"><a href="../../pkg/runtime.html#name-poll_runtime_pollOpen" class="ident">poll_runtime_pollOpen</a></label>(<label for="r6" class="ident">fd</label> <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>) (*<a href="#line-69" class="ident">pollDesc</a>, <a href="../../pkg/builtin.html#name-int" class="ident">int</a>) {
+	<label for="r7" class="ident">pd</label> := <a href="#line-109" class="ident">pollcache</a>.<a href="#line-529" class="ident">alloc</a>()
+	<a href="lock_sema.go.html#line-35" class="ident">lock</a>(&amp;<label for="r7" class="ident">pd</label>.<a href="#line-79" class="ident">lock</a>)
+	<span class="keyword">if</span> <label for="r7" class="ident">pd</label>.<a href="#line-89" class="ident">wg</a> != <span class="lit-number">0</span> &amp;&amp; <label for="r7" class="ident">pd</label>.<a href="#line-89" class="ident">wg</a> != <a href="#line-58" class="ident">pdReady</a> {
+		<a href="panic.go.html#line-1107" class="ident">throw</a>(<span class="lit-string">"runtime: blocked write on free polldesc"</span>)
+	}
+	<span class="keyword">if</span> <label for="r7" class="ident">pd</label>.<a href="#line-85" class="ident">rg</a> != <span class="lit-number">0</span> &amp;&amp; <label for="r7" class="ident">pd</label>.<a href="#line-85" class="ident">rg</a> != <a href="#line-58" class="ident">pdReady</a> {
+		<a href="panic.go.html#line-1107" class="ident">throw</a>(<span class="lit-string">"runtime: blocked read on free polldesc"</span>)
+	}
+	<label for="r7" class="ident">pd</label>.<a href="#line-80" class="ident">fd</a> = <label for="r6" class="ident">fd</label>
+	<label for="r7" class="ident">pd</label>.<a href="#line-81" class="ident">closing</a> = <a href="../../pkg/builtin.html#name-false" class="ident">false</a>
+	<label for="r7" class="ident">pd</label>.<a href="#line-82" class="ident">everr</a> = <a href="../../pkg/builtin.html#name-false" class="ident">false</a>
+	<label for="r7" class="ident">pd</label>.<a href="#line-84" class="ident">rseq</a>++
+	<label for="r7" class="ident">pd</label>.<a href="#line-85" class="ident">rg</a> = <span class="lit-number">0</span>
+	<label for="r7" class="ident">pd</label>.<a href="#line-87" class="ident">rd</a> = <span class="lit-number">0</span>
+	<label for="r7" class="ident">pd</label>.<a href="#line-88" class="ident">wseq</a>++
+	<label for="r7" class="ident">pd</label>.<a href="#line-89" class="ident">wg</a> = <span class="lit-number">0</span>
+	<label for="r7" class="ident">pd</label>.<a href="#line-91" class="ident">wd</a> = <span class="lit-number">0</span>
+	<label for="r7" class="ident">pd</label>.<a href="#line-92" class="ident">self</a> = <label for="r7" class="ident">pd</label>
+	<a href="lock_sema.go.html#line-96" class="ident">unlock</a>(&amp;<label for="r7" class="ident">pd</label>.<a href="#line-79" class="ident">lock</a>)
+
+	<span class="keyword">var</span> <label for="r8" class="ident">errno</label> <a href="../../pkg/builtin.html#name-int32" class="ident">int32</a>
+	<label for="r8" class="ident">errno</label> = <a href="netpoll_kqueue.go.html#line-54" class="ident">netpollopen</a>(<label for="r6" class="ident">fd</label>, <label for="r7" class="ident">pd</label>)
+	<span class="keyword">return</span> <label for="r7" class="ident">pd</label>, <a href="../../pkg/builtin.html#name-int" class="ident">int</a>(<label for="r8" class="ident">errno</label>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">go:linkname poll_runtime_pollClose internal/poll.runtime_pollClose</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r9" class="ident"><a href="../../pkg/runtime.html#name-poll_runtime_pollClose" class="ident">poll_runtime_pollClose</a></label>(<label for="r10" class="ident">pd</label> *<a href="#line-69" class="ident">pollDesc</a>) {
+	<span class="keyword">if</span> !<label for="r10" class="ident">pd</label>.<a href="#line-81" class="ident">closing</a> {
+		<a href="panic.go.html#line-1107" class="ident">throw</a>(<span class="lit-string">"runtime: close polldesc w/o unblock"</span>)
+	}
+	<span class="keyword">if</span> <label for="r10" class="ident">pd</label>.<a href="#line-89" class="ident">wg</a> != <span class="lit-number">0</span> &amp;&amp; <label for="r10" class="ident">pd</label>.<a href="#line-89" class="ident">wg</a> != <a href="#line-58" class="ident">pdReady</a> {
+		<a href="panic.go.html#line-1107" class="ident">throw</a>(<span class="lit-string">"runtime: blocked write on closing polldesc"</span>)
+	}
+	<span class="keyword">if</span> <label for="r10" class="ident">pd</label>.<a href="#line-85" class="ident">rg</a> != <span class="lit-number">0</span> &amp;&amp; <label for="r10" class="ident">pd</label>.<a href="#line-85" class="ident">rg</a> != <a href="#line-58" class="ident">pdReady</a> {
+		<a href="panic.go.html#line-1107" class="ident">throw</a>(<span class="lit-string">"runtime: blocked read on closing polldesc"</span>)
+	}
+	<a href="netpoll_kqueue.go.html#line-74" class="ident">netpollclose</a>(<label for="r10" class="ident">pd</label>.<a href="#line-80" class="ident">fd</a>)
+	<a href="#line-109" class="ident">pollcache</a>.<a href="#line-184" class="ident">free</a>(<label for="r10" class="ident">pd</label>)
+}
+
+<span class="keyword">func</span> (<label for="r11" class="ident">c</label> *<a href="#line-95" class="ident">pollCache</a>) <label for="r12" class="ident"><a href="../../use/runtime..pollCache*aeff3.free*ad95d.html" class="ident">free</a></label>(<label for="r13" class="ident">pd</label> *<a href="#line-69" class="ident">pollDesc</a>) {
+	<a href="lock_sema.go.html#line-35" class="ident">lock</a>(&amp;<label for="r11" class="ident">c</label>.<a href="#line-96" class="ident">lock</a>)
+	<label for="r13" class="ident">pd</label>.<a href="#line-70" class="ident">link</a> = <label for="r11" class="ident">c</label>.<a href="#line-97" class="ident">first</a>
+	<label for="r11" class="ident">c</label>.<a href="#line-97" class="ident">first</a> = <label for="r13" class="ident">pd</label>
+	<a href="lock_sema.go.html#line-96" class="ident">unlock</a>(&amp;<label for="r11" class="ident">c</label>.<a href="#line-96" class="ident">lock</a>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> poll_runtime_pollReset, which is internal/poll.runtime_pollReset,</span><span class="comment"> prepares a descriptor for polling in mode, which is 'r' or 'w'.</span><span class="comment"> This returns an error code; the codes are defined above.</span><span class="comment">go:linkname poll_runtime_pollReset internal/poll.runtime_pollReset</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r14" class="ident"><a href="../../pkg/runtime.html#name-poll_runtime_pollReset" class="ident">poll_runtime_pollReset</a></label>(<label for="r15" class="ident">pd</label> *<a href="#line-69" class="ident">pollDesc</a>, <label for="r16" class="ident">mode</label> <a href="../../pkg/builtin.html#name-int" class="ident">int</a>) <a href="../../pkg/builtin.html#name-int" class="ident">int</a> {
+	<label for="r17" class="ident">errcode</label> := <a href="#line-379" class="ident">netpollcheckerr</a>(<label for="r15" class="ident">pd</label>, <a href="../../pkg/builtin.html#name-int32" class="ident">int32</a>(<label for="r16" class="ident">mode</label>))
+	<span class="keyword">if</span> <label for="r17" class="ident">errcode</label> != <a href="#line-39" class="ident">pollNoError</a> {
+		<span class="keyword">return</span> <label for="r17" class="ident">errcode</label>
+	}
+	<span class="keyword">if</span> <label for="r16" class="ident">mode</label> == <span class="lit-number">'r'</span> {
+		<label for="r15" class="ident">pd</label>.<a href="#line-85" class="ident">rg</a> = <span class="lit-number">0</span>
+	} <span class="keyword">else</span> <span class="keyword">if</span> <label for="r16" class="ident">mode</label> == <span class="lit-number">'w'</span> {
+		<label for="r15" class="ident">pd</label>.<a href="#line-89" class="ident">wg</a> = <span class="lit-number">0</span>
+	}
+	<span class="keyword">return</span> <a href="#line-39" class="ident">pollNoError</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> poll_runtime_pollWait, which is internal/poll.runtime_pollWait,</span><span class="comment"> waits for a descriptor to be ready for reading or writing,</span><span class="comment"> according to mode, which is 'r' or 'w'.</span><span class="comment"> This returns an error code; the codes are defined above.</span><span class="comment">go:linkname poll_runtime_pollWait internal/poll.runtime_pollWait</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r18" class="ident"><a href="../../pkg/runtime.html#name-poll_runtime_pollWait" class="ident">poll_runtime_pollWait</a></label>(<label for="r19" class="ident">pd</label> *<a href="#line-69" class="ident">pollDesc</a>, <label for="r20" class="ident">mode</label> <a href="../../pkg/builtin.html#name-int" class="ident">int</a>) <a href="../../pkg/builtin.html#name-int" class="ident">int</a> {
+	<label for="r21" class="ident">errcode</label> := <a href="#line-379" class="ident">netpollcheckerr</a>(<label for="r19" class="ident">pd</label>, <a href="../../pkg/builtin.html#name-int32" class="ident">int32</a>(<label for="r20" class="ident">mode</label>))
+	<span class="keyword">if</span> <label for="r21" class="ident">errcode</label> != <a href="#line-39" class="ident">pollNoError</a> {
+		<span class="keyword">return</span> <label for="r21" class="ident">errcode</label>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> As for now only Solaris, illumos, and AIX use level-triggered IO.</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> <a href="extern.go.html#line-253" class="ident">GOOS</a> == <span class="lit-string">"solaris"</span> || <a href="extern.go.html#line-253" class="ident">GOOS</a> == <span class="lit-string">"illumos"</span> || <a href="extern.go.html#line-253" class="ident">GOOS</a> == <span class="lit-string">"aix"</span> {
+		<a href="netpoll_kqueue.go.html#line-80" class="ident">netpollarm</a>(<label for="r19" class="ident">pd</label>, <label for="r20" class="ident">mode</label>)
+	}
+	<span class="keyword">for</span> !<a href="#line-413" class="ident">netpollblock</a>(<label for="r19" class="ident">pd</label>, <a href="../../pkg/builtin.html#name-int32" class="ident">int32</a>(<label for="r20" class="ident">mode</label>), <a href="../../pkg/builtin.html#name-false" class="ident">false</a>) {
+		<label for="r21" class="ident">errcode</label> = <a href="#line-379" class="ident">netpollcheckerr</a>(<label for="r19" class="ident">pd</label>, <a href="../../pkg/builtin.html#name-int32" class="ident">int32</a>(<label for="r20" class="ident">mode</label>))
+		<span class="keyword">if</span> <label for="r21" class="ident">errcode</label> != <a href="#line-39" class="ident">pollNoError</a> {
+			<span class="keyword">return</span> <label for="r21" class="ident">errcode</label>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Can happen if timeout has fired and unblocked us,</span><span class="comment">		 but before we had a chance to run, timeout has been reset.</span><span class="comment">		 Pretend it has not happened and retry.</span></div>
+<div class="code"><pre><code>	}
+	<span class="keyword">return</span> <a href="#line-39" class="ident">pollNoError</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">go:linkname poll_runtime_pollWaitCanceled internal/poll.runtime_pollWaitCanceled</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> This function is used only on windows after a failed attempt to cancel</span><span class="comment">	 a pending async IO operation. Wait for ioready, ignore closing or timeouts.</span></div>
+<div class="code"><pre><code>	<span class="keyword">for</span> !<a href="#line-413" class="ident">netpollblock</a>(<label for="r23" class="ident">pd</label>, <a href="../../pkg/builtin.html#name-int32" class="ident">int32</a>(<label for="r24" class="ident">mode</label>), <a href="../../pkg/builtin.html#name-true" class="ident">true</a>) {
+	}
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">go:linkname poll_runtime_pollSetDeadline internal/poll.runtime_pollSetDeadline</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r25" class="ident"><a href="../../pkg/runtime.html#name-poll_runtime_pollSetDeadline" class="ident">poll_runtime_pollSetDeadline</a></label>(<label for="r26" class="ident">pd</label> *<a href="#line-69" class="ident">pollDesc</a>, <label for="r27" class="ident">d</label> <a href="../../pkg/builtin.html#name-int64" class="ident">int64</a>, <label for="r28" class="ident">mode</label> <a href="../../pkg/builtin.html#name-int" class="ident">int</a>) {
+	<a href="lock_sema.go.html#line-35" class="ident">lock</a>(&amp;<label for="r26" class="ident">pd</label>.<a href="#line-79" class="ident">lock</a>)
+	<span class="keyword">if</span> <label for="r26" class="ident">pd</label>.<a href="#line-81" class="ident">closing</a> {
+		<a href="lock_sema.go.html#line-96" class="ident">unlock</a>(&amp;<label for="r26" class="ident">pd</label>.<a href="#line-79" class="ident">lock</a>)
+		<span class="keyword">return</span>
+	}
+	<label for="r29" class="ident">rd0</label>, <label for="r30" class="ident">wd0</label> := <label for="r26" class="ident">pd</label>.<a href="#line-87" class="ident">rd</a>, <label for="r26" class="ident">pd</label>.<a href="#line-91" class="ident">wd</a>
+	<label for="r31" class="ident">combo0</label> := <label for="r29" class="ident">rd0</label> &gt; <span class="lit-number">0</span> &amp;&amp; <label for="r29" class="ident">rd0</label> == <label for="r30" class="ident">wd0</label>
+	<span class="keyword">if</span> <label for="r27" class="ident">d</label> &gt; <span class="lit-number">0</span> {
+		<label for="r27" class="ident">d</label> += <a href="time_nofake.go.html#line-18" class="ident">nanotime</a>()
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> If the user has a deadline in the future, but the delay calculation</span><span class="comment">			 overflows, then set the deadline to the maximum possible value.</span></div>
+<div class="code"><pre><code>			<label for="r27" class="ident">d</label> = <span class="lit-number">1</span>&lt;&lt;<span class="lit-number">63</span> - <span class="lit-number">1</span>
+		}
+	}
+	<span class="keyword">if</span> <label for="r28" class="ident">mode</label> == <span class="lit-number">'r'</span> || <label for="r28" class="ident">mode</label> == <span class="lit-number">'r'</span>+<span class="lit-number">'w'</span> {
+		<label for="r26" class="ident">pd</label>.<a href="#line-87" class="ident">rd</a> = <label for="r27" class="ident">d</label>
+	}
+	<span class="keyword">if</span> <label for="r28" class="ident">mode</label> == <span class="lit-number">'w'</span> || <label for="r28" class="ident">mode</label> == <span class="lit-number">'r'</span>+<span class="lit-number">'w'</span> {
+		<label for="r26" class="ident">pd</label>.<a href="#line-91" class="ident">wd</a> = <label for="r27" class="ident">d</label>
+	}
+	<label for="r32" class="ident">combo</label> := <label for="r26" class="ident">pd</label>.<a href="#line-87" class="ident">rd</a> &gt; <span class="lit-number">0</span> &amp;&amp; <label for="r26" class="ident">pd</label>.<a href="#line-87" class="ident">rd</a> == <label for="r26" class="ident">pd</label>.<a href="#line-91" class="ident">wd</a>
+	<label for="r33" class="ident">rtf</label> := <a href="#line-521" class="ident">netpollReadDeadline</a>
+	<span class="keyword">if</span> <label for="r32" class="ident">combo</label> {
+		<label for="r33" class="ident">rtf</label> = <a href="#line-517" class="ident">netpollDeadline</a>
+	}
+	<span class="keyword">if</span> <label for="r26" class="ident">pd</label>.<a href="#line-86" class="ident">rt</a>.<a href="time.go.html#line-30" class="ident">f</a> == <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">if</span> <label for="r26" class="ident">pd</label>.<a href="#line-87" class="ident">rd</a> &gt; <span class="lit-number">0</span> {
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Copy current seq into the timer arg.</span><span class="comment">			 Timer func will check the seq against current descriptor seq,</span><span class="comment">			 if they differ the descriptor was reused or timers were reset.</span></div>
+<div class="code"><pre><code>			<label for="r26" class="ident">pd</label>.<a href="#line-86" class="ident">rt</a>.<a href="time.go.html#line-31" class="ident">arg</a> = <label for="r26" class="ident">pd</label>.<a href="#line-558" class="ident">makeArg</a>()
+			<label for="r26" class="ident">pd</label>.<a href="#line-86" class="ident">rt</a>.<a href="time.go.html#line-32" class="ident">seq</a> = <label for="r26" class="ident">pd</label>.<a href="#line-84" class="ident">rseq</a>
+			<a href="time.go.html#line-548" class="ident">resettimer</a>(&amp;<label for="r26" class="ident">pd</label>.<a href="#line-86" class="ident">rt</a>, <label for="r26" class="ident">pd</label>.<a href="#line-87" class="ident">rd</a>)
+		}
+	} <span class="keyword">else</span> <span class="keyword">if</span> <label for="r26" class="ident">pd</label>.<a href="#line-87" class="ident">rd</a> != <label for="r29" class="ident">rd0</label> || <label for="r32" class="ident">combo</label> != <label for="r31" class="ident">combo0</label> {
+		<label for="r26" class="ident">pd</label>.<a href="#line-84" class="ident">rseq</a>++ <span class="comment">// invalidate current timers</span>
+		<span class="keyword">if</span> <label for="r26" class="ident">pd</label>.<a href="#line-87" class="ident">rd</a> &gt; <span class="lit-number">0</span> {
+			<a href="time.go.html#line-422" class="ident">modtimer</a>(&amp;<label for="r26" class="ident">pd</label>.<a href="#line-86" class="ident">rt</a>, <label for="r26" class="ident">pd</label>.<a href="#line-87" class="ident">rd</a>, <span class="lit-number">0</span>, <label for="r33" class="ident">rtf</label>, <label for="r26" class="ident">pd</label>.<a href="#line-558" class="ident">makeArg</a>(), <label for="r26" class="ident">pd</label>.<a href="#line-84" class="ident">rseq</a>)
+		} <span class="keyword">else</span> {
+			<a href="time.go.html#line-306" class="ident">deltimer</a>(&amp;<label for="r26" class="ident">pd</label>.<a href="#line-86" class="ident">rt</a>)
+			<label for="r26" class="ident">pd</label>.<a href="#line-86" class="ident">rt</a>.<a href="time.go.html#line-30" class="ident">f</a> = <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a>
+		}
+	}
+	<span class="keyword">if</span> <label for="r26" class="ident">pd</label>.<a href="#line-90" class="ident">wt</a>.<a href="time.go.html#line-30" class="ident">f</a> == <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">if</span> <label for="r26" class="ident">pd</label>.<a href="#line-91" class="ident">wd</a> &gt; <span class="lit-number">0</span> &amp;&amp; !<label for="r32" class="ident">combo</label> {
+			<label for="r26" class="ident">pd</label>.<a href="#line-90" class="ident">wt</a>.<a href="time.go.html#line-30" class="ident">f</a> = <a href="#line-525" class="ident">netpollWriteDeadline</a>
+			<label for="r26" class="ident">pd</label>.<a href="#line-90" class="ident">wt</a>.<a href="time.go.html#line-31" class="ident">arg</a> = <label for="r26" class="ident">pd</label>.<a href="#line-558" class="ident">makeArg</a>()
+			<label for="r26" class="ident">pd</label>.<a href="#line-90" class="ident">wt</a>.<a href="time.go.html#line-32" class="ident">seq</a> = <label for="r26" class="ident">pd</label>.<a href="#line-88" class="ident">wseq</a>
+			<a href="time.go.html#line-548" class="ident">resettimer</a>(&amp;<label for="r26" class="ident">pd</label>.<a href="#line-90" class="ident">wt</a>, <label for="r26" class="ident">pd</label>.<a href="#line-91" class="ident">wd</a>)
+		}
+	} <span class="keyword">else</span> <span class="keyword">if</span> <label for="r26" class="ident">pd</label>.<a href="#line-91" class="ident">wd</a> != <label for="r30" class="ident">wd0</label> || <label for="r32" class="ident">combo</label> != <label for="r31" class="ident">combo0</label> {
+		<label for="r26" class="ident">pd</label>.<a href="#line-88" class="ident">wseq</a>++ <span class="comment">// invalidate current timers</span>
+		<span class="keyword">if</span> <label for="r26" class="ident">pd</label>.<a href="#line-91" class="ident">wd</a> &gt; <span class="lit-number">0</span> &amp;&amp; !<label for="r32" class="ident">combo</label> {
+			<a href="time.go.html#line-422" class="ident">modtimer</a>(&amp;<label for="r26" class="ident">pd</label>.<a href="#line-90" class="ident">wt</a>, <label for="r26" class="ident">pd</label>.<a href="#line-91" class="ident">wd</a>, <span class="lit-number">0</span>, <a href="#line-525" class="ident">netpollWriteDeadline</a>, <label for="r26" class="ident">pd</label>.<a href="#line-558" class="ident">makeArg</a>(), <label for="r26" class="ident">pd</label>.<a href="#line-88" class="ident">wseq</a>)
+		} <span class="keyword">else</span> {
+			<a href="time.go.html#line-306" class="ident">deltimer</a>(&amp;<label for="r26" class="ident">pd</label>.<a href="#line-90" class="ident">wt</a>)
+			<label for="r26" class="ident">pd</label>.<a href="#line-90" class="ident">wt</a>.<a href="time.go.html#line-30" class="ident">f</a> = <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a>
+		}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> If we set the new deadline in the past, unblock currently pending IO if any.</span></div>
+<div class="code"><pre><code>	<span class="keyword">var</span> <label for="r34" class="ident">rg</label>, <label for="r35" class="ident">wg</label> *<a href="runtime2.go.html#line-404" class="ident">g</a>
+	<span class="keyword">if</span> <label for="r26" class="ident">pd</label>.<a href="#line-87" class="ident">rd</a> &lt; <span class="lit-number">0</span> || <label for="r26" class="ident">pd</label>.<a href="#line-91" class="ident">wd</a> &lt; <span class="lit-number">0</span> {
+		<a href="../../pkg/runtime/internal/atomic.html" class="ident i0">atomic</a>.<a href="internal/atomic/atomic_amd64.go.html#line-116" class="ident">StorepNoWB</a>(<a href="stubs.go.html#line-157" class="ident">noescape</a>(<a href="../../pkg/unsafe.html" class="ident i1">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(&amp;<label for="r35" class="ident">wg</label>)), <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a>) <span class="comment">// full memory barrier between stores to rd/wd and load of rg/wg in netpollunblock</span>
+		<span class="keyword">if</span> <label for="r26" class="ident">pd</label>.<a href="#line-87" class="ident">rd</a> &lt; <span class="lit-number">0</span> {
+			<label for="r34" class="ident">rg</label> = <a href="#line-448" class="ident">netpollunblock</a>(<label for="r26" class="ident">pd</label>, <span class="lit-number">'r'</span>, <a href="../../pkg/builtin.html#name-false" class="ident">false</a>)
+		}
+		<span class="keyword">if</span> <label for="r26" class="ident">pd</label>.<a href="#line-91" class="ident">wd</a> &lt; <span class="lit-number">0</span> {
+			<label for="r35" class="ident">wg</label> = <a href="#line-448" class="ident">netpollunblock</a>(<label for="r26" class="ident">pd</label>, <span class="lit-number">'w'</span>, <a href="../../pkg/builtin.html#name-false" class="ident">false</a>)
+		}
+	}
+	<a href="lock_sema.go.html#line-96" class="ident">unlock</a>(&amp;<label for="r26" class="ident">pd</label>.<a href="#line-79" class="ident">lock</a>)
+	<span class="keyword">if</span> <label for="r34" class="ident">rg</label> != <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<a href="#line-406" class="ident">netpollgoready</a>(<label for="r34" class="ident">rg</label>, <span class="lit-number">3</span>)
+	}
+	<span class="keyword">if</span> <label for="r35" class="ident">wg</label> != <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<a href="#line-406" class="ident">netpollgoready</a>(<label for="r35" class="ident">wg</label>, <span class="lit-number">3</span>)
+	}
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">go:linkname poll_runtime_pollUnblock internal/poll.runtime_pollUnblock</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r36" class="ident"><a href="../../pkg/runtime.html#name-poll_runtime_pollUnblock" class="ident">poll_runtime_pollUnblock</a></label>(<label for="r37" class="ident">pd</label> *<a href="#line-69" class="ident">pollDesc</a>) {
+	<a href="lock_sema.go.html#line-35" class="ident">lock</a>(&amp;<label for="r37" class="ident">pd</label>.<a href="#line-79" class="ident">lock</a>)
+	<span class="keyword">if</span> <label for="r37" class="ident">pd</label>.<a href="#line-81" class="ident">closing</a> {
+		<a href="panic.go.html#line-1107" class="ident">throw</a>(<span class="lit-string">"runtime: unblock on closing polldesc"</span>)
+	}
+	<label for="r37" class="ident">pd</label>.<a href="#line-81" class="ident">closing</a> = <a href="../../pkg/builtin.html#name-true" class="ident">true</a>
+	<label for="r37" class="ident">pd</label>.<a href="#line-84" class="ident">rseq</a>++
+	<label for="r37" class="ident">pd</label>.<a href="#line-88" class="ident">wseq</a>++
+	<span class="keyword">var</span> <label for="r38" class="ident">rg</label>, <label for="r39" class="ident">wg</label> *<a href="runtime2.go.html#line-404" class="ident">g</a>
+	<a href="../../pkg/runtime/internal/atomic.html" class="ident i0">atomic</a>.<a href="internal/atomic/atomic_amd64.go.html#line-116" class="ident">StorepNoWB</a>(<a href="stubs.go.html#line-157" class="ident">noescape</a>(<a href="../../pkg/unsafe.html" class="ident i1">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(&amp;<label for="r38" class="ident">rg</label>)), <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a>) <span class="comment">// full memory barrier between store to closing and read of rg/wg in netpollunblock</span>
+	<label for="r38" class="ident">rg</label> = <a href="#line-448" class="ident">netpollunblock</a>(<label for="r37" class="ident">pd</label>, <span class="lit-number">'r'</span>, <a href="../../pkg/builtin.html#name-false" class="ident">false</a>)
+	<label for="r39" class="ident">wg</label> = <a href="#line-448" class="ident">netpollunblock</a>(<label for="r37" class="ident">pd</label>, <span class="lit-number">'w'</span>, <a href="../../pkg/builtin.html#name-false" class="ident">false</a>)
+	<span class="keyword">if</span> <label for="r37" class="ident">pd</label>.<a href="#line-86" class="ident">rt</a>.<a href="time.go.html#line-30" class="ident">f</a> != <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<a href="time.go.html#line-306" class="ident">deltimer</a>(&amp;<label for="r37" class="ident">pd</label>.<a href="#line-86" class="ident">rt</a>)
+		<label for="r37" class="ident">pd</label>.<a href="#line-86" class="ident">rt</a>.<a href="time.go.html#line-30" class="ident">f</a> = <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a>
+	}
+	<span class="keyword">if</span> <label for="r37" class="ident">pd</label>.<a href="#line-90" class="ident">wt</a>.<a href="time.go.html#line-30" class="ident">f</a> != <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<a href="time.go.html#line-306" class="ident">deltimer</a>(&amp;<label for="r37" class="ident">pd</label>.<a href="#line-90" class="ident">wt</a>)
+		<label for="r37" class="ident">pd</label>.<a href="#line-90" class="ident">wt</a>.<a href="time.go.html#line-30" class="ident">f</a> = <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a>
+	}
+	<a href="lock_sema.go.html#line-96" class="ident">unlock</a>(&amp;<label for="r37" class="ident">pd</label>.<a href="#line-79" class="ident">lock</a>)
+	<span class="keyword">if</span> <label for="r38" class="ident">rg</label> != <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<a href="#line-406" class="ident">netpollgoready</a>(<label for="r38" class="ident">rg</label>, <span class="lit-number">3</span>)
+	}
+	<span class="keyword">if</span> <label for="r39" class="ident">wg</label> != <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<a href="#line-406" class="ident">netpollgoready</a>(<label for="r39" class="ident">wg</label>, <span class="lit-number">3</span>)
+	}
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> netpollready is called by the platform-specific netpoll function.</span><span class="comment"> It declares that the fd associated with pd is ready for I/O.</span><span class="comment"> The toRun argument is used to build a list of goroutines to return</span><span class="comment"> from netpoll. The mode argument is 'r', 'w', or 'r'+'w' to indicate</span><span class="comment"> whether the fd is ready for reading or writing or both.</span><span class="comment"></span><span class="comment"> This may run while the world is stopped, so write barriers are not allowed.</span><span class="comment">go:nowritebarrier</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r40" class="ident"><a href="../../pkg/runtime.html#name-netpollready" class="ident">netpollready</a></label>(<label for="r41" class="ident">toRun</label> *<a href="proc.go.html#line-6023" class="ident">gList</a>, <label for="r42" class="ident">pd</label> *<a href="#line-69" class="ident">pollDesc</a>, <label for="r43" class="ident">mode</label> <a href="../../pkg/builtin.html#name-int32" class="ident">int32</a>) {
+	<span class="keyword">var</span> <label for="r44" class="ident">rg</label>, <label for="r45" class="ident">wg</label> *<a href="runtime2.go.html#line-404" class="ident">g</a>
+	<span class="keyword">if</span> <label for="r43" class="ident">mode</label> == <span class="lit-number">'r'</span> || <label for="r43" class="ident">mode</label> == <span class="lit-number">'r'</span>+<span class="lit-number">'w'</span> {
+		<label for="r44" class="ident">rg</label> = <a href="#line-448" class="ident">netpollunblock</a>(<label for="r42" class="ident">pd</label>, <span class="lit-number">'r'</span>, <a href="../../pkg/builtin.html#name-true" class="ident">true</a>)
+	}
+	<span class="keyword">if</span> <label for="r43" class="ident">mode</label> == <span class="lit-number">'w'</span> || <label for="r43" class="ident">mode</label> == <span class="lit-number">'r'</span>+<span class="lit-number">'w'</span> {
+		<label for="r45" class="ident">wg</label> = <a href="#line-448" class="ident">netpollunblock</a>(<label for="r42" class="ident">pd</label>, <span class="lit-number">'w'</span>, <a href="../../pkg/builtin.html#name-true" class="ident">true</a>)
+	}
+	<span class="keyword">if</span> <label for="r44" class="ident">rg</label> != <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<label for="r41" class="ident">toRun</label>.<a href="proc.go.html#line-6033" class="ident">push</a>(<label for="r44" class="ident">rg</label>)
+	}
+	<span class="keyword">if</span> <label for="r45" class="ident">wg</label> != <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<label for="r41" class="ident">toRun</label>.<a href="proc.go.html#line-6033" class="ident">push</a>(<label for="r45" class="ident">wg</label>)
+	}
+}
+
+<span class="keyword">func</span> <label for="r46" class="ident"><a href="../../pkg/runtime.html#name-netpollcheckerr" class="ident">netpollcheckerr</a></label>(<label for="r47" class="ident">pd</label> *<a href="#line-69" class="ident">pollDesc</a>, <label for="r48" class="ident">mode</label> <a href="../../pkg/builtin.html#name-int32" class="ident">int32</a>) <a href="../../pkg/builtin.html#name-int" class="ident">int</a> {
+	<span class="keyword">if</span> <label for="r47" class="ident">pd</label>.<a href="#line-81" class="ident">closing</a> {
+		<span class="keyword">return</span> <a href="#line-40" class="ident">pollErrClosing</a>
+	}
+	<span class="keyword">if</span> (<label for="r48" class="ident">mode</label> == <span class="lit-number">'r'</span> &amp;&amp; <label for="r47" class="ident">pd</label>.<a href="#line-87" class="ident">rd</a> &lt; <span class="lit-number">0</span>) || (<label for="r48" class="ident">mode</label> == <span class="lit-number">'w'</span> &amp;&amp; <label for="r47" class="ident">pd</label>.<a href="#line-91" class="ident">wd</a> &lt; <span class="lit-number">0</span>) {
+		<span class="keyword">return</span> <a href="#line-41" class="ident">pollErrTimeout</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Report an event scanning error only on a read event.</span><span class="comment">	 An error on a write event will be captured in a subsequent</span><span class="comment">	 write call that is able to report a more specific error.</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> <label for="r48" class="ident">mode</label> == <span class="lit-number">'r'</span> &amp;&amp; <label for="r47" class="ident">pd</label>.<a href="#line-82" class="ident">everr</a> {
+		<span class="keyword">return</span> <a href="#line-42" class="ident">pollErrNotPollable</a>
+	}
+	<span class="keyword">return</span> <a href="#line-39" class="ident">pollNoError</a>
+}
+
+<span class="keyword">func</span> <label for="r49" class="ident"><a href="../../pkg/runtime.html#name-netpollblockcommit" class="ident">netpollblockcommit</a></label>(<label for="r50" class="ident">gp</label> *<a href="runtime2.go.html#line-404" class="ident">g</a>, <label for="r51" class="ident">gpp</label> <a href="../../pkg/unsafe.html" class="ident i1">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>) <a href="../../pkg/builtin.html#name-bool" class="ident">bool</a> {
+	<label for="r52" class="ident">r</label> := <a href="../../pkg/runtime/internal/atomic.html" class="ident i0">atomic</a>.<a href="internal/atomic/stubs.go.html#line-18" class="ident">Casuintptr</a>((*<a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>)(<label for="r51" class="ident">gpp</label>), <a href="#line-59" class="ident">pdWait</a>, <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<a href="../../pkg/unsafe.html" class="ident i1">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(<label for="r50" class="ident">gp</label>)))
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Bump the count of goroutines waiting for the poller.</span><span class="comment">		 The scheduler uses this to decide whether to block</span><span class="comment">		 waiting for the poller if there is nothing else to do.</span></div>
+<div class="code"><pre><code>		<a href="../../pkg/runtime/internal/atomic.html" class="ident i0">atomic</a>.<a href="internal/atomic/atomic_amd64.go.html#line-51" class="ident">Xadd</a>(&amp;<a href="#line-110" class="ident">netpollWaiters</a>, <span class="lit-number">1</span>)
+	}
+	<span class="keyword">return</span> <label for="r52" class="ident">r</label>
+}
+
+<span class="keyword">func</span> <label for="r53" class="ident"><a href="../../pkg/runtime.html#name-netpollgoready" class="ident">netpollgoready</a></label>(<label for="r54" class="ident">gp</label> *<a href="runtime2.go.html#line-404" class="ident">g</a>, <label for="r55" class="ident">traceskip</label> <a href="../../pkg/builtin.html#name-int" class="ident">int</a>) {
+	<a href="../../pkg/runtime/internal/atomic.html" class="ident i0">atomic</a>.<a href="internal/atomic/atomic_amd64.go.html#line-51" class="ident">Xadd</a>(&amp;<a href="#line-110" class="ident">netpollWaiters</a>, -<span class="lit-number">1</span>)
+	<a href="proc.go.html#line-345" class="ident">goready</a>(<label for="r54" class="ident">gp</label>, <label for="r55" class="ident">traceskip</label>+<span class="lit-number">1</span>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> returns true if IO is ready, or false if timedout or closed</span><span class="comment"> waitio - wait only for completed IO, ignore errors</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r56" class="ident"><a href="../../pkg/runtime.html#name-netpollblock" class="ident">netpollblock</a></label>(<label for="r57" class="ident">pd</label> *<a href="#line-69" class="ident">pollDesc</a>, <label for="r58" class="ident">mode</label> <a href="../../pkg/builtin.html#name-int32" class="ident">int32</a>, <label for="r59" class="ident">waitio</label> <a href="../../pkg/builtin.html#name-bool" class="ident">bool</a>) <a href="../../pkg/builtin.html#name-bool" class="ident">bool</a> {
+	<label for="r60" class="ident">gpp</label> := &amp;<label for="r57" class="ident">pd</label>.<a href="#line-85" class="ident">rg</a>
+	<span class="keyword">if</span> <label for="r58" class="ident">mode</label> == <span class="lit-number">'w'</span> {
+		<label for="r60" class="ident">gpp</label> = &amp;<label for="r57" class="ident">pd</label>.<a href="#line-89" class="ident">wg</a>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> set the gpp semaphore to pdWait</span></div>
+<div class="code"><pre><code>	<span class="keyword">for</span> {
+		<label for="r61" class="ident">old</label> := *<label for="r60" class="ident">gpp</label>
+		<span class="keyword">if</span> <label for="r61" class="ident">old</label> == <a href="#line-58" class="ident">pdReady</a> {
+			*<label for="r60" class="ident">gpp</label> = <span class="lit-number">0</span>
+			<span class="keyword">return</span> <a href="../../pkg/builtin.html#name-true" class="ident">true</a>
+		}
+		<span class="keyword">if</span> <label for="r61" class="ident">old</label> != <span class="lit-number">0</span> {
+			<a href="panic.go.html#line-1107" class="ident">throw</a>(<span class="lit-string">"runtime: double wait"</span>)
+		}
+		<span class="keyword">if</span> <a href="../../pkg/runtime/internal/atomic.html" class="ident i0">atomic</a>.<a href="internal/atomic/stubs.go.html#line-18" class="ident">Casuintptr</a>(<label for="r60" class="ident">gpp</label>, <span class="lit-number">0</span>, <a href="#line-59" class="ident">pdWait</a>) {
+			<span class="keyword">break</span>
+		}
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> need to recheck error states after setting gpp to pdWait</span><span class="comment">	 this is necessary because runtime_pollUnblock/runtime_pollSetDeadline/deadlineimpl</span><span class="comment">	 do the opposite: store to closing/rd/wd, membarrier, load of rg/wg</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> <label for="r59" class="ident">waitio</label> || <a href="#line-379" class="ident">netpollcheckerr</a>(<label for="r57" class="ident">pd</label>, <label for="r58" class="ident">mode</label>) == <span class="lit-number">0</span> {
+		<a href="proc.go.html#line-319" class="ident">gopark</a>(<a href="#line-395" class="ident">netpollblockcommit</a>, <a href="../../pkg/unsafe.html" class="ident i1">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(<label for="r60" class="ident">gpp</label>), <a href="runtime2.go.html#line-990" class="ident">waitReasonIOWait</a>, <a href="trace.go.html#line-50" class="ident">traceEvGoBlockNet</a>, <span class="lit-number">5</span>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> be careful to not lose concurrent pdReady notification</span></div>
+<div class="code"><pre><code>	<label for="r62" class="ident">old</label> := <a href="../../pkg/runtime/internal/atomic.html" class="ident i0">atomic</a>.<a href="internal/atomic/atomic_amd64.go.html#line-66" class="ident">Xchguintptr</a>(<label for="r60" class="ident">gpp</label>, <span class="lit-number">0</span>)
+	<span class="keyword">if</span> <label for="r62" class="ident">old</label> &gt; <a href="#line-59" class="ident">pdWait</a> {
+		<a href="panic.go.html#line-1107" class="ident">throw</a>(<span class="lit-string">"runtime: corrupted polldesc"</span>)
+	}
+	<span class="keyword">return</span> <label for="r62" class="ident">old</label> == <a href="#line-58" class="ident">pdReady</a>
+}
+
+<span class="keyword">func</span> <label for="r63" class="ident"><a href="../../pkg/runtime.html#name-netpollunblock" class="ident">netpollunblock</a></label>(<label for="r64" class="ident">pd</label> *<a href="#line-69" class="ident">pollDesc</a>, <label for="r65" class="ident">mode</label> <a href="../../pkg/builtin.html#name-int32" class="ident">int32</a>, <label for="r66" class="ident">ioready</label> <a href="../../pkg/builtin.html#name-bool" class="ident">bool</a>) *<a href="runtime2.go.html#line-404" class="ident">g</a> {
+	<label for="r67" class="ident">gpp</label> := &amp;<label for="r64" class="ident">pd</label>.<a href="#line-85" class="ident">rg</a>
+	<span class="keyword">if</span> <label for="r65" class="ident">mode</label> == <span class="lit-number">'w'</span> {
+		<label for="r67" class="ident">gpp</label> = &amp;<label for="r64" class="ident">pd</label>.<a href="#line-89" class="ident">wg</a>
+	}
+
+	<span class="keyword">for</span> {
+		<label for="r68" class="ident">old</label> := *<label for="r67" class="ident">gpp</label>
+		<span class="keyword">if</span> <label for="r68" class="ident">old</label> == <a href="#line-58" class="ident">pdReady</a> {
+			<span class="keyword">return</span> <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a>
+		}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Only set pdReady for ioready. runtime_pollWait</span><span class="comment">			 will check for timeout/cancel before waiting.</span></div>
+<div class="code"><pre><code>			<span class="keyword">return</span> <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a>
+		}
+		<span class="keyword">var</span> <label for="r69" class="ident">new</label> <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>
+		<span class="keyword">if</span> <label for="r66" class="ident">ioready</label> {
+			<label for="r69" class="ident">new</label> = <a href="#line-58" class="ident">pdReady</a>
+		}
+		<span class="keyword">if</span> <a href="../../pkg/runtime/internal/atomic.html" class="ident i0">atomic</a>.<a href="internal/atomic/stubs.go.html#line-18" class="ident">Casuintptr</a>(<label for="r67" class="ident">gpp</label>, <label for="r68" class="ident">old</label>, <label for="r69" class="ident">new</label>) {
+			<span class="keyword">if</span> <label for="r68" class="ident">old</label> == <a href="#line-59" class="ident">pdWait</a> {
+				<label for="r68" class="ident">old</label> = <span class="lit-number">0</span>
+			}
+			<span class="keyword">return</span> (*<a href="runtime2.go.html#line-404" class="ident">g</a>)(<a href="../../pkg/unsafe.html" class="ident i1">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(<label for="r68" class="ident">old</label>))
+		}
+	}
+}
+
+<span class="keyword">func</span> <label for="r70" class="ident"><a href="../../pkg/runtime.html#name-netpolldeadlineimpl" class="ident">netpolldeadlineimpl</a></label>(<label for="r71" class="ident">pd</label> *<a href="#line-69" class="ident">pollDesc</a>, <label for="r72" class="ident">seq</label> <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>, <label for="r73" class="ident">read</label>, <label for="r74" class="ident">write</label> <a href="../../pkg/builtin.html#name-bool" class="ident">bool</a>) {
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Seq arg is seq when the timer was set.</span><span class="comment">	 If it's stale, ignore the timer event.</span></div>
+<div class="code"><pre><code>	<label for="r75" class="ident">currentSeq</label> := <label for="r71" class="ident">pd</label>.<a href="#line-84" class="ident">rseq</a>
+	<span class="keyword">if</span> !<label for="r73" class="ident">read</label> {
+		<label for="r75" class="ident">currentSeq</label> = <label for="r71" class="ident">pd</label>.<a href="#line-88" class="ident">wseq</a>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> The descriptor was reused or timers were reset.</span></div>
+<div class="code"><pre><code>		<a href="lock_sema.go.html#line-96" class="ident">unlock</a>(&amp;<label for="r71" class="ident">pd</label>.<a href="#line-79" class="ident">lock</a>)
+		<span class="keyword">return</span>
+	}
+	<span class="keyword">var</span> <label for="r76" class="ident">rg</label> *<a href="runtime2.go.html#line-404" class="ident">g</a>
+	<span class="keyword">if</span> <label for="r73" class="ident">read</label> {
+		<span class="keyword">if</span> <label for="r71" class="ident">pd</label>.<a href="#line-87" class="ident">rd</a> &lt;= <span class="lit-number">0</span> || <label for="r71" class="ident">pd</label>.<a href="#line-86" class="ident">rt</a>.<a href="time.go.html#line-30" class="ident">f</a> == <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<a href="panic.go.html#line-1107" class="ident">throw</a>(<span class="lit-string">"runtime: inconsistent read deadline"</span>)
+		}
+		<label for="r71" class="ident">pd</label>.<a href="#line-87" class="ident">rd</a> = -<span class="lit-number">1</span>
+		<a href="../../pkg/runtime/internal/atomic.html" class="ident i0">atomic</a>.<a href="internal/atomic/atomic_amd64.go.html#line-116" class="ident">StorepNoWB</a>(<a href="../../pkg/unsafe.html" class="ident i1">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(&amp;<label for="r71" class="ident">pd</label>.<a href="#line-86" class="ident">rt</a>.<a href="time.go.html#line-30" class="ident">f</a>), <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a>) <span class="comment">// full memory barrier between store to rd and load of rg in netpollunblock</span>
+		<label for="r76" class="ident">rg</label> = <a href="#line-448" class="ident">netpollunblock</a>(<label for="r71" class="ident">pd</label>, <span class="lit-number">'r'</span>, <a href="../../pkg/builtin.html#name-false" class="ident">false</a>)
+	}
+	<span class="keyword">var</span> <label for="r77" class="ident">wg</label> *<a href="runtime2.go.html#line-404" class="ident">g</a>
+	<span class="keyword">if</span> <label for="r74" class="ident">write</label> {
+		<span class="keyword">if</span> <label for="r71" class="ident">pd</label>.<a href="#line-91" class="ident">wd</a> &lt;= <span class="lit-number">0</span> || <label for="r71" class="ident">pd</label>.<a href="#line-90" class="ident">wt</a>.<a href="time.go.html#line-30" class="ident">f</a> == <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a> &amp;&amp; !<label for="r73" class="ident">read</label> {
+			<a href="panic.go.html#line-1107" class="ident">throw</a>(<span class="lit-string">"runtime: inconsistent write deadline"</span>)
+		}
+		<label for="r71" class="ident">pd</label>.<a href="#line-91" class="ident">wd</a> = -<span class="lit-number">1</span>
+		<a href="../../pkg/runtime/internal/atomic.html" class="ident i0">atomic</a>.<a href="internal/atomic/atomic_amd64.go.html#line-116" class="ident">StorepNoWB</a>(<a href="../../pkg/unsafe.html" class="ident i1">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(&amp;<label for="r71" class="ident">pd</label>.<a href="#line-90" class="ident">wt</a>.<a href="time.go.html#line-30" class="ident">f</a>), <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a>) <span class="comment">// full memory barrier between store to wd and load of wg in netpollunblock</span>
+		<label for="r77" class="ident">wg</label> = <a href="#line-448" class="ident">netpollunblock</a>(<label for="r71" class="ident">pd</label>, <span class="lit-number">'w'</span>, <a href="../../pkg/builtin.html#name-false" class="ident">false</a>)
+	}
+	<a href="lock_sema.go.html#line-96" class="ident">unlock</a>(&amp;<label for="r71" class="ident">pd</label>.<a href="#line-79" class="ident">lock</a>)
+	<span class="keyword">if</span> <label for="r76" class="ident">rg</label> != <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<a href="#line-406" class="ident">netpollgoready</a>(<label for="r76" class="ident">rg</label>, <span class="lit-number">0</span>)
+	}
+	<span class="keyword">if</span> <label for="r77" class="ident">wg</label> != <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<a href="#line-406" class="ident">netpollgoready</a>(<label for="r77" class="ident">wg</label>, <span class="lit-number">0</span>)
+	}
+}
+
+<span class="keyword">func</span> <label for="r78" class="ident"><a href="../../pkg/runtime.html#name-netpollDeadline" class="ident">netpollDeadline</a></label>(<label for="r79" class="ident">arg</label> <span class="keyword">interface</span>{}, <label for="r80" class="ident">seq</label> <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>) {
+	<a href="#line-477" class="ident">netpolldeadlineimpl</a>(<label for="r79" class="ident">arg</label>.(*<a href="#line-69" class="ident">pollDesc</a>), <label for="r80" class="ident">seq</label>, <a href="../../pkg/builtin.html#name-true" class="ident">true</a>, <a href="../../pkg/builtin.html#name-true" class="ident">true</a>)
+}
+
+<span class="keyword">func</span> <label for="r81" class="ident"><a href="../../pkg/runtime.html#name-netpollReadDeadline" class="ident">netpollReadDeadline</a></label>(<label for="r82" class="ident">arg</label> <span class="keyword">interface</span>{}, <label for="r83" class="ident">seq</label> <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>) {
+	<a href="#line-477" class="ident">netpolldeadlineimpl</a>(<label for="r82" class="ident">arg</label>.(*<a href="#line-69" class="ident">pollDesc</a>), <label for="r83" class="ident">seq</label>, <a href="../../pkg/builtin.html#name-true" class="ident">true</a>, <a href="../../pkg/builtin.html#name-false" class="ident">false</a>)
+}
+
+<span class="keyword">func</span> <label for="r84" class="ident"><a href="../../pkg/runtime.html#name-netpollWriteDeadline" class="ident">netpollWriteDeadline</a></label>(<label for="r85" class="ident">arg</label> <span class="keyword">interface</span>{}, <label for="r86" class="ident">seq</label> <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>) {
+	<a href="#line-477" class="ident">netpolldeadlineimpl</a>(<label for="r85" class="ident">arg</label>.(*<a href="#line-69" class="ident">pollDesc</a>), <label for="r86" class="ident">seq</label>, <a href="../../pkg/builtin.html#name-false" class="ident">false</a>, <a href="../../pkg/builtin.html#name-true" class="ident">true</a>)
+}
+
+<span class="keyword">func</span> (<label for="r87" class="ident">c</label> *<a href="#line-95" class="ident">pollCache</a>) <label for="r88" class="ident"><a href="../../use/runtime..pollCache*aeff3.alloc*bcd3b.html" class="ident">alloc</a></label>() *<a href="#line-69" class="ident">pollDesc</a> {
+	<a href="lock_sema.go.html#line-35" class="ident">lock</a>(&amp;<label for="r87" class="ident">c</label>.<a href="#line-96" class="ident">lock</a>)
+	<span class="keyword">if</span> <label for="r87" class="ident">c</label>.<a href="#line-97" class="ident">first</a> == <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">const</span> <label for="r89" class="ident">pdSize</label> = <a href="../../pkg/unsafe.html" class="ident i1">unsafe</a>.<a href="../../pkg/unsafe.html#name-Sizeof" class="ident">Sizeof</a>(<a href="#line-69" class="ident">pollDesc</a>{})
+		<label for="r90" class="ident">n</label> := <a href="#line-62" class="ident">pollBlockSize</a> / <label for="r89" class="ident">pdSize</label>
+		<span class="keyword">if</span> <label for="r90" class="ident">n</label> == <span class="lit-number">0</span> {
+			<label for="r90" class="ident">n</label> = <span class="lit-number">1</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Must be in non-GC memory because can be referenced</span><span class="comment">		 only from epoll/kqueue internals.</span></div>
+<div class="code"><pre><code>		<label for="r91" class="ident">mem</label> := <a href="malloc.go.html#line-1311" class="ident">persistentalloc</a>(<label for="r90" class="ident">n</label>*<label for="r89" class="ident">pdSize</label>, <span class="lit-number">0</span>, &amp;<a href="mstats.go.html#line-170" class="ident">memstats</a>.<a href="mstats.go.html#line-61" class="ident">other_sys</a>)
+		<span class="keyword">for</span> <label for="r92" class="ident">i</label> := <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<span class="lit-number">0</span>); <label for="r92" class="ident">i</label> &lt; <label for="r90" class="ident">n</label>; <label for="r92" class="ident">i</label>++ {
+			<label for="r93" class="ident">pd</label> := (*<a href="#line-69" class="ident">pollDesc</a>)(<a href="stubs.go.html#line-11" class="ident">add</a>(<label for="r91" class="ident">mem</label>, <label for="r92" class="ident">i</label>*<label for="r89" class="ident">pdSize</label>))
+			<label for="r93" class="ident">pd</label>.<a href="#line-70" class="ident">link</a> = <label for="r87" class="ident">c</label>.<a href="#line-97" class="ident">first</a>
+			<label for="r87" class="ident">c</label>.<a href="#line-97" class="ident">first</a> = <label for="r93" class="ident">pd</label>
+		}
+	}
+	<label for="r94" class="ident">pd</label> := <label for="r87" class="ident">c</label>.<a href="#line-97" class="ident">first</a>
+	<label for="r87" class="ident">c</label>.<a href="#line-97" class="ident">first</a> = <label for="r94" class="ident">pd</label>.<a href="#line-70" class="ident">link</a>
+	<a href="lockrank_off.go.html#line-14" class="ident">lockInit</a>(&amp;<label for="r94" class="ident">pd</label>.<a href="#line-79" class="ident">lock</a>, <a href="lockrank.go.html#line-44" class="ident">lockRankPollDesc</a>)
+	<a href="lock_sema.go.html#line-96" class="ident">unlock</a>(&amp;<label for="r87" class="ident">c</label>.<a href="#line-96" class="ident">lock</a>)
+	<span class="keyword">return</span> <label for="r94" class="ident">pd</label>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> makeArg converts pd to an interface{}.</span><span class="comment"> makeArg does not do any allocation. Normally, such</span><span class="comment"> a conversion requires an allocation because pointers to</span><span class="comment"> go:notinheap types (which pollDesc is) must be stored</span><span class="comment"> in interfaces indirectly. See issue 42076.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r95" class="ident">pd</label> *<a href="#line-69" class="ident">pollDesc</a>) <label for="r96" class="ident"><a href="../../use/runtime..pollDesc*ae5b4.makeArg*45b56.html" class="ident">makeArg</a></label>() (<label for="r97" class="ident">i</label> <span class="keyword">interface</span>{}) {
+	<label for="r98" class="ident">x</label> := (*<a href="runtime2.go.html#line-208" class="ident">eface</a>)(<a href="../../pkg/unsafe.html" class="ident i1">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(&amp;<label for="r97" class="ident">i</label>))
+	<label for="r98" class="ident">x</label>.<a href="runtime2.go.html#line-209" class="ident">_type</a> = <a href="#line-567" class="ident">pdType</a>
+	<label for="r98" class="ident">x</label>.<a href="runtime2.go.html#line-210" class="ident">data</a> = <a href="../../pkg/unsafe.html" class="ident i1">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(&amp;<label for="r95" class="ident">pd</label>.<a href="#line-92" class="ident">self</a>)
+	<span class="keyword">return</span>
+}
+
+<span class="keyword">var</span> (
+	<a href="../../pkg/runtime.html#name-pdEface" class="ident">pdEface</a> <span class="keyword">interface</span>{} = (*<a href="#line-69" class="ident">pollDesc</a>)(<a href="../../pkg/builtin.html#name-nil" class="ident">nil</a>)
+	<a href="../../pkg/runtime.html#name-pdType" class="ident">pdType</a>  *<a href="type.go.html#line-31" class="ident">_type</a>      = <a href="runtime2.go.html#line-213" class="ident">efaceOf</a>(&amp;<a href="#line-566" class="ident">pdEface</a>).<a href="runtime2.go.html#line-209" class="ident">_type</a>
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

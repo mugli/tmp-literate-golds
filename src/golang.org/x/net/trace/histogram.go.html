@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: histogram.go in package golang.org/x/net/trace</title>
+<link href="../../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	histogram.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../../pkg/golang.org/x/net/trace.html">golang.org/x/net/trace</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16],
+input[id=r17]:checked ~pre label[for=r17],
+input[id=r18]:checked ~pre label[for=r18],
+input[id=r19]:checked ~pre label[for=r19],
+input[id=r20]:checked ~pre label[for=r20],
+input[id=r21]:checked ~pre label[for=r21],
+input[id=r22]:checked ~pre label[for=r22],
+input[id=r23]:checked ~pre label[for=r23],
+input[id=r24]:checked ~pre label[for=r24],
+input[id=r25]:checked ~pre label[for=r25],
+input[id=r26]:checked ~pre label[for=r26],
+input[id=r27]:checked ~pre label[for=r27],
+input[id=r28]:checked ~pre label[for=r28],
+input[id=r29]:checked ~pre label[for=r29],
+input[id=r30]:checked ~pre label[for=r30],
+input[id=r31]:checked ~pre label[for=r31],
+input[id=r32]:checked ~pre label[for=r32],
+input[id=r33]:checked ~pre label[for=r33],
+input[id=r34]:checked ~pre label[for=r34],
+input[id=r35]:checked ~pre label[for=r35],
+input[id=r36]:checked ~pre label[for=r36],
+input[id=r37]:checked ~pre label[for=r37],
+input[id=r38]:checked ~pre label[for=r38],
+input[id=r39]:checked ~pre label[for=r39],
+input[id=r40]:checked ~pre label[for=r40],
+input[id=r41]:checked ~pre label[for=r41],
+input[id=r42]:checked ~pre label[for=r42],
+input[id=r43]:checked ~pre label[for=r43],
+input[id=r44]:checked ~pre label[for=r44],
+input[id=r45]:checked ~pre label[for=r45],
+input[id=r46]:checked ~pre label[for=r46],
+input[id=r47]:checked ~pre label[for=r47],
+input[id=r48]:checked ~pre label[for=r48],
+input[id=r49]:checked ~pre label[for=r49],
+input[id=r50]:checked ~pre label[for=r50],
+input[id=r51]:checked ~pre label[for=r51],
+input[id=r52]:checked ~pre label[for=r52],
+input[id=r53]:checked ~pre label[for=r53],
+input[id=r54]:checked ~pre label[for=r54],
+input[id=r55]:checked ~pre label[for=r55],
+input[id=r56]:checked ~pre label[for=r56],
+input[id=r57]:checked ~pre label[for=r57],
+input[id=r58]:checked ~pre label[for=r58],
+input[id=r59]:checked ~pre label[for=r59],
+input[id=r60]:checked ~pre label[for=r60],
+input[id=r61]:checked ~pre label[for=r61],
+input[id=r62]:checked ~pre label[for=r62],
+input[id=r63]:checked ~pre label[for=r63],
+input[id=r64]:checked ~pre label[for=r64],
+input[id=r65]:checked ~pre label[for=r65],
+input[id=r66]:checked ~pre label[for=r66],
+input[id=r67]:checked ~pre label[for=r67],
+input[id=r68]:checked ~pre label[for=r68],
+input[id=r69]:checked ~pre label[for=r69],
+input[id=r70]:checked ~pre label[for=r70],
+input[id=r71]:checked ~pre label[for=r71],
+input[id=r72]:checked ~pre label[for=r72],
+input[id=r73]:checked ~pre label[for=r73],
+input[id=r74]:checked ~pre label[for=r74],
+input[id=r75]:checked ~pre label[for=r75],
+input[id=r76]:checked ~pre label[for=r76],
+input[id=r77]:checked ~pre label[for=r77],
+input[id=r78]:checked ~pre label[for=r78],
+input[id=r79]:checked ~pre label[for=r79],
+input[id=r80]:checked ~pre label[for=r80],
+input[id=r81]:checked ~pre label[for=r81],
+input[id=r82]:checked ~pre label[for=r82],
+input[id=r83]:checked ~pre label[for=r83],
+input[id=r84]:checked ~pre label[for=r84],
+input[id=r85]:checked ~pre label[for=r85]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1,
+input[id=i2]:checked ~pre .i2,
+input[id=i3]:checked ~pre .i3,
+input[id=i4]:checked ~pre .i4,
+input[id=i5]:checked ~pre .i5,
+input[id=i6]:checked ~pre .i6
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="r17" type="radio" name="g"/>
+<input id="r18" type="radio" name="g"/>
+<input id="r19" type="radio" name="g"/>
+<input id="r20" type="radio" name="g"/>
+<input id="r21" type="radio" name="g"/>
+<input id="r22" type="radio" name="g"/>
+<input id="r23" type="radio" name="g"/>
+<input id="r24" type="radio" name="g"/>
+<input id="r25" type="radio" name="g"/>
+<input id="r26" type="radio" name="g"/>
+<input id="r27" type="radio" name="g"/>
+<input id="r28" type="radio" name="g"/>
+<input id="r29" type="radio" name="g"/>
+<input id="r30" type="radio" name="g"/>
+<input id="r31" type="radio" name="g"/>
+<input id="r32" type="radio" name="g"/>
+<input id="r33" type="radio" name="g"/>
+<input id="r34" type="radio" name="g"/>
+<input id="r35" type="radio" name="g"/>
+<input id="r36" type="radio" name="g"/>
+<input id="r37" type="radio" name="g"/>
+<input id="r38" type="radio" name="g"/>
+<input id="r39" type="radio" name="g"/>
+<input id="r40" type="radio" name="g"/>
+<input id="r41" type="radio" name="g"/>
+<input id="r42" type="radio" name="g"/>
+<input id="r43" type="radio" name="g"/>
+<input id="r44" type="radio" name="g"/>
+<input id="r45" type="radio" name="g"/>
+<input id="r46" type="radio" name="g"/>
+<input id="r47" type="radio" name="g"/>
+<input id="r48" type="radio" name="g"/>
+<input id="r49" type="radio" name="g"/>
+<input id="r50" type="radio" name="g"/>
+<input id="r51" type="radio" name="g"/>
+<input id="r52" type="radio" name="g"/>
+<input id="r53" type="radio" name="g"/>
+<input id="r54" type="radio" name="g"/>
+<input id="r55" type="radio" name="g"/>
+<input id="r56" type="radio" name="g"/>
+<input id="r57" type="radio" name="g"/>
+<input id="r58" type="radio" name="g"/>
+<input id="r59" type="radio" name="g"/>
+<input id="r60" type="radio" name="g"/>
+<input id="r61" type="radio" name="g"/>
+<input id="r62" type="radio" name="g"/>
+<input id="r63" type="radio" name="g"/>
+<input id="r64" type="radio" name="g"/>
+<input id="r65" type="radio" name="g"/>
+<input id="r66" type="radio" name="g"/>
+<input id="r67" type="radio" name="g"/>
+<input id="r68" type="radio" name="g"/>
+<input id="r69" type="radio" name="g"/>
+<input id="r70" type="radio" name="g"/>
+<input id="r71" type="radio" name="g"/>
+<input id="r72" type="radio" name="g"/>
+<input id="r73" type="radio" name="g"/>
+<input id="r74" type="radio" name="g"/>
+<input id="r75" type="radio" name="g"/>
+<input id="r76" type="radio" name="g"/>
+<input id="r77" type="radio" name="g"/>
+<input id="r78" type="radio" name="g"/>
+<input id="r79" type="radio" name="g"/>
+<input id="r80" type="radio" name="g"/>
+<input id="r81" type="radio" name="g"/>
+<input id="r82" type="radio" name="g"/>
+<input id="r83" type="radio" name="g"/>
+<input id="r84" type="radio" name="g"/>
+<input id="r85" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<input id="i2" type="radio" name="i"/>
+<input id="i3" type="radio" name="i"/>
+<input id="i4" type="radio" name="i"/>
+<input id="i5" type="radio" name="i"/>
+<input id="i6" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2015 The Go Authors. All rights reserved.</span><span class="comment"> Use of this source code is governed by a BSD-style</span><span class="comment"> license that can be found in the LICENSE file.</span></div>
+<div class="code"><pre><code>
+<span class="keyword">package</span> trace
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> This file implements histogramming for RPC statistics collection.</span></div>
+<div class="code"><pre><code>
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"bytes"</span></label>
+	<label for="i1"><span class="lit-string i1">"fmt"</span></label>
+	<label for="i2"><span class="lit-string i2">"html/template"</span></label>
+	<label for="i3"><span class="lit-string i3">"log"</span></label>
+	<label for="i4"><span class="lit-string i4">"math"</span></label>
+	<label for="i5"><span class="lit-string i5">"sync"</span></label>
+
+	<label for="i6"><span class="lit-string i6">"golang.org/x/net/internal/timeseries"</span></label>
+)
+
+<span class="keyword">const</span> (
+	<a href="../../../../../pkg/golang.org/x/net/trace.html#name-bucketCount" class="ident">bucketCount</a> = <span class="lit-number">38</span>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> histogram keeps counts of values in buckets that are spaced</span><span class="comment"> out in powers of 2: 0-1, 2-3, 4-7...</span><span class="comment"> histogram implements timeseries.Observable</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../pkg/golang.org/x/net/trace.html#name-histogram" class="ident">histogram</a> <span class="keyword">struct</span> {
+	<a href="../../../../../use/golang.org/x/net/trace..histogram*56f0e.sum*09f5f.html" class="ident">sum</a>          <a href="../../../../../pkg/builtin.html#name-int64" class="ident">int64</a>   <span class="comment">// running total of measurements</span>
+	<a href="../../../../../use/golang.org/x/net/trace..histogram*56f0e.sumOfSquares*c3c20.html" class="ident">sumOfSquares</a> <a href="../../../../../pkg/builtin.html#name-float64" class="ident">float64</a> <span class="comment">// square of running total</span>
+	<a href="../../../../../use/golang.org/x/net/trace..histogram*56f0e.buckets*4985c.html" class="ident">buckets</a>      []<a href="../../../../../pkg/builtin.html#name-int64" class="ident">int64</a> <span class="comment">// bucketed values for histogram</span>
+	<a href="../../../../../use/golang.org/x/net/trace..histogram*56f0e.value*cd424.html" class="ident">value</a>        <a href="../../../../../pkg/builtin.html#name-int" class="ident">int</a>     <span class="comment">// holds a single value as an optimization</span>
+	<a href="../../../../../use/golang.org/x/net/trace..histogram*56f0e.valueCount*8c692.html" class="ident">valueCount</a>   <a href="../../../../../pkg/builtin.html#name-int64" class="ident">int64</a>   <span class="comment">// number of values recorded for single value</span>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> AddMeasurement records a value measurement observation to the histogram.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> TODO: assert invariant</span></div>
+<div class="code"><pre><code>	<label for="r0" class="ident">h</label>.<a href="#line-28" class="ident">sum</a> += <label for="r2" class="ident">value</label>
+	<label for="r0" class="ident">h</label>.<a href="#line-29" class="ident">sumOfSquares</a> += <a href="../../../../../pkg/builtin.html#name-float64" class="ident">float64</a>(<label for="r2" class="ident">value</label>) * <a href="../../../../../pkg/builtin.html#name-float64" class="ident">float64</a>(<label for="r2" class="ident">value</label>)
+
+	<label for="r3" class="ident">bucketIndex</label> := <a href="#line-72" class="ident">getBucket</a>(<label for="r2" class="ident">value</label>)
+
+	<span class="keyword">if</span> <label for="r0" class="ident">h</label>.<a href="#line-32" class="ident">valueCount</a> == <span class="lit-number">0</span> || (<label for="r0" class="ident">h</label>.<a href="#line-32" class="ident">valueCount</a> &gt; <span class="lit-number">0</span> &amp;&amp; <label for="r0" class="ident">h</label>.<a href="#line-31" class="ident">value</a> == <label for="r3" class="ident">bucketIndex</label>) {
+		<label for="r0" class="ident">h</label>.<a href="#line-31" class="ident">value</a> = <label for="r3" class="ident">bucketIndex</label>
+		<label for="r0" class="ident">h</label>.<a href="#line-32" class="ident">valueCount</a>++
+	} <span class="keyword">else</span> {
+		<label for="r0" class="ident">h</label>.<a href="#line-52" class="ident">allocateBuckets</a>()
+		<label for="r0" class="ident">h</label>.<a href="#line-30" class="ident">buckets</a>[<label for="r3" class="ident">bucketIndex</label>]++
+	}
+}
+
+<span class="keyword">func</span> (<label for="r4" class="ident">h</label> *<a href="#line-27" class="ident">histogram</a>) <label for="r5" class="ident"><a href="../../../../../use/golang.org/x/net/trace..histogram*56f0e.allocateBuckets*89826.html" class="ident">allocateBuckets</a></label>() {
+	<span class="keyword">if</span> <label for="r4" class="ident">h</label>.<a href="#line-30" class="ident">buckets</a> == <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<label for="r4" class="ident">h</label>.<a href="#line-30" class="ident">buckets</a> = <a href="../../../../../pkg/builtin.html#name-make" class="ident">make</a>([]<a href="../../../../../pkg/builtin.html#name-int64" class="ident">int64</a>, <a href="#line-21" class="ident">bucketCount</a>)
+		<label for="r4" class="ident">h</label>.<a href="#line-30" class="ident">buckets</a>[<label for="r4" class="ident">h</label>.<a href="#line-31" class="ident">value</a>] = <label for="r4" class="ident">h</label>.<a href="#line-32" class="ident">valueCount</a>
+		<label for="r4" class="ident">h</label>.<a href="#line-31" class="ident">value</a> = <span class="lit-number">0</span>
+		<label for="r4" class="ident">h</label>.<a href="#line-32" class="ident">valueCount</a> = -<span class="lit-number">1</span>
+	}
+}
+
+<span class="keyword">func</span> <label for="r6" class="ident"><a href="../../../../../pkg/golang.org/x/net/trace.html#name-log2" class="ident">log2</a></label>(<label for="r7" class="ident">i</label> <a href="../../../../../pkg/builtin.html#name-int64" class="ident">int64</a>) <a href="../../../../../pkg/builtin.html#name-int" class="ident">int</a> {
+	<label for="r8" class="ident">n</label> := <span class="lit-number">0</span>
+	<span class="keyword">for</span> ; <label for="r7" class="ident">i</label> &gt;= <span class="lit-number">0x100</span>; <label for="r7" class="ident">i</label> &gt;&gt;= <span class="lit-number">8</span> {
+		<label for="r8" class="ident">n</label> += <span class="lit-number">8</span>
+	}
+	<span class="keyword">for</span> ; <label for="r7" class="ident">i</label> &gt; <span class="lit-number">0</span>; <label for="r7" class="ident">i</label> &gt;&gt;= <span class="lit-number">1</span> {
+		<label for="r8" class="ident">n</label> += <span class="lit-number">1</span>
+	}
+	<span class="keyword">return</span> <label for="r8" class="ident">n</label>
+}
+
+<span class="keyword">func</span> <label for="r9" class="ident"><a href="../../../../../pkg/golang.org/x/net/trace.html#name-getBucket" class="ident">getBucket</a></label>(<label for="r10" class="ident">i</label> <a href="../../../../../pkg/builtin.html#name-int64" class="ident">int64</a>) (<label for="r11" class="ident">index</label> <a href="../../../../../pkg/builtin.html#name-int" class="ident">int</a>) {
+	<label for="r11" class="ident">index</label> = <a href="#line-61" class="ident">log2</a>(<label for="r10" class="ident">i</label>) - <span class="lit-number">1</span>
+	<span class="keyword">if</span> <label for="r11" class="ident">index</label> &lt; <span class="lit-number">0</span> {
+		<label for="r11" class="ident">index</label> = <span class="lit-number">0</span>
+	}
+	<span class="keyword">if</span> <label for="r11" class="ident">index</label> &gt;= <a href="#line-21" class="ident">bucketCount</a> {
+		<label for="r11" class="ident">index</label> = <a href="#line-21" class="ident">bucketCount</a> - <span class="lit-number">1</span>
+	}
+	<span class="keyword">return</span>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Total returns the number of recorded observations.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r12" class="ident">h</label> *<a href="#line-27" class="ident">histogram</a>) <label for="r13" class="ident"><a href="../../../../../use/golang.org/x/net/trace..histogram*56f0e.total*11239.html" class="ident">total</a></label>() (<label for="r14" class="ident">total</label> <a href="../../../../../pkg/builtin.html#name-int64" class="ident">int64</a>) {
+	<span class="keyword">if</span> <label for="r12" class="ident">h</label>.<a href="#line-32" class="ident">valueCount</a> &gt;= <span class="lit-number">0</span> {
+		<label for="r14" class="ident">total</label> = <label for="r12" class="ident">h</label>.<a href="#line-32" class="ident">valueCount</a>
+	}
+	<span class="keyword">for</span> <label for="r15" class="ident">_</label>, <label for="r16" class="ident">val</label> := <span class="keyword">range</span> <label for="r12" class="ident">h</label>.<a href="#line-30" class="ident">buckets</a> {
+		<label for="r14" class="ident">total</label> += <a href="../../../../../pkg/builtin.html#name-int64" class="ident">int64</a>(<label for="r16" class="ident">val</label>)
+	}
+	<span class="keyword">return</span>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Average returns the average value of recorded observations.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r17" class="ident">h</label> *<a href="#line-27" class="ident">histogram</a>) <label for="r18" class="ident"><a href="../../../../../use/golang.org/x/net/trace..histogram*56f0e.average*184df.html" class="ident">average</a></label>() <a href="../../../../../pkg/builtin.html#name-float64" class="ident">float64</a> {
+	<label for="r19" class="ident">t</label> := <label for="r17" class="ident">h</label>.<a href="#line-84" class="ident">total</a>()
+	<span class="keyword">if</span> <label for="r19" class="ident">t</label> == <span class="lit-number">0</span> {
+		<span class="keyword">return</span> <span class="lit-number">0</span>
+	}
+	<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-float64" class="ident">float64</a>(<label for="r17" class="ident">h</label>.<a href="#line-28" class="ident">sum</a>) / <a href="../../../../../pkg/builtin.html#name-float64" class="ident">float64</a>(<label for="r19" class="ident">t</label>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Variance returns the variance of recorded observations.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r20" class="ident">h</label> *<a href="#line-27" class="ident">histogram</a>) <label for="r21" class="ident"><a href="../../../../../use/golang.org/x/net/trace..histogram*56f0e.variance*7c076.html" class="ident">variance</a></label>() <a href="../../../../../pkg/builtin.html#name-float64" class="ident">float64</a> {
+	<label for="r22" class="ident">t</label> := <a href="../../../../../pkg/builtin.html#name-float64" class="ident">float64</a>(<label for="r20" class="ident">h</label>.<a href="#line-84" class="ident">total</a>())
+	<span class="keyword">if</span> <label for="r22" class="ident">t</label> == <span class="lit-number">0</span> {
+		<span class="keyword">return</span> <span class="lit-number">0</span>
+	}
+	<label for="r23" class="ident">s</label> := <a href="../../../../../pkg/builtin.html#name-float64" class="ident">float64</a>(<label for="r20" class="ident">h</label>.<a href="#line-28" class="ident">sum</a>) / <label for="r22" class="ident">t</label>
+	<span class="keyword">return</span> <label for="r20" class="ident">h</label>.<a href="#line-29" class="ident">sumOfSquares</a>/<label for="r22" class="ident">t</label> - <label for="r23" class="ident">s</label>*<label for="r23" class="ident">s</label>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> StandardDeviation returns the standard deviation of recorded observations.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r24" class="ident">h</label> *<a href="#line-27" class="ident">histogram</a>) <label for="r25" class="ident"><a href="../../../../../use/golang.org/x/net/trace..histogram*56f0e.standardDeviation*22aa2.html" class="ident">standardDeviation</a></label>() <a href="../../../../../pkg/builtin.html#name-float64" class="ident">float64</a> {
+	<span class="keyword">return</span> <a href="../../../../../pkg/math.html" class="ident i4">math</a>.<a href="../../../../math/sqrt.go.html#line-92" class="ident">Sqrt</a>(<label for="r24" class="ident">h</label>.<a href="#line-104" class="ident">variance</a>())
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> PercentileBoundary estimates the value that the given fraction of recorded</span><span class="comment"> observations are less than.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r26" class="ident">h</label> *<a href="#line-27" class="ident">histogram</a>) <label for="r27" class="ident"><a href="../../../../../use/golang.org/x/net/trace..histogram*56f0e.percentileBoundary*1ad5f.html" class="ident">percentileBoundary</a></label>(<label for="r28" class="ident">percentile</label> <a href="../../../../../pkg/builtin.html#name-float64" class="ident">float64</a>) <a href="../../../../../pkg/builtin.html#name-int64" class="ident">int64</a> {
+	<label for="r29" class="ident">total</label> := <label for="r26" class="ident">h</label>.<a href="#line-84" class="ident">total</a>()
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Corner cases (make sure result is strictly less than Total())</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> <label for="r29" class="ident">total</label> == <span class="lit-number">0</span> {
+		<span class="keyword">return</span> <span class="lit-number">0</span>
+	} <span class="keyword">else</span> <span class="keyword">if</span> <label for="r29" class="ident">total</label> == <span class="lit-number">1</span> {
+		<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-int64" class="ident">int64</a>(<label for="r26" class="ident">h</label>.<a href="#line-95" class="ident">average</a>())
+	}
+
+	<label for="r30" class="ident">percentOfTotal</label> := <a href="#line-240" class="ident">round</a>(<a href="../../../../../pkg/builtin.html#name-float64" class="ident">float64</a>(<label for="r29" class="ident">total</label>) * <label for="r28" class="ident">percentile</label>)
+	<span class="keyword">var</span> <label for="r31" class="ident">runningTotal</label> <a href="../../../../../pkg/builtin.html#name-int64" class="ident">int64</a>
+
+	<span class="keyword">for</span> <label for="r32" class="ident">i</label> := <span class="keyword">range</span> <label for="r26" class="ident">h</label>.<a href="#line-30" class="ident">buckets</a> {
+		<label for="r33" class="ident">value</label> := <label for="r26" class="ident">h</label>.<a href="#line-30" class="ident">buckets</a>[<label for="r32" class="ident">i</label>]
+		<label for="r31" class="ident">runningTotal</label> += <label for="r33" class="ident">value</label>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> We hit an exact bucket boundary. If the next bucket has data, it is a</span><span class="comment">			 good estimate of the value. If the bucket is empty, we interpolate the</span><span class="comment">			 midpoint between the next bucket's boundary and the next non-zero</span><span class="comment">			 bucket. If the remaining buckets are all empty, then we use the</span><span class="comment">			 boundary for the next bucket as the estimate.</span></div>
+<div class="code"><pre><code>			<label for="r34" class="ident">j</label> := <a href="../../../../../pkg/builtin.html#name-uint8" class="ident">uint8</a>(<label for="r32" class="ident">i</label> + <span class="lit-number">1</span>)
+			<label for="r35" class="ident">min</label> := <a href="#line-245" class="ident">bucketBoundary</a>(<label for="r34" class="ident">j</label>)
+			<span class="keyword">if</span> <label for="r31" class="ident">runningTotal</label> &lt; <label for="r29" class="ident">total</label> {
+				<span class="keyword">for</span> <label for="r26" class="ident">h</label>.<a href="#line-30" class="ident">buckets</a>[<label for="r34" class="ident">j</label>] == <span class="lit-number">0</span> {
+					<label for="r34" class="ident">j</label>++
+				}
+			}
+			<label for="r36" class="ident">max</label> := <a href="#line-245" class="ident">bucketBoundary</a>(<label for="r34" class="ident">j</label>)
+			<span class="keyword">return</span> <label for="r35" class="ident">min</label> + <a href="#line-240" class="ident">round</a>(<a href="../../../../../pkg/builtin.html#name-float64" class="ident">float64</a>(<label for="r36" class="ident">max</label>-<label for="r35" class="ident">min</label>)/<span class="lit-number">2</span>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> The value is in this bucket. Interpolate the value.</span></div>
+<div class="code"><pre><code>			<label for="r37" class="ident">delta</label> := <label for="r31" class="ident">runningTotal</label> - <label for="r30" class="ident">percentOfTotal</label>
+			<label for="r38" class="ident">percentBucket</label> := <a href="../../../../../pkg/builtin.html#name-float64" class="ident">float64</a>(<label for="r33" class="ident">value</label>-<label for="r37" class="ident">delta</label>) / <a href="../../../../../pkg/builtin.html#name-float64" class="ident">float64</a>(<label for="r33" class="ident">value</label>)
+			<label for="r39" class="ident">bucketMin</label> := <a href="#line-245" class="ident">bucketBoundary</a>(<a href="../../../../../pkg/builtin.html#name-uint8" class="ident">uint8</a>(<label for="r32" class="ident">i</label>))
+			<label for="r40" class="ident">nextBucketMin</label> := <a href="#line-245" class="ident">bucketBoundary</a>(<a href="../../../../../pkg/builtin.html#name-uint8" class="ident">uint8</a>(<label for="r32" class="ident">i</label> + <span class="lit-number">1</span>))
+			<label for="r41" class="ident">bucketSize</label> := <label for="r40" class="ident">nextBucketMin</label> - <label for="r39" class="ident">bucketMin</label>
+			<span class="keyword">return</span> <label for="r39" class="ident">bucketMin</label> + <a href="#line-240" class="ident">round</a>(<label for="r38" class="ident">percentBucket</label>*<a href="../../../../../pkg/builtin.html#name-float64" class="ident">float64</a>(<label for="r41" class="ident">bucketSize</label>))
+		}
+	}
+	<span class="keyword">return</span> <a href="#line-245" class="ident">bucketBoundary</a>(<a href="#line-21" class="ident">bucketCount</a> - <span class="lit-number">1</span>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Median returns the estimated median of the observed values.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r42" class="ident">h</label> *<a href="#line-27" class="ident">histogram</a>) <label for="r43" class="ident"><a href="../../../../../use/golang.org/x/net/trace..histogram*56f0e.median*7896a.html" class="ident">median</a></label>() <a href="../../../../../pkg/builtin.html#name-int64" class="ident">int64</a> {
+	<span class="keyword">return</span> <label for="r42" class="ident">h</label>.<a href="#line-120" class="ident">percentileBoundary</a>(<span class="lit-number">0.5</span>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Add adds other to h.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r44" class="ident">h</label> *<a href="#line-27" class="ident">histogram</a>) <label for="r45" class="ident"><a href="../../../../../use/golang.org/x/net/trace..histogram*56f0e.Add.html" class="ident">Add</a></label>(<label for="r46" class="ident">other</label> <a href="../../../../../pkg/golang.org/x/net/internal/timeseries.html" class="ident i6">timeseries</a>.<a href="../internal/timeseries/timeseries.go.html#line-38" class="ident">Observable</a>) {
+	<label for="r47" class="ident">o</label> := <label for="r46" class="ident">other</label>.(*<a href="#line-27" class="ident">histogram</a>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Other histogram is empty</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Both have a single bucketed value, aggregate them</span></div>
+<div class="code"><pre><code>		<label for="r44" class="ident">h</label>.<a href="#line-32" class="ident">valueCount</a> += <label for="r47" class="ident">o</label>.<a href="#line-32" class="ident">valueCount</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Two different values necessitate buckets in this histogram</span></div>
+<div class="code"><pre><code>		<label for="r44" class="ident">h</label>.<a href="#line-52" class="ident">allocateBuckets</a>()
+		<span class="keyword">if</span> <label for="r47" class="ident">o</label>.<a href="#line-32" class="ident">valueCount</a> &gt;= <span class="lit-number">0</span> {
+			<label for="r44" class="ident">h</label>.<a href="#line-30" class="ident">buckets</a>[<label for="r47" class="ident">o</label>.<a href="#line-31" class="ident">value</a>] += <label for="r47" class="ident">o</label>.<a href="#line-32" class="ident">valueCount</a>
+		} <span class="keyword">else</span> {
+			<span class="keyword">for</span> <label for="r48" class="ident">i</label> := <span class="keyword">range</span> <label for="r44" class="ident">h</label>.<a href="#line-30" class="ident">buckets</a> {
+				<label for="r44" class="ident">h</label>.<a href="#line-30" class="ident">buckets</a>[<label for="r48" class="ident">i</label>] += <label for="r47" class="ident">o</label>.<a href="#line-30" class="ident">buckets</a>[<label for="r48" class="ident">i</label>]
+			}
+		}
+	}
+	<label for="r44" class="ident">h</label>.<a href="#line-29" class="ident">sumOfSquares</a> += <label for="r47" class="ident">o</label>.<a href="#line-29" class="ident">sumOfSquares</a>
+	<label for="r44" class="ident">h</label>.<a href="#line-28" class="ident">sum</a> += <label for="r47" class="ident">o</label>.<a href="#line-28" class="ident">sum</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Clear resets the histogram to an empty state, removing all observed values.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r49" class="ident">h</label> *<a href="#line-27" class="ident">histogram</a>) <label for="r50" class="ident"><a href="../../../../../use/golang.org/x/net/trace..histogram*56f0e.Clear.html" class="ident">Clear</a></label>() {
+	<label for="r49" class="ident">h</label>.<a href="#line-30" class="ident">buckets</a> = <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+	<label for="r49" class="ident">h</label>.<a href="#line-31" class="ident">value</a> = <span class="lit-number">0</span>
+	<label for="r49" class="ident">h</label>.<a href="#line-32" class="ident">valueCount</a> = <span class="lit-number">0</span>
+	<label for="r49" class="ident">h</label>.<a href="#line-28" class="ident">sum</a> = <span class="lit-number">0</span>
+	<label for="r49" class="ident">h</label>.<a href="#line-29" class="ident">sumOfSquares</a> = <span class="lit-number">0</span>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> CopyFrom copies from other, which must be a *histogram, into h.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r51" class="ident">h</label> *<a href="#line-27" class="ident">histogram</a>) <label for="r52" class="ident"><a href="../../../../../use/golang.org/x/net/trace..histogram*56f0e.CopyFrom.html" class="ident">CopyFrom</a></label>(<label for="r53" class="ident">other</label> <a href="../../../../../pkg/golang.org/x/net/internal/timeseries.html" class="ident i6">timeseries</a>.<a href="../internal/timeseries/timeseries.go.html#line-38" class="ident">Observable</a>) {
+	<label for="r54" class="ident">o</label> := <label for="r53" class="ident">other</label>.(*<a href="#line-27" class="ident">histogram</a>)
+	<span class="keyword">if</span> <label for="r54" class="ident">o</label>.<a href="#line-32" class="ident">valueCount</a> == -<span class="lit-number">1</span> {
+		<label for="r51" class="ident">h</label>.<a href="#line-52" class="ident">allocateBuckets</a>()
+		<a href="../../../../../pkg/builtin.html#name-copy" class="ident">copy</a>(<label for="r51" class="ident">h</label>.<a href="#line-30" class="ident">buckets</a>, <label for="r54" class="ident">o</label>.<a href="#line-30" class="ident">buckets</a>)
+	}
+	<label for="r51" class="ident">h</label>.<a href="#line-28" class="ident">sum</a> = <label for="r54" class="ident">o</label>.<a href="#line-28" class="ident">sum</a>
+	<label for="r51" class="ident">h</label>.<a href="#line-29" class="ident">sumOfSquares</a> = <label for="r54" class="ident">o</label>.<a href="#line-29" class="ident">sumOfSquares</a>
+	<label for="r51" class="ident">h</label>.<a href="#line-31" class="ident">value</a> = <label for="r54" class="ident">o</label>.<a href="#line-31" class="ident">value</a>
+	<label for="r51" class="ident">h</label>.<a href="#line-32" class="ident">valueCount</a> = <label for="r54" class="ident">o</label>.<a href="#line-32" class="ident">valueCount</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Multiply scales the histogram by the specified ratio.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r55" class="ident">h</label> *<a href="#line-27" class="ident">histogram</a>) <label for="r56" class="ident"><a href="../../../../../use/golang.org/x/net/trace..histogram*56f0e.Multiply.html" class="ident">Multiply</a></label>(<label for="r57" class="ident">ratio</label> <a href="../../../../../pkg/builtin.html#name-float64" class="ident">float64</a>) {
+	<span class="keyword">if</span> <label for="r55" class="ident">h</label>.<a href="#line-32" class="ident">valueCount</a> == -<span class="lit-number">1</span> {
+		<span class="keyword">for</span> <label for="r58" class="ident">i</label> := <span class="keyword">range</span> <label for="r55" class="ident">h</label>.<a href="#line-30" class="ident">buckets</a> {
+			<label for="r55" class="ident">h</label>.<a href="#line-30" class="ident">buckets</a>[<label for="r58" class="ident">i</label>] = <a href="../../../../../pkg/builtin.html#name-int64" class="ident">int64</a>(<a href="../../../../../pkg/builtin.html#name-float64" class="ident">float64</a>(<label for="r55" class="ident">h</label>.<a href="#line-30" class="ident">buckets</a>[<label for="r58" class="ident">i</label>]) * <label for="r57" class="ident">ratio</label>)
+		}
+	} <span class="keyword">else</span> {
+		<label for="r55" class="ident">h</label>.<a href="#line-32" class="ident">valueCount</a> = <a href="../../../../../pkg/builtin.html#name-int64" class="ident">int64</a>(<a href="../../../../../pkg/builtin.html#name-float64" class="ident">float64</a>(<label for="r55" class="ident">h</label>.<a href="#line-32" class="ident">valueCount</a>) * <label for="r57" class="ident">ratio</label>)
+	}
+	<label for="r55" class="ident">h</label>.<a href="#line-28" class="ident">sum</a> = <a href="../../../../../pkg/builtin.html#name-int64" class="ident">int64</a>(<a href="../../../../../pkg/builtin.html#name-float64" class="ident">float64</a>(<label for="r55" class="ident">h</label>.<a href="#line-28" class="ident">sum</a>) * <label for="r57" class="ident">ratio</label>)
+	<label for="r55" class="ident">h</label>.<a href="#line-29" class="ident">sumOfSquares</a> = <label for="r55" class="ident">h</label>.<a href="#line-29" class="ident">sumOfSquares</a> * <label for="r57" class="ident">ratio</label>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> New creates a new histogram.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r59" class="ident">h</label> *<a href="#line-27" class="ident">histogram</a>) <label for="r60" class="ident"><a href="../../../../../use/golang.org/x/net/trace..histogram*56f0e.New.html" class="ident">New</a></label>() <a href="../../../../../pkg/golang.org/x/net/internal/timeseries.html" class="ident i6">timeseries</a>.<a href="../internal/timeseries/timeseries.go.html#line-38" class="ident">Observable</a> {
+	<label for="r61" class="ident">r</label> := <a href="../../../../../pkg/builtin.html#name-new" class="ident">new</a>(<a href="#line-27" class="ident">histogram</a>)
+	<label for="r61" class="ident">r</label>.<a href="#line-193" class="ident">Clear</a>()
+	<span class="keyword">return</span> <label for="r61" class="ident">r</label>
+}
+
+<span class="keyword">func</span> (<label for="r62" class="ident">h</label> *<a href="#line-27" class="ident">histogram</a>) <label for="r63" class="ident"><a href="../../../../../use/golang.org/x/net/trace..histogram*56f0e.String.html" class="ident">String</a></label>() <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a> {
+	<span class="keyword">return</span> <a href="../../../../../pkg/fmt.html" class="ident i1">fmt</a>.<a href="../../../../fmt/print.go.html#line-217" class="ident">Sprintf</a>(<span class="lit-string">"%d, %f, %d, %d, %v"</span>,
+		<label for="r62" class="ident">h</label>.<a href="#line-28" class="ident">sum</a>, <label for="r62" class="ident">h</label>.<a href="#line-29" class="ident">sumOfSquares</a>, <label for="r62" class="ident">h</label>.<a href="#line-31" class="ident">value</a>, <label for="r62" class="ident">h</label>.<a href="#line-32" class="ident">valueCount</a>, <label for="r62" class="ident">h</label>.<a href="#line-30" class="ident">buckets</a>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> round returns the closest int64 to the argument</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r64" class="ident"><a href="../../../../../pkg/golang.org/x/net/trace.html#name-round" class="ident">round</a></label>(<label for="r65" class="ident">in</label> <a href="../../../../../pkg/builtin.html#name-float64" class="ident">float64</a>) <a href="../../../../../pkg/builtin.html#name-int64" class="ident">int64</a> {
+	<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-int64" class="ident">int64</a>(<a href="../../../../../pkg/math.html" class="ident i4">math</a>.<a href="../../../../math/floor.go.html#line-13" class="ident">Floor</a>(<label for="r65" class="ident">in</label> + <span class="lit-number">0.5</span>))
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> bucketBoundary returns the first value in the bucket.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r66" class="ident"><a href="../../../../../pkg/golang.org/x/net/trace.html#name-bucketBoundary" class="ident">bucketBoundary</a></label>(<label for="r67" class="ident">bucket</label> <a href="../../../../../pkg/builtin.html#name-uint8" class="ident">uint8</a>) <a href="../../../../../pkg/builtin.html#name-int64" class="ident">int64</a> {
+	<span class="keyword">if</span> <label for="r67" class="ident">bucket</label> == <span class="lit-number">0</span> {
+		<span class="keyword">return</span> <span class="lit-number">0</span>
+	}
+	<span class="keyword">return</span> <span class="lit-number">1</span> &lt;&lt; <label for="r67" class="ident">bucket</label>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> bucketData holds data about a specific bucket for use in distTmpl.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../pkg/golang.org/x/net/trace.html#name-bucketData" class="ident">bucketData</a> <span class="keyword">struct</span> {
+	<a href="../../../../../use/golang.org/x/net/trace..bucketData*7f90c.Lower.html" class="ident">Lower</a>, <a href="../../../../../use/golang.org/x/net/trace..bucketData*7f90c.Upper.html" class="ident">Upper</a>       <a href="../../../../../pkg/builtin.html#name-int64" class="ident">int64</a>
+	<a href="../../../../../use/golang.org/x/net/trace..bucketData*7f90c.N.html" class="ident">N</a>                  <a href="../../../../../pkg/builtin.html#name-int64" class="ident">int64</a>
+	<a href="../../../../../use/golang.org/x/net/trace..bucketData*7f90c.Pct.html" class="ident">Pct</a>, <a href="../../../../../use/golang.org/x/net/trace..bucketData*7f90c.CumulativePct.html" class="ident">CumulativePct</a> <a href="../../../../../pkg/builtin.html#name-float64" class="ident">float64</a>
+	<a href="../../../../../use/golang.org/x/net/trace..bucketData*7f90c.GraphWidth.html" class="ident">GraphWidth</a>         <a href="../../../../../pkg/builtin.html#name-int" class="ident">int</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> data holds data about a Distribution for use in distTmpl.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../pkg/golang.org/x/net/trace.html#name-data" class="ident">data</a> <span class="keyword">struct</span> {
+	<a href="../../../../../use/golang.org/x/net/trace..data*3a6eb.Buckets.html" class="ident">Buckets</a>                 []*<a href="#line-253" class="ident">bucketData</a>
+	<a href="../../../../../use/golang.org/x/net/trace..data*3a6eb.Count.html" class="ident">Count</a>, <a href="../../../../../use/golang.org/x/net/trace..data*3a6eb.Median.html" class="ident">Median</a>           <a href="../../../../../pkg/builtin.html#name-int64" class="ident">int64</a>
+	<a href="../../../../../use/golang.org/x/net/trace..data*3a6eb.Mean.html" class="ident">Mean</a>, <a href="../../../../../use/golang.org/x/net/trace..data*3a6eb.StandardDeviation.html" class="ident">StandardDeviation</a> <a href="../../../../../pkg/builtin.html#name-float64" class="ident">float64</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> maxHTMLBarWidth is the maximum width of the HTML bar for visualizing buckets.</span></div>
+<div class="code"><pre><code><span class="keyword">const</span> <a href="../../../../../pkg/golang.org/x/net/trace.html#name-maxHTMLBarWidth" class="ident">maxHTMLBarWidth</a> = <span class="lit-number">350.0</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> newData returns data representing h for use in distTmpl.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Force the allocation of buckets to simplify the rendering implementation</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> We scale the bars on the right so that the largest bar is</span><span class="comment">	 maxHTMLBarWidth pixels in width.</span></div>
+<div class="code"><pre><code>	<label for="r70" class="ident">maxBucket</label> := <a href="../../../../../pkg/builtin.html#name-int64" class="ident">int64</a>(<span class="lit-number">0</span>)
+	<span class="keyword">for</span> <label for="r71" class="ident">_</label>, <label for="r72" class="ident">n</label> := <span class="keyword">range</span> <label for="r68" class="ident">h</label>.<a href="#line-30" class="ident">buckets</a> {
+		<span class="keyword">if</span> <label for="r72" class="ident">n</label> &gt; <label for="r70" class="ident">maxBucket</label> {
+			<label for="r70" class="ident">maxBucket</label> = <label for="r72" class="ident">n</label>
+		}
+	}
+	<label for="r73" class="ident">total</label> := <label for="r68" class="ident">h</label>.<a href="#line-84" class="ident">total</a>()
+	<label for="r74" class="ident">barsizeMult</label> := <a href="#line-268" class="ident">maxHTMLBarWidth</a> / <a href="../../../../../pkg/builtin.html#name-float64" class="ident">float64</a>(<label for="r70" class="ident">maxBucket</label>)
+	<span class="keyword">var</span> <label for="r75" class="ident">pctMult</label> <a href="../../../../../pkg/builtin.html#name-float64" class="ident">float64</a>
+	<span class="keyword">if</span> <label for="r73" class="ident">total</label> == <span class="lit-number">0</span> {
+		<label for="r75" class="ident">pctMult</label> = <span class="lit-number">1.0</span>
+	} <span class="keyword">else</span> {
+		<label for="r75" class="ident">pctMult</label> = <span class="lit-number">100.0</span> / <a href="../../../../../pkg/builtin.html#name-float64" class="ident">float64</a>(<label for="r73" class="ident">total</label>)
+	}
+
+	<label for="r76" class="ident">buckets</label> := <a href="../../../../../pkg/builtin.html#name-make" class="ident">make</a>([]*<a href="#line-253" class="ident">bucketData</a>, <a href="../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r68" class="ident">h</label>.<a href="#line-30" class="ident">buckets</a>))
+	<label for="r77" class="ident">runningTotal</label> := <a href="../../../../../pkg/builtin.html#name-int64" class="ident">int64</a>(<span class="lit-number">0</span>)
+	<span class="keyword">for</span> <label for="r78" class="ident">i</label>, <label for="r79" class="ident">n</label> := <span class="keyword">range</span> <label for="r68" class="ident">h</label>.<a href="#line-30" class="ident">buckets</a> {
+		<span class="keyword">if</span> <label for="r79" class="ident">n</label> == <span class="lit-number">0</span> {
+			<span class="keyword">continue</span>
+		}
+		<label for="r77" class="ident">runningTotal</label> += <label for="r79" class="ident">n</label>
+		<span class="keyword">var</span> <label for="r80" class="ident">upperBound</label> <a href="../../../../../pkg/builtin.html#name-int64" class="ident">int64</a>
+		<span class="keyword">if</span> <label for="r78" class="ident">i</label> &lt; <a href="#line-21" class="ident">bucketCount</a>-<span class="lit-number">1</span> {
+			<label for="r80" class="ident">upperBound</label> = <a href="#line-245" class="ident">bucketBoundary</a>(<a href="../../../../../pkg/builtin.html#name-uint8" class="ident">uint8</a>(<label for="r78" class="ident">i</label> + <span class="lit-number">1</span>))
+		} <span class="keyword">else</span> {
+			<label for="r80" class="ident">upperBound</label> = <a href="../../../../../pkg/math.html" class="ident i4">math</a>.<a href="../../../../math/const.go.html#line-46" class="ident">MaxInt64</a>
+		}
+		<label for="r76" class="ident">buckets</label>[<label for="r78" class="ident">i</label>] = &amp;<a href="#line-253" class="ident">bucketData</a>{
+			<a href="#line-254" class="ident">Lower</a>:         <a href="#line-245" class="ident">bucketBoundary</a>(<a href="../../../../../pkg/builtin.html#name-uint8" class="ident">uint8</a>(<label for="r78" class="ident">i</label>)),
+			<a href="#line-254" class="ident">Upper</a>:         <label for="r80" class="ident">upperBound</label>,
+			<a href="#line-255" class="ident">N</a>:             <label for="r79" class="ident">n</label>,
+			<a href="#line-256" class="ident">Pct</a>:           <a href="../../../../../pkg/builtin.html#name-float64" class="ident">float64</a>(<label for="r79" class="ident">n</label>) * <label for="r75" class="ident">pctMult</label>,
+			<a href="#line-256" class="ident">CumulativePct</a>: <a href="../../../../../pkg/builtin.html#name-float64" class="ident">float64</a>(<label for="r77" class="ident">runningTotal</label>) * <label for="r75" class="ident">pctMult</label>,
+			<a href="#line-257" class="ident">GraphWidth</a>:    <a href="../../../../../pkg/builtin.html#name-int" class="ident">int</a>(<a href="../../../../../pkg/builtin.html#name-float64" class="ident">float64</a>(<label for="r79" class="ident">n</label>) * <label for="r74" class="ident">barsizeMult</label>),
+		}
+	}
+	<span class="keyword">return</span> &amp;<a href="#line-261" class="ident">data</a>{
+		<a href="#line-262" class="ident">Buckets</a>:           <label for="r76" class="ident">buckets</label>,
+		<a href="#line-263" class="ident">Count</a>:             <label for="r73" class="ident">total</label>,
+		<a href="#line-263" class="ident">Median</a>:            <label for="r68" class="ident">h</label>.<a href="#line-165" class="ident">median</a>(),
+		<a href="#line-264" class="ident">Mean</a>:              <label for="r68" class="ident">h</label>.<a href="#line-95" class="ident">average</a>(),
+		<a href="#line-264" class="ident">StandardDeviation</a>: <label for="r68" class="ident">h</label>.<a href="#line-114" class="ident">standardDeviation</a>(),
+	}
+}
+
+<span class="keyword">func</span> (<label for="r81" class="ident">h</label> *<a href="#line-27" class="ident">histogram</a>) <label for="r82" class="ident"><a href="../../../../../use/golang.org/x/net/trace..histogram*56f0e.html*e5e23.html" class="ident">html</a></label>() <a href="../../../../../pkg/html/template.html" class="ident i2">template</a>.<a href="../../../../html/template/content.go.html#line-35" class="ident">HTML</a> {
+	<label for="r83" class="ident">buf</label> := <a href="../../../../../pkg/builtin.html#name-new" class="ident">new</a>(<a href="../../../../../pkg/bytes.html" class="ident i0">bytes</a>.<a href="../../../../bytes/buffer.go.html#line-20" class="ident">Buffer</a>)
+	<span class="keyword">if</span> <label for="r84" class="ident">err</label> := <a href="#line-334" class="ident">distTmpl</a>().<a href="../../../../html/template/template.go.html#line-120" class="ident">Execute</a>(<label for="r83" class="ident">buf</label>, <label for="r81" class="ident">h</label>.<a href="#line-271" class="ident">newData</a>()); <label for="r84" class="ident">err</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<label for="r83" class="ident">buf</label>.<a href="../../../../bytes/buffer.go.html#line-97" class="ident">Reset</a>()
+		<a href="../../../../../pkg/log.html" class="ident i3">log</a>.<a href="../../../../log/log.go.html#line-322" class="ident">Printf</a>(<span class="lit-string">"net/trace: couldn't execute template: %v"</span>, <label for="r84" class="ident">err</label>)
+	}
+	<span class="keyword">return</span> <a href="../../../../../pkg/html/template.html" class="ident i2">template</a>.<a href="../../../../html/template/content.go.html#line-35" class="ident">HTML</a>(<label for="r83" class="ident">buf</label>.<a href="../../../../bytes/buffer.go.html#line-60" class="ident">String</a>())
+}
+
+<span class="keyword">var</span> <a href="../../../../../pkg/golang.org/x/net/trace.html#name-distTmplCache" class="ident">distTmplCache</a> *<a href="../../../../../pkg/html/template.html" class="ident i2">template</a>.<a href="../../../../html/template/template.go.html#line-21" class="ident">Template</a>
+<span class="keyword">var</span> <a href="../../../../../pkg/golang.org/x/net/trace.html#name-distTmplOnce" class="ident">distTmplOnce</a> <a href="../../../../../pkg/sync.html" class="ident i5">sync</a>.<a href="../../../../sync/once.go.html#line-14" class="ident">Once</a>
+
+<span class="keyword">func</span> <label for="r85" class="ident"><a href="../../../../../pkg/golang.org/x/net/trace.html#name-distTmpl" class="ident">distTmpl</a></label>() *<a href="../../../../../pkg/html/template.html" class="ident i2">template</a>.<a href="../../../../html/template/template.go.html#line-21" class="ident">Template</a> {
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Input: data</span></div>
+<div class="code"><pre><code>		<a href="#line-331" class="ident">distTmplCache</a> = <a href="../../../../../pkg/html/template.html" class="ident i2">template</a>.<a href="../../../../html/template/template.go.html#line-372" class="ident">Must</a>(<a href="../../../../../pkg/html/template.html" class="ident i2">template</a>.<a href="../../../../html/template/template.go.html#line-284" class="ident">New</a>(<span class="lit-string">"distTmpl"</span>).<a href="../../../../html/template/template.go.html#line-186" class="ident">Parse</a>(<span class="lit-string">`</span>
+<span class="lit-string">&lt;table&gt;</span>
+<span class="lit-string">&lt;tr&gt;</span>
+<span class="lit-string">    &lt;td style="padding:0.25em"&gt;Count: {{.Count}}&lt;/td&gt;</span>
+<span class="lit-string">    &lt;td style="padding:0.25em"&gt;Mean: {{printf "%.0f" .Mean}}&lt;/td&gt;</span>
+<span class="lit-string">    &lt;td style="padding:0.25em"&gt;StdDev: {{printf "%.0f" .StandardDeviation}}&lt;/td&gt;</span>
+<span class="lit-string">    &lt;td style="padding:0.25em"&gt;Median: {{.Median}}&lt;/td&gt;</span>
+<span class="lit-string">&lt;/tr&gt;</span>
+<span class="lit-string">&lt;/table&gt;</span>
+<span class="lit-string">&lt;hr&gt;</span>
+<span class="lit-string">&lt;table&gt;</span>
+<span class="lit-string">{{range $b := .Buckets}}</span>
+<span class="lit-string">{{if $b}}</span>
+<span class="lit-string">  &lt;tr&gt;</span>
+<span class="lit-string">    &lt;td style="padding:0 0 0 0.25em"&gt;[&lt;/td&gt;</span>
+<span class="lit-string">    &lt;td style="text-align:right;padding:0 0.25em"&gt;{{.Lower}},&lt;/td&gt;</span>
+<span class="lit-string">    &lt;td style="text-align:right;padding:0 0.25em"&gt;{{.Upper}})&lt;/td&gt;</span>
+<span class="lit-string">    &lt;td style="text-align:right;padding:0 0.25em"&gt;{{.N}}&lt;/td&gt;</span>
+<span class="lit-string">    &lt;td style="text-align:right;padding:0 0.25em"&gt;{{printf "%#.3f" .Pct}}%&lt;/td&gt;</span>
+<span class="lit-string">    &lt;td style="text-align:right;padding:0 0.25em"&gt;{{printf "%#.3f" .CumulativePct}}%&lt;/td&gt;</span>
+<span class="lit-string">    &lt;td&gt;&lt;div style="background-color: blue; height: 1em; width: {{.GraphWidth}};"&gt;&lt;/div&gt;&lt;/td&gt;</span>
+<span class="lit-string">  &lt;/tr&gt;</span>
+<span class="lit-string">{{end}}</span>
+<span class="lit-string">{{end}}</span>
+<span class="lit-string">&lt;/table&gt;</span>
+<span class="lit-string">`</span>))
+	})
+	<span class="keyword">return</span> <a href="#line-331" class="ident">distTmplCache</a>
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

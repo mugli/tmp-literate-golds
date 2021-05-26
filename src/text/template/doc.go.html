@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: doc.go in package text/template</title>
+<link href="../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	doc.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../pkg/text/template.html">text/template</a>
+</code></pre>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2011 The Go Authors. All rights reserved.</span><span class="comment"> Use of this source code is governed by a BSD-style</span><span class="comment"> license that can be found in the LICENSE file.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"></span><span class="comment">Package template implements data-driven templates for generating textual output.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">To generate HTML output, see package html/template, which has the same interface</span><span class="comment">as this package but automatically secures HTML output against certain attacks.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Templates are executed by applying them to a data structure. Annotations in the</span><span class="comment">template refer to elements of the data structure (typically a field of a struct</span><span class="comment">or a key in a map) to control execution and derive values to be displayed.</span><span class="comment">Execution of the template walks the structure and sets the cursor, represented</span><span class="comment">by a period '.' and called "dot", to the value at the current location in the</span><span class="comment">structure as execution proceeds.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">The input text for a template is UTF-8-encoded text in any format.</span><span class="comment">"Actions"--data evaluations or control structures--are delimited by</span><span class="comment">"{{" and "}}"; all text outside actions is copied to the output unchanged.</span><span class="comment">Except for raw strings, actions may not span newlines, although comments can.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Once parsed, a template may be executed safely in parallel, although if parallel</span><span class="comment">executions share a Writer the output may be interleaved.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Here is a trivial example that prints "17 items are made of wool".</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">	type Inventory struct {</span><span class="comment">		Material string</span><span class="comment">		Count    uint</span><span class="comment">	}</span><span class="comment">	sweaters := Inventory{"wool", 17}</span><span class="comment">	tmpl, err := template.New("test").Parse("{{.Count}} items are made of {{.Material}}")</span><span class="comment">	if err != nil { panic(err) }</span><span class="comment">	err = tmpl.Execute(os.Stdout, sweaters)</span><span class="comment">	if err != nil { panic(err) }</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">More intricate examples appear below.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Text and spaces</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">By default, all text between actions is copied verbatim when the template is</span><span class="comment">executed. For example, the string " items are made of " in the example above</span><span class="comment">appears on standard output when the program is run.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">However, to aid in formatting template source code, if an action's left</span><span class="comment">delimiter (by default "{{") is followed immediately by a minus sign and white</span><span class="comment">space, all trailing white space is trimmed from the immediately preceding text.</span><span class="comment">Similarly, if the right delimiter ("}}") is preceded by white space and a minus</span><span class="comment">sign, all leading white space is trimmed from the immediately following text.</span><span class="comment">In these trim markers, the white space must be present:</span><span class="comment">"{{- 3}}" is like "{{3}}" but trims the immediately preceding text, while</span><span class="comment">"{{-3}}" parses as an action containing the number -3.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">For instance, when executing the template whose source is</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">	"{{23 -}} &lt; {{- 45}}"</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">the generated output would be</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">	"23&lt;45"</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">For this trimming, the definition of white space characters is the same as in Go:</span><span class="comment">space, horizontal tab, carriage return, and newline.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Actions</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Here is the list of actions. "Arguments" and "pipelines" are evaluations of</span><span class="comment">data, defined in detail in the corresponding sections that follow.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"></span><span class="comment">	{{ a comment }}</span><span class="comment">	{{-  a comment with white space trimmed from preceding and following text  -}}</span><span class="comment">		A comment; discarded. May contain newlines.</span><span class="comment">		Comments do not nest and must start and end at the</span><span class="comment">		delimiters, as shown here.</span><span class="comment"></span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">	{{pipeline}}</span><span class="comment">		The default textual representation (the same as would be</span><span class="comment">		printed by fmt.Print) of the value of the pipeline is copied</span><span class="comment">		to the output.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">	{{if pipeline}} T1 {{end}}</span><span class="comment">		If the value of the pipeline is empty, no output is generated;</span><span class="comment">		otherwise, T1 is executed. The empty values are false, 0, any</span><span class="comment">		nil pointer or interface value, and any array, slice, map, or</span><span class="comment">		string of length zero.</span><span class="comment">		Dot is unaffected.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">	{{if pipeline}} T1 {{else}} T0 {{end}}</span><span class="comment">		If the value of the pipeline is empty, T0 is executed;</span><span class="comment">		otherwise, T1 is executed. Dot is unaffected.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">	{{if pipeline}} T1 {{else if pipeline}} T0 {{end}}</span><span class="comment">		To simplify the appearance of if-else chains, the else action</span><span class="comment">		of an if may include another if directly; the effect is exactly</span><span class="comment">		the same as writing</span><span class="comment">			{{if pipeline}} T1 {{else}}{{if pipeline}} T0 {{end}}{{end}}</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">	{{range pipeline}} T1 {{end}}</span><span class="comment">		The value of the pipeline must be an array, slice, map, or channel.</span><span class="comment">		If the value of the pipeline has length zero, nothing is output;</span><span class="comment">		otherwise, dot is set to the successive elements of the array,</span><span class="comment">		slice, or map and T1 is executed. If the value is a map and the</span><span class="comment">		keys are of basic type with a defined order, the elements will be</span><span class="comment">		visited in sorted key order.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">	{{range pipeline}} T1 {{else}} T0 {{end}}</span><span class="comment">		The value of the pipeline must be an array, slice, map, or channel.</span><span class="comment">		If the value of the pipeline has length zero, dot is unaffected and</span><span class="comment">		T0 is executed; otherwise, dot is set to the successive elements</span><span class="comment">		of the array, slice, or map and T1 is executed.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">	{{template "name"}}</span><span class="comment">		The template with the specified name is executed with nil data.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">	{{template "name" pipeline}}</span><span class="comment">		The template with the specified name is executed with dot set</span><span class="comment">		to the value of the pipeline.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">	{{block "name" pipeline}} T1 {{end}}</span><span class="comment">		A block is shorthand for defining a template</span><span class="comment">			{{define "name"}} T1 {{end}}</span><span class="comment">		and then executing it in place</span><span class="comment">			{{template "name" pipeline}}</span><span class="comment">		The typical use is to define a set of root templates that are</span><span class="comment">		then customized by redefining the block templates within.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">	{{with pipeline}} T1 {{end}}</span><span class="comment">		If the value of the pipeline is empty, no output is generated;</span><span class="comment">		otherwise, dot is set to the value of the pipeline and T1 is</span><span class="comment">		executed.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">	{{with pipeline}} T1 {{else}} T0 {{end}}</span><span class="comment">		If the value of the pipeline is empty, dot is unaffected and T0</span><span class="comment">		is executed; otherwise, dot is set to the value of the pipeline</span><span class="comment">		and T1 is executed.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Arguments</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">An argument is a simple value, denoted by one of the following.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">	- A boolean, string, character, integer, floating-point, imaginary</span><span class="comment">	  or complex constant in Go syntax. These behave like Go's untyped</span><span class="comment">	  constants. Note that, as in Go, whether a large integer constant</span><span class="comment">	  overflows when assigned or passed to a function can depend on whether</span><span class="comment">	  the host machine's ints are 32 or 64 bits.</span><span class="comment">	- The keyword nil, representing an untyped Go nil.</span><span class="comment">	- The character '.' (period):</span><span class="comment">		.</span><span class="comment">	  The result is the value of dot.</span><span class="comment">	- A variable name, which is a (possibly empty) alphanumeric string</span><span class="comment">	  preceded by a dollar sign, such as</span><span class="comment">		$piOver2</span><span class="comment">	  or</span><span class="comment">		$</span><span class="comment">	  The result is the value of the variable.</span><span class="comment">	  Variables are described below.</span><span class="comment">	- The name of a field of the data, which must be a struct, preceded</span><span class="comment">	  by a period, such as</span><span class="comment">		.Field</span><span class="comment">	  The result is the value of the field. Field invocations may be</span><span class="comment">	  chained:</span><span class="comment">	    .Field1.Field2</span><span class="comment">	  Fields can also be evaluated on variables, including chaining:</span><span class="comment">	    $x.Field1.Field2</span><span class="comment">	- The name of a key of the data, which must be a map, preceded</span><span class="comment">	  by a period, such as</span><span class="comment">		.Key</span><span class="comment">	  The result is the map element value indexed by the key.</span><span class="comment">	  Key invocations may be chained and combined with fields to any</span><span class="comment">	  depth:</span><span class="comment">	    .Field1.Key1.Field2.Key2</span><span class="comment">	  Although the key must be an alphanumeric identifier, unlike with</span><span class="comment">	  field names they do not need to start with an upper case letter.</span><span class="comment">	  Keys can also be evaluated on variables, including chaining:</span><span class="comment">	    $x.key1.key2</span><span class="comment">	- The name of a niladic method of the data, preceded by a period,</span><span class="comment">	  such as</span><span class="comment">		.Method</span><span class="comment">	  The result is the value of invoking the method with dot as the</span><span class="comment">	  receiver, dot.Method(). Such a method must have one return value (of</span><span class="comment">	  any type) or two return values, the second of which is an error.</span><span class="comment">	  If it has two and the returned error is non-nil, execution terminates</span><span class="comment">	  and an error is returned to the caller as the value of Execute.</span><span class="comment">	  Method invocations may be chained and combined with fields and keys</span><span class="comment">	  to any depth:</span><span class="comment">	    .Field1.Key1.Method1.Field2.Key2.Method2</span><span class="comment">	  Methods can also be evaluated on variables, including chaining:</span><span class="comment">	    $x.Method1.Field</span><span class="comment">	- The name of a niladic function, such as</span><span class="comment">		fun</span><span class="comment">	  The result is the value of invoking the function, fun(). The return</span><span class="comment">	  types and values behave as in methods. Functions and function</span><span class="comment">	  names are described below.</span><span class="comment">	- A parenthesized instance of one the above, for grouping. The result</span><span class="comment">	  may be accessed by a field or map key invocation.</span><span class="comment">		print (.F1 arg1) (.F2 arg2)</span><span class="comment">		(.StructValuedMethod "arg").Field</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Arguments may evaluate to any type; if they are pointers the implementation</span><span class="comment">automatically indirects to the base type when required.</span><span class="comment">If an evaluation yields a function value, such as a function-valued</span><span class="comment">field of a struct, the function is not invoked automatically, but it</span><span class="comment">can be used as a truth value for an if action and the like. To invoke</span><span class="comment">it, use the call function, defined below.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Pipelines</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">A pipeline is a possibly chained sequence of "commands". A command is a simple</span><span class="comment">value (argument) or a function or method call, possibly with multiple arguments:</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">	Argument</span><span class="comment">		The result is the value of evaluating the argument.</span><span class="comment">	.Method [Argument...]</span><span class="comment">		The method can be alone or the last element of a chain but,</span><span class="comment">		unlike methods in the middle of a chain, it can take arguments.</span><span class="comment">		The result is the value of calling the method with the</span><span class="comment">		arguments:</span><span class="comment">			dot.Method(Argument1, etc.)</span><span class="comment">	functionName [Argument...]</span><span class="comment">		The result is the value of calling the function associated</span><span class="comment">		with the name:</span><span class="comment">			function(Argument1, etc.)</span><span class="comment">		Functions and function names are described below.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">A pipeline may be "chained" by separating a sequence of commands with pipeline</span><span class="comment">characters '|'. In a chained pipeline, the result of each command is</span><span class="comment">passed as the last argument of the following command. The output of the final</span><span class="comment">command in the pipeline is the value of the pipeline.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">The output of a command will be either one value or two values, the second of</span><span class="comment">which has type error. If that second value is present and evaluates to</span><span class="comment">non-nil, execution terminates and the error is returned to the caller of</span><span class="comment">Execute.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Variables</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">A pipeline inside an action may initialize a variable to capture the result.</span><span class="comment">The initialization has syntax</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">	$variable := pipeline</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">where $variable is the name of the variable. An action that declares a</span><span class="comment">variable produces no output.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Variables previously declared can also be assigned, using the syntax</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">	$variable = pipeline</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">If a "range" action initializes a variable, the variable is set to the</span><span class="comment">successive elements of the iteration. Also, a "range" may declare two</span><span class="comment">variables, separated by a comma:</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">	range $index, $element := pipeline</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">in which case $index and $element are set to the successive values of the</span><span class="comment">array/slice index or map key and element, respectively. Note that if there is</span><span class="comment">only one variable, it is assigned the element; this is opposite to the</span><span class="comment">convention in Go range clauses.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">A variable's scope extends to the "end" action of the control structure ("if",</span><span class="comment">"with", or "range") in which it is declared, or to the end of the template if</span><span class="comment">there is no such control structure. A template invocation does not inherit</span><span class="comment">variables from the point of its invocation.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">When execution begins, $ is set to the data argument passed to Execute, that is,</span><span class="comment">to the starting value of dot.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Examples</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Here are some example one-line templates demonstrating pipelines and variables.</span><span class="comment">All produce the quoted word "output":</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">	{{"\"output\""}}</span><span class="comment">		A string constant.</span><span class="comment">	{{`"output"`}}</span><span class="comment">		A raw string constant.</span><span class="comment">	{{printf "%q" "output"}}</span><span class="comment">		A function call.</span><span class="comment">	{{"output" | printf "%q"}}</span><span class="comment">		A function call whose final argument comes from the previous</span><span class="comment">		command.</span><span class="comment">	{{printf "%q" (print "out" "put")}}</span><span class="comment">		A parenthesized argument.</span><span class="comment">	{{"put" | printf "%s%s" "out" | printf "%q"}}</span><span class="comment">		A more elaborate call.</span><span class="comment">	{{"output" | printf "%s" | printf "%q"}}</span><span class="comment">		A longer chain.</span><span class="comment">	{{with "output"}}{{printf "%q" .}}{{end}}</span><span class="comment">		A with action using dot.</span><span class="comment">	{{with $x := "output" | printf "%q"}}{{$x}}{{end}}</span><span class="comment">		A with action that creates and uses a variable.</span><span class="comment">	{{with $x := "output"}}{{printf "%q" $x}}{{end}}</span><span class="comment">		A with action that uses the variable in another action.</span><span class="comment">	{{with $x := "output"}}{{$x | printf "%q"}}{{end}}</span><span class="comment">		The same, but pipelined.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Functions</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">During execution functions are found in two function maps: first in the</span><span class="comment">template, then in the global function map. By default, no functions are defined</span><span class="comment">in the template but the Funcs method can be used to add them.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Predefined global functions are named as follows.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">	and</span><span class="comment">		Returns the boolean AND of its arguments by returning the</span><span class="comment">		first empty argument or the last argument, that is,</span><span class="comment">		"and x y" behaves as "if x then y else x". All the</span><span class="comment">		arguments are evaluated.</span><span class="comment">	call</span><span class="comment">		Returns the result of calling the first argument, which</span><span class="comment">		must be a function, with the remaining arguments as parameters.</span><span class="comment">		Thus "call .X.Y 1 2" is, in Go notation, dot.X.Y(1, 2) where</span><span class="comment">		Y is a func-valued field, map entry, or the like.</span><span class="comment">		The first argument must be the result of an evaluation</span><span class="comment">		that yields a value of function type (as distinct from</span><span class="comment">		a predefined function such as print). The function must</span><span class="comment">		return either one or two result values, the second of which</span><span class="comment">		is of type error. If the arguments don't match the function</span><span class="comment">		or the returned error value is non-nil, execution stops.</span><span class="comment">	html</span><span class="comment">		Returns the escaped HTML equivalent of the textual</span><span class="comment">		representation of its arguments. This function is unavailable</span><span class="comment">		in html/template, with a few exceptions.</span><span class="comment">	index</span><span class="comment">		Returns the result of indexing its first argument by the</span><span class="comment">		following arguments. Thus "index x 1 2 3" is, in Go syntax,</span><span class="comment">		x[1][2][3]. Each indexed item must be a map, slice, or array.</span><span class="comment">	slice</span><span class="comment">		slice returns the result of slicing its first argument by the</span><span class="comment">		remaining arguments. Thus "slice x 1 2" is, in Go syntax, x[1:2],</span><span class="comment">		while "slice x" is x[:], "slice x 1" is x[1:], and "slice x 1 2 3"</span><span class="comment">		is x[1:2:3]. The first argument must be a string, slice, or array.</span><span class="comment">	js</span><span class="comment">		Returns the escaped JavaScript equivalent of the textual</span><span class="comment">		representation of its arguments.</span><span class="comment">	len</span><span class="comment">		Returns the integer length of its argument.</span><span class="comment">	not</span><span class="comment">		Returns the boolean negation of its single argument.</span><span class="comment">	or</span><span class="comment">		Returns the boolean OR of its arguments by returning the</span><span class="comment">		first non-empty argument or the last argument, that is,</span><span class="comment">		"or x y" behaves as "if x then x else y". All the</span><span class="comment">		arguments are evaluated.</span><span class="comment">	print</span><span class="comment">		An alias for fmt.Sprint</span><span class="comment">	printf</span><span class="comment">		An alias for fmt.Sprintf</span><span class="comment">	println</span><span class="comment">		An alias for fmt.Sprintln</span><span class="comment">	urlquery</span><span class="comment">		Returns the escaped value of the textual representation of</span><span class="comment">		its arguments in a form suitable for embedding in a URL query.</span><span class="comment">		This function is unavailable in html/template, with a few</span><span class="comment">		exceptions.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">The boolean functions take any zero value to be false and a non-zero</span><span class="comment">value to be true.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">There is also a set of binary comparison operators defined as</span><span class="comment">functions:</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">	eq</span><span class="comment">		Returns the boolean truth of arg1 == arg2</span><span class="comment">	ne</span><span class="comment">		Returns the boolean truth of arg1 != arg2</span><span class="comment">	lt</span><span class="comment">		Returns the boolean truth of arg1 &lt; arg2</span><span class="comment">	le</span><span class="comment">		Returns the boolean truth of arg1 &lt;= arg2</span><span class="comment">	gt</span><span class="comment">		Returns the boolean truth of arg1 &gt; arg2</span><span class="comment">	ge</span><span class="comment">		Returns the boolean truth of arg1 &gt;= arg2</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">For simpler multi-way equality tests, eq (only) accepts two or more</span><span class="comment">arguments and compares the second and subsequent to the first,</span><span class="comment">returning in effect</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">	arg1==arg2 || arg1==arg3 || arg1==arg4 ...</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">(Unlike with || in Go, however, eq is a function call and all the</span><span class="comment">arguments will be evaluated.)</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">The comparison functions work on any values whose type Go defines as</span><span class="comment">comparable. For basic types such as integers, the rules are relaxed:</span><span class="comment">size and exact type are ignored, so any integer value, signed or unsigned,</span><span class="comment">may be compared with any other integer value. (The arithmetic value is compared,</span><span class="comment">not the bit pattern, so all negative integers are less than all unsigned integers.)</span><span class="comment">However, as usual, one may not compare an int with a float32 and so on.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Associated templates</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Each template is named by a string specified when it is created. Also, each</span><span class="comment">template is associated with zero or more other templates that it may invoke by</span><span class="comment">name; such associations are transitive and form a name space of templates.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">A template may use a template invocation to instantiate another associated</span><span class="comment">template; see the explanation of the "template" action above. The name must be</span><span class="comment">that of a template associated with the template that contains the invocation.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Nested template definitions</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">When parsing a template, another template may be defined and associated with the</span><span class="comment">template being parsed. Template definitions must appear at the top level of the</span><span class="comment">template, much like global variables in a Go program.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">The syntax of such definitions is to surround each template declaration with a</span><span class="comment">"define" and "end" action.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">The define action names the template being created by providing a string</span><span class="comment">constant. Here is a simple example:</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">	`{{define "T1"}}ONE{{end}}</span><span class="comment">	{{define "T2"}}TWO{{end}}</span><span class="comment">	{{define "T3"}}{{template "T1"}} {{template "T2"}}{{end}}</span><span class="comment">	{{template "T3"}}`</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">This defines two templates, T1 and T2, and a third T3 that invokes the other two</span><span class="comment">when it is executed. Finally it invokes T3. If executed this template will</span><span class="comment">produce the text</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">	ONE TWO</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">By construction, a template may reside in only one association. If it's</span><span class="comment">necessary to have a template addressable from multiple associations, the</span><span class="comment">template definition must be parsed multiple times to create distinct *Template</span><span class="comment">values, or must be copied with the Clone or AddParseTree method.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Parse may be called multiple times to assemble the various associated templates;</span><span class="comment">see the ParseFiles and ParseGlob functions and methods for simple ways to parse</span><span class="comment">related templates stored in files.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">A template may be executed directly or through ExecuteTemplate, which executes</span><span class="comment">an associated template identified by name. To invoke our example above, we</span><span class="comment">might write,</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">	err := tmpl.Execute(os.Stdout, "no data needed")</span><span class="comment">	if err != nil {</span><span class="comment">		log.Fatalf("execution failed: %s", err)</span><span class="comment">	}</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">or to invoke a particular template explicitly by name,</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">	err := tmpl.ExecuteTemplate(os.Stdout, "T2", "no data needed")</span><span class="comment">	if err != nil {</span><span class="comment">		log.Fatalf("execution failed: %s", err)</span><span class="comment">	}</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"></span></div>
+<div class="code"><pre><code></code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

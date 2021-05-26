@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: huffman.go in package compress/bzip2</title>
+<link href="../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	huffman.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../pkg/compress/bzip2.html">compress/bzip2</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16],
+input[id=r17]:checked ~pre label[for=r17],
+input[id=r18]:checked ~pre label[for=r18],
+input[id=r19]:checked ~pre label[for=r19],
+input[id=r20]:checked ~pre label[for=r20],
+input[id=r21]:checked ~pre label[for=r21],
+input[id=r22]:checked ~pre label[for=r22],
+input[id=r23]:checked ~pre label[for=r23],
+input[id=r24]:checked ~pre label[for=r24],
+input[id=r25]:checked ~pre label[for=r25],
+input[id=r26]:checked ~pre label[for=r26],
+input[id=r27]:checked ~pre label[for=r27],
+input[id=r28]:checked ~pre label[for=r28],
+input[id=r29]:checked ~pre label[for=r29],
+input[id=r30]:checked ~pre label[for=r30],
+input[id=r31]:checked ~pre label[for=r31],
+input[id=r32]:checked ~pre label[for=r32],
+input[id=r33]:checked ~pre label[for=r33],
+input[id=r34]:checked ~pre label[for=r34],
+input[id=r35]:checked ~pre label[for=r35],
+input[id=r36]:checked ~pre label[for=r36],
+input[id=r37]:checked ~pre label[for=r37],
+input[id=r38]:checked ~pre label[for=r38],
+input[id=r39]:checked ~pre label[for=r39]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="r17" type="radio" name="g"/>
+<input id="r18" type="radio" name="g"/>
+<input id="r19" type="radio" name="g"/>
+<input id="r20" type="radio" name="g"/>
+<input id="r21" type="radio" name="g"/>
+<input id="r22" type="radio" name="g"/>
+<input id="r23" type="radio" name="g"/>
+<input id="r24" type="radio" name="g"/>
+<input id="r25" type="radio" name="g"/>
+<input id="r26" type="radio" name="g"/>
+<input id="r27" type="radio" name="g"/>
+<input id="r28" type="radio" name="g"/>
+<input id="r29" type="radio" name="g"/>
+<input id="r30" type="radio" name="g"/>
+<input id="r31" type="radio" name="g"/>
+<input id="r32" type="radio" name="g"/>
+<input id="r33" type="radio" name="g"/>
+<input id="r34" type="radio" name="g"/>
+<input id="r35" type="radio" name="g"/>
+<input id="r36" type="radio" name="g"/>
+<input id="r37" type="radio" name="g"/>
+<input id="r38" type="radio" name="g"/>
+<input id="r39" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2011 The Go Authors. All rights reserved.</span><span class="comment"> Use of this source code is governed by a BSD-style</span><span class="comment"> license that can be found in the LICENSE file.</span></div>
+<div class="code"><pre><code>
+<span class="keyword">package</span> bzip2
+
+<span class="keyword">import</span> <label for="i0"><span class="lit-string i0">"sort"</span></label>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> A huffmanTree is a binary tree which is navigated, bit-by-bit to reach a</span><span class="comment"> symbol.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> nodes contains all the non-leaf nodes in the tree. nodes[0] is the</span><span class="comment">	 root of the tree and nextNode contains the index of the next element</span><span class="comment">	 of nodes to use when the tree is being constructed.</span></div>
+<div class="code"><pre><code>	<a href="../../../use/compress/bzip2..huffmanTree*7ea5d.nodes*45978.html" class="ident">nodes</a>    []<a href="#line-26" class="ident">huffmanNode</a>
+	<a href="../../../use/compress/bzip2..huffmanTree*7ea5d.nextNode*e9c8a.html" class="ident">nextNode</a> <a href="../../../pkg/builtin.html#name-int" class="ident">int</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> A huffmanNode is a node in the tree. left and right contain indexes into the</span><span class="comment"> nodes slice of the tree. If left or right is invalidNodeValue then the child</span><span class="comment"> is a left node and its value is in leftValue/rightValue.</span><span class="comment"></span><span class="comment"> The symbols are uint16s because bzip2 encodes not only MTF indexes in the</span><span class="comment"> tree, but also two magic values for run-length encoding and an EOF symbol.</span><span class="comment"> Thus there are more than 256 possible symbols.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../pkg/compress/bzip2.html#name-huffmanNode" class="ident">huffmanNode</a> <span class="keyword">struct</span> {
+	<a href="../../../use/compress/bzip2..huffmanNode*add23.left*360f8.html" class="ident">left</a>, <a href="../../../use/compress/bzip2..huffmanNode*add23.right*27042.html" class="ident">right</a>           <a href="../../../pkg/builtin.html#name-uint16" class="ident">uint16</a>
+	<a href="../../../use/compress/bzip2..huffmanNode*add23.leftValue*3a328.html" class="ident">leftValue</a>, <a href="../../../use/compress/bzip2..huffmanNode*add23.rightValue*b2815.html" class="ident">rightValue</a> <a href="../../../pkg/builtin.html#name-uint16" class="ident">uint16</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> invalidNodeValue is an invalid index which marks a leaf node in the tree.</span></div>
+<div class="code"><pre><code><span class="keyword">const</span> <a href="../../../pkg/compress/bzip2.html#name-invalidNodeValue" class="ident">invalidNodeValue</a> = <span class="lit-number">0xffff</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Decode reads bits from the given bitReader and navigates the tree until a</span><span class="comment"> symbol is found.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r0" class="ident">t</label> *<a href="#line-11" class="ident">huffmanTree</a>) <label for="r1" class="ident"><a href="../../../use/compress/bzip2..huffmanTree*7ea5d.Decode.html" class="ident">Decode</a></label>(<label for="r2" class="ident">br</label> *<a href="bit_reader.go.html#line-16" class="ident">bitReader</a>) (<label for="r3" class="ident">v</label> <a href="../../../pkg/builtin.html#name-uint16" class="ident">uint16</a>) {
+	<label for="r4" class="ident">nodeIndex</label> := <a href="../../../pkg/builtin.html#name-uint16" class="ident">uint16</a>(<span class="lit-number">0</span>) <span class="comment">// node 0 is the root of the tree.</span>
+
+	<span class="keyword">for</span> {
+		<label for="r5" class="ident">node</label> := &amp;<label for="r0" class="ident">t</label>.<a href="#line-15" class="ident">nodes</a>[<label for="r4" class="ident">nodeIndex</label>]
+
+		<span class="keyword">var</span> <label for="r6" class="ident">bit</label> <a href="../../../pkg/builtin.html#name-uint16" class="ident">uint16</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Get next bit - fast path.</span></div>
+<div class="code"><pre><code>			<label for="r2" class="ident">br</label>.<a href="bit_reader.go.html#line-19" class="ident">bits</a>--
+			<label for="r6" class="ident">bit</label> = <a href="../../../pkg/builtin.html#name-uint16" class="ident">uint16</a>(<label for="r2" class="ident">br</label>.<a href="bit_reader.go.html#line-18" class="ident">n</a>&gt;&gt;(<label for="r2" class="ident">br</label>.<a href="bit_reader.go.html#line-19" class="ident">bits</a>&amp;<span class="lit-number">63</span>)) &amp; <span class="lit-number">1</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Get next bit - slow path.</span><span class="comment">			 Use ReadBits to retrieve a single bit</span><span class="comment">			 from the underling io.ByteReader.</span></div>
+<div class="code"><pre><code>			<label for="r6" class="ident">bit</label> = <a href="../../../pkg/builtin.html#name-uint16" class="ident">uint16</a>(<label for="r2" class="ident">br</label>.<a href="bit_reader.go.html#line-70" class="ident">ReadBits</a>(<span class="lit-number">1</span>))
+		}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Trick a compiler into generating conditional move instead of branch,</span><span class="comment">		 by making both loads unconditional.</span></div>
+<div class="code"><pre><code>		<label for="r7" class="ident">l</label>, <label for="r8" class="ident">r</label> := <label for="r5" class="ident">node</label>.<a href="#line-27" class="ident">left</a>, <label for="r5" class="ident">node</label>.<a href="#line-27" class="ident">right</a>
+
+		<span class="keyword">if</span> <label for="r6" class="ident">bit</label> == <span class="lit-number">1</span> {
+			<label for="r4" class="ident">nodeIndex</label> = <label for="r7" class="ident">l</label>
+		} <span class="keyword">else</span> {
+			<label for="r4" class="ident">nodeIndex</label> = <label for="r8" class="ident">r</label>
+		}
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> We found a leaf. Use the value of bit to decide</span><span class="comment">			 whether is a left or a right value.</span></div>
+<div class="code"><pre><code>			<label for="r9" class="ident">l</label>, <label for="r10" class="ident">r</label> := <label for="r5" class="ident">node</label>.<a href="#line-28" class="ident">leftValue</a>, <label for="r5" class="ident">node</label>.<a href="#line-28" class="ident">rightValue</a>
+			<span class="keyword">if</span> <label for="r6" class="ident">bit</label> == <span class="lit-number">1</span> {
+				<label for="r3" class="ident">v</label> = <label for="r9" class="ident">l</label>
+			} <span class="keyword">else</span> {
+				<label for="r3" class="ident">v</label> = <label for="r10" class="ident">r</label>
+			}
+			<span class="keyword">return</span>
+		}
+	}
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> newHuffmanTree builds a Huffman tree from a slice containing the code</span><span class="comment"> lengths of each symbol. The maximum code length is 32 bits.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> There are many possible trees that assign the same code length to</span><span class="comment">	 each symbol (consider reflecting a tree down the middle, for</span><span class="comment">	 example). Since the code length assignments determine the</span><span class="comment">	 efficiency of the tree, each of these trees is equally good. In</span><span class="comment">	 order to minimize the amount of information needed to build a tree</span><span class="comment">	 bzip2 uses a canonical tree so that it can be reconstructed given</span><span class="comment">	 only the code length assignments.</span></div>
+<div class="code"><pre><code>
+	<span class="keyword">if</span> <a href="../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r12" class="ident">lengths</label>) &lt; <span class="lit-number">2</span> {
+		<a href="../../../pkg/builtin.html#name-panic" class="ident">panic</a>(<span class="lit-string">"newHuffmanTree: too few symbols"</span>)
+	}
+
+	<span class="keyword">var</span> <label for="r13" class="ident">t</label> <a href="#line-11" class="ident">huffmanTree</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> First we sort the code length assignments by ascending code length,</span><span class="comment">	 using the symbol value to break ties.</span></div>
+<div class="code"><pre><code>	<label for="r14" class="ident">pairs</label> := <a href="../../../pkg/builtin.html#name-make" class="ident">make</a>([]<a href="#line-148" class="ident">huffmanSymbolLengthPair</a>, <a href="../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r12" class="ident">lengths</label>))
+	<span class="keyword">for</span> <label for="r15" class="ident">i</label>, <label for="r16" class="ident">length</label> := <span class="keyword">range</span> <label for="r12" class="ident">lengths</label> {
+		<label for="r14" class="ident">pairs</label>[<label for="r15" class="ident">i</label>].<a href="#line-149" class="ident">value</a> = <a href="../../../pkg/builtin.html#name-uint16" class="ident">uint16</a>(<label for="r15" class="ident">i</label>)
+		<label for="r14" class="ident">pairs</label>[<label for="r15" class="ident">i</label>].<a href="#line-150" class="ident">length</a> = <label for="r16" class="ident">length</label>
+	}
+
+	<a href="../../../pkg/sort.html" class="ident i0">sort</a>.<a href="../../sort/slice.go.html#line-16" class="ident">Slice</a>(<label for="r14" class="ident">pairs</label>, <span class="keyword">func</span>(<label for="r17" class="ident">i</label>, <label for="r18" class="ident">j</label> <a href="../../../pkg/builtin.html#name-int" class="ident">int</a>) <a href="../../../pkg/builtin.html#name-bool" class="ident">bool</a> {
+		<span class="keyword">if</span> <label for="r14" class="ident">pairs</label>[<label for="r17" class="ident">i</label>].<a href="#line-150" class="ident">length</a> &lt; <label for="r14" class="ident">pairs</label>[<label for="r18" class="ident">j</label>].<a href="#line-150" class="ident">length</a> {
+			<span class="keyword">return</span> <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>
+		}
+		<span class="keyword">if</span> <label for="r14" class="ident">pairs</label>[<label for="r17" class="ident">i</label>].<a href="#line-150" class="ident">length</a> &gt; <label for="r14" class="ident">pairs</label>[<label for="r18" class="ident">j</label>].<a href="#line-150" class="ident">length</a> {
+			<span class="keyword">return</span> <a href="../../../pkg/builtin.html#name-false" class="ident">false</a>
+		}
+		<span class="keyword">if</span> <label for="r14" class="ident">pairs</label>[<label for="r17" class="ident">i</label>].<a href="#line-149" class="ident">value</a> &lt; <label for="r14" class="ident">pairs</label>[<label for="r18" class="ident">j</label>].<a href="#line-149" class="ident">value</a> {
+			<span class="keyword">return</span> <a href="../../../pkg/builtin.html#name-true" class="ident">true</a>
+		}
+		<span class="keyword">return</span> <a href="../../../pkg/builtin.html#name-false" class="ident">false</a>
+	})
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Now we assign codes to the symbols, starting with the longest code.</span><span class="comment">	 We keep the codes packed into a uint32, at the most-significant end.</span><span class="comment">	 So branches are taken from the MSB downwards. This makes it easy to</span><span class="comment">	 sort them later.</span></div>
+<div class="code"><pre><code>	<label for="r19" class="ident">code</label> := <a href="../../../pkg/builtin.html#name-uint32" class="ident">uint32</a>(<span class="lit-number">0</span>)
+	<label for="r20" class="ident">length</label> := <a href="../../../pkg/builtin.html#name-uint8" class="ident">uint8</a>(<span class="lit-number">32</span>)
+
+	<label for="r21" class="ident">codes</label> := <a href="../../../pkg/builtin.html#name-make" class="ident">make</a>([]<a href="#line-154" class="ident">huffmanCode</a>, <a href="../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r12" class="ident">lengths</label>))
+	<span class="keyword">for</span> <label for="r22" class="ident">i</label> := <a href="../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r14" class="ident">pairs</label>) - <span class="lit-number">1</span>; <label for="r22" class="ident">i</label> &gt;= <span class="lit-number">0</span>; <label for="r22" class="ident">i</label>-- {
+		<span class="keyword">if</span> <label for="r20" class="ident">length</label> &gt; <label for="r14" class="ident">pairs</label>[<label for="r22" class="ident">i</label>].<a href="#line-150" class="ident">length</a> {
+			<label for="r20" class="ident">length</label> = <label for="r14" class="ident">pairs</label>[<label for="r22" class="ident">i</label>].<a href="#line-150" class="ident">length</a>
+		}
+		<label for="r21" class="ident">codes</label>[<label for="r22" class="ident">i</label>].<a href="#line-155" class="ident">code</a> = <label for="r19" class="ident">code</label>
+		<label for="r21" class="ident">codes</label>[<label for="r22" class="ident">i</label>].<a href="#line-156" class="ident">codeLen</a> = <label for="r20" class="ident">length</label>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> We need to 'increment' the code, which means treating |code|</span><span class="comment">		 like a |length| bit number.</span></div>
+<div class="code"><pre><code>		<label for="r19" class="ident">code</label> += <span class="lit-number">1</span> &lt;&lt; (<span class="lit-number">32</span> - <label for="r20" class="ident">length</label>)
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Now we can sort by the code so that the left half of each branch are</span><span class="comment">	 grouped together, recursively.</span></div>
+<div class="code"><pre><code>	<a href="../../../pkg/sort.html" class="ident i0">sort</a>.<a href="../../sort/slice.go.html#line-16" class="ident">Slice</a>(<label for="r21" class="ident">codes</label>, <span class="keyword">func</span>(<label for="r23" class="ident">i</label>, <label for="r24" class="ident">j</label> <a href="../../../pkg/builtin.html#name-int" class="ident">int</a>) <a href="../../../pkg/builtin.html#name-bool" class="ident">bool</a> {
+		<span class="keyword">return</span> <label for="r21" class="ident">codes</label>[<label for="r23" class="ident">i</label>].<a href="#line-155" class="ident">code</a> &lt; <label for="r21" class="ident">codes</label>[<label for="r24" class="ident">j</label>].<a href="#line-155" class="ident">code</a>
+	})
+
+	<label for="r13" class="ident">t</label>.<a href="#line-15" class="ident">nodes</a> = <a href="../../../pkg/builtin.html#name-make" class="ident">make</a>([]<a href="#line-26" class="ident">huffmanNode</a>, <a href="../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r21" class="ident">codes</label>))
+	<label for="r25" class="ident">_</label>, <label for="r26" class="ident">err</label> := <a href="#line-163" class="ident">buildHuffmanNode</a>(&amp;<label for="r13" class="ident">t</label>, <label for="r21" class="ident">codes</label>, <span class="lit-number">0</span>)
+	<span class="keyword">return</span> <label for="r13" class="ident">t</label>, <label for="r26" class="ident">err</label>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> huffmanSymbolLengthPair contains a symbol and its code length.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../pkg/compress/bzip2.html#name-huffmanSymbolLengthPair" class="ident">huffmanSymbolLengthPair</a> <span class="keyword">struct</span> {
+	<a href="../../../use/compress/bzip2..huffmanSymbolLengthPair*0e936.value*cd424.html" class="ident">value</a>  <a href="../../../pkg/builtin.html#name-uint16" class="ident">uint16</a>
+	<a href="../../../use/compress/bzip2..huffmanSymbolLengthPair*0e936.length*0f82a.html" class="ident">length</a> <a href="../../../pkg/builtin.html#name-uint8" class="ident">uint8</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> huffmanCode contains a symbol, its code and code length.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../pkg/compress/bzip2.html#name-huffmanCode" class="ident">huffmanCode</a> <span class="keyword">struct</span> {
+	<a href="../../../use/compress/bzip2..huffmanCode*22d0c.code*5694d.html" class="ident">code</a>    <a href="../../../pkg/builtin.html#name-uint32" class="ident">uint32</a>
+	<a href="../../../use/compress/bzip2..huffmanCode*22d0c.codeLen*14f8a.html" class="ident">codeLen</a> <a href="../../../pkg/builtin.html#name-uint8" class="ident">uint8</a>
+	<a href="../../../use/compress/bzip2..huffmanCode*22d0c.value*cd424.html" class="ident">value</a>   <a href="../../../pkg/builtin.html#name-uint16" class="ident">uint16</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> buildHuffmanNode takes a slice of sorted huffmanCodes and builds a node in</span><span class="comment"> the Huffman tree at the given level. It returns the index of the newly</span><span class="comment"> constructed node.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r27" class="ident"><a href="../../../pkg/compress/bzip2.html#name-buildHuffmanNode" class="ident">buildHuffmanNode</a></label>(<label for="r28" class="ident">t</label> *<a href="#line-11" class="ident">huffmanTree</a>, <label for="r29" class="ident">codes</label> []<a href="#line-154" class="ident">huffmanCode</a>, <label for="r30" class="ident">level</label> <a href="../../../pkg/builtin.html#name-uint32" class="ident">uint32</a>) (<label for="r31" class="ident">nodeIndex</label> <a href="../../../pkg/builtin.html#name-uint16" class="ident">uint16</a>, <label for="r32" class="ident">err</label> <a href="../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<label for="r33" class="ident">test</label> := <a href="../../../pkg/builtin.html#name-uint32" class="ident">uint32</a>(<span class="lit-number">1</span>) &lt;&lt; (<span class="lit-number">31</span> - <label for="r30" class="ident">level</label>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> We have to search the list of codes to find the divide between the left and right sides.</span></div>
+<div class="code"><pre><code>	<label for="r34" class="ident">firstRightIndex</label> := <a href="../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r29" class="ident">codes</label>)
+	<span class="keyword">for</span> <label for="r35" class="ident">i</label>, <label for="r36" class="ident">code</label> := <span class="keyword">range</span> <label for="r29" class="ident">codes</label> {
+		<span class="keyword">if</span> <label for="r36" class="ident">code</label>.<a href="#line-155" class="ident">code</a>&amp;<label for="r33" class="ident">test</label> != <span class="lit-number">0</span> {
+			<label for="r34" class="ident">firstRightIndex</label> = <label for="r35" class="ident">i</label>
+			<span class="keyword">break</span>
+		}
+	}
+
+	<label for="r37" class="ident">left</label> := <label for="r29" class="ident">codes</label>[:<label for="r34" class="ident">firstRightIndex</label>]
+	<label for="r38" class="ident">right</label> := <label for="r29" class="ident">codes</label>[<label for="r34" class="ident">firstRightIndex</label>:]
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> There is a superfluous level in the Huffman tree indicating</span><span class="comment">		 a bug in the encoder. However, this bug has been observed in</span><span class="comment">		 the wild so we handle it.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> If this function was called recursively then we know that</span><span class="comment">		 len(codes) &gt;= 2 because, otherwise, we would have hit the</span><span class="comment">		 "leaf node" case, below, and not recursed.</span><span class="comment">		</span><span class="comment">		 However, for the initial call it's possible that len(codes)</span><span class="comment">		 is zero or one. Both cases are invalid because a zero length</span><span class="comment">		 tree cannot encode anything and a length-1 tree can only</span><span class="comment">		 encode EOF and so is superfluous. We reject both.</span></div>
+<div class="code"><pre><code>		<span class="keyword">if</span> <a href="../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r29" class="ident">codes</label>) &lt; <span class="lit-number">2</span> {
+			<span class="keyword">return</span> <span class="lit-number">0</span>, <a href="bzip2.go.html#line-17" class="ident">StructuralError</a>(<span class="lit-string">"empty Huffman tree"</span>)
+		}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> In this case the recursion doesn't always reduce the length</span><span class="comment">		 of codes so we need to ensure termination via another</span><span class="comment">		 mechanism.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Since len(codes) &gt;= 2 the only way that the values</span><span class="comment">			 can match at all 32 bits is if they are equal, which</span><span class="comment">			 is invalid. This ensures that we never enter</span><span class="comment">			 infinite recursion.</span></div>
+<div class="code"><pre><code>			<span class="keyword">return</span> <span class="lit-number">0</span>, <a href="bzip2.go.html#line-17" class="ident">StructuralError</a>(<span class="lit-string">"equal symbols in Huffman tree"</span>)
+		}
+
+		<span class="keyword">if</span> <a href="../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r37" class="ident">left</label>) == <span class="lit-number">0</span> {
+			<span class="keyword">return</span> <label for="r27" class="ident">buildHuffmanNode</label>(<label for="r28" class="ident">t</label>, <label for="r38" class="ident">right</label>, <label for="r30" class="ident">level</label>+<span class="lit-number">1</span>)
+		}
+		<span class="keyword">return</span> <label for="r27" class="ident">buildHuffmanNode</label>(<label for="r28" class="ident">t</label>, <label for="r37" class="ident">left</label>, <label for="r30" class="ident">level</label>+<span class="lit-number">1</span>)
+	}
+
+	<label for="r31" class="ident">nodeIndex</label> = <a href="../../../pkg/builtin.html#name-uint16" class="ident">uint16</a>(<label for="r28" class="ident">t</label>.<a href="#line-16" class="ident">nextNode</a>)
+	<label for="r39" class="ident">node</label> := &amp;<label for="r28" class="ident">t</label>.<a href="#line-15" class="ident">nodes</a>[<label for="r28" class="ident">t</label>.<a href="#line-16" class="ident">nextNode</a>]
+	<label for="r28" class="ident">t</label>.<a href="#line-16" class="ident">nextNode</a>++
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> leaf node</span></div>
+<div class="code"><pre><code>		<label for="r39" class="ident">node</label>.<a href="#line-27" class="ident">left</a> = <a href="#line-32" class="ident">invalidNodeValue</a>
+		<label for="r39" class="ident">node</label>.<a href="#line-28" class="ident">leftValue</a> = <label for="r37" class="ident">left</label>[<span class="lit-number">0</span>].<a href="#line-157" class="ident">value</a>
+	} <span class="keyword">else</span> {
+		<label for="r39" class="ident">node</label>.<a href="#line-27" class="ident">left</a>, <label for="r32" class="ident">err</label> = <label for="r27" class="ident">buildHuffmanNode</label>(<label for="r28" class="ident">t</label>, <label for="r37" class="ident">left</label>, <label for="r30" class="ident">level</label>+<span class="lit-number">1</span>)
+	}
+
+	<span class="keyword">if</span> <label for="r32" class="ident">err</label> != <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span>
+	}
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> leaf node</span></div>
+<div class="code"><pre><code>		<label for="r39" class="ident">node</label>.<a href="#line-27" class="ident">right</a> = <a href="#line-32" class="ident">invalidNodeValue</a>
+		<label for="r39" class="ident">node</label>.<a href="#line-28" class="ident">rightValue</a> = <label for="r38" class="ident">right</label>[<span class="lit-number">0</span>].<a href="#line-157" class="ident">value</a>
+	} <span class="keyword">else</span> {
+		<label for="r39" class="ident">node</label>.<a href="#line-27" class="ident">right</a>, <label for="r32" class="ident">err</label> = <label for="r27" class="ident">buildHuffmanNode</label>(<label for="r28" class="ident">t</label>, <label for="r38" class="ident">right</label>, <label for="r30" class="ident">level</label>+<span class="lit-number">1</span>)
+	}
+
+	<span class="keyword">return</span>
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

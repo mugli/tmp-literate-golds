@@ -1,0 +1,1455 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: malloc.go in package runtime</title>
+<link href="../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	malloc.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../pkg/runtime.html">runtime</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16],
+input[id=r17]:checked ~pre label[for=r17],
+input[id=r18]:checked ~pre label[for=r18],
+input[id=r19]:checked ~pre label[for=r19],
+input[id=r20]:checked ~pre label[for=r20],
+input[id=r21]:checked ~pre label[for=r21],
+input[id=r22]:checked ~pre label[for=r22],
+input[id=r23]:checked ~pre label[for=r23],
+input[id=r24]:checked ~pre label[for=r24],
+input[id=r25]:checked ~pre label[for=r25],
+input[id=r26]:checked ~pre label[for=r26],
+input[id=r27]:checked ~pre label[for=r27],
+input[id=r28]:checked ~pre label[for=r28],
+input[id=r29]:checked ~pre label[for=r29],
+input[id=r30]:checked ~pre label[for=r30],
+input[id=r31]:checked ~pre label[for=r31],
+input[id=r32]:checked ~pre label[for=r32],
+input[id=r33]:checked ~pre label[for=r33],
+input[id=r34]:checked ~pre label[for=r34],
+input[id=r35]:checked ~pre label[for=r35],
+input[id=r36]:checked ~pre label[for=r36],
+input[id=r37]:checked ~pre label[for=r37],
+input[id=r38]:checked ~pre label[for=r38],
+input[id=r39]:checked ~pre label[for=r39],
+input[id=r40]:checked ~pre label[for=r40],
+input[id=r41]:checked ~pre label[for=r41],
+input[id=r42]:checked ~pre label[for=r42],
+input[id=r43]:checked ~pre label[for=r43],
+input[id=r44]:checked ~pre label[for=r44],
+input[id=r45]:checked ~pre label[for=r45],
+input[id=r46]:checked ~pre label[for=r46],
+input[id=r47]:checked ~pre label[for=r47],
+input[id=r48]:checked ~pre label[for=r48],
+input[id=r49]:checked ~pre label[for=r49],
+input[id=r50]:checked ~pre label[for=r50],
+input[id=r51]:checked ~pre label[for=r51],
+input[id=r52]:checked ~pre label[for=r52],
+input[id=r53]:checked ~pre label[for=r53],
+input[id=r54]:checked ~pre label[for=r54],
+input[id=r55]:checked ~pre label[for=r55],
+input[id=r56]:checked ~pre label[for=r56],
+input[id=r57]:checked ~pre label[for=r57],
+input[id=r58]:checked ~pre label[for=r58],
+input[id=r59]:checked ~pre label[for=r59],
+input[id=r60]:checked ~pre label[for=r60],
+input[id=r61]:checked ~pre label[for=r61],
+input[id=r62]:checked ~pre label[for=r62],
+input[id=r63]:checked ~pre label[for=r63],
+input[id=r64]:checked ~pre label[for=r64],
+input[id=r65]:checked ~pre label[for=r65],
+input[id=r66]:checked ~pre label[for=r66],
+input[id=r67]:checked ~pre label[for=r67],
+input[id=r68]:checked ~pre label[for=r68],
+input[id=r69]:checked ~pre label[for=r69],
+input[id=r70]:checked ~pre label[for=r70],
+input[id=r71]:checked ~pre label[for=r71],
+input[id=r72]:checked ~pre label[for=r72],
+input[id=r73]:checked ~pre label[for=r73],
+input[id=r74]:checked ~pre label[for=r74],
+input[id=r75]:checked ~pre label[for=r75],
+input[id=r76]:checked ~pre label[for=r76],
+input[id=r77]:checked ~pre label[for=r77],
+input[id=r78]:checked ~pre label[for=r78],
+input[id=r79]:checked ~pre label[for=r79],
+input[id=r80]:checked ~pre label[for=r80],
+input[id=r81]:checked ~pre label[for=r81],
+input[id=r82]:checked ~pre label[for=r82],
+input[id=r83]:checked ~pre label[for=r83],
+input[id=r84]:checked ~pre label[for=r84],
+input[id=r85]:checked ~pre label[for=r85],
+input[id=r86]:checked ~pre label[for=r86],
+input[id=r87]:checked ~pre label[for=r87],
+input[id=r88]:checked ~pre label[for=r88],
+input[id=r89]:checked ~pre label[for=r89],
+input[id=r90]:checked ~pre label[for=r90],
+input[id=r91]:checked ~pre label[for=r91],
+input[id=r92]:checked ~pre label[for=r92],
+input[id=r93]:checked ~pre label[for=r93],
+input[id=r94]:checked ~pre label[for=r94],
+input[id=r95]:checked ~pre label[for=r95],
+input[id=r96]:checked ~pre label[for=r96],
+input[id=r97]:checked ~pre label[for=r97],
+input[id=r98]:checked ~pre label[for=r98],
+input[id=r99]:checked ~pre label[for=r99],
+input[id=r100]:checked ~pre label[for=r100],
+input[id=r101]:checked ~pre label[for=r101],
+input[id=r102]:checked ~pre label[for=r102],
+input[id=r103]:checked ~pre label[for=r103],
+input[id=r104]:checked ~pre label[for=r104],
+input[id=r105]:checked ~pre label[for=r105],
+input[id=r106]:checked ~pre label[for=r106],
+input[id=r107]:checked ~pre label[for=r107],
+input[id=r108]:checked ~pre label[for=r108],
+input[id=r109]:checked ~pre label[for=r109],
+input[id=r110]:checked ~pre label[for=r110],
+input[id=r111]:checked ~pre label[for=r111],
+input[id=r112]:checked ~pre label[for=r112],
+input[id=r113]:checked ~pre label[for=r113],
+input[id=r114]:checked ~pre label[for=r114],
+input[id=r115]:checked ~pre label[for=r115],
+input[id=r116]:checked ~pre label[for=r116],
+input[id=r117]:checked ~pre label[for=r117],
+input[id=r118]:checked ~pre label[for=r118],
+input[id=r119]:checked ~pre label[for=r119],
+input[id=r120]:checked ~pre label[for=r120],
+input[id=r121]:checked ~pre label[for=r121],
+input[id=r122]:checked ~pre label[for=r122],
+input[id=r123]:checked ~pre label[for=r123],
+input[id=r124]:checked ~pre label[for=r124],
+input[id=r125]:checked ~pre label[for=r125],
+input[id=r126]:checked ~pre label[for=r126],
+input[id=r127]:checked ~pre label[for=r127],
+input[id=r128]:checked ~pre label[for=r128],
+input[id=r129]:checked ~pre label[for=r129],
+input[id=r130]:checked ~pre label[for=r130],
+input[id=r131]:checked ~pre label[for=r131],
+input[id=r132]:checked ~pre label[for=r132],
+input[id=r133]:checked ~pre label[for=r133],
+input[id=r134]:checked ~pre label[for=r134],
+input[id=r135]:checked ~pre label[for=r135],
+input[id=r136]:checked ~pre label[for=r136]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1,
+input[id=i2]:checked ~pre .i2,
+input[id=i3]:checked ~pre .i3
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="r17" type="radio" name="g"/>
+<input id="r18" type="radio" name="g"/>
+<input id="r19" type="radio" name="g"/>
+<input id="r20" type="radio" name="g"/>
+<input id="r21" type="radio" name="g"/>
+<input id="r22" type="radio" name="g"/>
+<input id="r23" type="radio" name="g"/>
+<input id="r24" type="radio" name="g"/>
+<input id="r25" type="radio" name="g"/>
+<input id="r26" type="radio" name="g"/>
+<input id="r27" type="radio" name="g"/>
+<input id="r28" type="radio" name="g"/>
+<input id="r29" type="radio" name="g"/>
+<input id="r30" type="radio" name="g"/>
+<input id="r31" type="radio" name="g"/>
+<input id="r32" type="radio" name="g"/>
+<input id="r33" type="radio" name="g"/>
+<input id="r34" type="radio" name="g"/>
+<input id="r35" type="radio" name="g"/>
+<input id="r36" type="radio" name="g"/>
+<input id="r37" type="radio" name="g"/>
+<input id="r38" type="radio" name="g"/>
+<input id="r39" type="radio" name="g"/>
+<input id="r40" type="radio" name="g"/>
+<input id="r41" type="radio" name="g"/>
+<input id="r42" type="radio" name="g"/>
+<input id="r43" type="radio" name="g"/>
+<input id="r44" type="radio" name="g"/>
+<input id="r45" type="radio" name="g"/>
+<input id="r46" type="radio" name="g"/>
+<input id="r47" type="radio" name="g"/>
+<input id="r48" type="radio" name="g"/>
+<input id="r49" type="radio" name="g"/>
+<input id="r50" type="radio" name="g"/>
+<input id="r51" type="radio" name="g"/>
+<input id="r52" type="radio" name="g"/>
+<input id="r53" type="radio" name="g"/>
+<input id="r54" type="radio" name="g"/>
+<input id="r55" type="radio" name="g"/>
+<input id="r56" type="radio" name="g"/>
+<input id="r57" type="radio" name="g"/>
+<input id="r58" type="radio" name="g"/>
+<input id="r59" type="radio" name="g"/>
+<input id="r60" type="radio" name="g"/>
+<input id="r61" type="radio" name="g"/>
+<input id="r62" type="radio" name="g"/>
+<input id="r63" type="radio" name="g"/>
+<input id="r64" type="radio" name="g"/>
+<input id="r65" type="radio" name="g"/>
+<input id="r66" type="radio" name="g"/>
+<input id="r67" type="radio" name="g"/>
+<input id="r68" type="radio" name="g"/>
+<input id="r69" type="radio" name="g"/>
+<input id="r70" type="radio" name="g"/>
+<input id="r71" type="radio" name="g"/>
+<input id="r72" type="radio" name="g"/>
+<input id="r73" type="radio" name="g"/>
+<input id="r74" type="radio" name="g"/>
+<input id="r75" type="radio" name="g"/>
+<input id="r76" type="radio" name="g"/>
+<input id="r77" type="radio" name="g"/>
+<input id="r78" type="radio" name="g"/>
+<input id="r79" type="radio" name="g"/>
+<input id="r80" type="radio" name="g"/>
+<input id="r81" type="radio" name="g"/>
+<input id="r82" type="radio" name="g"/>
+<input id="r83" type="radio" name="g"/>
+<input id="r84" type="radio" name="g"/>
+<input id="r85" type="radio" name="g"/>
+<input id="r86" type="radio" name="g"/>
+<input id="r87" type="radio" name="g"/>
+<input id="r88" type="radio" name="g"/>
+<input id="r89" type="radio" name="g"/>
+<input id="r90" type="radio" name="g"/>
+<input id="r91" type="radio" name="g"/>
+<input id="r92" type="radio" name="g"/>
+<input id="r93" type="radio" name="g"/>
+<input id="r94" type="radio" name="g"/>
+<input id="r95" type="radio" name="g"/>
+<input id="r96" type="radio" name="g"/>
+<input id="r97" type="radio" name="g"/>
+<input id="r98" type="radio" name="g"/>
+<input id="r99" type="radio" name="g"/>
+<input id="r100" type="radio" name="g"/>
+<input id="r101" type="radio" name="g"/>
+<input id="r102" type="radio" name="g"/>
+<input id="r103" type="radio" name="g"/>
+<input id="r104" type="radio" name="g"/>
+<input id="r105" type="radio" name="g"/>
+<input id="r106" type="radio" name="g"/>
+<input id="r107" type="radio" name="g"/>
+<input id="r108" type="radio" name="g"/>
+<input id="r109" type="radio" name="g"/>
+<input id="r110" type="radio" name="g"/>
+<input id="r111" type="radio" name="g"/>
+<input id="r112" type="radio" name="g"/>
+<input id="r113" type="radio" name="g"/>
+<input id="r114" type="radio" name="g"/>
+<input id="r115" type="radio" name="g"/>
+<input id="r116" type="radio" name="g"/>
+<input id="r117" type="radio" name="g"/>
+<input id="r118" type="radio" name="g"/>
+<input id="r119" type="radio" name="g"/>
+<input id="r120" type="radio" name="g"/>
+<input id="r121" type="radio" name="g"/>
+<input id="r122" type="radio" name="g"/>
+<input id="r123" type="radio" name="g"/>
+<input id="r124" type="radio" name="g"/>
+<input id="r125" type="radio" name="g"/>
+<input id="r126" type="radio" name="g"/>
+<input id="r127" type="radio" name="g"/>
+<input id="r128" type="radio" name="g"/>
+<input id="r129" type="radio" name="g"/>
+<input id="r130" type="radio" name="g"/>
+<input id="r131" type="radio" name="g"/>
+<input id="r132" type="radio" name="g"/>
+<input id="r133" type="radio" name="g"/>
+<input id="r134" type="radio" name="g"/>
+<input id="r135" type="radio" name="g"/>
+<input id="r136" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<input id="i2" type="radio" name="i"/>
+<input id="i3" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2014 The Go Authors. All rights reserved.</span><span class="comment"> Use of this source code is governed by a BSD-style</span><span class="comment"> license that can be found in the LICENSE file.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Memory allocator.</span><span class="comment"></span><span class="comment"> This was originally based on tcmalloc, but has diverged quite a bit.</span><span class="comment"> http://goog-perftools.sourceforge.net/doc/tcmalloc.html</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> The main allocator works in runs of pages.</span><span class="comment"> Small allocation sizes (up to and including 32 kB) are</span><span class="comment"> rounded to one of about 70 size classes, each of which</span><span class="comment"> has its own free set of objects of exactly that size.</span><span class="comment"> Any free page of memory can be split into a set of objects</span><span class="comment"> of one size class, which are then managed using a free bitmap.</span><span class="comment"></span><span class="comment"> The allocator's data structures are:</span><span class="comment"></span><span class="comment">	fixalloc: a free-list allocator for fixed-size off-heap objects,</span><span class="comment">		used to manage storage used by the allocator.</span><span class="comment">	mheap: the malloc heap, managed at page (8192-byte) granularity.</span><span class="comment">	mspan: a run of in-use pages managed by the mheap.</span><span class="comment">	mcentral: collects all spans of a given size class.</span><span class="comment">	mcache: a per-P cache of mspans with free space.</span><span class="comment">	mstats: allocation statistics.</span><span class="comment"></span><span class="comment"> Allocating a small object proceeds up a hierarchy of caches:</span><span class="comment"></span><span class="comment">	1. Round the size up to one of the small size classes</span><span class="comment">	   and look in the corresponding mspan in this P's mcache.</span><span class="comment">	   Scan the mspan's free bitmap to find a free slot.</span><span class="comment">	   If there is a free slot, allocate it.</span><span class="comment">	   This can all be done without acquiring a lock.</span><span class="comment"></span><span class="comment">	2. If the mspan has no free slots, obtain a new mspan</span><span class="comment">	   from the mcentral's list of mspans of the required size</span><span class="comment">	   class that have free space.</span><span class="comment">	   Obtaining a whole span amortizes the cost of locking</span><span class="comment">	   the mcentral.</span><span class="comment"></span><span class="comment">	3. If the mcentral's mspan list is empty, obtain a run</span><span class="comment">	   of pages from the mheap to use for the mspan.</span><span class="comment"></span><span class="comment">	4. If the mheap is empty or has no page runs large enough,</span><span class="comment">	   allocate a new group of pages (at least 1MB) from the</span><span class="comment">	   operating system. Allocating a large run of pages</span><span class="comment">	   amortizes the cost of talking to the operating system.</span><span class="comment"></span><span class="comment"> Sweeping an mspan and freeing objects on it proceeds up a similar</span><span class="comment"> hierarchy:</span><span class="comment"></span><span class="comment">	1. If the mspan is being swept in response to allocation, it</span><span class="comment">	   is returned to the mcache to satisfy the allocation.</span><span class="comment"></span><span class="comment">	2. Otherwise, if the mspan still has allocated objects in it,</span><span class="comment">	   it is placed on the mcentral free list for the mspan's size</span><span class="comment">	   class.</span><span class="comment"></span><span class="comment">	3. Otherwise, if all objects in the mspan are free, the mspan's</span><span class="comment">	   pages are returned to the mheap and the mspan is now dead.</span><span class="comment"></span><span class="comment"> Allocating and freeing a large object uses the mheap</span><span class="comment"> directly, bypassing the mcache and mcentral.</span><span class="comment"></span><span class="comment"> If mspan.needzero is false, then free object slots in the mspan are</span><span class="comment"> already zeroed. Otherwise if needzero is true, objects are zeroed as</span><span class="comment"> they are allocated. There are various benefits to delaying zeroing</span><span class="comment"> this way:</span><span class="comment"></span><span class="comment">	1. Stack frame allocation can avoid zeroing altogether.</span><span class="comment"></span><span class="comment">	2. It exhibits better temporal locality, since the program is</span><span class="comment">	   probably about to write to the memory.</span><span class="comment"></span><span class="comment">	3. We don't zero pages that never get reused.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Virtual memory layout</span><span class="comment"></span><span class="comment"> The heap consists of a set of arenas, which are 64MB on 64-bit and</span><span class="comment"> 4MB on 32-bit (heapArenaBytes). Each arena's start address is also</span><span class="comment"> aligned to the arena size.</span><span class="comment"></span><span class="comment"> Each arena has an associated heapArena object that stores the</span><span class="comment"> metadata for that arena: the heap bitmap for all words in the arena</span><span class="comment"> and the span map for all pages in the arena. heapArena objects are</span><span class="comment"> themselves allocated off-heap.</span><span class="comment"></span><span class="comment"> Since arenas are aligned, the address space can be viewed as a</span><span class="comment"> series of arena frames. The arena map (mheap_.arenas) maps from</span><span class="comment"> arena frame number to *heapArena, or nil for parts of the address</span><span class="comment"> space not backed by the Go heap. The arena map is structured as a</span><span class="comment"> two-level array consisting of a "L1" arena map and many "L2" arena</span><span class="comment"> maps; however, since arenas are large, on many architectures, the</span><span class="comment"> arena map consists of a single, large L2 map.</span><span class="comment"></span><span class="comment"> The arena map covers the entire possible address space, allowing</span><span class="comment"> the Go heap to use any part of the address space. The allocator</span><span class="comment"> attempts to keep arenas contiguous so that large spans (and hence</span><span class="comment"> large objects) can cross arenas.</span></div>
+<div class="code"><pre><code>
+<span class="keyword">package</span> runtime
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"runtime/internal/atomic"</span></label>
+	<label for="i1"><span class="lit-string i1">"runtime/internal/math"</span></label>
+	<label for="i2"><span class="lit-string i2">"runtime/internal/sys"</span></label>
+	<label for="i3"><span class="lit-string i3">"unsafe"</span></label>
+)
+
+<span class="keyword">const</span> (
+	<a href="../../pkg/runtime.html#name-debugMalloc" class="ident">debugMalloc</a> = <a href="../../pkg/builtin.html#name-false" class="ident">false</a>
+
+	<a href="../../pkg/runtime.html#name-maxTinySize" class="ident">maxTinySize</a>   = <a href="#line-133" class="ident">_TinySize</a>
+	<a href="../../pkg/runtime.html#name-tinySizeClass" class="ident">tinySizeClass</a> = <a href="#line-134" class="ident">_TinySizeClass</a>
+	<a href="../../pkg/runtime.html#name-maxSmallSize" class="ident">maxSmallSize</a>  = <a href="sizeclasses.go.html#line-76" class="ident">_MaxSmallSize</a>
+
+	<a href="../../pkg/runtime.html#name-pageShift" class="ident">pageShift</a> = <a href="sizeclasses.go.html#line-81" class="ident">_PageShift</a>
+	<a href="../../pkg/runtime.html#name-pageSize" class="ident">pageSize</a>  = <a href="#line-126" class="ident">_PageSize</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> By construction, single page spans of the smallest object class</span><span class="comment">	 have the most objects per span.</span></div>
+<div class="code"><pre><code>	<a href="../../pkg/runtime.html#name-maxObjsPerSpan" class="ident">maxObjsPerSpan</a> = <a href="#line-118" class="ident">pageSize</a> / <span class="lit-number">8</span>
+
+	<a href="../../pkg/runtime.html#name-concurrentSweep" class="ident">concurrentSweep</a> = <a href="mgc.go.html#line-139" class="ident">_ConcurrentSweep</a>
+
+	<a href="../../pkg/runtime.html#name-_PageSize" class="ident">_PageSize</a> = <span class="lit-number">1</span> &lt;&lt; <a href="sizeclasses.go.html#line-81" class="ident">_PageShift</a>
+	<a href="../../pkg/runtime.html#name-_PageMask" class="ident">_PageMask</a> = <a href="#line-126" class="ident">_PageSize</a> - <span class="lit-number">1</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> _64bit = 1 on 64-bit systems, 0 on 32-bit systems</span></div>
+<div class="code"><pre><code>	<a href="../../pkg/runtime.html#name-_64bit" class="ident">_64bit</a> = <span class="lit-number">1</span> &lt;&lt; (^<a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<span class="lit-number">0</span>) &gt;&gt; <span class="lit-number">63</span>) / <span class="lit-number">2</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Tiny allocator parameters, see "Tiny allocator" comment in malloc.go.</span></div>
+<div class="code"><pre><code>	<a href="../../pkg/runtime.html#name-_TinySize" class="ident">_TinySize</a>      = <span class="lit-number">16</span>
+	<a href="../../pkg/runtime.html#name-_TinySizeClass" class="ident">_TinySizeClass</a> = <a href="../../pkg/builtin.html#name-int8" class="ident">int8</a>(<span class="lit-number">2</span>)
+
+	<a href="../../pkg/runtime.html#name-_FixAllocChunk" class="ident">_FixAllocChunk</a> = <span class="lit-number">16</span> &lt;&lt; <span class="lit-number">10</span> <span class="comment">// Chunk size for FixAlloc</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Per-P, per order stack segment cache size.</span></div>
+<div class="code"><pre><code>	<a href="../../pkg/runtime.html#name-_StackCacheSize" class="ident">_StackCacheSize</a> = <span class="lit-number">32</span> * <span class="lit-number">1024</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Number of orders that get caching. Order 0 is FixedStack</span><span class="comment">	 and each successive order is twice as large.</span><span class="comment">	 We want to cache 2KB, 4KB, 8KB, and 16KB stacks. Larger stacks</span><span class="comment">	 will be allocated directly.</span><span class="comment">	 Since FixedStack is different on different systems, we</span><span class="comment">	 must vary NumStackOrders to keep the same maximum cached size.</span><span class="comment">	   OS               | FixedStack | NumStackOrders</span><span class="comment">	   -----------------+------------+---------------</span><span class="comment">	   linux/darwin/bsd | 2KB        | 4</span><span class="comment">	   windows/32       | 4KB        | 3</span><span class="comment">	   windows/64       | 8KB        | 2</span><span class="comment">	   plan9            | 4KB        | 3</span></div>
+<div class="code"><pre><code>	<a href="../../pkg/runtime.html#name-_NumStackOrders" class="ident">_NumStackOrders</a> = <span class="lit-number">4</span> - <a href="../../pkg/runtime/internal/sys.html" class="ident i2">sys</a>.<a href="internal/sys/stubs.go.html#line-9" class="ident">PtrSize</a>/<span class="lit-number">4</span>*<a href="../../pkg/runtime/internal/sys.html" class="ident i2">sys</a>.<a href="internal/sys/zgoos_darwin.go.html#line-25" class="ident">GoosWindows</a> - <span class="lit-number">1</span>*<a href="../../pkg/runtime/internal/sys.html" class="ident i2">sys</a>.<a href="internal/sys/zgoos_darwin.go.html#line-23" class="ident">GoosPlan9</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> heapAddrBits is the number of bits in a heap address. On</span><span class="comment">	 amd64, addresses are sign-extended beyond heapAddrBits. On</span><span class="comment">	 other arches, they are zero-extended.</span><span class="comment">	</span><span class="comment">	 On most 64-bit platforms, we limit this to 48 bits based on a</span><span class="comment">	 combination of hardware and OS limitations.</span><span class="comment">	</span><span class="comment">	 amd64 hardware limits addresses to 48 bits, sign-extended</span><span class="comment">	 to 64 bits. Addresses where the top 16 bits are not either</span><span class="comment">	 all 0 or all 1 are "non-canonical" and invalid. Because of</span><span class="comment">	 these "negative" addresses, we offset addresses by 1&lt;&lt;47</span><span class="comment">	 (arenaBaseOffset) on amd64 before computing indexes into</span><span class="comment">	 the heap arenas index. In 2017, amd64 hardware added</span><span class="comment">	 support for 57 bit addresses; however, currently only Linux</span><span class="comment">	 supports this extension and the kernel will never choose an</span><span class="comment">	 address above 1&lt;&lt;47 unless mmap is called with a hint</span><span class="comment">	 address above 1&lt;&lt;47 (which we never do).</span><span class="comment">	</span><span class="comment">	 arm64 hardware (as of ARMv8) limits user addresses to 48</span><span class="comment">	 bits, in the range [0, 1&lt;&lt;48).</span><span class="comment">	</span><span class="comment">	 ppc64, mips64, and s390x support arbitrary 64 bit addresses</span><span class="comment">	 in hardware. On Linux, Go leans on stricter OS limits. Based</span><span class="comment">	 on Linux's processor.h, the user address space is limited as</span><span class="comment">	 follows on 64-bit architectures:</span><span class="comment">	</span><span class="comment">	 Architecture  Name              Maximum Value (exclusive)</span><span class="comment">	 ---------------------------------------------------------------------</span><span class="comment">	 amd64         TASK_SIZE_MAX     0x007ffffffff000 (47 bit addresses)</span><span class="comment">	 arm64         TASK_SIZE_64      0x01000000000000 (48 bit addresses)</span><span class="comment">	 ppc64{,le}    TASK_SIZE_USER64  0x00400000000000 (46 bit addresses)</span><span class="comment">	 mips64{,le}   TASK_SIZE64       0x00010000000000 (40 bit addresses)</span><span class="comment">	 s390x         TASK_SIZE         1&lt;&lt;64 (64 bit addresses)</span><span class="comment">	</span><span class="comment">	 These limits may increase over time, but are currently at</span><span class="comment">	 most 48 bits except on s390x. On all architectures, Linux</span><span class="comment">	 starts placing mmap'd regions at addresses that are</span><span class="comment">	 significantly below 48 bits, so even if it's possible to</span><span class="comment">	 exceed Go's 48 bit limit, it's extremely unlikely in</span><span class="comment">	 practice.</span><span class="comment">	</span><span class="comment">	 On 32-bit platforms, we accept the full 32-bit address</span><span class="comment">	 space because doing so is cheap.</span><span class="comment">	 mips32 only has access to the low 2GB of virtual memory, so</span><span class="comment">	 we further limit it to 31 bits.</span><span class="comment">	</span><span class="comment">	 On ios/arm64, although 64-bit pointers are presumably</span><span class="comment">	 available, pointers are truncated to 33 bits. Furthermore,</span><span class="comment">	 only the top 4 GiB of the address space are actually available</span><span class="comment">	 to the application, but we allow the whole 33 bits anyway for</span><span class="comment">	 simplicity.</span><span class="comment">	 TODO(mknyszek): Consider limiting it to 32 bits and using</span><span class="comment">	 arenaBaseOffset to offset into the top 4 GiB.</span><span class="comment">	</span><span class="comment">	 WebAssembly currently has a limit of 4GB linear memory.</span></div>
+<div class="code"><pre><code>	<a href="../../pkg/runtime.html#name-heapAddrBits" class="ident">heapAddrBits</a> = (<a href="#line-130" class="ident">_64bit</a>*(<span class="lit-number">1</span>-<a href="../../pkg/runtime/internal/sys.html" class="ident i2">sys</a>.<a href="internal/sys/zgoarch_amd64.go.html#line-31" class="ident">GoarchWasm</a>)*(<span class="lit-number">1</span>-<a href="../../pkg/runtime/internal/sys.html" class="ident i2">sys</a>.<a href="internal/sys/zgoos_darwin.go.html#line-17" class="ident">GoosIos</a>*<a href="../../pkg/runtime/internal/sys.html" class="ident i2">sys</a>.<a href="internal/sys/zgoarch_amd64.go.html#line-14" class="ident">GoarchArm64</a>))*<span class="lit-number">48</span> + (<span class="lit-number">1</span>-<a href="#line-130" class="ident">_64bit</a>+<a href="../../pkg/runtime/internal/sys.html" class="ident i2">sys</a>.<a href="internal/sys/zgoarch_amd64.go.html#line-31" class="ident">GoarchWasm</a>)*(<span class="lit-number">32</span>-(<a href="../../pkg/runtime/internal/sys.html" class="ident i2">sys</a>.<a href="internal/sys/zgoarch_amd64.go.html#line-18" class="ident">GoarchMips</a>+<a href="../../pkg/runtime/internal/sys.html" class="ident i2">sys</a>.<a href="internal/sys/zgoarch_amd64.go.html#line-19" class="ident">GoarchMipsle</a>)) + <span class="lit-number">33</span>*<a href="../../pkg/runtime/internal/sys.html" class="ident i2">sys</a>.<a href="internal/sys/zgoos_darwin.go.html#line-17" class="ident">GoosIos</a>*<a href="../../pkg/runtime/internal/sys.html" class="ident i2">sys</a>.<a href="internal/sys/zgoarch_amd64.go.html#line-14" class="ident">GoarchArm64</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> maxAlloc is the maximum size of an allocation. On 64-bit,</span><span class="comment">	 it's theoretically possible to allocate 1&lt;&lt;heapAddrBits bytes. On</span><span class="comment">	 32-bit, however, this is one less than 1&lt;&lt;32 because the</span><span class="comment">	 number of bytes in the address space doesn't actually fit</span><span class="comment">	 in a uintptr.</span></div>
+<div class="code"><pre><code>	<a href="../../pkg/runtime.html#name-maxAlloc" class="ident">maxAlloc</a> = (<span class="lit-number">1</span> &lt;&lt; <a href="#line-210" class="ident">heapAddrBits</a>) - (<span class="lit-number">1</span>-<a href="#line-130" class="ident">_64bit</a>)*<span class="lit-number">1</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> The number of bits in a heap address, the size of heap</span><span class="comment">	 arenas, and the L1 and L2 arena map sizes are related by</span><span class="comment">	</span><span class="comment">	   (1 &lt;&lt; addr bits) = arena size * L1 entries * L2 entries</span><span class="comment">	</span><span class="comment">	 Currently, we balance these as follows:</span><span class="comment">	</span><span class="comment">	       Platform  Addr bits  Arena size  L1 entries   L2 entries</span><span class="comment">	 --------------  ---------  ----------  ----------  -----------</span><span class="comment">	       64-bit         48        64MB           1    4M (32MB)</span><span class="comment">	 windows/64-bit         48         4MB          64    1M  (8MB)</span><span class="comment">	       32-bit         32         4MB           1  1024  (4KB)</span><span class="comment">	     mips(le)         31         4MB           1   512  (2KB)</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> heapArenaBytes is the size of a heap arena. The heap</span><span class="comment">	 consists of mappings of size heapArenaBytes, aligned to</span><span class="comment">	 heapArenaBytes. The initial heap mapping is one arena.</span><span class="comment">	</span><span class="comment">	 This is currently 64MB on 64-bit non-Windows and 4MB on</span><span class="comment">	 32-bit and on Windows. We use smaller arenas on Windows</span><span class="comment">	 because all committed memory is charged to the process,</span><span class="comment">	 even if it's not touched. Hence, for processes with small</span><span class="comment">	 heaps, the mapped arena space needs to be commensurate.</span><span class="comment">	 This is particularly important with the race detector,</span><span class="comment">	 since it significantly amplifies the cost of committed</span><span class="comment">	 memory.</span></div>
+<div class="code"><pre><code>	<a href="../../pkg/runtime.html#name-heapArenaBytes" class="ident">heapArenaBytes</a> = <span class="lit-number">1</span> &lt;&lt; <a href="#line-250" class="ident">logHeapArenaBytes</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> logHeapArenaBytes is log_2 of heapArenaBytes. For clarity,</span><span class="comment">	 prefer using heapArenaBytes where possible (we need the</span><span class="comment">	 constant to compute some other constants).</span></div>
+<div class="code"><pre><code>	<a href="../../pkg/runtime.html#name-logHeapArenaBytes" class="ident">logHeapArenaBytes</a> = (<span class="lit-number">6</span>+<span class="lit-number">20</span>)*(<a href="#line-130" class="ident">_64bit</a>*(<span class="lit-number">1</span>-<a href="../../pkg/runtime/internal/sys.html" class="ident i2">sys</a>.<a href="internal/sys/zgoos_darwin.go.html#line-25" class="ident">GoosWindows</a>)*(<span class="lit-number">1</span>-<a href="../../pkg/runtime/internal/sys.html" class="ident i2">sys</a>.<a href="internal/sys/zgoarch_amd64.go.html#line-31" class="ident">GoarchWasm</a>)) + (<span class="lit-number">2</span>+<span class="lit-number">20</span>)*(<a href="#line-130" class="ident">_64bit</a>*<a href="../../pkg/runtime/internal/sys.html" class="ident i2">sys</a>.<a href="internal/sys/zgoos_darwin.go.html#line-25" class="ident">GoosWindows</a>) + (<span class="lit-number">2</span>+<span class="lit-number">20</span>)*(<span class="lit-number">1</span>-<a href="#line-130" class="ident">_64bit</a>) + (<span class="lit-number">2</span>+<span class="lit-number">20</span>)*<a href="../../pkg/runtime/internal/sys.html" class="ident i2">sys</a>.<a href="internal/sys/zgoarch_amd64.go.html#line-31" class="ident">GoarchWasm</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> heapArenaBitmapBytes is the size of each heap arena's bitmap.</span></div>
+<div class="code"><pre><code>	<a href="../../pkg/runtime.html#name-heapArenaBitmapBytes" class="ident">heapArenaBitmapBytes</a> = <a href="#line-245" class="ident">heapArenaBytes</a> / (<a href="../../pkg/runtime/internal/sys.html" class="ident i2">sys</a>.<a href="internal/sys/stubs.go.html#line-9" class="ident">PtrSize</a> * <span class="lit-number">8</span> / <span class="lit-number">2</span>)
+
+	<a href="../../pkg/runtime.html#name-pagesPerArena" class="ident">pagesPerArena</a> = <a href="#line-245" class="ident">heapArenaBytes</a> / <a href="#line-118" class="ident">pageSize</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> arenaL1Bits is the number of bits of the arena number</span><span class="comment">	 covered by the first level arena map.</span><span class="comment">	</span><span class="comment">	 This number should be small, since the first level arena</span><span class="comment">	 map requires PtrSize*(1&lt;&lt;arenaL1Bits) of space in the</span><span class="comment">	 binary's BSS. It can be zero, in which case the first level</span><span class="comment">	 index is effectively unused. There is a performance benefit</span><span class="comment">	 to this, since the generated code can be more efficient,</span><span class="comment">	 but comes at the cost of having a large L2 mapping.</span><span class="comment">	</span><span class="comment">	 We use the L1 map on 64-bit Windows because the arena size</span><span class="comment">	 is small, but the address space is still 48 bits, and</span><span class="comment">	 there's a high cost to having a large L2.</span></div>
+<div class="code"><pre><code>	<a href="../../pkg/runtime.html#name-arenaL1Bits" class="ident">arenaL1Bits</a> = <span class="lit-number">6</span> * (<a href="#line-130" class="ident">_64bit</a> * <a href="../../pkg/runtime/internal/sys.html" class="ident i2">sys</a>.<a href="internal/sys/zgoos_darwin.go.html#line-25" class="ident">GoosWindows</a>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> arenaL2Bits is the number of bits of the arena number</span><span class="comment">	 covered by the second level arena index.</span><span class="comment">	</span><span class="comment">	 The size of each arena map allocation is proportional to</span><span class="comment">	 1&lt;&lt;arenaL2Bits, so it's important that this not be too</span><span class="comment">	 large. 48 bits leads to 32MB arena index allocations, which</span><span class="comment">	 is about the practical threshold.</span></div>
+<div class="code"><pre><code>	<a href="../../pkg/runtime.html#name-arenaL2Bits" class="ident">arenaL2Bits</a> = <a href="#line-210" class="ident">heapAddrBits</a> - <a href="#line-250" class="ident">logHeapArenaBytes</a> - <a href="#line-270" class="ident">arenaL1Bits</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> arenaL1Shift is the number of bits to shift an arena frame</span><span class="comment">	 number by to compute an index into the first level arena map.</span></div>
+<div class="code"><pre><code>	<a href="../../pkg/runtime.html#name-arenaL1Shift" class="ident">arenaL1Shift</a> = <a href="#line-279" class="ident">arenaL2Bits</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> arenaBits is the total bits in a combined arena map index.</span><span class="comment">	 This is split between the index into the L1 arena map and</span><span class="comment">	 the L2 arena map.</span></div>
+<div class="code"><pre><code>	<a href="../../pkg/runtime.html#name-arenaBits" class="ident">arenaBits</a> = <a href="#line-270" class="ident">arenaL1Bits</a> + <a href="#line-279" class="ident">arenaL2Bits</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> arenaBaseOffset is the pointer value that corresponds to</span><span class="comment">	 index 0 in the heap arena map.</span><span class="comment">	</span><span class="comment">	 On amd64, the address space is 48 bits, sign extended to 64</span><span class="comment">	 bits. This offset lets us handle "negative" addresses (or</span><span class="comment">	 high addresses if viewed as unsigned).</span><span class="comment">	</span><span class="comment">	 On aix/ppc64, this offset allows to keep the heapAddrBits to</span><span class="comment">	 48. Otherwize, it would be 60 in order to handle mmap addresses</span><span class="comment">	 (in range 0x0a00000000000000 - 0x0afffffffffffff). But in this</span><span class="comment">	 case, the memory reserved in (s *pageAlloc).init for chunks</span><span class="comment">	 is causing important slowdowns.</span><span class="comment">	</span><span class="comment">	 On other platforms, the user address space is contiguous</span><span class="comment">	 and starts at 0, so no offset is necessary.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> A typed version of this constant that will make it into DWARF (for viewcore).</span></div>
+<div class="code"><pre><code>	<a href="../../pkg/runtime.html#name-arenaBaseOffsetUintptr" class="ident">arenaBaseOffsetUintptr</a> = <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<a href="#line-305" class="ident">arenaBaseOffset</a>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Max number of threads to run garbage collection.</span><span class="comment">	 2, 3, and 4 are all plausible maximums depending</span><span class="comment">	 on the hardware details of the machine. The garbage</span><span class="comment">	 collector scales well to 32 cpus.</span></div>
+<div class="code"><pre><code>	<a href="../../pkg/runtime.html#name-_MaxGcproc" class="ident">_MaxGcproc</a> = <span class="lit-number">32</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> minLegalPointer is the smallest possible legal pointer.</span><span class="comment">	 This is the smallest possible architectural page size,</span><span class="comment">	 since we assume that the first page is never mapped.</span><span class="comment">	</span><span class="comment">	 This should agree with minZeroPage in the compiler.</span></div>
+<div class="code"><pre><code>	<a href="../../pkg/runtime.html#name-minLegalPointer" class="ident">minLegalPointer</a> <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a> = <span class="lit-number">4096</span>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> physPageSize is the size in bytes of the OS's physical pages.</span><span class="comment"> Mapping and unmapping operations must be done at multiples of</span><span class="comment"> physPageSize.</span><span class="comment"></span><span class="comment"> This must be set by the OS init code (typically in osinit) before</span><span class="comment"> mallocinit.</span></div>
+<div class="code"><pre><code><span class="keyword">var</span> <a href="../../pkg/runtime.html#name-physPageSize" class="ident">physPageSize</a> <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> physHugePageSize is the size in bytes of the OS's default physical huge</span><span class="comment"> page size whose allocation is opaque to the application. It is assumed</span><span class="comment"> and verified to be a power of two.</span><span class="comment"></span><span class="comment"> If set, this must be set by the OS init code (typically in osinit) before</span><span class="comment"> mallocinit. However, setting it at all is optional, and leaving the default</span><span class="comment"> value is always safe (though potentially less efficient).</span><span class="comment"></span><span class="comment"> Since physHugePageSize is always assumed to be a power of two,</span><span class="comment"> physHugePageShift is defined as physHugePageSize == 1 &lt;&lt; physHugePageShift.</span><span class="comment"> The purpose of physHugePageShift is to avoid doing divisions in</span><span class="comment"> performance critical functions.</span></div>
+<div class="code"><pre><code><span class="keyword">var</span> (
+	<a href="../../pkg/runtime.html#name-physHugePageSize" class="ident">physHugePageSize</a>  <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>
+	<a href="../../pkg/runtime.html#name-physHugePageShift" class="ident">physHugePageShift</a> <a href="../../pkg/builtin.html#name-uint" class="ident">uint</a>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> OS memory management abstraction layer</span><span class="comment"></span><span class="comment"> Regions of the address space managed by the runtime may be in one of four</span><span class="comment"> states at any given time:</span><span class="comment"> 1) None - Unreserved and unmapped, the default state of any region.</span><span class="comment"> 2) Reserved - Owned by the runtime, but accessing it would cause a fault.</span><span class="comment">               Does not count against the process' memory footprint.</span><span class="comment"> 3) Prepared - Reserved, intended not to be backed by physical memory (though</span><span class="comment">               an OS may implement this lazily). Can transition efficiently to</span><span class="comment">               Ready. Accessing memory in such a region is undefined (may</span><span class="comment">               fault, may give back unexpected zeroes, etc.).</span><span class="comment"> 4) Ready - may be accessed safely.</span><span class="comment"></span><span class="comment"> This set of states is more than is strictly necessary to support all the</span><span class="comment"> currently supported platforms. One could get by with just None, Reserved, and</span><span class="comment"> Ready. However, the Prepared state gives us flexibility for performance</span><span class="comment"> purposes. For example, on POSIX-y operating systems, Reserved is usually a</span><span class="comment"> private anonymous mmap'd region with PROT_NONE set, and to transition</span><span class="comment"> to Ready would require setting PROT_READ|PROT_WRITE. However the</span><span class="comment"> underspecification of Prepared lets us use just MADV_FREE to transition from</span><span class="comment"> Ready to Prepared. Thus with the Prepared state we can set the permission</span><span class="comment"> bits just once early on, we can efficiently tell the OS that it's free to</span><span class="comment"> take pages away from us when we don't strictly need them.</span><span class="comment"></span><span class="comment"> For each OS there is a common set of helpers defined that transition</span><span class="comment"> memory regions between these states. The helpers are as follows:</span><span class="comment"></span><span class="comment"> sysAlloc transitions an OS-chosen region of memory from None to Ready.</span><span class="comment"> More specifically, it obtains a large chunk of zeroed memory from the</span><span class="comment"> operating system, typically on the order of a hundred kilobytes</span><span class="comment"> or a megabyte. This memory is always immediately available for use.</span><span class="comment"></span><span class="comment"> sysFree transitions a memory region from any state to None. Therefore, it</span><span class="comment"> returns memory unconditionally. It is used if an out-of-memory error has been</span><span class="comment"> detected midway through an allocation or to carve out an aligned section of</span><span class="comment"> the address space. It is okay if sysFree is a no-op only if sysReserve always</span><span class="comment"> returns a memory region aligned to the heap allocator's alignment</span><span class="comment"> restrictions.</span><span class="comment"></span><span class="comment"> sysReserve transitions a memory region from None to Reserved. It reserves</span><span class="comment"> address space in such a way that it would cause a fatal fault upon access</span><span class="comment"> (either via permissions or not committing the memory). Such a reservation is</span><span class="comment"> thus never backed by physical memory.</span><span class="comment"> If the pointer passed to it is non-nil, the caller wants the</span><span class="comment"> reservation there, but sysReserve can still choose another</span><span class="comment"> location if that one is unavailable.</span><span class="comment"> NOTE: sysReserve returns OS-aligned memory, but the heap allocator</span><span class="comment"> may use larger alignment, so the caller must be careful to realign the</span><span class="comment"> memory obtained by sysReserve.</span><span class="comment"></span><span class="comment"> sysMap transitions a memory region from Reserved to Prepared. It ensures the</span><span class="comment"> memory region can be efficiently transitioned to Ready.</span><span class="comment"></span><span class="comment"> sysUsed transitions a memory region from Prepared to Ready. It notifies the</span><span class="comment"> operating system that the memory region is needed and ensures that the region</span><span class="comment"> may be safely accessed. This is typically a no-op on systems that don't have</span><span class="comment"> an explicit commit step and hard over-commit limits, but is critical on</span><span class="comment"> Windows, for example.</span><span class="comment"></span><span class="comment"> sysUnused transitions a memory region from Ready to Prepared. It notifies the</span><span class="comment"> operating system that the physical pages backing this memory region are no</span><span class="comment"> longer needed and can be reused for other purposes. The contents of a</span><span class="comment"> sysUnused memory region are considered forfeit and the region must not be</span><span class="comment"> accessed again until sysUsed is called.</span><span class="comment"></span><span class="comment"> sysFault transitions a memory region from Ready or Prepared to Reserved. It</span><span class="comment"> marks a region such that it will always fault if accessed. Used only for</span><span class="comment"> debugging the runtime.</span></div>
+<div class="code"><pre><code>
+<span class="keyword">func</span> <label for="r0" class="ident"><a href="../../pkg/runtime.html#name-mallocinit" class="ident">mallocinit</a></label>() {
+	<span class="keyword">if</span> <a href="sizeclasses.go.html#line-84" class="ident">class_to_size</a>[<a href="#line-134" class="ident">_TinySizeClass</a>] != <a href="#line-133" class="ident">_TinySize</a> {
+		<a href="panic.go.html#line-1107" class="ident">throw</a>(<span class="lit-string">"bad TinySizeClass"</span>)
+	}
+
+	<a href="panic.go.html#line-342" class="ident">testdefersizes</a>()
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> heapBits expects modular arithmetic on bitmap</span><span class="comment">		 addresses to work.</span></div>
+<div class="code"><pre><code>		<a href="panic.go.html#line-1107" class="ident">throw</a>(<span class="lit-string">"heapArenaBitmapBytes not a power of 2"</span>)
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Copy class sizes out for statistics table.</span></div>
+<div class="code"><pre><code>	<span class="keyword">for</span> <label for="r1" class="ident">i</label> := <span class="keyword">range</span> <a href="sizeclasses.go.html#line-84" class="ident">class_to_size</a> {
+		<a href="mstats.go.html#line-170" class="ident">memstats</a>.<a href="mstats.go.html#line-84" class="ident">by_size</a>[<label for="r1" class="ident">i</label>].<a href="mstats.go.html#line-85" class="ident">size</a> = <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>(<a href="sizeclasses.go.html#line-84" class="ident">class_to_size</a>[<label for="r1" class="ident">i</label>])
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Check physPageSize.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> The OS init code failed to fetch the physical page size.</span></div>
+<div class="code"><pre><code>		<a href="panic.go.html#line-1107" class="ident">throw</a>(<span class="lit-string">"failed to get system page size"</span>)
+	}
+	<span class="keyword">if</span> <a href="#line-329" class="ident">physPageSize</a> &gt; <a href="mheap.go.html#line-25" class="ident">maxPhysPageSize</a> {
+		<a href="../../pkg/builtin.html#name-print" class="ident">print</a>(<span class="lit-string">"system page size ("</span>, <a href="#line-329" class="ident">physPageSize</a>, <span class="lit-string">") is larger than maximum page size ("</span>, <a href="mheap.go.html#line-25" class="ident">maxPhysPageSize</a>, <span class="lit-string">")\n"</span>)
+		<a href="panic.go.html#line-1107" class="ident">throw</a>(<span class="lit-string">"bad system page size"</span>)
+	}
+	<span class="keyword">if</span> <a href="#line-329" class="ident">physPageSize</a> &lt; <a href="mheap.go.html#line-22" class="ident">minPhysPageSize</a> {
+		<a href="../../pkg/builtin.html#name-print" class="ident">print</a>(<span class="lit-string">"system page size ("</span>, <a href="#line-329" class="ident">physPageSize</a>, <span class="lit-string">") is smaller than minimum page size ("</span>, <a href="mheap.go.html#line-22" class="ident">minPhysPageSize</a>, <span class="lit-string">")\n"</span>)
+		<a href="panic.go.html#line-1107" class="ident">throw</a>(<span class="lit-string">"bad system page size"</span>)
+	}
+	<span class="keyword">if</span> <a href="#line-329" class="ident">physPageSize</a>&amp;(<a href="#line-329" class="ident">physPageSize</a>-<span class="lit-number">1</span>) != <span class="lit-number">0</span> {
+		<a href="../../pkg/builtin.html#name-print" class="ident">print</a>(<span class="lit-string">"system page size ("</span>, <a href="#line-329" class="ident">physPageSize</a>, <span class="lit-string">") must be a power of 2\n"</span>)
+		<a href="panic.go.html#line-1107" class="ident">throw</a>(<span class="lit-string">"bad system page size"</span>)
+	}
+	<span class="keyword">if</span> <a href="#line-344" class="ident">physHugePageSize</a>&amp;(<a href="#line-344" class="ident">physHugePageSize</a>-<span class="lit-number">1</span>) != <span class="lit-number">0</span> {
+		<a href="../../pkg/builtin.html#name-print" class="ident">print</a>(<span class="lit-string">"system huge page size ("</span>, <a href="#line-344" class="ident">physHugePageSize</a>, <span class="lit-string">") must be a power of 2\n"</span>)
+		<a href="panic.go.html#line-1107" class="ident">throw</a>(<span class="lit-string">"bad system huge page size"</span>)
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> physHugePageSize is greater than the maximum supported huge page size.</span><span class="comment">		 Don't throw here, like in the other cases, since a system configured</span><span class="comment">		 in this way isn't wrong, we just don't have the code to support them.</span><span class="comment">		 Instead, silently set the huge page size to zero.</span></div>
+<div class="code"><pre><code>		<a href="#line-344" class="ident">physHugePageSize</a> = <span class="lit-number">0</span>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Since physHugePageSize is a power of 2, it suffices to increase</span><span class="comment">		 physHugePageShift until 1&lt;&lt;physHugePageShift == physHugePageSize.</span></div>
+<div class="code"><pre><code>		<span class="keyword">for</span> <span class="lit-number">1</span>&lt;&lt;<a href="#line-345" class="ident">physHugePageShift</a> != <a href="#line-344" class="ident">physHugePageSize</a> {
+			<a href="#line-345" class="ident">physHugePageShift</a>++
+		}
+	}
+	<span class="keyword">if</span> <a href="#line-255" class="ident">pagesPerArena</a>%<a href="mgcmark.go.html#line-49" class="ident">pagesPerSpanRoot</a> != <span class="lit-number">0</span> {
+		<a href="../../pkg/builtin.html#name-print" class="ident">print</a>(<span class="lit-string">"pagesPerArena ("</span>, <a href="#line-255" class="ident">pagesPerArena</a>, <span class="lit-string">") is not divisible by pagesPerSpanRoot ("</span>, <a href="mgcmark.go.html#line-49" class="ident">pagesPerSpanRoot</a>, <span class="lit-string">")\n"</span>)
+		<a href="panic.go.html#line-1107" class="ident">throw</a>(<span class="lit-string">"bad pagesPerSpanRoot"</span>)
+	}
+	<span class="keyword">if</span> <a href="#line-255" class="ident">pagesPerArena</a>%<a href="mheap.go.html#line-46" class="ident">pagesPerReclaimerChunk</a> != <span class="lit-number">0</span> {
+		<a href="../../pkg/builtin.html#name-print" class="ident">print</a>(<span class="lit-string">"pagesPerArena ("</span>, <a href="#line-255" class="ident">pagesPerArena</a>, <span class="lit-string">") is not divisible by pagesPerReclaimerChunk ("</span>, <a href="mheap.go.html#line-46" class="ident">pagesPerReclaimerChunk</a>, <span class="lit-string">")\n"</span>)
+		<a href="panic.go.html#line-1107" class="ident">throw</a>(<span class="lit-string">"bad pagesPerReclaimerChunk"</span>)
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Initialize the heap.</span></div>
+<div class="code"><pre><code>	<a href="mheap.go.html#line-221" class="ident">mheap_</a>.<a href="mheap.go.html#line-701" class="ident">init</a>()
+	<a href="proc.go.html#line-86" class="ident">mcache0</a> = <a href="mcache.go.html#line-84" class="ident">allocmcache</a>()
+	<a href="lockrank_off.go.html#line-14" class="ident">lockInit</a>(&amp;<a href="mheap.go.html#line-1902" class="ident">gcBitsArenas</a>.<a href="mheap.go.html#line-1903" class="ident">lock</a>, <a href="lockrank.go.html#line-61" class="ident">lockRankGcBitsArenas</a>)
+	<a href="lockrank_off.go.html#line-14" class="ident">lockInit</a>(&amp;<a href="mprof.go.html#line-16" class="ident">proflock</a>, <a href="lockrank.go.html#line-60" class="ident">lockRankProf</a>)
+	<a href="lockrank_off.go.html#line-14" class="ident">lockInit</a>(&amp;<a href="#line-1290" class="ident">globalAlloc</a>.<a href="#line-1291" class="ident">mutex</a>, <a href="lockrank.go.html#line-83" class="ident">lockRankGlobalAlloc</a>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Create initial arena growth hints.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> On a 64-bit machine, we pick the following hints</span><span class="comment">		 because:</span><span class="comment">		</span><span class="comment">		 1. Starting from the middle of the address space</span><span class="comment">		 makes it easier to grow out a contiguous range</span><span class="comment">		 without running in to some other mapping.</span><span class="comment">		</span><span class="comment">		 2. This makes Go heap addresses more easily</span><span class="comment">		 recognizable when debugging.</span><span class="comment">		</span><span class="comment">		 3. Stack scanning in gccgo is still conservative,</span><span class="comment">		 so it's important that addresses be distinguishable</span><span class="comment">		 from other data.</span><span class="comment">		</span><span class="comment">		 Starting at 0x00c0 means that the valid memory addresses</span><span class="comment">		 will begin 0x00c0, 0x00c1, ...</span><span class="comment">		 In little-endian, that's c0 00, c1 00, ... None of those are valid</span><span class="comment">		 UTF-8 sequences, and they are otherwise as far away from</span><span class="comment">		 ff (likely a common byte) as possible. If that fails, we try other 0xXXc0</span><span class="comment">		 addresses. An earlier attempt to use 0x11f8 caused out of memory errors</span><span class="comment">		 on OS X during thread allocations.  0x00c0 causes conflicts with</span><span class="comment">		 AddressSanitizer which reserves all memory up to 0x0100.</span><span class="comment">		 These choices reduce the odds of a conservative garbage collector</span><span class="comment">		 not collecting memory because some non-pointer block of memory</span><span class="comment">		 had a bit pattern that matched a memory address.</span><span class="comment">		</span><span class="comment">		 However, on arm64, we ignore all this advice above and slam the</span><span class="comment">		 allocation at 0x40 &lt;&lt; 32 because when using 4k pages with 3-level</span><span class="comment">		 translation buffers, the user address space is limited to 39 bits</span><span class="comment">		 On ios/arm64, the address space is even smaller.</span><span class="comment">		</span><span class="comment">		 On AIX, mmaps starts at 0x0A00000000000000 for 64-bit.</span><span class="comment">		 processes.</span></div>
+<div class="code"><pre><code>		<span class="keyword">for</span> <label for="r2" class="ident">i</label> := <span class="lit-number">0x7f</span>; <label for="r2" class="ident">i</label> &gt;= <span class="lit-number">0</span>; <label for="r2" class="ident">i</label>-- {
+			<span class="keyword">var</span> <label for="r3" class="ident">p</label> <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>
+			<span class="keyword">switch</span> {
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> The TSAN runtime requires the heap</span><span class="comment">				 to be in the range [0x00c000000000,</span><span class="comment">				 0x00e000000000).</span></div>
+<div class="code"><pre><code>				<label for="r3" class="ident">p</label> = <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<label for="r2" class="ident">i</label>)&lt;&lt;<span class="lit-number">32</span> | <a href="stack.go.html#line-123" class="ident">uintptrMask</a>&amp;(<span class="lit-number">0x00c0</span>&lt;&lt;<span class="lit-number">32</span>)
+				<span class="keyword">if</span> <label for="r3" class="ident">p</label> &gt;= <a href="stack.go.html#line-123" class="ident">uintptrMask</a>&amp;<span class="lit-number">0x00e000000000</span> {
+					<span class="keyword">continue</span>
+				}
+			<span class="keyword">case</span> <a href="extern.go.html#line-257" class="ident">GOARCH</a> == <span class="lit-string">"arm64"</span> &amp;&amp; <a href="extern.go.html#line-253" class="ident">GOOS</a> == <span class="lit-string">"ios"</span>:
+				<label for="r3" class="ident">p</label> = <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<label for="r2" class="ident">i</label>)&lt;&lt;<span class="lit-number">40</span> | <a href="stack.go.html#line-123" class="ident">uintptrMask</a>&amp;(<span class="lit-number">0x0013</span>&lt;&lt;<span class="lit-number">28</span>)
+			<span class="keyword">case</span> <a href="extern.go.html#line-257" class="ident">GOARCH</a> == <span class="lit-string">"arm64"</span>:
+				<label for="r3" class="ident">p</label> = <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<label for="r2" class="ident">i</label>)&lt;&lt;<span class="lit-number">40</span> | <a href="stack.go.html#line-123" class="ident">uintptrMask</a>&amp;(<span class="lit-number">0x0040</span>&lt;&lt;<span class="lit-number">32</span>)
+			<span class="keyword">case</span> <a href="extern.go.html#line-253" class="ident">GOOS</a> == <span class="lit-string">"aix"</span>:
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> We don't use addresses directly after 0x0A00000000000000</span><span class="comment">					 to avoid collisions with others mmaps done by non-go programs.</span></div>
+<div class="code"><pre><code>					<span class="keyword">continue</span>
+				}
+				<label for="r3" class="ident">p</label> = <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<label for="r2" class="ident">i</label>)&lt;&lt;<span class="lit-number">40</span> | <a href="stack.go.html#line-123" class="ident">uintptrMask</a>&amp;(<span class="lit-number">0xa0</span>&lt;&lt;<span class="lit-number">52</span>)
+			<span class="keyword">default</span>:
+				<label for="r3" class="ident">p</label> = <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<label for="r2" class="ident">i</label>)&lt;&lt;<span class="lit-number">40</span> | <a href="stack.go.html#line-123" class="ident">uintptrMask</a>&amp;(<span class="lit-number">0x00c0</span>&lt;&lt;<span class="lit-number">32</span>)
+			}
+			<label for="r4" class="ident">hint</label> := (*<a href="mheap.go.html#line-300" class="ident">arenaHint</a>)(<a href="mheap.go.html#line-221" class="ident">mheap_</a>.<a href="mheap.go.html#line-216" class="ident">arenaHintAlloc</a>.<a href="mfixalloc.go.html#line-64" class="ident">alloc</a>())
+			<label for="r4" class="ident">hint</label>.<a href="mheap.go.html#line-301" class="ident">addr</a> = <label for="r3" class="ident">p</label>
+			<label for="r4" class="ident">hint</label>.<a href="mheap.go.html#line-303" class="ident">next</a>, <a href="mheap.go.html#line-221" class="ident">mheap_</a>.<a href="mheap.go.html#line-167" class="ident">arenaHints</a> = <a href="mheap.go.html#line-221" class="ident">mheap_</a>.<a href="mheap.go.html#line-167" class="ident">arenaHints</a>, <label for="r4" class="ident">hint</label>
+		}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> On a 32-bit machine, we're much more concerned</span><span class="comment">		 about keeping the usable heap contiguous.</span><span class="comment">		 Hence:</span><span class="comment">		</span><span class="comment">		 1. We reserve space for all heapArenas up front so</span><span class="comment">		 they don't get interleaved with the heap. They're</span><span class="comment">		 ~258MB, so this isn't too bad. (We could reserve a</span><span class="comment">		 smaller amount of space up front if this is a</span><span class="comment">		 problem.)</span><span class="comment">		</span><span class="comment">		 2. We hint the heap to start right above the end of</span><span class="comment">		 the binary so we have the best chance of keeping it</span><span class="comment">		 contiguous.</span><span class="comment">		</span><span class="comment">		 3. We try to stake out a reasonably large initial</span><span class="comment">		 heap reservation.</span></div>
+<div class="code"><pre><code>
+		<span class="keyword">const</span> <label for="r5" class="ident">arenaMetaSize</label> = (<span class="lit-number">1</span> &lt;&lt; <a href="#line-288" class="ident">arenaBits</a>) * <a href="../../pkg/unsafe.html" class="ident i3">unsafe</a>.<a href="../../pkg/unsafe.html#name-Sizeof" class="ident">Sizeof</a>(<a href="mheap.go.html#line-227" class="ident">heapArena</a>{})
+		<label for="r6" class="ident">meta</label> := <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<a href="mem_darwin.go.html#line-51" class="ident">sysReserve</a>(<a href="../../pkg/builtin.html#name-nil" class="ident">nil</a>, <label for="r5" class="ident">arenaMetaSize</label>))
+		<span class="keyword">if</span> <label for="r6" class="ident">meta</label> != <span class="lit-number">0</span> {
+			<a href="mheap.go.html#line-221" class="ident">mheap_</a>.<a href="mheap.go.html#line-161" class="ident">heapArenaAlloc</a>.<a href="#line-1411" class="ident">init</a>(<label for="r6" class="ident">meta</label>, <label for="r5" class="ident">arenaMetaSize</label>)
+		}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> We want to start the arena low, but if we're linked</span><span class="comment">		 against C code, it's possible global constructors</span><span class="comment">		 have called malloc and adjusted the process' brk.</span><span class="comment">		 Query the brk so we can avoid trying to map the</span><span class="comment">		 region over it (which will cause the kernel to put</span><span class="comment">		 the region somewhere else, likely at a high</span><span class="comment">		 address).</span></div>
+<div class="code"><pre><code>		<label for="r7" class="ident">procBrk</label> := <a href="stubs_nonlinux.go.html#line-10" class="ident">sbrk0</a>()
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> If we ask for the end of the data segment but the</span><span class="comment">		 operating system requires a little more space</span><span class="comment">		 before we can start allocating, it will give out a</span><span class="comment">		 slightly higher pointer. Except QEMU, which is</span><span class="comment">		 buggy, as usual: it won't adjust the pointer</span><span class="comment">		 upward. So adjust it upward a little bit ourselves:</span><span class="comment">		 1/4 MB to get away from the running binary image.</span></div>
+<div class="code"><pre><code>		<label for="r8" class="ident">p</label> := <a href="symtab.go.html#line-426" class="ident">firstmoduledata</a>.<a href="symtab.go.html#line-373" class="ident">end</a>
+		<span class="keyword">if</span> <label for="r8" class="ident">p</label> &lt; <label for="r7" class="ident">procBrk</label> {
+			<label for="r8" class="ident">p</label> = <label for="r7" class="ident">procBrk</label>
+		}
+		<span class="keyword">if</span> <a href="mheap.go.html#line-221" class="ident">mheap_</a>.<a href="mheap.go.html#line-161" class="ident">heapArenaAlloc</a>.<a href="#line-1406" class="ident">next</a> &lt;= <label for="r8" class="ident">p</label> &amp;&amp; <label for="r8" class="ident">p</label> &lt; <a href="mheap.go.html#line-221" class="ident">mheap_</a>.<a href="mheap.go.html#line-161" class="ident">heapArenaAlloc</a>.<a href="#line-1408" class="ident">end</a> {
+			<label for="r8" class="ident">p</label> = <a href="mheap.go.html#line-221" class="ident">mheap_</a>.<a href="mheap.go.html#line-161" class="ident">heapArenaAlloc</a>.<a href="#line-1408" class="ident">end</a>
+		}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Because we're worried about fragmentation on</span><span class="comment">		 32-bit, we try to make a large initial reservation.</span></div>
+<div class="code"><pre><code>		<label for="r9" class="ident">arenaSizes</label> := []<a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>{
+			<span class="lit-number">512</span> &lt;&lt; <span class="lit-number">20</span>,
+			<span class="lit-number">256</span> &lt;&lt; <span class="lit-number">20</span>,
+			<span class="lit-number">128</span> &lt;&lt; <span class="lit-number">20</span>,
+		}
+		<span class="keyword">for</span> <label for="r10" class="ident">_</label>, <label for="r11" class="ident">arenaSize</label> := <span class="keyword">range</span> <label for="r9" class="ident">arenaSizes</label> {
+			<label for="r12" class="ident">a</label>, <label for="r13" class="ident">size</label> := <a href="#line-795" class="ident">sysReserveAligned</a>(<a href="../../pkg/unsafe.html" class="ident i3">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(<label for="r8" class="ident">p</label>), <label for="r11" class="ident">arenaSize</label>, <a href="#line-245" class="ident">heapArenaBytes</a>)
+			<span class="keyword">if</span> <label for="r12" class="ident">a</label> != <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+				<a href="mheap.go.html#line-221" class="ident">mheap_</a>.<a href="mheap.go.html#line-171" class="ident">arena</a>.<a href="#line-1411" class="ident">init</a>(<a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<label for="r12" class="ident">a</label>), <label for="r13" class="ident">size</label>)
+				<label for="r8" class="ident">p</label> = <a href="mheap.go.html#line-221" class="ident">mheap_</a>.<a href="mheap.go.html#line-171" class="ident">arena</a>.<a href="#line-1408" class="ident">end</a> <span class="comment">// For hint below</span>
+				<span class="keyword">break</span>
+			}
+		}
+		<label for="r14" class="ident">hint</label> := (*<a href="mheap.go.html#line-300" class="ident">arenaHint</a>)(<a href="mheap.go.html#line-221" class="ident">mheap_</a>.<a href="mheap.go.html#line-216" class="ident">arenaHintAlloc</a>.<a href="mfixalloc.go.html#line-64" class="ident">alloc</a>())
+		<label for="r14" class="ident">hint</label>.<a href="mheap.go.html#line-301" class="ident">addr</a> = <label for="r8" class="ident">p</label>
+		<label for="r14" class="ident">hint</label>.<a href="mheap.go.html#line-303" class="ident">next</a>, <a href="mheap.go.html#line-221" class="ident">mheap_</a>.<a href="mheap.go.html#line-167" class="ident">arenaHints</a> = <a href="mheap.go.html#line-221" class="ident">mheap_</a>.<a href="mheap.go.html#line-167" class="ident">arenaHints</a>, <label for="r14" class="ident">hint</label>
+	}
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> sysAlloc allocates heap arena space for at least n bytes. The</span><span class="comment"> returned pointer is always heapArenaBytes-aligned and backed by</span><span class="comment"> h.arenas metadata. The returned size is always a multiple of</span><span class="comment"> heapArenaBytes. sysAlloc returns nil on failure.</span><span class="comment"> There is no corresponding free function.</span><span class="comment"></span><span class="comment"> sysAlloc returns a memory region in the Prepared state. This region must</span><span class="comment"> be transitioned to Ready before use.</span><span class="comment"></span><span class="comment"> h must be locked.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r15" class="ident">h</label> *<a href="mheap.go.html#line-62" class="ident">mheap</a>) <label for="r16" class="ident"><a href="../../use/runtime..mheap*d82e8.sysAlloc*384b9.html" class="ident">sysAlloc</a></label>(<label for="r17" class="ident">n</label> <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>) (<label for="r18" class="ident">v</label> <a href="../../pkg/unsafe.html" class="ident i3">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>, <label for="r19" class="ident">size</label> <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>) {
+	<a href="lockrank_off.go.html#line-43" class="ident">assertLockHeld</a>(&amp;<label for="r15" class="ident">h</label>.<a href="mheap.go.html#line-65" class="ident">lock</a>)
+
+	<label for="r17" class="ident">n</label> = <a href="stubs.go.html#line-318" class="ident">alignUp</a>(<label for="r17" class="ident">n</label>, <a href="#line-245" class="ident">heapArenaBytes</a>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> First, try the arena pre-reservation.</span></div>
+<div class="code"><pre><code>	<label for="r18" class="ident">v</label> = <label for="r15" class="ident">h</label>.<a href="mheap.go.html#line-171" class="ident">arena</a>.<a href="#line-1423" class="ident">alloc</a>(<label for="r17" class="ident">n</label>, <a href="#line-245" class="ident">heapArenaBytes</a>, &amp;<a href="mstats.go.html#line-170" class="ident">memstats</a>.<a href="mstats.go.html#line-35" class="ident">heap_sys</a>)
+	<span class="keyword">if</span> <label for="r18" class="ident">v</label> != <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<label for="r19" class="ident">size</label> = <label for="r17" class="ident">n</label>
+		<span class="keyword">goto</span> <label for="r20" class="ident">mapped</label>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Try to grow the heap at a hint address.</span></div>
+<div class="code"><pre><code>	<span class="keyword">for</span> <label for="r15" class="ident">h</label>.<a href="mheap.go.html#line-167" class="ident">arenaHints</a> != <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<label for="r21" class="ident">hint</label> := <label for="r15" class="ident">h</label>.<a href="mheap.go.html#line-167" class="ident">arenaHints</a>
+		<label for="r22" class="ident">p</label> := <label for="r21" class="ident">hint</label>.<a href="mheap.go.html#line-301" class="ident">addr</a>
+		<span class="keyword">if</span> <label for="r21" class="ident">hint</label>.<a href="mheap.go.html#line-302" class="ident">down</a> {
+			<label for="r22" class="ident">p</label> -= <label for="r17" class="ident">n</label>
+		}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> We can't use this, so don't ask.</span></div>
+<div class="code"><pre><code>			<label for="r18" class="ident">v</label> = <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Outside addressable heap. Can't use.</span></div>
+<div class="code"><pre><code>			<label for="r18" class="ident">v</label> = <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a>
+		} <span class="keyword">else</span> {
+			<label for="r18" class="ident">v</label> = <a href="mem_darwin.go.html#line-51" class="ident">sysReserve</a>(<a href="../../pkg/unsafe.html" class="ident i3">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(<label for="r22" class="ident">p</label>), <label for="r17" class="ident">n</label>)
+		}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Success. Update the hint.</span></div>
+<div class="code"><pre><code>			<span class="keyword">if</span> !<label for="r21" class="ident">hint</label>.<a href="mheap.go.html#line-302" class="ident">down</a> {
+				<label for="r22" class="ident">p</label> += <label for="r17" class="ident">n</label>
+			}
+			<label for="r21" class="ident">hint</label>.<a href="mheap.go.html#line-301" class="ident">addr</a> = <label for="r22" class="ident">p</label>
+			<label for="r19" class="ident">size</label> = <label for="r17" class="ident">n</label>
+			<span class="keyword">break</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Failed. Discard this hint and try the next.</span><span class="comment">		</span><span class="comment">		 TODO: This would be cleaner if sysReserve could be</span><span class="comment">		 told to only return the requested address. In</span><span class="comment">		 particular, this is already how Windows behaves, so</span><span class="comment">		 it would simplify things there.</span></div>
+<div class="code"><pre><code>		<span class="keyword">if</span> <label for="r18" class="ident">v</label> != <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<a href="mem_darwin.go.html#line-42" class="ident">sysFree</a>(<label for="r18" class="ident">v</label>, <label for="r17" class="ident">n</label>, <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a>)
+		}
+		<label for="r15" class="ident">h</label>.<a href="mheap.go.html#line-167" class="ident">arenaHints</a> = <label for="r21" class="ident">hint</label>.<a href="mheap.go.html#line-303" class="ident">next</a>
+		<label for="r15" class="ident">h</label>.<a href="mheap.go.html#line-216" class="ident">arenaHintAlloc</a>.<a href="mfixalloc.go.html#line-94" class="ident">free</a>(<a href="../../pkg/unsafe.html" class="ident i3">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(<label for="r21" class="ident">hint</label>))
+	}
+
+	<span class="keyword">if</span> <label for="r19" class="ident">size</label> == <span class="lit-number">0</span> {
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> The race detector assumes the heap lives in</span><span class="comment">			 [0x00c000000000, 0x00e000000000), but we</span><span class="comment">			 just ran out of hints in this region. Give</span><span class="comment">			 a nice failure.</span></div>
+<div class="code"><pre><code>			<a href="panic.go.html#line-1107" class="ident">throw</a>(<span class="lit-string">"too many address space collisions for -race mode"</span>)
+		}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> All of the hints failed, so we'll take any</span><span class="comment">		 (sufficiently aligned) address the kernel will give</span><span class="comment">		 us.</span></div>
+<div class="code"><pre><code>		<label for="r18" class="ident">v</label>, <label for="r19" class="ident">size</label> = <a href="#line-795" class="ident">sysReserveAligned</a>(<a href="../../pkg/builtin.html#name-nil" class="ident">nil</a>, <label for="r17" class="ident">n</label>, <a href="#line-245" class="ident">heapArenaBytes</a>)
+		<span class="keyword">if</span> <label for="r18" class="ident">v</label> == <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<span class="keyword">return</span> <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a>, <span class="lit-number">0</span>
+		}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Create new hints for extending this region.</span></div>
+<div class="code"><pre><code>		<label for="r23" class="ident">hint</label> := (*<a href="mheap.go.html#line-300" class="ident">arenaHint</a>)(<label for="r15" class="ident">h</label>.<a href="mheap.go.html#line-216" class="ident">arenaHintAlloc</a>.<a href="mfixalloc.go.html#line-64" class="ident">alloc</a>())
+		<label for="r23" class="ident">hint</label>.<a href="mheap.go.html#line-301" class="ident">addr</a>, <label for="r23" class="ident">hint</label>.<a href="mheap.go.html#line-302" class="ident">down</a> = <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<label for="r18" class="ident">v</label>), <a href="../../pkg/builtin.html#name-true" class="ident">true</a>
+		<label for="r23" class="ident">hint</label>.<a href="mheap.go.html#line-303" class="ident">next</a>, <a href="mheap.go.html#line-221" class="ident">mheap_</a>.<a href="mheap.go.html#line-167" class="ident">arenaHints</a> = <a href="mheap.go.html#line-221" class="ident">mheap_</a>.<a href="mheap.go.html#line-167" class="ident">arenaHints</a>, <label for="r23" class="ident">hint</label>
+		<label for="r23" class="ident">hint</label> = (*<a href="mheap.go.html#line-300" class="ident">arenaHint</a>)(<label for="r15" class="ident">h</label>.<a href="mheap.go.html#line-216" class="ident">arenaHintAlloc</a>.<a href="mfixalloc.go.html#line-64" class="ident">alloc</a>())
+		<label for="r23" class="ident">hint</label>.<a href="mheap.go.html#line-301" class="ident">addr</a> = <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<label for="r18" class="ident">v</label>) + <label for="r19" class="ident">size</label>
+		<label for="r23" class="ident">hint</label>.<a href="mheap.go.html#line-303" class="ident">next</a>, <a href="mheap.go.html#line-221" class="ident">mheap_</a>.<a href="mheap.go.html#line-167" class="ident">arenaHints</a> = <a href="mheap.go.html#line-221" class="ident">mheap_</a>.<a href="mheap.go.html#line-167" class="ident">arenaHints</a>, <label for="r23" class="ident">hint</label>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Check for bad pointers or pointers we can't use.</span></div>
+<div class="code"><pre><code>	{
+		<span class="keyword">var</span> <label for="r24" class="ident">bad</label> <a href="../../pkg/builtin.html#name-string" class="ident">string</a>
+		<label for="r25" class="ident">p</label> := <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<label for="r18" class="ident">v</label>)
+		<span class="keyword">if</span> <label for="r25" class="ident">p</label>+<label for="r19" class="ident">size</label> &lt; <label for="r25" class="ident">p</label> {
+			<label for="r24" class="ident">bad</label> = <span class="lit-string">"region exceeds uintptr range"</span>
+		} <span class="keyword">else</span> <span class="keyword">if</span> <a href="mheap.go.html#line-563" class="ident">arenaIndex</a>(<label for="r25" class="ident">p</label>) &gt;= <span class="lit-number">1</span>&lt;&lt;<a href="#line-288" class="ident">arenaBits</a> {
+			<label for="r24" class="ident">bad</label> = <span class="lit-string">"base outside usable address space"</span>
+		} <span class="keyword">else</span> <span class="keyword">if</span> <a href="mheap.go.html#line-563" class="ident">arenaIndex</a>(<label for="r25" class="ident">p</label>+<label for="r19" class="ident">size</label>-<span class="lit-number">1</span>) &gt;= <span class="lit-number">1</span>&lt;&lt;<a href="#line-288" class="ident">arenaBits</a> {
+			<label for="r24" class="ident">bad</label> = <span class="lit-string">"end outside usable address space"</span>
+		}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> This should be impossible on most architectures,</span><span class="comment">			 but it would be really confusing to debug.</span></div>
+<div class="code"><pre><code>			<a href="../../pkg/builtin.html#name-print" class="ident">print</a>(<span class="lit-string">"runtime: memory allocated by OS ["</span>, <a href="print.go.html#line-15" class="ident">hex</a>(<label for="r25" class="ident">p</label>), <span class="lit-string">", "</span>, <a href="print.go.html#line-15" class="ident">hex</a>(<label for="r25" class="ident">p</label>+<label for="r19" class="ident">size</label>), <span class="lit-string">") not in usable address space: "</span>, <label for="r24" class="ident">bad</label>, <span class="lit-string">"\n"</span>)
+			<a href="panic.go.html#line-1107" class="ident">throw</a>(<span class="lit-string">"memory reservation exceeds address space limit"</span>)
+		}
+	}
+
+	<span class="keyword">if</span> <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<label for="r18" class="ident">v</label>)&amp;(<a href="#line-245" class="ident">heapArenaBytes</a>-<span class="lit-number">1</span>) != <span class="lit-number">0</span> {
+		<a href="panic.go.html#line-1107" class="ident">throw</a>(<span class="lit-string">"misrounded allocation in sysAlloc"</span>)
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Transition from Reserved to Prepared.</span></div>
+<div class="code"><pre><code>	<a href="mem_darwin.go.html#line-61" class="ident">sysMap</a>(<label for="r18" class="ident">v</label>, <label for="r19" class="ident">size</label>, &amp;<a href="mstats.go.html#line-170" class="ident">memstats</a>.<a href="mstats.go.html#line-35" class="ident">heap_sys</a>)
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Create arena metadata.</span></div>
+<div class="code"><pre><code>	<span class="keyword">for</span> <label for="r26" class="ident">ri</label> := <a href="mheap.go.html#line-563" class="ident">arenaIndex</a>(<a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<label for="r18" class="ident">v</label>)); <label for="r26" class="ident">ri</label> &lt;= <a href="mheap.go.html#line-563" class="ident">arenaIndex</a>(<a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<label for="r18" class="ident">v</label>)+<label for="r19" class="ident">size</label>-<span class="lit-number">1</span>); <label for="r26" class="ident">ri</label>++ {
+		<label for="r27" class="ident">l2</label> := <label for="r15" class="ident">h</label>.<a href="mheap.go.html#line-156" class="ident">arenas</a>[<label for="r26" class="ident">ri</label>.<a href="mheap.go.html#line-575" class="ident">l1</a>()]
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Allocate an L2 arena map.</span></div>
+<div class="code"><pre><code>			<label for="r27" class="ident">l2</label> = (*[<span class="lit-number">1</span> &lt;&lt; <a href="#line-279" class="ident">arenaL2Bits</a>]*<a href="mheap.go.html#line-227" class="ident">heapArena</a>)(<a href="#line-1311" class="ident">persistentalloc</a>(<a href="../../pkg/unsafe.html" class="ident i3">unsafe</a>.<a href="../../pkg/unsafe.html#name-Sizeof" class="ident">Sizeof</a>(*<label for="r27" class="ident">l2</label>), <a href="../../pkg/runtime/internal/sys.html" class="ident i2">sys</a>.<a href="internal/sys/stubs.go.html#line-9" class="ident">PtrSize</a>, <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a>))
+			<span class="keyword">if</span> <label for="r27" class="ident">l2</label> == <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+				<a href="panic.go.html#line-1107" class="ident">throw</a>(<span class="lit-string">"out of memory allocating heap arena map"</span>)
+			}
+			<a href="../../pkg/runtime/internal/atomic.html" class="ident i0">atomic</a>.<a href="internal/atomic/atomic_amd64.go.html#line-116" class="ident">StorepNoWB</a>(<a href="../../pkg/unsafe.html" class="ident i3">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(&amp;<label for="r15" class="ident">h</label>.<a href="mheap.go.html#line-156" class="ident">arenas</a>[<label for="r26" class="ident">ri</label>.<a href="mheap.go.html#line-575" class="ident">l1</a>()]), <a href="../../pkg/unsafe.html" class="ident i3">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(<label for="r27" class="ident">l2</label>))
+		}
+
+		<span class="keyword">if</span> <label for="r27" class="ident">l2</label>[<label for="r26" class="ident">ri</label>.<a href="mheap.go.html#line-585" class="ident">l2</a>()] != <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<a href="panic.go.html#line-1107" class="ident">throw</a>(<span class="lit-string">"arena already initialized"</span>)
+		}
+		<span class="keyword">var</span> <label for="r28" class="ident">r</label> *<a href="mheap.go.html#line-227" class="ident">heapArena</a>
+		<label for="r28" class="ident">r</label> = (*<a href="mheap.go.html#line-227" class="ident">heapArena</a>)(<label for="r15" class="ident">h</label>.<a href="mheap.go.html#line-161" class="ident">heapArenaAlloc</a>.<a href="#line-1423" class="ident">alloc</a>(<a href="../../pkg/unsafe.html" class="ident i3">unsafe</a>.<a href="../../pkg/unsafe.html#name-Sizeof" class="ident">Sizeof</a>(*<label for="r28" class="ident">r</label>), <a href="../../pkg/runtime/internal/sys.html" class="ident i2">sys</a>.<a href="internal/sys/stubs.go.html#line-9" class="ident">PtrSize</a>, &amp;<a href="mstats.go.html#line-170" class="ident">memstats</a>.<a href="mstats.go.html#line-58" class="ident">gcMiscSys</a>))
+		<span class="keyword">if</span> <label for="r28" class="ident">r</label> == <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<label for="r28" class="ident">r</label> = (*<a href="mheap.go.html#line-227" class="ident">heapArena</a>)(<a href="#line-1311" class="ident">persistentalloc</a>(<a href="../../pkg/unsafe.html" class="ident i3">unsafe</a>.<a href="../../pkg/unsafe.html#name-Sizeof" class="ident">Sizeof</a>(*<label for="r28" class="ident">r</label>), <a href="../../pkg/runtime/internal/sys.html" class="ident i2">sys</a>.<a href="internal/sys/stubs.go.html#line-9" class="ident">PtrSize</a>, &amp;<a href="mstats.go.html#line-170" class="ident">memstats</a>.<a href="mstats.go.html#line-58" class="ident">gcMiscSys</a>))
+			<span class="keyword">if</span> <label for="r28" class="ident">r</label> == <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+				<a href="panic.go.html#line-1107" class="ident">throw</a>(<span class="lit-string">"out of memory allocating heap arena metadata"</span>)
+			}
+		}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Add the arena to the arenas list.</span></div>
+<div class="code"><pre><code>		<span class="keyword">if</span> <a href="../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r15" class="ident">h</label>.<a href="mheap.go.html#line-180" class="ident">allArenas</a>) == <a href="../../pkg/builtin.html#name-cap" class="ident">cap</a>(<label for="r15" class="ident">h</label>.<a href="mheap.go.html#line-180" class="ident">allArenas</a>) {
+			<label for="r29" class="ident">size</label> := <span class="lit-number">2</span> * <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<a href="../../pkg/builtin.html#name-cap" class="ident">cap</a>(<label for="r15" class="ident">h</label>.<a href="mheap.go.html#line-180" class="ident">allArenas</a>)) * <a href="../../pkg/runtime/internal/sys.html" class="ident i2">sys</a>.<a href="internal/sys/stubs.go.html#line-9" class="ident">PtrSize</a>
+			<span class="keyword">if</span> <label for="r29" class="ident">size</label> == <span class="lit-number">0</span> {
+				<label for="r29" class="ident">size</label> = <a href="#line-329" class="ident">physPageSize</a>
+			}
+			<label for="r30" class="ident">newArray</label> := (*<a href="#line-1448" class="ident">notInHeap</a>)(<a href="#line-1311" class="ident">persistentalloc</a>(<label for="r29" class="ident">size</label>, <a href="../../pkg/runtime/internal/sys.html" class="ident i2">sys</a>.<a href="internal/sys/stubs.go.html#line-9" class="ident">PtrSize</a>, &amp;<a href="mstats.go.html#line-170" class="ident">memstats</a>.<a href="mstats.go.html#line-58" class="ident">gcMiscSys</a>))
+			<span class="keyword">if</span> <label for="r30" class="ident">newArray</label> == <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+				<a href="panic.go.html#line-1107" class="ident">throw</a>(<span class="lit-string">"out of memory allocating allArenas"</span>)
+			}
+			<label for="r31" class="ident">oldSlice</label> := <label for="r15" class="ident">h</label>.<a href="mheap.go.html#line-180" class="ident">allArenas</a>
+			*(*<a href="slice.go.html#line-20" class="ident">notInHeapSlice</a>)(<a href="../../pkg/unsafe.html" class="ident i3">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(&amp;<label for="r15" class="ident">h</label>.<a href="mheap.go.html#line-180" class="ident">allArenas</a>)) = <a href="slice.go.html#line-20" class="ident">notInHeapSlice</a>{<label for="r30" class="ident">newArray</label>, <a href="../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r15" class="ident">h</label>.<a href="mheap.go.html#line-180" class="ident">allArenas</a>), <a href="../../pkg/builtin.html#name-int" class="ident">int</a>(<label for="r29" class="ident">size</label> / <a href="../../pkg/runtime/internal/sys.html" class="ident i2">sys</a>.<a href="internal/sys/stubs.go.html#line-9" class="ident">PtrSize</a>)}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Do not free the old backing array because</span><span class="comment">			 there may be concurrent readers. Since we</span><span class="comment">			 double the array each time, this can lead</span><span class="comment">			 to at most 2x waste.</span></div>
+<div class="code"><pre><code>		}
+		<label for="r15" class="ident">h</label>.<a href="mheap.go.html#line-180" class="ident">allArenas</a> = <label for="r15" class="ident">h</label>.<a href="mheap.go.html#line-180" class="ident">allArenas</a>[:<a href="../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r15" class="ident">h</label>.<a href="mheap.go.html#line-180" class="ident">allArenas</a>)+<span class="lit-number">1</span>]
+		<label for="r15" class="ident">h</label>.<a href="mheap.go.html#line-180" class="ident">allArenas</a>[<a href="../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r15" class="ident">h</label>.<a href="mheap.go.html#line-180" class="ident">allArenas</a>)-<span class="lit-number">1</span>] = <label for="r26" class="ident">ri</label>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Store atomically just in case an object from the</span><span class="comment">		 new heap arena becomes visible before the heap lock</span><span class="comment">		 is released (which shouldn't happen, but there's</span><span class="comment">		 little downside to this).</span></div>
+<div class="code"><pre><code>		<a href="../../pkg/runtime/internal/atomic.html" class="ident i0">atomic</a>.<a href="internal/atomic/atomic_amd64.go.html#line-116" class="ident">StorepNoWB</a>(<a href="../../pkg/unsafe.html" class="ident i3">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(&amp;<label for="r27" class="ident">l2</label>[<label for="r26" class="ident">ri</label>.<a href="mheap.go.html#line-585" class="ident">l2</a>()]), <a href="../../pkg/unsafe.html" class="ident i3">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(<label for="r28" class="ident">r</label>))
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Tell the race detector about the new heap memory.</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> <a href="race0.go.html#line-15" class="ident">raceenabled</a> {
+		<a href="race0.go.html#line-25" class="ident">racemapshadow</a>(<label for="r18" class="ident">v</label>, <label for="r19" class="ident">size</label>)
+	}
+
+	<span class="keyword">return</span>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> sysReserveAligned is like sysReserve, but the returned pointer is</span><span class="comment"> aligned to align bytes. It may reserve either n or n+align bytes,</span><span class="comment"> so it returns the size that was reserved.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Since the alignment is rather large in uses of this</span><span class="comment">	 function, we're not likely to get it by chance, so we ask</span><span class="comment">	 for a larger region and remove the parts we don't need.</span></div>
+<div class="code"><pre><code>	<label for="r36" class="ident">retries</label> := <span class="lit-number">0</span>
+<label for="r37" class="ident">retry</label>:
+	<label for="r38" class="ident">p</label> := <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<a href="mem_darwin.go.html#line-51" class="ident">sysReserve</a>(<label for="r33" class="ident">v</label>, <label for="r34" class="ident">size</label>+<label for="r35" class="ident">align</label>))
+	<span class="keyword">switch</span> {
+	<span class="keyword">case</span> <label for="r38" class="ident">p</label> == <span class="lit-number">0</span>:
+		<span class="keyword">return</span> <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a>, <span class="lit-number">0</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> We got lucky and got an aligned region, so we can</span><span class="comment">		 use the whole thing.</span></div>
+<div class="code"><pre><code>		<span class="keyword">return</span> <a href="../../pkg/unsafe.html" class="ident i3">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(<label for="r38" class="ident">p</label>), <label for="r34" class="ident">size</label> + <label for="r35" class="ident">align</label>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> On Windows we can't release pieces of a</span><span class="comment">		 reservation, so we release the whole thing and</span><span class="comment">		 re-reserve the aligned sub-region. This may race,</span><span class="comment">		 so we may have to try again.</span></div>
+<div class="code"><pre><code>		<a href="mem_darwin.go.html#line-42" class="ident">sysFree</a>(<a href="../../pkg/unsafe.html" class="ident i3">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(<label for="r38" class="ident">p</label>), <label for="r34" class="ident">size</label>+<label for="r35" class="ident">align</label>, <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a>)
+		<label for="r38" class="ident">p</label> = <a href="stubs.go.html#line-318" class="ident">alignUp</a>(<label for="r38" class="ident">p</label>, <label for="r35" class="ident">align</label>)
+		<label for="r39" class="ident">p2</label> := <a href="mem_darwin.go.html#line-51" class="ident">sysReserve</a>(<a href="../../pkg/unsafe.html" class="ident i3">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(<label for="r38" class="ident">p</label>), <label for="r34" class="ident">size</label>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Must have raced. Try again.</span></div>
+<div class="code"><pre><code>			<a href="mem_darwin.go.html#line-42" class="ident">sysFree</a>(<label for="r39" class="ident">p2</label>, <label for="r34" class="ident">size</label>, <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a>)
+			<span class="keyword">if</span> <label for="r36" class="ident">retries</label>++; <label for="r36" class="ident">retries</label> == <span class="lit-number">100</span> {
+				<a href="panic.go.html#line-1107" class="ident">throw</a>(<span class="lit-string">"failed to allocate aligned heap memory; too many retries"</span>)
+			}
+			<span class="keyword">goto</span> <label for="r37" class="ident">retry</label>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Success.</span></div>
+<div class="code"><pre><code>		<span class="keyword">return</span> <label for="r39" class="ident">p2</label>, <label for="r34" class="ident">size</label>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Trim off the unaligned parts.</span></div>
+<div class="code"><pre><code>		<label for="r40" class="ident">pAligned</label> := <a href="stubs.go.html#line-318" class="ident">alignUp</a>(<label for="r38" class="ident">p</label>, <label for="r35" class="ident">align</label>)
+		<a href="mem_darwin.go.html#line-42" class="ident">sysFree</a>(<a href="../../pkg/unsafe.html" class="ident i3">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(<label for="r38" class="ident">p</label>), <label for="r40" class="ident">pAligned</label>-<label for="r38" class="ident">p</label>, <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a>)
+		<label for="r41" class="ident">end</label> := <label for="r40" class="ident">pAligned</label> + <label for="r34" class="ident">size</label>
+		<label for="r42" class="ident">endLen</label> := (<label for="r38" class="ident">p</label> + <label for="r34" class="ident">size</label> + <label for="r35" class="ident">align</label>) - <label for="r41" class="ident">end</label>
+		<span class="keyword">if</span> <label for="r42" class="ident">endLen</label> &gt; <span class="lit-number">0</span> {
+			<a href="mem_darwin.go.html#line-42" class="ident">sysFree</a>(<a href="../../pkg/unsafe.html" class="ident i3">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(<label for="r41" class="ident">end</label>), <label for="r42" class="ident">endLen</label>, <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a>)
+		}
+		<span class="keyword">return</span> <a href="../../pkg/unsafe.html" class="ident i3">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(<label for="r40" class="ident">pAligned</label>), <label for="r34" class="ident">size</label>
+	}
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> base address for all 0-byte allocations</span></div>
+<div class="code"><pre><code><span class="keyword">var</span> <a href="../../pkg/runtime.html#name-zerobase" class="ident">zerobase</a> <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> nextFreeFast returns the next free object if one is quickly available.</span><span class="comment"> Otherwise it returns 0.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r43" class="ident"><a href="../../pkg/runtime.html#name-nextFreeFast" class="ident">nextFreeFast</a></label>(<label for="r44" class="ident">s</label> *<a href="mheap.go.html#line-382" class="ident">mspan</a>) <a href="mcache.go.html#line-67" class="ident">gclinkptr</a> {
+	<label for="r45" class="ident">theBit</label> := <a href="../../pkg/runtime/internal/sys.html" class="ident i2">sys</a>.<a href="internal/sys/intrinsics.go.html#line-38" class="ident">Ctz64</a>(<label for="r44" class="ident">s</label>.<a href="mheap.go.html#line-418" class="ident">allocCache</a>) <span class="comment">// Is there a free object in the allocCache?</span>
+	<span class="keyword">if</span> <label for="r45" class="ident">theBit</label> &lt; <span class="lit-number">64</span> {
+		<label for="r46" class="ident">result</label> := <label for="r44" class="ident">s</label>.<a href="mheap.go.html#line-407" class="ident">freeindex</a> + <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<label for="r45" class="ident">theBit</label>)
+		<span class="keyword">if</span> <label for="r46" class="ident">result</label> &lt; <label for="r44" class="ident">s</label>.<a href="mheap.go.html#line-410" class="ident">nelems</a> {
+			<label for="r47" class="ident">freeidx</label> := <label for="r46" class="ident">result</label> + <span class="lit-number">1</span>
+			<span class="keyword">if</span> <label for="r47" class="ident">freeidx</label>%<span class="lit-number">64</span> == <span class="lit-number">0</span> &amp;&amp; <label for="r47" class="ident">freeidx</label> != <label for="r44" class="ident">s</label>.<a href="mheap.go.html#line-410" class="ident">nelems</a> {
+				<span class="keyword">return</span> <span class="lit-number">0</span>
+			}
+			<label for="r44" class="ident">s</label>.<a href="mheap.go.html#line-418" class="ident">allocCache</a> &gt;&gt;= <a href="../../pkg/builtin.html#name-uint" class="ident">uint</a>(<label for="r45" class="ident">theBit</label> + <span class="lit-number">1</span>)
+			<label for="r44" class="ident">s</label>.<a href="mheap.go.html#line-407" class="ident">freeindex</a> = <label for="r47" class="ident">freeidx</label>
+			<label for="r44" class="ident">s</label>.<a href="mheap.go.html#line-456" class="ident">allocCount</a>++
+			<span class="keyword">return</span> <a href="mcache.go.html#line-67" class="ident">gclinkptr</a>(<label for="r46" class="ident">result</label>*<label for="r44" class="ident">s</label>.<a href="mheap.go.html#line-462" class="ident">elemsize</a> + <label for="r44" class="ident">s</label>.<a href="mheap.go.html#line-468" class="ident">base</a>())
+		}
+	}
+	<span class="keyword">return</span> <span class="lit-number">0</span>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> nextFree returns the next free object from the cached span if one is available.</span><span class="comment"> Otherwise it refills the cache with a span with an available object and</span><span class="comment"> returns that object along with a flag indicating that this was a heavy</span><span class="comment"> weight allocation. If it is a heavy weight allocation the caller must</span><span class="comment"> determine whether a new GC cycle needs to be started or if the GC is active</span><span class="comment"> whether this goroutine needs to assist the GC.</span><span class="comment"></span><span class="comment"> Must run in a non-preemptible context since otherwise the owner of</span><span class="comment"> c could change.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r48" class="ident">c</label> *<a href="mcache.go.html#line-20" class="ident">mcache</a>) <label for="r49" class="ident"><a href="../../use/runtime..mcache*8aa2c.nextFree*568f4.html" class="ident">nextFree</a></label>(<label for="r50" class="ident">spc</label> <a href="mheap.go.html#line-532" class="ident">spanClass</a>) (<label for="r51" class="ident">v</label> <a href="mcache.go.html#line-67" class="ident">gclinkptr</a>, <label for="r52" class="ident">s</label> *<a href="mheap.go.html#line-382" class="ident">mspan</a>, <label for="r53" class="ident">shouldhelpgc</label> <a href="../../pkg/builtin.html#name-bool" class="ident">bool</a>) {
+	<label for="r52" class="ident">s</label> = <label for="r48" class="ident">c</label>.<a href="mcache.go.html#line-44" class="ident">alloc</a>[<label for="r50" class="ident">spc</label>]
+	<label for="r53" class="ident">shouldhelpgc</label> = <a href="../../pkg/builtin.html#name-false" class="ident">false</a>
+	<label for="r54" class="ident">freeIndex</label> := <label for="r52" class="ident">s</label>.<a href="mbitmap.go.html#line-166" class="ident">nextFreeIndex</a>()
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> The span is full.</span></div>
+<div class="code"><pre><code>		<span class="keyword">if</span> <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<label for="r52" class="ident">s</label>.<a href="mheap.go.html#line-456" class="ident">allocCount</a>) != <label for="r52" class="ident">s</label>.<a href="mheap.go.html#line-410" class="ident">nelems</a> {
+			<a href="../../pkg/builtin.html#name-println" class="ident">println</a>(<span class="lit-string">"runtime: s.allocCount="</span>, <label for="r52" class="ident">s</label>.<a href="mheap.go.html#line-456" class="ident">allocCount</a>, <span class="lit-string">"s.nelems="</span>, <label for="r52" class="ident">s</label>.<a href="mheap.go.html#line-410" class="ident">nelems</a>)
+			<a href="panic.go.html#line-1107" class="ident">throw</a>(<span class="lit-string">"s.allocCount != s.nelems &amp;&amp; freeIndex == s.nelems"</span>)
+		}
+		<label for="r48" class="ident">c</label>.<a href="mcache.go.html#line-146" class="ident">refill</a>(<label for="r50" class="ident">spc</label>)
+		<label for="r53" class="ident">shouldhelpgc</label> = <a href="../../pkg/builtin.html#name-true" class="ident">true</a>
+		<label for="r52" class="ident">s</label> = <label for="r48" class="ident">c</label>.<a href="mcache.go.html#line-44" class="ident">alloc</a>[<label for="r50" class="ident">spc</label>]
+
+		<label for="r54" class="ident">freeIndex</label> = <label for="r52" class="ident">s</label>.<a href="mbitmap.go.html#line-166" class="ident">nextFreeIndex</a>()
+	}
+
+	<span class="keyword">if</span> <label for="r54" class="ident">freeIndex</label> &gt;= <label for="r52" class="ident">s</label>.<a href="mheap.go.html#line-410" class="ident">nelems</a> {
+		<a href="panic.go.html#line-1107" class="ident">throw</a>(<span class="lit-string">"freeIndex is not valid"</span>)
+	}
+
+	<label for="r51" class="ident">v</label> = <a href="mcache.go.html#line-67" class="ident">gclinkptr</a>(<label for="r54" class="ident">freeIndex</label>*<label for="r52" class="ident">s</label>.<a href="mheap.go.html#line-462" class="ident">elemsize</a> + <label for="r52" class="ident">s</label>.<a href="mheap.go.html#line-468" class="ident">base</a>())
+	<label for="r52" class="ident">s</label>.<a href="mheap.go.html#line-456" class="ident">allocCount</a>++
+	<span class="keyword">if</span> <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<label for="r52" class="ident">s</label>.<a href="mheap.go.html#line-456" class="ident">allocCount</a>) &gt; <label for="r52" class="ident">s</label>.<a href="mheap.go.html#line-410" class="ident">nelems</a> {
+		<a href="../../pkg/builtin.html#name-println" class="ident">println</a>(<span class="lit-string">"s.allocCount="</span>, <label for="r52" class="ident">s</label>.<a href="mheap.go.html#line-456" class="ident">allocCount</a>, <span class="lit-string">"s.nelems="</span>, <label for="r52" class="ident">s</label>.<a href="mheap.go.html#line-410" class="ident">nelems</a>)
+		<a href="panic.go.html#line-1107" class="ident">throw</a>(<span class="lit-string">"s.allocCount &gt; s.nelems"</span>)
+	}
+	<span class="keyword">return</span>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Allocate an object of size bytes.</span><span class="comment"> Small objects are allocated from the per-P cache's free lists.</span><span class="comment"> Large objects (&gt; 32 kB) are allocated straight from the heap.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r55" class="ident"><a href="../../pkg/runtime.html#name-mallocgc" class="ident">mallocgc</a></label>(<label for="r56" class="ident">size</label> <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>, <label for="r57" class="ident">typ</label> *<a href="type.go.html#line-31" class="ident">_type</a>, <label for="r58" class="ident">needzero</label> <a href="../../pkg/builtin.html#name-bool" class="ident">bool</a>) <a href="../../pkg/unsafe.html" class="ident i3">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a> {
+	<span class="keyword">if</span> <a href="mgc.go.html#line-251" class="ident">gcphase</a> == <a href="mgc.go.html#line-273" class="ident">_GCmarktermination</a> {
+		<a href="panic.go.html#line-1107" class="ident">throw</a>(<span class="lit-string">"mallocgc called with gcphase == _GCmarktermination"</span>)
+	}
+
+	<span class="keyword">if</span> <label for="r56" class="ident">size</label> == <span class="lit-number">0</span> {
+		<span class="keyword">return</span> <a href="../../pkg/unsafe.html" class="ident i3">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(&amp;<a href="#line-841" class="ident">zerobase</a>)
+	}
+
+	<span class="keyword">if</span> <a href="runtime1.go.html#line-302" class="ident">debug</a>.<a href="runtime1.go.html#line-323" class="ident">malloc</a> {
+		<span class="keyword">if</span> <a href="runtime1.go.html#line-302" class="ident">debug</a>.<a href="runtime1.go.html#line-326" class="ident">sbrk</a> != <span class="lit-number">0</span> {
+			<label for="r59" class="ident">align</label> := <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<span class="lit-number">16</span>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> TODO(austin): This should be just</span><span class="comment">				   align = uintptr(typ.align)</span><span class="comment">				 but that's only 4 on 32-bit platforms,</span><span class="comment">				 even if there's a uint64 field in typ (see #599).</span><span class="comment">				 This causes 64-bit atomic accesses to panic.</span><span class="comment">				 Hence, we use stricter alignment that matches</span><span class="comment">				 the normal allocator better.</span></div>
+<div class="code"><pre><code>				<span class="keyword">if</span> <label for="r56" class="ident">size</label>&amp;<span class="lit-number">7</span> == <span class="lit-number">0</span> {
+					<label for="r59" class="ident">align</label> = <span class="lit-number">8</span>
+				} <span class="keyword">else</span> <span class="keyword">if</span> <label for="r56" class="ident">size</label>&amp;<span class="lit-number">3</span> == <span class="lit-number">0</span> {
+					<label for="r59" class="ident">align</label> = <span class="lit-number">4</span>
+				} <span class="keyword">else</span> <span class="keyword">if</span> <label for="r56" class="ident">size</label>&amp;<span class="lit-number">1</span> == <span class="lit-number">0</span> {
+					<label for="r59" class="ident">align</label> = <span class="lit-number">2</span>
+				} <span class="keyword">else</span> {
+					<label for="r59" class="ident">align</label> = <span class="lit-number">1</span>
+				}
+			}
+			<span class="keyword">return</span> <a href="#line-1311" class="ident">persistentalloc</a>(<label for="r56" class="ident">size</label>, <label for="r59" class="ident">align</label>, &amp;<a href="mstats.go.html#line-170" class="ident">memstats</a>.<a href="mstats.go.html#line-61" class="ident">other_sys</a>)
+		}
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Init functions are executed sequentially in a single Go routine.</span></div>
+<div class="code"><pre><code>			<a href="proc.go.html#line-6221" class="ident">inittrace</a>.<a href="proc.go.html#line-6226" class="ident">allocs</a> += <span class="lit-number">1</span>
+		}
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> assistG is the G to charge for this allocation, or nil if</span><span class="comment">	 GC is not currently active.</span></div>
+<div class="code"><pre><code>	<span class="keyword">var</span> <label for="r60" class="ident">assistG</label> *<a href="runtime2.go.html#line-404" class="ident">g</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Charge the current user G for this allocation.</span></div>
+<div class="code"><pre><code>		<label for="r60" class="ident">assistG</label> = <a href="stubs.go.html#line-18" class="ident">getg</a>()
+		<span class="keyword">if</span> <label for="r60" class="ident">assistG</label>.<a href="runtime2.go.html#line-418" class="ident">m</a>.<a href="runtime2.go.html#line-498" class="ident">curg</a> != <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<label for="r60" class="ident">assistG</label> = <label for="r60" class="ident">assistG</label>.<a href="runtime2.go.html#line-418" class="ident">m</a>.<a href="runtime2.go.html#line-498" class="ident">curg</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Charge the allocation against the G. We'll account</span><span class="comment">		 for internal fragmentation at the end of mallocgc.</span></div>
+<div class="code"><pre><code>		<label for="r60" class="ident">assistG</label>.<a href="runtime2.go.html#line-483" class="ident">gcAssistBytes</a> -= <a href="../../pkg/builtin.html#name-int64" class="ident">int64</a>(<label for="r56" class="ident">size</label>)
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> This G is in debt. Assist the GC to correct</span><span class="comment">			 this before allocating. This must happen</span><span class="comment">			 before disabling preemption.</span></div>
+<div class="code"><pre><code>			<a href="mgcmark.go.html#line-387" class="ident">gcAssistAlloc</a>(<label for="r60" class="ident">assistG</label>)
+		}
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Set mp.mallocing to keep from being preempted by GC.</span></div>
+<div class="code"><pre><code>	<label for="r61" class="ident">mp</label> := <a href="runtime1.go.html#line-467" class="ident">acquirem</a>()
+	<span class="keyword">if</span> <label for="r61" class="ident">mp</label>.<a href="runtime2.go.html#line-504" class="ident">mallocing</a> != <span class="lit-number">0</span> {
+		<a href="panic.go.html#line-1107" class="ident">throw</a>(<span class="lit-string">"malloc deadlock"</span>)
+	}
+	<span class="keyword">if</span> <label for="r61" class="ident">mp</label>.<a href="runtime2.go.html#line-493" class="ident">gsignal</a> == <a href="stubs.go.html#line-18" class="ident">getg</a>() {
+		<a href="panic.go.html#line-1107" class="ident">throw</a>(<span class="lit-string">"malloc during signal"</span>)
+	}
+	<label for="r61" class="ident">mp</label>.<a href="runtime2.go.html#line-504" class="ident">mallocing</a> = <span class="lit-number">1</span>
+
+	<label for="r62" class="ident">shouldhelpgc</label> := <a href="../../pkg/builtin.html#name-false" class="ident">false</a>
+	<label for="r63" class="ident">dataSize</label> := <label for="r56" class="ident">size</label>
+	<label for="r64" class="ident">c</label> := <a href="mcache.go.html#line-125" class="ident">getMCache</a>()
+	<span class="keyword">if</span> <label for="r64" class="ident">c</label> == <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<a href="panic.go.html#line-1107" class="ident">throw</a>(<span class="lit-string">"mallocgc called without a P or outside bootstrapping"</span>)
+	}
+	<span class="keyword">var</span> <label for="r65" class="ident">span</label> *<a href="mheap.go.html#line-382" class="ident">mspan</a>
+	<span class="keyword">var</span> <label for="r66" class="ident">x</label> <a href="../../pkg/unsafe.html" class="ident i3">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>
+	<label for="r67" class="ident">noscan</label> := <label for="r57" class="ident">typ</label> == <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a> || <label for="r57" class="ident">typ</label>.<a href="type.go.html#line-33" class="ident">ptrdata</a> == <span class="lit-number">0</span>
+	<span class="keyword">if</span> <label for="r56" class="ident">size</label> &lt;= <a href="#line-115" class="ident">maxSmallSize</a> {
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Tiny allocator.</span><span class="comment">			</span><span class="comment">			 Tiny allocator combines several tiny allocation requests</span><span class="comment">			 into a single memory block. The resulting memory block</span><span class="comment">			 is freed when all subobjects are unreachable. The subobjects</span><span class="comment">			 must be noscan (don't have pointers), this ensures that</span><span class="comment">			 the amount of potentially wasted memory is bounded.</span><span class="comment">			</span><span class="comment">			 Size of the memory block used for combining (maxTinySize) is tunable.</span><span class="comment">			 Current setting is 16 bytes, which relates to 2x worst case memory</span><span class="comment">			 wastage (when all but one subobjects are unreachable).</span><span class="comment">			 8 bytes would result in no wastage at all, but provides less</span><span class="comment">			 opportunities for combining.</span><span class="comment">			 32 bytes provides more opportunities for combining,</span><span class="comment">			 but can lead to 4x worst case wastage.</span><span class="comment">			 The best case winning is 8x regardless of block size.</span><span class="comment">			</span><span class="comment">			 Objects obtained from tiny allocator must not be freed explicitly.</span><span class="comment">			 So when an object will be freed explicitly, we ensure that</span><span class="comment">			 its size &gt;= maxTinySize.</span><span class="comment">			</span><span class="comment">			 SetFinalizer has a special case for objects potentially coming</span><span class="comment">			 from tiny allocator, it such case it allows to set finalizers</span><span class="comment">			 for an inner byte of a memory block.</span><span class="comment">			</span><span class="comment">			 The main targets of tiny allocator are small strings and</span><span class="comment">			 standalone escaping variables. On a json benchmark</span><span class="comment">			 the allocator reduces number of allocations by ~12% and</span><span class="comment">			 reduces heap size by ~20%.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Align tiny pointer for required (conservative) alignment.</span></div>
+<div class="code"><pre><code>			<span class="keyword">if</span> <label for="r56" class="ident">size</label>&amp;<span class="lit-number">7</span> == <span class="lit-number">0</span> {
+				<label for="r68" class="ident">off</label> = <a href="stubs.go.html#line-318" class="ident">alignUp</a>(<label for="r68" class="ident">off</label>, <span class="lit-number">8</span>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Conservatively align 12-byte objects to 8 bytes on 32-bit</span><span class="comment">				 systems so that objects whose first field is a 64-bit</span><span class="comment">				 value is aligned to 8 bytes and does not cause a fault on</span><span class="comment">				 atomic access. See issue 37262.</span><span class="comment">				 TODO(mknyszek): Remove this workaround if/when issue 36606</span><span class="comment">				 is resolved.</span></div>
+<div class="code"><pre><code>				<label for="r68" class="ident">off</label> = <a href="stubs.go.html#line-318" class="ident">alignUp</a>(<label for="r68" class="ident">off</label>, <span class="lit-number">8</span>)
+			} <span class="keyword">else</span> <span class="keyword">if</span> <label for="r56" class="ident">size</label>&amp;<span class="lit-number">3</span> == <span class="lit-number">0</span> {
+				<label for="r68" class="ident">off</label> = <a href="stubs.go.html#line-318" class="ident">alignUp</a>(<label for="r68" class="ident">off</label>, <span class="lit-number">4</span>)
+			} <span class="keyword">else</span> <span class="keyword">if</span> <label for="r56" class="ident">size</label>&amp;<span class="lit-number">1</span> == <span class="lit-number">0</span> {
+				<label for="r68" class="ident">off</label> = <a href="stubs.go.html#line-318" class="ident">alignUp</a>(<label for="r68" class="ident">off</label>, <span class="lit-number">2</span>)
+			}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> The object fits into existing tiny block.</span></div>
+<div class="code"><pre><code>				<label for="r66" class="ident">x</label> = <a href="../../pkg/unsafe.html" class="ident i3">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(<label for="r64" class="ident">c</label>.<a href="mcache.go.html#line-38" class="ident">tiny</a> + <label for="r68" class="ident">off</label>)
+				<label for="r64" class="ident">c</label>.<a href="mcache.go.html#line-39" class="ident">tinyoffset</a> = <label for="r68" class="ident">off</label> + <label for="r56" class="ident">size</label>
+				<label for="r64" class="ident">c</label>.<a href="mcache.go.html#line-40" class="ident">tinyAllocs</a>++
+				<label for="r61" class="ident">mp</label>.<a href="runtime2.go.html#line-504" class="ident">mallocing</a> = <span class="lit-number">0</span>
+				<a href="runtime1.go.html#line-474" class="ident">releasem</a>(<label for="r61" class="ident">mp</label>)
+				<span class="keyword">return</span> <label for="r66" class="ident">x</label>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Allocate a new maxTinySize block.</span></div>
+<div class="code"><pre><code>			<label for="r65" class="ident">span</label> = <label for="r64" class="ident">c</label>.<a href="mcache.go.html#line-44" class="ident">alloc</a>[<a href="mheap.go.html#line-536" class="ident">tinySpanClass</a>]
+			<label for="r69" class="ident">v</label> := <a href="#line-845" class="ident">nextFreeFast</a>(<label for="r65" class="ident">span</label>)
+			<span class="keyword">if</span> <label for="r69" class="ident">v</label> == <span class="lit-number">0</span> {
+				<label for="r69" class="ident">v</label>, <label for="r65" class="ident">span</label>, <label for="r62" class="ident">shouldhelpgc</label> = <label for="r64" class="ident">c</label>.<a href="#line-872" class="ident">nextFree</a>(<a href="mheap.go.html#line-536" class="ident">tinySpanClass</a>)
+			}
+			<label for="r66" class="ident">x</label> = <a href="../../pkg/unsafe.html" class="ident i3">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(<label for="r69" class="ident">v</label>)
+			(*[<span class="lit-number">2</span>]<a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a>)(<label for="r66" class="ident">x</label>)[<span class="lit-number">0</span>] = <span class="lit-number">0</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> See if we need to replace the existing tiny block with the new one</span><span class="comment">			 based on amount of remaining free space.</span></div>
+<div class="code"><pre><code>			<span class="keyword">if</span> <label for="r56" class="ident">size</label> &lt; <label for="r64" class="ident">c</label>.<a href="mcache.go.html#line-39" class="ident">tinyoffset</a> || <label for="r64" class="ident">c</label>.<a href="mcache.go.html#line-38" class="ident">tiny</a> == <span class="lit-number">0</span> {
+				<label for="r64" class="ident">c</label>.<a href="mcache.go.html#line-38" class="ident">tiny</a> = <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<label for="r66" class="ident">x</label>)
+				<label for="r64" class="ident">c</label>.<a href="mcache.go.html#line-39" class="ident">tinyoffset</a> = <label for="r56" class="ident">size</label>
+			}
+			<label for="r56" class="ident">size</label> = <a href="#line-113" class="ident">maxTinySize</a>
+		} <span class="keyword">else</span> {
+			<span class="keyword">var</span> <label for="r70" class="ident">sizeclass</label> <a href="../../pkg/builtin.html#name-uint8" class="ident">uint8</a>
+			<span class="keyword">if</span> <label for="r56" class="ident">size</label> &lt;= <a href="sizeclasses.go.html#line-78" class="ident">smallSizeMax</a>-<span class="lit-number">8</span> {
+				<label for="r70" class="ident">sizeclass</label> = <a href="sizeclasses.go.html#line-95" class="ident">size_to_class8</a>[<a href="stubs.go.html#line-328" class="ident">divRoundUp</a>(<label for="r56" class="ident">size</label>, <a href="sizeclasses.go.html#line-77" class="ident">smallSizeDiv</a>)]
+			} <span class="keyword">else</span> {
+				<label for="r70" class="ident">sizeclass</label> = <a href="sizeclasses.go.html#line-96" class="ident">size_to_class128</a>[<a href="stubs.go.html#line-328" class="ident">divRoundUp</a>(<label for="r56" class="ident">size</label>-<a href="sizeclasses.go.html#line-78" class="ident">smallSizeMax</a>, <a href="sizeclasses.go.html#line-79" class="ident">largeSizeDiv</a>)]
+			}
+			<label for="r56" class="ident">size</label> = <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<a href="sizeclasses.go.html#line-84" class="ident">class_to_size</a>[<label for="r70" class="ident">sizeclass</label>])
+			<label for="r71" class="ident">spc</label> := <a href="mheap.go.html#line-539" class="ident">makeSpanClass</a>(<label for="r70" class="ident">sizeclass</label>, <label for="r67" class="ident">noscan</label>)
+			<label for="r65" class="ident">span</label> = <label for="r64" class="ident">c</label>.<a href="mcache.go.html#line-44" class="ident">alloc</a>[<label for="r71" class="ident">spc</label>]
+			<label for="r72" class="ident">v</label> := <a href="#line-845" class="ident">nextFreeFast</a>(<label for="r65" class="ident">span</label>)
+			<span class="keyword">if</span> <label for="r72" class="ident">v</label> == <span class="lit-number">0</span> {
+				<label for="r72" class="ident">v</label>, <label for="r65" class="ident">span</label>, <label for="r62" class="ident">shouldhelpgc</label> = <label for="r64" class="ident">c</label>.<a href="#line-872" class="ident">nextFree</a>(<label for="r71" class="ident">spc</label>)
+			}
+			<label for="r66" class="ident">x</label> = <a href="../../pkg/unsafe.html" class="ident i3">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(<label for="r72" class="ident">v</label>)
+			<span class="keyword">if</span> <label for="r58" class="ident">needzero</label> &amp;&amp; <label for="r65" class="ident">span</label>.<a href="mheap.go.html#line-459" class="ident">needzero</a> != <span class="lit-number">0</span> {
+				<a href="stubs.go.html#line-86" class="ident">memclrNoHeapPointers</a>(<a href="../../pkg/unsafe.html" class="ident i3">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(<label for="r72" class="ident">v</label>), <label for="r56" class="ident">size</label>)
+			}
+		}
+	} <span class="keyword">else</span> {
+		<label for="r62" class="ident">shouldhelpgc</label> = <a href="../../pkg/builtin.html#name-true" class="ident">true</a>
+		<label for="r65" class="ident">span</label> = <label for="r64" class="ident">c</label>.<a href="mcache.go.html#line-209" class="ident">allocLarge</a>(<label for="r56" class="ident">size</label>, <label for="r58" class="ident">needzero</label>, <label for="r67" class="ident">noscan</label>)
+		<label for="r65" class="ident">span</label>.<a href="mheap.go.html#line-407" class="ident">freeindex</a> = <span class="lit-number">1</span>
+		<label for="r65" class="ident">span</label>.<a href="mheap.go.html#line-456" class="ident">allocCount</a> = <span class="lit-number">1</span>
+		<label for="r66" class="ident">x</label> = <a href="../../pkg/unsafe.html" class="ident i3">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(<label for="r65" class="ident">span</label>.<a href="mheap.go.html#line-468" class="ident">base</a>())
+		<label for="r56" class="ident">size</label> = <label for="r65" class="ident">span</label>.<a href="mheap.go.html#line-462" class="ident">elemsize</a>
+	}
+
+	<span class="keyword">var</span> <label for="r73" class="ident">scanSize</label> <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> If allocating a defer+arg block, now that we've picked a malloc size</span><span class="comment">		 large enough to hold everything, cut the "asked for" size down to</span><span class="comment">		 just the defer header, so that the GC bitmap will record the arg block</span><span class="comment">		 as containing nothing at all (as if it were unused space at the end of</span><span class="comment">		 a malloc block caused by size rounding).</span><span class="comment">		 The defer arg areas are scanned as part of scanstack.</span></div>
+<div class="code"><pre><code>		<span class="keyword">if</span> <label for="r57" class="ident">typ</label> == <a href="panic.go.html#line-376" class="ident">deferType</a> {
+			<label for="r63" class="ident">dataSize</label> = <a href="../../pkg/unsafe.html" class="ident i3">unsafe</a>.<a href="../../pkg/unsafe.html#name-Sizeof" class="ident">Sizeof</a>(<a href="runtime2.go.html#line-907" class="ident">_defer</a>{})
+		}
+		<a href="mbitmap.go.html#line-815" class="ident">heapBitsSetType</a>(<a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<label for="r66" class="ident">x</label>), <label for="r56" class="ident">size</label>, <label for="r63" class="ident">dataSize</label>, <label for="r57" class="ident">typ</label>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Array allocation. If there are any</span><span class="comment">			 pointers, GC has to scan to the last</span><span class="comment">			 element.</span></div>
+<div class="code"><pre><code>			<span class="keyword">if</span> <label for="r57" class="ident">typ</label>.<a href="type.go.html#line-33" class="ident">ptrdata</a> != <span class="lit-number">0</span> {
+				<label for="r73" class="ident">scanSize</label> = <label for="r63" class="ident">dataSize</label> - <label for="r57" class="ident">typ</label>.<a href="type.go.html#line-32" class="ident">size</a> + <label for="r57" class="ident">typ</label>.<a href="type.go.html#line-33" class="ident">ptrdata</a>
+			}
+		} <span class="keyword">else</span> {
+			<label for="r73" class="ident">scanSize</label> = <label for="r57" class="ident">typ</label>.<a href="type.go.html#line-33" class="ident">ptrdata</a>
+		}
+		<label for="r64" class="ident">c</label>.<a href="mcache.go.html#line-24" class="ident">scanAlloc</a> += <label for="r73" class="ident">scanSize</label>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Ensure that the stores above that initialize x to</span><span class="comment">	 type-safe memory and set the heap bits occur before</span><span class="comment">	 the caller can make x observable to the garbage</span><span class="comment">	 collector. Otherwise, on weakly ordered machines,</span><span class="comment">	 the garbage collector could follow a pointer to x,</span><span class="comment">	 but see uninitialized memory or stale heap bits.</span></div>
+<div class="code"><pre><code>	<a href="stubs.go.html#line-223" class="ident">publicationBarrier</a>()
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Allocate black during GC.</span><span class="comment">	 All slots hold nil so no scanning is needed.</span><span class="comment">	 This may be racing with GC so do it atomically if there can be</span><span class="comment">	 a race marking the bit.</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> <a href="mgc.go.html#line-251" class="ident">gcphase</a> != <a href="mgc.go.html#line-271" class="ident">_GCoff</a> {
+		<a href="mgcmark.go.html#line-1514" class="ident">gcmarknewobject</a>(<label for="r65" class="ident">span</label>, <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<label for="r66" class="ident">x</label>), <label for="r56" class="ident">size</label>, <label for="r73" class="ident">scanSize</label>)
+	}
+
+	<span class="keyword">if</span> <a href="race0.go.html#line-15" class="ident">raceenabled</a> {
+		<a href="race0.go.html#line-40" class="ident">racemalloc</a>(<label for="r66" class="ident">x</label>, <label for="r56" class="ident">size</label>)
+	}
+
+	<span class="keyword">if</span> <a href="msan0.go.html#line-15" class="ident">msanenabled</a> {
+		<a href="msan0.go.html#line-21" class="ident">msanmalloc</a>(<label for="r66" class="ident">x</label>, <label for="r56" class="ident">size</label>)
+	}
+
+	<label for="r61" class="ident">mp</label>.<a href="runtime2.go.html#line-504" class="ident">mallocing</a> = <span class="lit-number">0</span>
+	<a href="runtime1.go.html#line-474" class="ident">releasem</a>(<label for="r61" class="ident">mp</label>)
+
+	<span class="keyword">if</span> <a href="runtime1.go.html#line-302" class="ident">debug</a>.<a href="runtime1.go.html#line-323" class="ident">malloc</a> {
+		<span class="keyword">if</span> <a href="runtime1.go.html#line-302" class="ident">debug</a>.<a href="runtime1.go.html#line-324" class="ident">allocfreetrace</a> != <span class="lit-number">0</span> {
+			<a href="mprof.go.html#line-841" class="ident">tracealloc</a>(<label for="r66" class="ident">x</label>, <label for="r56" class="ident">size</label>, <label for="r57" class="ident">typ</label>)
+		}
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Init functions are executed sequentially in a single Go routine.</span></div>
+<div class="code"><pre><code>			<a href="proc.go.html#line-6221" class="ident">inittrace</a>.<a href="proc.go.html#line-6227" class="ident">bytes</a> += <a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a>(<label for="r56" class="ident">size</label>)
+		}
+	}
+
+	<span class="keyword">if</span> <label for="r74" class="ident">rate</label> := <a href="mprof.go.html#line-493" class="ident">MemProfileRate</a>; <label for="r74" class="ident">rate</label> &gt; <span class="lit-number">0</span> {
+		<span class="keyword">if</span> <label for="r74" class="ident">rate</label> != <span class="lit-number">1</span> &amp;&amp; <label for="r56" class="ident">size</label> &lt; <label for="r64" class="ident">c</label>.<a href="mcache.go.html#line-23" class="ident">nextSample</a> {
+			<label for="r64" class="ident">c</label>.<a href="mcache.go.html#line-23" class="ident">nextSample</a> -= <label for="r56" class="ident">size</label>
+		} <span class="keyword">else</span> {
+			<label for="r75" class="ident">mp</label> := <a href="runtime1.go.html#line-467" class="ident">acquirem</a>()
+			<a href="#line-1207" class="ident">profilealloc</a>(<label for="r75" class="ident">mp</label>, <label for="r66" class="ident">x</label>, <label for="r56" class="ident">size</label>)
+			<a href="runtime1.go.html#line-474" class="ident">releasem</a>(<label for="r75" class="ident">mp</label>)
+		}
+	}
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Account for internal fragmentation in the assist</span><span class="comment">		 debt now that we know it.</span></div>
+<div class="code"><pre><code>		<label for="r60" class="ident">assistG</label>.<a href="runtime2.go.html#line-483" class="ident">gcAssistBytes</a> -= <a href="../../pkg/builtin.html#name-int64" class="ident">int64</a>(<label for="r56" class="ident">size</label> - <label for="r63" class="ident">dataSize</label>)
+	}
+
+	<span class="keyword">if</span> <label for="r62" class="ident">shouldhelpgc</label> {
+		<span class="keyword">if</span> <label for="r76" class="ident">t</label> := (<a href="mgc.go.html#line-1234" class="ident">gcTrigger</a>{<a href="mgc.go.html#line-1235" class="ident">kind</a>: <a href="mgc.go.html#line-1246" class="ident">gcTriggerHeap</a>}); <label for="r76" class="ident">t</label>.<a href="mgc.go.html#line-1262" class="ident">test</a>() {
+			<a href="mgc.go.html#line-1292" class="ident">gcStart</a>(<label for="r76" class="ident">t</label>)
+		}
+	}
+
+	<span class="keyword">return</span> <label for="r66" class="ident">x</label>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> implementation of new builtin</span><span class="comment"> compiler (both frontend and SSA backend) knows the signature</span><span class="comment"> of this function</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r77" class="ident"><a href="../../pkg/runtime.html#name-newobject" class="ident">newobject</a></label>(<label for="r78" class="ident">typ</label> *<a href="type.go.html#line-31" class="ident">_type</a>) <a href="../../pkg/unsafe.html" class="ident i3">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a> {
+	<span class="keyword">return</span> <a href="#line-905" class="ident">mallocgc</a>(<label for="r78" class="ident">typ</label>.<a href="type.go.html#line-32" class="ident">size</a>, <label for="r78" class="ident">typ</label>, <a href="../../pkg/builtin.html#name-true" class="ident">true</a>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">go:linkname reflect_unsafe_New reflect.unsafe_New</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r79" class="ident"><a href="../../pkg/runtime.html#name-reflect_unsafe_New" class="ident">reflect_unsafe_New</a></label>(<label for="r80" class="ident">typ</label> *<a href="type.go.html#line-31" class="ident">_type</a>) <a href="../../pkg/unsafe.html" class="ident i3">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a> {
+	<span class="keyword">return</span> <a href="#line-905" class="ident">mallocgc</a>(<label for="r80" class="ident">typ</label>.<a href="type.go.html#line-32" class="ident">size</a>, <label for="r80" class="ident">typ</label>, <a href="../../pkg/builtin.html#name-true" class="ident">true</a>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">go:linkname reflectlite_unsafe_New internal/reflectlite.unsafe_New</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r81" class="ident"><a href="../../pkg/runtime.html#name-reflectlite_unsafe_New" class="ident">reflectlite_unsafe_New</a></label>(<label for="r82" class="ident">typ</label> *<a href="type.go.html#line-31" class="ident">_type</a>) <a href="../../pkg/unsafe.html" class="ident i3">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a> {
+	<span class="keyword">return</span> <a href="#line-905" class="ident">mallocgc</a>(<label for="r82" class="ident">typ</label>.<a href="type.go.html#line-32" class="ident">size</a>, <label for="r82" class="ident">typ</label>, <a href="../../pkg/builtin.html#name-true" class="ident">true</a>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> newarray allocates an array of n elements of type typ.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r83" class="ident"><a href="../../pkg/runtime.html#name-newarray" class="ident">newarray</a></label>(<label for="r84" class="ident">typ</label> *<a href="type.go.html#line-31" class="ident">_type</a>, <label for="r85" class="ident">n</label> <a href="../../pkg/builtin.html#name-int" class="ident">int</a>) <a href="../../pkg/unsafe.html" class="ident i3">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a> {
+	<span class="keyword">if</span> <label for="r85" class="ident">n</label> == <span class="lit-number">1</span> {
+		<span class="keyword">return</span> <a href="#line-905" class="ident">mallocgc</a>(<label for="r84" class="ident">typ</label>.<a href="type.go.html#line-32" class="ident">size</a>, <label for="r84" class="ident">typ</label>, <a href="../../pkg/builtin.html#name-true" class="ident">true</a>)
+	}
+	<label for="r86" class="ident">mem</label>, <label for="r87" class="ident">overflow</label> := <a href="../../pkg/runtime/internal/math.html" class="ident i1">math</a>.<a href="internal/math/math.go.html#line-13" class="ident">MulUintptr</a>(<label for="r84" class="ident">typ</label>.<a href="type.go.html#line-32" class="ident">size</a>, <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<label for="r85" class="ident">n</label>))
+	<span class="keyword">if</span> <label for="r87" class="ident">overflow</label> || <label for="r86" class="ident">mem</label> &gt; <a href="#line-217" class="ident">maxAlloc</a> || <label for="r85" class="ident">n</label> &lt; <span class="lit-number">0</span> {
+		<a href="../../pkg/builtin.html#name-panic" class="ident">panic</a>(<a href="error.go.html#line-103" class="ident">plainError</a>(<span class="lit-string">"runtime: allocation size out of range"</span>))
+	}
+	<span class="keyword">return</span> <a href="#line-905" class="ident">mallocgc</a>(<label for="r86" class="ident">mem</label>, <label for="r84" class="ident">typ</label>, <a href="../../pkg/builtin.html#name-true" class="ident">true</a>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">go:linkname reflect_unsafe_NewArray reflect.unsafe_NewArray</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r88" class="ident"><a href="../../pkg/runtime.html#name-reflect_unsafe_NewArray" class="ident">reflect_unsafe_NewArray</a></label>(<label for="r89" class="ident">typ</label> *<a href="type.go.html#line-31" class="ident">_type</a>, <label for="r90" class="ident">n</label> <a href="../../pkg/builtin.html#name-int" class="ident">int</a>) <a href="../../pkg/unsafe.html" class="ident i3">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a> {
+	<span class="keyword">return</span> <a href="#line-1191" class="ident">newarray</a>(<label for="r89" class="ident">typ</label>, <label for="r90" class="ident">n</label>)
+}
+
+<span class="keyword">func</span> <label for="r91" class="ident"><a href="../../pkg/runtime.html#name-profilealloc" class="ident">profilealloc</a></label>(<label for="r92" class="ident">mp</label> *<a href="runtime2.go.html#line-486" class="ident">m</a>, <label for="r93" class="ident">x</label> <a href="../../pkg/unsafe.html" class="ident i3">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>, <label for="r94" class="ident">size</label> <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>) {
+	<label for="r95" class="ident">c</label> := <a href="mcache.go.html#line-125" class="ident">getMCache</a>()
+	<span class="keyword">if</span> <label for="r95" class="ident">c</label> == <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<a href="panic.go.html#line-1107" class="ident">throw</a>(<span class="lit-string">"profilealloc called without a P or outside bootstrapping"</span>)
+	}
+	<label for="r95" class="ident">c</label>.<a href="mcache.go.html#line-23" class="ident">nextSample</a> = <a href="#line-1223" class="ident">nextSample</a>()
+	<a href="mprof.go.html#line-340" class="ident">mProf_Malloc</a>(<label for="r93" class="ident">x</label>, <label for="r94" class="ident">size</label>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> nextSample returns the next sampling point for heap profiling. The goal is</span><span class="comment"> to sample allocations on average every MemProfileRate bytes, but with a</span><span class="comment"> completely random distribution over the allocation timeline; this</span><span class="comment"> corresponds to a Poisson process with parameter MemProfileRate. In Poisson</span><span class="comment"> processes, the distance between two samples follows the exponential</span><span class="comment"> distribution (exp(MemProfileRate)), so the best return value is a random</span><span class="comment"> number taken from an exponential distribution whose mean is MemProfileRate.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r96" class="ident"><a href="../../pkg/runtime.html#name-nextSample" class="ident">nextSample</a></label>() <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a> {
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Callers assign our return value to</span><span class="comment">		 mcache.next_sample, but next_sample is not used</span><span class="comment">		 when the rate is 1. So avoid the math below and</span><span class="comment">		 just return something.</span></div>
+<div class="code"><pre><code>		<span class="keyword">return</span> <span class="lit-number">0</span>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Plan 9 doesn't support floating point in note handler.</span></div>
+<div class="code"><pre><code>		<span class="keyword">if</span> <label for="r97" class="ident">g</label> := <a href="stubs.go.html#line-18" class="ident">getg</a>(); <label for="r97" class="ident">g</label> == <label for="r97" class="ident">g</label>.<a href="runtime2.go.html#line-418" class="ident">m</a>.<a href="runtime2.go.html#line-493" class="ident">gsignal</a> {
+			<span class="keyword">return</span> <a href="#line-1273" class="ident">nextSampleNoFP</a>()
+		}
+	}
+
+	<span class="keyword">return</span> <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<a href="#line-1243" class="ident">fastexprand</a>(<a href="mprof.go.html#line-493" class="ident">MemProfileRate</a>))
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> fastexprand returns a random number from an exponential distribution with</span><span class="comment"> the specified mean.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Avoid overflow. Maximum possible step is</span><span class="comment">	 -ln(1/(1&lt;&lt;randomBitCount)) * mean, approximately 20 * mean.</span></div>
+<div class="code"><pre><code>	<span class="keyword">switch</span> {
+	<span class="keyword">case</span> <label for="r99" class="ident">mean</label> &gt; <span class="lit-number">0x7000000</span>:
+		<label for="r99" class="ident">mean</label> = <span class="lit-number">0x7000000</span>
+	<span class="keyword">case</span> <label for="r99" class="ident">mean</label> == <span class="lit-number">0</span>:
+		<span class="keyword">return</span> <span class="lit-number">0</span>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Take a random sample of the exponential distribution exp(-mean*x).</span><span class="comment">	 The probability distribution function is mean*exp(-mean*x), so the CDF is</span><span class="comment">	 p = 1 - exp(-mean*x), so</span><span class="comment">	 q = 1 - p == exp(-mean*x)</span><span class="comment">	 log_e(q) = -mean*x</span><span class="comment">	 -log_e(q)/mean = x</span><span class="comment">	 x = -log_e(q) * mean</span><span class="comment">	 x = log_2(q) * (-log_e(2)) * mean    ; Using log_2 for efficiency</span></div>
+<div class="code"><pre><code>	<span class="keyword">const</span> <label for="r100" class="ident">randomBitCount</label> = <span class="lit-number">26</span>
+	<label for="r101" class="ident">q</label> := <a href="stubs.go.html#line-117" class="ident">fastrand</a>()%(<span class="lit-number">1</span>&lt;&lt;<label for="r100" class="ident">randomBitCount</label>) + <span class="lit-number">1</span>
+	<label for="r102" class="ident">qlog</label> := <a href="fastlog2.go.html#line-14" class="ident">fastlog2</a>(<a href="../../pkg/builtin.html#name-float64" class="ident">float64</a>(<label for="r101" class="ident">q</label>)) - <label for="r100" class="ident">randomBitCount</label>
+	<span class="keyword">if</span> <label for="r102" class="ident">qlog</label> &gt; <span class="lit-number">0</span> {
+		<label for="r102" class="ident">qlog</label> = <span class="lit-number">0</span>
+	}
+	<span class="keyword">const</span> <label for="r103" class="ident">minusLog2</label> = -<span class="lit-number">0.6931471805599453</span> <span class="comment">// -ln(2)</span>
+	<span class="keyword">return</span> <a href="../../pkg/builtin.html#name-int32" class="ident">int32</a>(<label for="r102" class="ident">qlog</label>*(<label for="r103" class="ident">minusLog2</label>*<a href="../../pkg/builtin.html#name-float64" class="ident">float64</a>(<label for="r99" class="ident">mean</label>))) + <span class="lit-number">1</span>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> nextSampleNoFP is similar to nextSample, but uses older,</span><span class="comment"> simpler code to avoid floating point.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Set first allocation sample size.</span></div>
+<div class="code"><pre><code>	<label for="r105" class="ident">rate</label> := <a href="mprof.go.html#line-493" class="ident">MemProfileRate</a>
+	<span class="keyword">if</span> <label for="r105" class="ident">rate</label> &gt; <span class="lit-number">0x3fffffff</span> { <span class="comment">// make 2*rate not overflow</span>
+		<label for="r105" class="ident">rate</label> = <span class="lit-number">0x3fffffff</span>
+	}
+	<span class="keyword">if</span> <label for="r105" class="ident">rate</label> != <span class="lit-number">0</span> {
+		<span class="keyword">return</span> <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<a href="stubs.go.html#line-117" class="ident">fastrand</a>() % <a href="../../pkg/builtin.html#name-uint32" class="ident">uint32</a>(<span class="lit-number">2</span>*<label for="r105" class="ident">rate</label>))
+	}
+	<span class="keyword">return</span> <span class="lit-number">0</span>
+}
+
+<span class="keyword">type</span> <a href="../../pkg/runtime.html#name-persistentAlloc" class="ident">persistentAlloc</a> <span class="keyword">struct</span> {
+	<a href="../../use/runtime..persistentAlloc*89bbc.base*cae66.html" class="ident">base</a> *<a href="#line-1448" class="ident">notInHeap</a>
+	<a href="../../use/runtime..persistentAlloc*89bbc.off*b4dc6.html" class="ident">off</a>  <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>
+}
+
+<span class="keyword">var</span> <a href="../../pkg/runtime.html#name-globalAlloc" class="ident">globalAlloc</a> <span class="keyword">struct</span> {
+	<a href="runtime2.go.html#line-162" class="ident">mutex</a>
+	<a href="#line-1285" class="ident">persistentAlloc</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> persistentChunkSize is the number of bytes we allocate when we grow</span><span class="comment"> a persistentAlloc.</span></div>
+<div class="code"><pre><code><span class="keyword">const</span> <a href="../../pkg/runtime.html#name-persistentChunkSize" class="ident">persistentChunkSize</a> = <span class="lit-number">256</span> &lt;&lt; <span class="lit-number">10</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> persistentChunks is a list of all the persistent chunks we have</span><span class="comment"> allocated. The list is maintained through the first word in the</span><span class="comment"> persistent chunk. This is updated atomically.</span></div>
+<div class="code"><pre><code><span class="keyword">var</span> <a href="../../pkg/runtime.html#name-persistentChunks" class="ident">persistentChunks</a> *<a href="#line-1448" class="ident">notInHeap</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Wrapper around sysAlloc that can allocate small chunks.</span><span class="comment"> There is no associated free operation.</span><span class="comment"> Intended for things like function/type/debug-related persistent data.</span><span class="comment"> If align is 0, uses default align (currently 8).</span><span class="comment"> The returned memory will be zeroed.</span><span class="comment"></span><span class="comment"> Consider marking persistentalloc'd types go:notinheap.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r106" class="ident"><a href="../../pkg/runtime.html#name-persistentalloc" class="ident">persistentalloc</a></label>(<label for="r107" class="ident">size</label>, <label for="r108" class="ident">align</label> <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>, <label for="r109" class="ident">sysStat</label> *<a href="mstats.go.html#line-738" class="ident">sysMemStat</a>) <a href="../../pkg/unsafe.html" class="ident i3">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a> {
+	<span class="keyword">var</span> <label for="r110" class="ident">p</label> *<a href="#line-1448" class="ident">notInHeap</a>
+	<a href="stubs.go.html#line-54" class="ident">systemstack</a>(<span class="keyword">func</span>() {
+		<label for="r110" class="ident">p</label> = <a href="#line-1322" class="ident">persistentalloc1</a>(<label for="r107" class="ident">size</label>, <label for="r108" class="ident">align</label>, <label for="r109" class="ident">sysStat</label>)
+	})
+	<span class="keyword">return</span> <a href="../../pkg/unsafe.html" class="ident i3">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(<label for="r110" class="ident">p</label>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Must run on system stack because stack growth can (re)invoke it.</span><span class="comment"> See issue 9174.</span><span class="comment">go:systemstack</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r111" class="ident"><a href="../../pkg/runtime.html#name-persistentalloc1" class="ident">persistentalloc1</a></label>(<label for="r112" class="ident">size</label>, <label for="r113" class="ident">align</label> <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>, <label for="r114" class="ident">sysStat</label> *<a href="mstats.go.html#line-738" class="ident">sysMemStat</a>) *<a href="#line-1448" class="ident">notInHeap</a> {
+	<span class="keyword">const</span> (
+		<label for="r115" class="ident">maxBlock</label> = <span class="lit-number">64</span> &lt;&lt; <span class="lit-number">10</span> <span class="comment">// VM reservation granularity is 64K on windows</span>
+	)
+
+	<span class="keyword">if</span> <label for="r112" class="ident">size</label> == <span class="lit-number">0</span> {
+		<a href="panic.go.html#line-1107" class="ident">throw</a>(<span class="lit-string">"persistentalloc: size == 0"</span>)
+	}
+	<span class="keyword">if</span> <label for="r113" class="ident">align</label> != <span class="lit-number">0</span> {
+		<span class="keyword">if</span> <label for="r113" class="ident">align</label>&amp;(<label for="r113" class="ident">align</label>-<span class="lit-number">1</span>) != <span class="lit-number">0</span> {
+			<a href="panic.go.html#line-1107" class="ident">throw</a>(<span class="lit-string">"persistentalloc: align is not a power of 2"</span>)
+		}
+		<span class="keyword">if</span> <label for="r113" class="ident">align</label> &gt; <a href="#line-126" class="ident">_PageSize</a> {
+			<a href="panic.go.html#line-1107" class="ident">throw</a>(<span class="lit-string">"persistentalloc: align is too large"</span>)
+		}
+	} <span class="keyword">else</span> {
+		<label for="r113" class="ident">align</label> = <span class="lit-number">8</span>
+	}
+
+	<span class="keyword">if</span> <label for="r112" class="ident">size</label> &gt;= <label for="r115" class="ident">maxBlock</label> {
+		<span class="keyword">return</span> (*<a href="#line-1448" class="ident">notInHeap</a>)(<a href="mem_darwin.go.html#line-14" class="ident">sysAlloc</a>(<label for="r112" class="ident">size</label>, <label for="r114" class="ident">sysStat</label>))
+	}
+
+	<label for="r116" class="ident">mp</label> := <a href="runtime1.go.html#line-467" class="ident">acquirem</a>()
+	<span class="keyword">var</span> <label for="r117" class="ident">persistent</label> *<a href="#line-1285" class="ident">persistentAlloc</a>
+	<span class="keyword">if</span> <label for="r116" class="ident">mp</label> != <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a> &amp;&amp; <label for="r116" class="ident">mp</label>.<a href="runtime2.go.html#line-500" class="ident">p</a> != <span class="lit-number">0</span> {
+		<label for="r117" class="ident">persistent</label> = &amp;<label for="r116" class="ident">mp</label>.<a href="runtime2.go.html#line-500" class="ident">p</a>.<a href="runtime2.go.html#line-283" class="ident">ptr</a>().<a href="runtime2.go.html#line-640" class="ident">palloc</a>
+	} <span class="keyword">else</span> {
+		<a href="lock_sema.go.html#line-35" class="ident">lock</a>(&amp;<a href="#line-1290" class="ident">globalAlloc</a>.<a href="#line-1291" class="ident">mutex</a>)
+		<label for="r117" class="ident">persistent</label> = &amp;<a href="#line-1290" class="ident">globalAlloc</a>.<a href="#line-1292" class="ident">persistentAlloc</a>
+	}
+	<label for="r117" class="ident">persistent</label>.<a href="#line-1287" class="ident">off</a> = <a href="stubs.go.html#line-318" class="ident">alignUp</a>(<label for="r117" class="ident">persistent</label>.<a href="#line-1287" class="ident">off</a>, <label for="r113" class="ident">align</label>)
+	<span class="keyword">if</span> <label for="r117" class="ident">persistent</label>.<a href="#line-1287" class="ident">off</a>+<label for="r112" class="ident">size</label> &gt; <a href="#line-1297" class="ident">persistentChunkSize</a> || <label for="r117" class="ident">persistent</label>.<a href="#line-1286" class="ident">base</a> == <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<label for="r117" class="ident">persistent</label>.<a href="#line-1286" class="ident">base</a> = (*<a href="#line-1448" class="ident">notInHeap</a>)(<a href="mem_darwin.go.html#line-14" class="ident">sysAlloc</a>(<a href="#line-1297" class="ident">persistentChunkSize</a>, &amp;<a href="mstats.go.html#line-170" class="ident">memstats</a>.<a href="mstats.go.html#line-61" class="ident">other_sys</a>))
+		<span class="keyword">if</span> <label for="r117" class="ident">persistent</label>.<a href="#line-1286" class="ident">base</a> == <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<span class="keyword">if</span> <label for="r117" class="ident">persistent</label> == &amp;<a href="#line-1290" class="ident">globalAlloc</a>.<a href="#line-1292" class="ident">persistentAlloc</a> {
+				<a href="lock_sema.go.html#line-96" class="ident">unlock</a>(&amp;<a href="#line-1290" class="ident">globalAlloc</a>.<a href="#line-1291" class="ident">mutex</a>)
+			}
+			<a href="panic.go.html#line-1107" class="ident">throw</a>(<span class="lit-string">"runtime: cannot allocate memory"</span>)
+		}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Add the new chunk to the persistentChunks list.</span></div>
+<div class="code"><pre><code>		<span class="keyword">for</span> {
+			<label for="r118" class="ident">chunks</label> := <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<a href="../../pkg/unsafe.html" class="ident i3">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(<a href="#line-1302" class="ident">persistentChunks</a>))
+			*(*<a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>)(<a href="../../pkg/unsafe.html" class="ident i3">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(<label for="r117" class="ident">persistent</label>.<a href="#line-1286" class="ident">base</a>)) = <label for="r118" class="ident">chunks</label>
+			<span class="keyword">if</span> <a href="../../pkg/runtime/internal/atomic.html" class="ident i0">atomic</a>.<a href="internal/atomic/stubs.go.html#line-18" class="ident">Casuintptr</a>((*<a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>)(<a href="../../pkg/unsafe.html" class="ident i3">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(&amp;<a href="#line-1302" class="ident">persistentChunks</a>)), <label for="r118" class="ident">chunks</label>, <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<a href="../../pkg/unsafe.html" class="ident i3">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(<label for="r117" class="ident">persistent</label>.<a href="#line-1286" class="ident">base</a>))) {
+				<span class="keyword">break</span>
+			}
+		}
+		<label for="r117" class="ident">persistent</label>.<a href="#line-1287" class="ident">off</a> = <a href="stubs.go.html#line-318" class="ident">alignUp</a>(<a href="../../pkg/runtime/internal/sys.html" class="ident i2">sys</a>.<a href="internal/sys/stubs.go.html#line-9" class="ident">PtrSize</a>, <label for="r113" class="ident">align</label>)
+	}
+	<label for="r119" class="ident">p</label> := <label for="r117" class="ident">persistent</label>.<a href="#line-1286" class="ident">base</a>.<a href="#line-1450" class="ident">add</a>(<label for="r117" class="ident">persistent</label>.<a href="#line-1287" class="ident">off</a>)
+	<label for="r117" class="ident">persistent</label>.<a href="#line-1287" class="ident">off</a> += <label for="r112" class="ident">size</label>
+	<a href="runtime1.go.html#line-474" class="ident">releasem</a>(<label for="r116" class="ident">mp</label>)
+	<span class="keyword">if</span> <label for="r117" class="ident">persistent</label> == &amp;<a href="#line-1290" class="ident">globalAlloc</a>.<a href="#line-1292" class="ident">persistentAlloc</a> {
+		<a href="lock_sema.go.html#line-96" class="ident">unlock</a>(&amp;<a href="#line-1290" class="ident">globalAlloc</a>.<a href="#line-1291" class="ident">mutex</a>)
+	}
+
+	<span class="keyword">if</span> <label for="r114" class="ident">sysStat</label> != &amp;<a href="mstats.go.html#line-170" class="ident">memstats</a>.<a href="mstats.go.html#line-61" class="ident">other_sys</a> {
+		<label for="r114" class="ident">sysStat</label>.<a href="mstats.go.html#line-752" class="ident">add</a>(<a href="../../pkg/builtin.html#name-int64" class="ident">int64</a>(<label for="r112" class="ident">size</label>))
+		<a href="mstats.go.html#line-170" class="ident">memstats</a>.<a href="mstats.go.html#line-61" class="ident">other_sys</a>.<a href="mstats.go.html#line-752" class="ident">add</a>(-<a href="../../pkg/builtin.html#name-int64" class="ident">int64</a>(<label for="r112" class="ident">size</label>))
+	}
+	<span class="keyword">return</span> <label for="r119" class="ident">p</label>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> inPersistentAlloc reports whether p points to memory allocated by</span><span class="comment"> persistentalloc. This must be nosplit because it is called by the</span><span class="comment"> cgo checker code, which is called by the write barrier code.</span><span class="comment">go:nosplit</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r120" class="ident"><a href="../../pkg/runtime.html#name-inPersistentAlloc" class="ident">inPersistentAlloc</a></label>(<label for="r121" class="ident">p</label> <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>) <a href="../../pkg/builtin.html#name-bool" class="ident">bool</a> {
+	<label for="r122" class="ident">chunk</label> := <a href="../../pkg/runtime/internal/atomic.html" class="ident i0">atomic</a>.<a href="internal/atomic/stubs.go.html#line-24" class="ident">Loaduintptr</a>((*<a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>)(<a href="../../pkg/unsafe.html" class="ident i3">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(&amp;<a href="#line-1302" class="ident">persistentChunks</a>)))
+	<span class="keyword">for</span> <label for="r122" class="ident">chunk</label> != <span class="lit-number">0</span> {
+		<span class="keyword">if</span> <label for="r121" class="ident">p</label> &gt;= <label for="r122" class="ident">chunk</label> &amp;&amp; <label for="r121" class="ident">p</label> &lt; <label for="r122" class="ident">chunk</label>+<a href="#line-1297" class="ident">persistentChunkSize</a> {
+			<span class="keyword">return</span> <a href="../../pkg/builtin.html#name-true" class="ident">true</a>
+		}
+		<label for="r122" class="ident">chunk</label> = *(*<a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>)(<a href="../../pkg/unsafe.html" class="ident i3">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(<label for="r122" class="ident">chunk</label>))
+	}
+	<span class="keyword">return</span> <a href="../../pkg/builtin.html#name-false" class="ident">false</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> linearAlloc is a simple linear allocator that pre-reserves a region</span><span class="comment"> of memory and then maps that region into the Ready state as needed. The</span><span class="comment"> caller is responsible for locking.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../pkg/runtime.html#name-linearAlloc" class="ident">linearAlloc</a> <span class="keyword">struct</span> {
+	<a href="../../use/runtime..linearAlloc*27631.next*c6c1c.html" class="ident">next</a>   <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a> <span class="comment">// next free byte</span>
+	<a href="../../use/runtime..linearAlloc*27631.mapped*03f88.html" class="ident">mapped</a> <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a> <span class="comment">// one byte past end of mapped space</span>
+	<a href="../../use/runtime..linearAlloc*27631.end*361e4.html" class="ident">end</a>    <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a> <span class="comment">// end of reserved space</span>
+}
+
+<span class="keyword">func</span> (<label for="r123" class="ident">l</label> *<a href="#line-1405" class="ident">linearAlloc</a>) <label for="r124" class="ident"><a href="../../use/runtime..linearAlloc*27631.init*bb540.html" class="ident">init</a></label>(<label for="r125" class="ident">base</label>, <label for="r126" class="ident">size</label> <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>) {
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Chop off the last byte. The runtime isn't prepared</span><span class="comment">		 to deal with situations where the bounds could overflow.</span><span class="comment">		 Leave that memory reserved, though, so we don't map it</span><span class="comment">		 later.</span></div>
+<div class="code"><pre><code>		<label for="r126" class="ident">size</label> -= <span class="lit-number">1</span>
+	}
+	<label for="r123" class="ident">l</label>.<a href="#line-1406" class="ident">next</a>, <label for="r123" class="ident">l</label>.<a href="#line-1407" class="ident">mapped</a> = <label for="r125" class="ident">base</label>, <label for="r125" class="ident">base</label>
+	<label for="r123" class="ident">l</label>.<a href="#line-1408" class="ident">end</a> = <label for="r125" class="ident">base</label> + <label for="r126" class="ident">size</label>
+}
+
+<span class="keyword">func</span> (<label for="r127" class="ident">l</label> *<a href="#line-1405" class="ident">linearAlloc</a>) <label for="r128" class="ident"><a href="../../use/runtime..linearAlloc*27631.alloc*bcd3b.html" class="ident">alloc</a></label>(<label for="r129" class="ident">size</label>, <label for="r130" class="ident">align</label> <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>, <label for="r131" class="ident">sysStat</label> *<a href="mstats.go.html#line-738" class="ident">sysMemStat</a>) <a href="../../pkg/unsafe.html" class="ident i3">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a> {
+	<label for="r132" class="ident">p</label> := <a href="stubs.go.html#line-318" class="ident">alignUp</a>(<label for="r127" class="ident">l</label>.<a href="#line-1406" class="ident">next</a>, <label for="r130" class="ident">align</label>)
+	<span class="keyword">if</span> <label for="r132" class="ident">p</label>+<label for="r129" class="ident">size</label> &gt; <label for="r127" class="ident">l</label>.<a href="#line-1408" class="ident">end</a> {
+		<span class="keyword">return</span> <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a>
+	}
+	<label for="r127" class="ident">l</label>.<a href="#line-1406" class="ident">next</a> = <label for="r132" class="ident">p</label> + <label for="r129" class="ident">size</label>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Transition from Reserved to Prepared to Ready.</span></div>
+<div class="code"><pre><code>		<a href="mem_darwin.go.html#line-61" class="ident">sysMap</a>(<a href="../../pkg/unsafe.html" class="ident i3">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(<label for="r127" class="ident">l</label>.<a href="#line-1407" class="ident">mapped</a>), <label for="r133" class="ident">pEnd</label>-<label for="r127" class="ident">l</label>.<a href="#line-1407" class="ident">mapped</a>, <label for="r131" class="ident">sysStat</label>)
+		<a href="mem_darwin.go.html#line-29" class="ident">sysUsed</a>(<a href="../../pkg/unsafe.html" class="ident i3">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(<label for="r127" class="ident">l</label>.<a href="#line-1407" class="ident">mapped</a>), <label for="r133" class="ident">pEnd</label>-<label for="r127" class="ident">l</label>.<a href="#line-1407" class="ident">mapped</a>)
+		<label for="r127" class="ident">l</label>.<a href="#line-1407" class="ident">mapped</a> = <label for="r133" class="ident">pEnd</label>
+	}
+	<span class="keyword">return</span> <a href="../../pkg/unsafe.html" class="ident i3">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(<label for="r132" class="ident">p</label>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> notInHeap is off-heap memory allocated by a lower-level allocator</span><span class="comment"> like sysAlloc or persistentAlloc.</span><span class="comment"></span><span class="comment"> In general, it's better to use real types marked as go:notinheap,</span><span class="comment"> but this serves as a generic type for situations where that isn't</span><span class="comment"> possible (like in the allocators).</span><span class="comment"></span><span class="comment"> TODO: Use this as the return type of sysAlloc, persistentAlloc, etc?</span><span class="comment"></span><span class="comment">go:notinheap</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../pkg/runtime.html#name-notInHeap" class="ident">notInHeap</a> <span class="keyword">struct</span>{}
+
+<span class="keyword">func</span> (<label for="r134" class="ident">p</label> *<a href="#line-1448" class="ident">notInHeap</a>) <label for="r135" class="ident"><a href="../../use/runtime..notInHeap*5e591.add*7e9e5.html" class="ident">add</a></label>(<label for="r136" class="ident">bytes</label> <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>) *<a href="#line-1448" class="ident">notInHeap</a> {
+	<span class="keyword">return</span> (*<a href="#line-1448" class="ident">notInHeap</a>)(<a href="../../pkg/unsafe.html" class="ident i3">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(<a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<a href="../../pkg/unsafe.html" class="ident i3">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>(<label for="r134" class="ident">p</label>)) + <label for="r136" class="ident">bytes</label>))
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

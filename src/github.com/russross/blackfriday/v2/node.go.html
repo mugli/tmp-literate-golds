@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: node.go in package github.com/russross/blackfriday/v2</title>
+<link href="../../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	node.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../../pkg/github.com/russross/blackfriday/v2.html">github.com/russross/blackfriday/v2</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16],
+input[id=r17]:checked ~pre label[for=r17],
+input[id=r18]:checked ~pre label[for=r18],
+input[id=r19]:checked ~pre label[for=r19],
+input[id=r20]:checked ~pre label[for=r20],
+input[id=r21]:checked ~pre label[for=r21],
+input[id=r22]:checked ~pre label[for=r22],
+input[id=r23]:checked ~pre label[for=r23],
+input[id=r24]:checked ~pre label[for=r24],
+input[id=r25]:checked ~pre label[for=r25],
+input[id=r26]:checked ~pre label[for=r26],
+input[id=r27]:checked ~pre label[for=r27],
+input[id=r28]:checked ~pre label[for=r28],
+input[id=r29]:checked ~pre label[for=r29],
+input[id=r30]:checked ~pre label[for=r30],
+input[id=r31]:checked ~pre label[for=r31],
+input[id=r32]:checked ~pre label[for=r32],
+input[id=r33]:checked ~pre label[for=r33],
+input[id=r34]:checked ~pre label[for=r34],
+input[id=r35]:checked ~pre label[for=r35],
+input[id=r36]:checked ~pre label[for=r36],
+input[id=r37]:checked ~pre label[for=r37],
+input[id=r38]:checked ~pre label[for=r38],
+input[id=r39]:checked ~pre label[for=r39],
+input[id=r40]:checked ~pre label[for=r40]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="r17" type="radio" name="g"/>
+<input id="r18" type="radio" name="g"/>
+<input id="r19" type="radio" name="g"/>
+<input id="r20" type="radio" name="g"/>
+<input id="r21" type="radio" name="g"/>
+<input id="r22" type="radio" name="g"/>
+<input id="r23" type="radio" name="g"/>
+<input id="r24" type="radio" name="g"/>
+<input id="r25" type="radio" name="g"/>
+<input id="r26" type="radio" name="g"/>
+<input id="r27" type="radio" name="g"/>
+<input id="r28" type="radio" name="g"/>
+<input id="r29" type="radio" name="g"/>
+<input id="r30" type="radio" name="g"/>
+<input id="r31" type="radio" name="g"/>
+<input id="r32" type="radio" name="g"/>
+<input id="r33" type="radio" name="g"/>
+<input id="r34" type="radio" name="g"/>
+<input id="r35" type="radio" name="g"/>
+<input id="r36" type="radio" name="g"/>
+<input id="r37" type="radio" name="g"/>
+<input id="r38" type="radio" name="g"/>
+<input id="r39" type="radio" name="g"/>
+<input id="r40" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+</div>
+<div class="code"><pre><code><span class="keyword">package</span> blackfriday
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"bytes"</span></label>
+	<label for="i1"><span class="lit-string i1">"fmt"</span></label>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> NodeType specifies a type of a single node of a syntax tree. Usually one</span><span class="comment"> node (and its type) corresponds to a single markdown feature, e.g. emphasis</span><span class="comment"> or code block.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../pkg/github.com/russross/blackfriday/v2.html#name-NodeType" class="ident">NodeType</a> <a href="../../../../../pkg/builtin.html#name-int" class="ident">int</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Constants for identifying different types of nodes. See NodeType.</span></div>
+<div class="code"><pre><code><span class="keyword">const</span> (
+	<a href="../../../../../pkg/github.com/russross/blackfriday/v2.html#name-Document" class="ident">Document</a> <a href="#line-11" class="ident">NodeType</a> = <a href="../../../../../pkg/builtin.html#name-iota" class="ident">iota</a>
+	<a href="../../../../../pkg/github.com/russross/blackfriday/v2.html#name-BlockQuote" class="ident">BlockQuote</a>
+	<a href="../../../../../pkg/github.com/russross/blackfriday/v2.html#name-List" class="ident">List</a>
+	<a href="../../../../../pkg/github.com/russross/blackfriday/v2.html#name-Item" class="ident">Item</a>
+	<a href="../../../../../pkg/github.com/russross/blackfriday/v2.html#name-Paragraph" class="ident">Paragraph</a>
+	<a href="../../../../../pkg/github.com/russross/blackfriday/v2.html#name-Heading" class="ident">Heading</a>
+	<a href="../../../../../pkg/github.com/russross/blackfriday/v2.html#name-HorizontalRule" class="ident">HorizontalRule</a>
+	<a href="../../../../../pkg/github.com/russross/blackfriday/v2.html#name-Emph" class="ident">Emph</a>
+	<a href="../../../../../pkg/github.com/russross/blackfriday/v2.html#name-Strong" class="ident">Strong</a>
+	<a href="../../../../../pkg/github.com/russross/blackfriday/v2.html#name-Del" class="ident">Del</a>
+	<a href="../../../../../pkg/github.com/russross/blackfriday/v2.html#name-Link" class="ident">Link</a>
+	<a href="../../../../../pkg/github.com/russross/blackfriday/v2.html#name-Image" class="ident">Image</a>
+	<a href="../../../../../pkg/github.com/russross/blackfriday/v2.html#name-Text" class="ident">Text</a>
+	<a href="../../../../../pkg/github.com/russross/blackfriday/v2.html#name-HTMLBlock" class="ident">HTMLBlock</a>
+	<a href="../../../../../pkg/github.com/russross/blackfriday/v2.html#name-CodeBlock" class="ident">CodeBlock</a>
+	<a href="../../../../../pkg/github.com/russross/blackfriday/v2.html#name-Softbreak" class="ident">Softbreak</a>
+	<a href="../../../../../pkg/github.com/russross/blackfriday/v2.html#name-Hardbreak" class="ident">Hardbreak</a>
+	<a href="../../../../../pkg/github.com/russross/blackfriday/v2.html#name-Code" class="ident">Code</a>
+	<a href="../../../../../pkg/github.com/russross/blackfriday/v2.html#name-HTMLSpan" class="ident">HTMLSpan</a>
+	<a href="../../../../../pkg/github.com/russross/blackfriday/v2.html#name-Table" class="ident">Table</a>
+	<a href="../../../../../pkg/github.com/russross/blackfriday/v2.html#name-TableCell" class="ident">TableCell</a>
+	<a href="../../../../../pkg/github.com/russross/blackfriday/v2.html#name-TableHead" class="ident">TableHead</a>
+	<a href="../../../../../pkg/github.com/russross/blackfriday/v2.html#name-TableBody" class="ident">TableBody</a>
+	<a href="../../../../../pkg/github.com/russross/blackfriday/v2.html#name-TableRow" class="ident">TableRow</a>
+)
+
+<span class="keyword">var</span> <a href="../../../../../pkg/github.com/russross/blackfriday/v2.html#name-nodeTypeNames" class="ident">nodeTypeNames</a> = []<a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>{
+	<a href="#line-15" class="ident">Document</a>:       <span class="lit-string">"Document"</span>,
+	<a href="#line-16" class="ident">BlockQuote</a>:     <span class="lit-string">"BlockQuote"</span>,
+	<a href="#line-17" class="ident">List</a>:           <span class="lit-string">"List"</span>,
+	<a href="#line-18" class="ident">Item</a>:           <span class="lit-string">"Item"</span>,
+	<a href="#line-19" class="ident">Paragraph</a>:      <span class="lit-string">"Paragraph"</span>,
+	<a href="#line-20" class="ident">Heading</a>:        <span class="lit-string">"Heading"</span>,
+	<a href="#line-21" class="ident">HorizontalRule</a>: <span class="lit-string">"HorizontalRule"</span>,
+	<a href="#line-22" class="ident">Emph</a>:           <span class="lit-string">"Emph"</span>,
+	<a href="#line-23" class="ident">Strong</a>:         <span class="lit-string">"Strong"</span>,
+	<a href="#line-24" class="ident">Del</a>:            <span class="lit-string">"Del"</span>,
+	<a href="#line-25" class="ident">Link</a>:           <span class="lit-string">"Link"</span>,
+	<a href="#line-26" class="ident">Image</a>:          <span class="lit-string">"Image"</span>,
+	<a href="#line-27" class="ident">Text</a>:           <span class="lit-string">"Text"</span>,
+	<a href="#line-28" class="ident">HTMLBlock</a>:      <span class="lit-string">"HTMLBlock"</span>,
+	<a href="#line-29" class="ident">CodeBlock</a>:      <span class="lit-string">"CodeBlock"</span>,
+	<a href="#line-30" class="ident">Softbreak</a>:      <span class="lit-string">"Softbreak"</span>,
+	<a href="#line-31" class="ident">Hardbreak</a>:      <span class="lit-string">"Hardbreak"</span>,
+	<a href="#line-32" class="ident">Code</a>:           <span class="lit-string">"Code"</span>,
+	<a href="#line-33" class="ident">HTMLSpan</a>:       <span class="lit-string">"HTMLSpan"</span>,
+	<a href="#line-34" class="ident">Table</a>:          <span class="lit-string">"Table"</span>,
+	<a href="#line-35" class="ident">TableCell</a>:      <span class="lit-string">"TableCell"</span>,
+	<a href="#line-36" class="ident">TableHead</a>:      <span class="lit-string">"TableHead"</span>,
+	<a href="#line-37" class="ident">TableBody</a>:      <span class="lit-string">"TableBody"</span>,
+	<a href="#line-38" class="ident">TableRow</a>:       <span class="lit-string">"TableRow"</span>,
+}
+
+<span class="keyword">func</span> (<label for="r0" class="ident">t</label> <a href="#line-11" class="ident">NodeType</a>) <label for="r1" class="ident"><a href="../../../../../use/github.com/russross/blackfriday/v2..NodeType.String.html" class="ident">String</a></label>() <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a> {
+	<span class="keyword">return</span> <a href="#line-41" class="ident">nodeTypeNames</a>[<label for="r0" class="ident">t</label>]
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ListData contains fields relevant to a List and Item node type.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../pkg/github.com/russross/blackfriday/v2.html#name-ListData" class="ident">ListData</a> <span class="keyword">struct</span> {
+	<a href="../../../../../use/github.com/russross/blackfriday/v2..ListData.ListFlags.html" class="ident">ListFlags</a>       <a href="markdown.go.html#line-60" class="ident">ListType</a>
+	<a href="../../../../../use/github.com/russross/blackfriday/v2..ListData.Tight.html" class="ident">Tight</a>           <a href="../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>   <span class="comment">// Skip &lt;p&gt;s around list item data if true</span>
+	<a href="../../../../../use/github.com/russross/blackfriday/v2..ListData.BulletChar.html" class="ident">BulletChar</a>      <a href="../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>   <span class="comment">// '*', '+' or '-' in bullet lists</span>
+	<a href="../../../../../use/github.com/russross/blackfriday/v2..ListData.Delimiter.html" class="ident">Delimiter</a>       <a href="../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>   <span class="comment">// '.' or ')' after the number in ordered lists</span>
+	<a href="../../../../../use/github.com/russross/blackfriday/v2..ListData.RefLink.html" class="ident">RefLink</a>         []<a href="../../../../../pkg/builtin.html#name-byte" class="ident">byte</a> <span class="comment">// If not nil, turns this list item into a footnote item and triggers different rendering</span>
+	<a href="../../../../../use/github.com/russross/blackfriday/v2..ListData.IsFootnotesList.html" class="ident">IsFootnotesList</a> <a href="../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>   <span class="comment">// This is a list of footnotes</span>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> LinkData contains fields relevant to a Link node type.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../pkg/github.com/russross/blackfriday/v2.html#name-LinkData" class="ident">LinkData</a> <span class="keyword">struct</span> {
+	<a href="../../../../../use/github.com/russross/blackfriday/v2..LinkData.Destination.html" class="ident">Destination</a> []<a href="../../../../../pkg/builtin.html#name-byte" class="ident">byte</a> <span class="comment">// Destination is what goes into a href</span>
+	<a href="../../../../../use/github.com/russross/blackfriday/v2..LinkData.Title.html" class="ident">Title</a>       []<a href="../../../../../pkg/builtin.html#name-byte" class="ident">byte</a> <span class="comment">// Title is the tooltip thing that goes in a title attribute</span>
+	<a href="../../../../../use/github.com/russross/blackfriday/v2..LinkData.NoteID.html" class="ident">NoteID</a>      <a href="../../../../../pkg/builtin.html#name-int" class="ident">int</a>    <span class="comment">// NoteID contains a serial number of a footnote, zero if it's not a footnote</span>
+	<a href="../../../../../use/github.com/russross/blackfriday/v2..LinkData.Footnote.html" class="ident">Footnote</a>    *<a href="#line-115" class="ident">Node</a>  <span class="comment">// If it's a footnote, this is a direct link to the footnote Node. Otherwise nil.</span>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> CodeBlockData contains fields relevant to a CodeBlock node type.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../pkg/github.com/russross/blackfriday/v2.html#name-CodeBlockData" class="ident">CodeBlockData</a> <span class="keyword">struct</span> {
+	<a href="../../../../../use/github.com/russross/blackfriday/v2..CodeBlockData.IsFenced.html" class="ident">IsFenced</a>    <a href="../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>   <span class="comment">// Specifies whether it's a fenced code block or an indented one</span>
+	<a href="../../../../../use/github.com/russross/blackfriday/v2..CodeBlockData.Info.html" class="ident">Info</a>        []<a href="../../../../../pkg/builtin.html#name-byte" class="ident">byte</a> <span class="comment">// This holds the info string</span>
+	<a href="../../../../../use/github.com/russross/blackfriday/v2..CodeBlockData.FenceChar.html" class="ident">FenceChar</a>   <a href="../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>
+	<a href="../../../../../use/github.com/russross/blackfriday/v2..CodeBlockData.FenceLength.html" class="ident">FenceLength</a> <a href="../../../../../pkg/builtin.html#name-int" class="ident">int</a>
+	<a href="../../../../../use/github.com/russross/blackfriday/v2..CodeBlockData.FenceOffset.html" class="ident">FenceOffset</a> <a href="../../../../../pkg/builtin.html#name-int" class="ident">int</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> TableCellData contains fields relevant to a TableCell node type.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../pkg/github.com/russross/blackfriday/v2.html#name-TableCellData" class="ident">TableCellData</a> <span class="keyword">struct</span> {
+	<a href="../../../../../use/github.com/russross/blackfriday/v2..TableCellData.IsHeader.html" class="ident">IsHeader</a> <a href="../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>           <span class="comment">// This tells if it's under the header row</span>
+	<a href="../../../../../use/github.com/russross/blackfriday/v2..TableCellData.Align.html" class="ident">Align</a>    <a href="markdown.go.html#line-76" class="ident">CellAlignFlags</a> <span class="comment">// This holds the value for align attribute</span>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> HeadingData contains fields relevant to a Heading node type.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../pkg/github.com/russross/blackfriday/v2.html#name-HeadingData" class="ident">HeadingData</a> <span class="keyword">struct</span> {
+	<a href="../../../../../use/github.com/russross/blackfriday/v2..HeadingData.Level.html" class="ident">Level</a>        <a href="../../../../../pkg/builtin.html#name-int" class="ident">int</a>    <span class="comment">// This holds the heading level number</span>
+	<a href="../../../../../use/github.com/russross/blackfriday/v2..HeadingData.HeadingID.html" class="ident">HeadingID</a>    <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a> <span class="comment">// This might hold heading ID, if present</span>
+	<a href="../../../../../use/github.com/russross/blackfriday/v2..HeadingData.IsTitleblock.html" class="ident">IsTitleblock</a> <a href="../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>   <span class="comment">// Specifies whether it's a title block</span>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Node is a single element in the abstract syntax tree of the parsed document.</span><span class="comment"> It holds connections to the structurally neighboring nodes and, for certain</span><span class="comment"> types of nodes, additional information that might be needed when rendering.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../pkg/github.com/russross/blackfriday/v2.html#name-Node" class="ident">Node</a> <span class="keyword">struct</span> {
+	<a href="../../../../../use/github.com/russross/blackfriday/v2..Node.Type.html" class="ident">Type</a>       <a href="#line-11" class="ident">NodeType</a> <span class="comment">// Determines the type of the node</span>
+	<a href="../../../../../use/github.com/russross/blackfriday/v2..Node.Parent.html" class="ident">Parent</a>     *<a href="#line-115" class="ident">Node</a>    <span class="comment">// Points to the parent</span>
+	<a href="../../../../../use/github.com/russross/blackfriday/v2..Node.FirstChild.html" class="ident">FirstChild</a> *<a href="#line-115" class="ident">Node</a>    <span class="comment">// Points to the first child, if any</span>
+	<a href="../../../../../use/github.com/russross/blackfriday/v2..Node.LastChild.html" class="ident">LastChild</a>  *<a href="#line-115" class="ident">Node</a>    <span class="comment">// Points to the last child, if any</span>
+	<a href="../../../../../use/github.com/russross/blackfriday/v2..Node.Prev.html" class="ident">Prev</a>       *<a href="#line-115" class="ident">Node</a>    <span class="comment">// Previous sibling; nil if it's the first child</span>
+	<a href="../../../../../use/github.com/russross/blackfriday/v2..Node.Next.html" class="ident">Next</a>       *<a href="#line-115" class="ident">Node</a>    <span class="comment">// Next sibling; nil if it's the last child</span>
+
+	<a href="../../../../../use/github.com/russross/blackfriday/v2..Node.Literal.html" class="ident">Literal</a> []<a href="../../../../../pkg/builtin.html#name-byte" class="ident">byte</a> <span class="comment">// Text contents of the leaf nodes</span>
+
+	<a href="#line-106" class="ident">HeadingData</a>   <span class="comment">// Populated if Type is Heading</span>
+	<a href="#line-73" class="ident">ListData</a>      <span class="comment">// Populated if Type is List</span>
+	<a href="#line-91" class="ident">CodeBlockData</a> <span class="comment">// Populated if Type is CodeBlock</span>
+	<a href="#line-83" class="ident">LinkData</a>      <span class="comment">// Populated if Type is Link</span>
+	<a href="#line-100" class="ident">TableCellData</a> <span class="comment">// Populated if Type is TableCell</span>
+
+	<a href="../../../../../use/github.com/russross/blackfriday/v2..Node.content*ed700.html" class="ident">content</a> []<a href="../../../../../pkg/builtin.html#name-byte" class="ident">byte</a> <span class="comment">// Markdown content of the block nodes</span>
+	<a href="../../../../../use/github.com/russross/blackfriday/v2..Node.open*2348f.html" class="ident">open</a>    <a href="../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>   <span class="comment">// Specifies an open block node that has not been finished to process yet</span>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> NewNode allocates a node of a specified type.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r2" class="ident"><a href="../../../../../pkg/github.com/russross/blackfriday/v2.html#name-NewNode" class="ident">NewNode</a></label>(<label for="r3" class="ident">typ</label> <a href="#line-11" class="ident">NodeType</a>) *<a href="#line-115" class="ident">Node</a> {
+	<span class="keyword">return</span> &amp;<a href="#line-115" class="ident">Node</a>{
+		<a href="#line-116" class="ident">Type</a>: <label for="r3" class="ident">typ</label>,
+		<a href="#line-132" class="ident">open</a>: <a href="../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	}
+}
+
+<span class="keyword">func</span> (<label for="r4" class="ident">n</label> *<a href="#line-115" class="ident">Node</a>) <label for="r5" class="ident"><a href="../../../../../use/github.com/russross/blackfriday/v2..Node.String.html" class="ident">String</a></label>() <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a> {
+	<label for="r6" class="ident">ellipsis</label> := <span class="lit-string">""</span>
+	<label for="r7" class="ident">snippet</label> := <label for="r4" class="ident">n</label>.<a href="#line-123" class="ident">Literal</a>
+	<span class="keyword">if</span> <a href="../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r7" class="ident">snippet</label>) &gt; <span class="lit-number">16</span> {
+		<label for="r7" class="ident">snippet</label> = <label for="r7" class="ident">snippet</label>[:<span class="lit-number">16</span>]
+		<label for="r6" class="ident">ellipsis</label> = <span class="lit-string">"..."</span>
+	}
+	<span class="keyword">return</span> <a href="../../../../../pkg/fmt.html" class="ident i1">fmt</a>.<a href="../../../../fmt/print.go.html#line-217" class="ident">Sprintf</a>(<span class="lit-string">"%s: '%s%s'"</span>, <label for="r4" class="ident">n</label>.<a href="#line-116" class="ident">Type</a>, <label for="r7" class="ident">snippet</label>, <label for="r6" class="ident">ellipsis</label>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Unlink removes node 'n' from the tree.</span><span class="comment"> It panics if the node is nil.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r8" class="ident">n</label> *<a href="#line-115" class="ident">Node</a>) <label for="r9" class="ident"><a href="../../../../../use/github.com/russross/blackfriday/v2..Node.Unlink.html" class="ident">Unlink</a></label>() {
+	<span class="keyword">if</span> <label for="r8" class="ident">n</label>.<a href="#line-120" class="ident">Prev</a> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<label for="r8" class="ident">n</label>.<a href="#line-120" class="ident">Prev</a>.<a href="#line-121" class="ident">Next</a> = <label for="r8" class="ident">n</label>.<a href="#line-121" class="ident">Next</a>
+	} <span class="keyword">else</span> <span class="keyword">if</span> <label for="r8" class="ident">n</label>.<a href="#line-117" class="ident">Parent</a> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<label for="r8" class="ident">n</label>.<a href="#line-117" class="ident">Parent</a>.<a href="#line-118" class="ident">FirstChild</a> = <label for="r8" class="ident">n</label>.<a href="#line-121" class="ident">Next</a>
+	}
+	<span class="keyword">if</span> <label for="r8" class="ident">n</label>.<a href="#line-121" class="ident">Next</a> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<label for="r8" class="ident">n</label>.<a href="#line-121" class="ident">Next</a>.<a href="#line-120" class="ident">Prev</a> = <label for="r8" class="ident">n</label>.<a href="#line-120" class="ident">Prev</a>
+	} <span class="keyword">else</span> <span class="keyword">if</span> <label for="r8" class="ident">n</label>.<a href="#line-117" class="ident">Parent</a> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<label for="r8" class="ident">n</label>.<a href="#line-117" class="ident">Parent</a>.<a href="#line-119" class="ident">LastChild</a> = <label for="r8" class="ident">n</label>.<a href="#line-120" class="ident">Prev</a>
+	}
+	<label for="r8" class="ident">n</label>.<a href="#line-117" class="ident">Parent</a> = <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+	<label for="r8" class="ident">n</label>.<a href="#line-121" class="ident">Next</a> = <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+	<label for="r8" class="ident">n</label>.<a href="#line-120" class="ident">Prev</a> = <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> AppendChild adds a node 'child' as a child of 'n'.</span><span class="comment"> It panics if either node is nil.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r10" class="ident">n</label> *<a href="#line-115" class="ident">Node</a>) <label for="r11" class="ident"><a href="../../../../../use/github.com/russross/blackfriday/v2..Node.AppendChild.html" class="ident">AppendChild</a></label>(<label for="r12" class="ident">child</label> *<a href="#line-115" class="ident">Node</a>) {
+	<label for="r12" class="ident">child</label>.<a href="#line-155" class="ident">Unlink</a>()
+	<label for="r12" class="ident">child</label>.<a href="#line-117" class="ident">Parent</a> = <label for="r10" class="ident">n</label>
+	<span class="keyword">if</span> <label for="r10" class="ident">n</label>.<a href="#line-119" class="ident">LastChild</a> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<label for="r10" class="ident">n</label>.<a href="#line-119" class="ident">LastChild</a>.<a href="#line-121" class="ident">Next</a> = <label for="r12" class="ident">child</label>
+		<label for="r12" class="ident">child</label>.<a href="#line-120" class="ident">Prev</a> = <label for="r10" class="ident">n</label>.<a href="#line-119" class="ident">LastChild</a>
+		<label for="r10" class="ident">n</label>.<a href="#line-119" class="ident">LastChild</a> = <label for="r12" class="ident">child</label>
+	} <span class="keyword">else</span> {
+		<label for="r10" class="ident">n</label>.<a href="#line-118" class="ident">FirstChild</a> = <label for="r12" class="ident">child</label>
+		<label for="r10" class="ident">n</label>.<a href="#line-119" class="ident">LastChild</a> = <label for="r12" class="ident">child</label>
+	}
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> InsertBefore inserts 'sibling' immediately before 'n'.</span><span class="comment"> It panics if either node is nil.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r13" class="ident">n</label> *<a href="#line-115" class="ident">Node</a>) <label for="r14" class="ident"><a href="../../../../../use/github.com/russross/blackfriday/v2..Node.InsertBefore.html" class="ident">InsertBefore</a></label>(<label for="r15" class="ident">sibling</label> *<a href="#line-115" class="ident">Node</a>) {
+	<label for="r15" class="ident">sibling</label>.<a href="#line-155" class="ident">Unlink</a>()
+	<label for="r15" class="ident">sibling</label>.<a href="#line-120" class="ident">Prev</a> = <label for="r13" class="ident">n</label>.<a href="#line-120" class="ident">Prev</a>
+	<span class="keyword">if</span> <label for="r15" class="ident">sibling</label>.<a href="#line-120" class="ident">Prev</a> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<label for="r15" class="ident">sibling</label>.<a href="#line-120" class="ident">Prev</a>.<a href="#line-121" class="ident">Next</a> = <label for="r15" class="ident">sibling</label>
+	}
+	<label for="r15" class="ident">sibling</label>.<a href="#line-121" class="ident">Next</a> = <label for="r13" class="ident">n</label>
+	<label for="r13" class="ident">n</label>.<a href="#line-120" class="ident">Prev</a> = <label for="r15" class="ident">sibling</label>
+	<label for="r15" class="ident">sibling</label>.<a href="#line-117" class="ident">Parent</a> = <label for="r13" class="ident">n</label>.<a href="#line-117" class="ident">Parent</a>
+	<span class="keyword">if</span> <label for="r15" class="ident">sibling</label>.<a href="#line-120" class="ident">Prev</a> == <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<label for="r15" class="ident">sibling</label>.<a href="#line-117" class="ident">Parent</a>.<a href="#line-118" class="ident">FirstChild</a> = <label for="r15" class="ident">sibling</label>
+	}
+}
+
+<span class="keyword">func</span> (<label for="r16" class="ident">n</label> *<a href="#line-115" class="ident">Node</a>) <label for="r17" class="ident"><a href="../../../../../use/github.com/russross/blackfriday/v2..Node.isContainer*eede8.html" class="ident">isContainer</a></label>() <a href="../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> {
+	<span class="keyword">switch</span> <label for="r16" class="ident">n</label>.<a href="#line-116" class="ident">Type</a> {
+	<span class="keyword">case</span> <a href="#line-15" class="ident">Document</a>:
+		<span class="keyword">fallthrough</span>
+	<span class="keyword">case</span> <a href="#line-16" class="ident">BlockQuote</a>:
+		<span class="keyword">fallthrough</span>
+	<span class="keyword">case</span> <a href="#line-17" class="ident">List</a>:
+		<span class="keyword">fallthrough</span>
+	<span class="keyword">case</span> <a href="#line-18" class="ident">Item</a>:
+		<span class="keyword">fallthrough</span>
+	<span class="keyword">case</span> <a href="#line-19" class="ident">Paragraph</a>:
+		<span class="keyword">fallthrough</span>
+	<span class="keyword">case</span> <a href="#line-20" class="ident">Heading</a>:
+		<span class="keyword">fallthrough</span>
+	<span class="keyword">case</span> <a href="#line-22" class="ident">Emph</a>:
+		<span class="keyword">fallthrough</span>
+	<span class="keyword">case</span> <a href="#line-23" class="ident">Strong</a>:
+		<span class="keyword">fallthrough</span>
+	<span class="keyword">case</span> <a href="#line-24" class="ident">Del</a>:
+		<span class="keyword">fallthrough</span>
+	<span class="keyword">case</span> <a href="#line-25" class="ident">Link</a>:
+		<span class="keyword">fallthrough</span>
+	<span class="keyword">case</span> <a href="#line-26" class="ident">Image</a>:
+		<span class="keyword">fallthrough</span>
+	<span class="keyword">case</span> <a href="#line-34" class="ident">Table</a>:
+		<span class="keyword">fallthrough</span>
+	<span class="keyword">case</span> <a href="#line-36" class="ident">TableHead</a>:
+		<span class="keyword">fallthrough</span>
+	<span class="keyword">case</span> <a href="#line-37" class="ident">TableBody</a>:
+		<span class="keyword">fallthrough</span>
+	<span class="keyword">case</span> <a href="#line-38" class="ident">TableRow</a>:
+		<span class="keyword">fallthrough</span>
+	<span class="keyword">case</span> <a href="#line-35" class="ident">TableCell</a>:
+		<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-true" class="ident">true</a>
+	<span class="keyword">default</span>:
+		<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-false" class="ident">false</a>
+	}
+}
+
+<span class="keyword">func</span> (<label for="r18" class="ident">n</label> *<a href="#line-115" class="ident">Node</a>) <label for="r19" class="ident"><a href="../../../../../use/github.com/russross/blackfriday/v2..Node.canContain*999fa.html" class="ident">canContain</a></label>(<label for="r20" class="ident">t</label> <a href="#line-11" class="ident">NodeType</a>) <a href="../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> {
+	<span class="keyword">if</span> <label for="r18" class="ident">n</label>.<a href="#line-116" class="ident">Type</a> == <a href="#line-17" class="ident">List</a> {
+		<span class="keyword">return</span> <label for="r20" class="ident">t</label> == <a href="#line-18" class="ident">Item</a>
+	}
+	<span class="keyword">if</span> <label for="r18" class="ident">n</label>.<a href="#line-116" class="ident">Type</a> == <a href="#line-15" class="ident">Document</a> || <label for="r18" class="ident">n</label>.<a href="#line-116" class="ident">Type</a> == <a href="#line-16" class="ident">BlockQuote</a> || <label for="r18" class="ident">n</label>.<a href="#line-116" class="ident">Type</a> == <a href="#line-18" class="ident">Item</a> {
+		<span class="keyword">return</span> <label for="r20" class="ident">t</label> != <a href="#line-18" class="ident">Item</a>
+	}
+	<span class="keyword">if</span> <label for="r18" class="ident">n</label>.<a href="#line-116" class="ident">Type</a> == <a href="#line-34" class="ident">Table</a> {
+		<span class="keyword">return</span> <label for="r20" class="ident">t</label> == <a href="#line-36" class="ident">TableHead</a> || <label for="r20" class="ident">t</label> == <a href="#line-37" class="ident">TableBody</a>
+	}
+	<span class="keyword">if</span> <label for="r18" class="ident">n</label>.<a href="#line-116" class="ident">Type</a> == <a href="#line-36" class="ident">TableHead</a> || <label for="r18" class="ident">n</label>.<a href="#line-116" class="ident">Type</a> == <a href="#line-37" class="ident">TableBody</a> {
+		<span class="keyword">return</span> <label for="r20" class="ident">t</label> == <a href="#line-38" class="ident">TableRow</a>
+	}
+	<span class="keyword">if</span> <label for="r18" class="ident">n</label>.<a href="#line-116" class="ident">Type</a> == <a href="#line-38" class="ident">TableRow</a> {
+		<span class="keyword">return</span> <label for="r20" class="ident">t</label> == <a href="#line-35" class="ident">TableCell</a>
+	}
+	<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-false" class="ident">false</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> WalkStatus allows NodeVisitor to have some control over the tree traversal.</span><span class="comment"> It is returned from NodeVisitor and different values allow Node.Walk to</span><span class="comment"> decide which node to go to next.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../pkg/github.com/russross/blackfriday/v2.html#name-WalkStatus" class="ident">WalkStatus</a> <a href="../../../../../pkg/builtin.html#name-int" class="ident">int</a>
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> GoToNext is the default traversal of every node.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> SkipChildren tells walker to skip all children of current node.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Terminate tells walker to terminate the traversal.</span></div>
+<div class="code"><pre><code>	<a href="../../../../../pkg/github.com/russross/blackfriday/v2.html#name-Terminate" class="ident">Terminate</a>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> NodeVisitor is a callback to be called when traversing the syntax tree.</span><span class="comment"> Called twice for every node: once with entering=true when the branch is</span><span class="comment"> first visited, then with entering=false after all the children are done.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../pkg/github.com/russross/blackfriday/v2.html#name-NodeVisitor" class="ident">NodeVisitor</a> <span class="keyword">func</span>(node *<a href="#line-115" class="ident">Node</a>, entering <a href="../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>) <a href="#line-263" class="ident">WalkStatus</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Walk is a convenience method that instantiates a walker and starts a</span><span class="comment"> traversal of subtree rooted at n.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r21" class="ident">n</label> *<a href="#line-115" class="ident">Node</a>) <label for="r22" class="ident"><a href="../../../../../use/github.com/russross/blackfriday/v2..Node.Walk.html" class="ident">Walk</a></label>(<label for="r23" class="ident">visitor</label> <a href="#line-277" class="ident">NodeVisitor</a>) {
+	<label for="r24" class="ident">w</label> := <a href="#line-303" class="ident">newNodeWalker</a>(<label for="r21" class="ident">n</label>)
+	<span class="keyword">for</span> <label for="r24" class="ident">w</label>.<a href="#line-298" class="ident">current</a> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<label for="r25" class="ident">status</label> := <label for="r23" class="ident">visitor</label>(<label for="r24" class="ident">w</label>.<a href="#line-298" class="ident">current</a>, <label for="r24" class="ident">w</label>.<a href="#line-300" class="ident">entering</a>)
+		<span class="keyword">switch</span> <label for="r25" class="ident">status</label> {
+		<span class="keyword">case</span> <a href="#line-267" class="ident">GoToNext</a>:
+			<label for="r24" class="ident">w</label>.<a href="#line-311" class="ident">next</a>()
+		<span class="keyword">case</span> <a href="#line-269" class="ident">SkipChildren</a>:
+			<label for="r24" class="ident">w</label>.<a href="#line-300" class="ident">entering</a> = <a href="../../../../../pkg/builtin.html#name-false" class="ident">false</a>
+			<label for="r24" class="ident">w</label>.<a href="#line-311" class="ident">next</a>()
+		<span class="keyword">case</span> <a href="#line-271" class="ident">Terminate</a>:
+			<span class="keyword">return</span>
+		}
+	}
+}
+
+<span class="keyword">type</span> <a href="../../../../../pkg/github.com/russross/blackfriday/v2.html#name-nodeWalker" class="ident">nodeWalker</a> <span class="keyword">struct</span> {
+	<a href="../../../../../use/github.com/russross/blackfriday/v2..nodeWalker*331af.current*97b05.html" class="ident">current</a>  *<a href="#line-115" class="ident">Node</a>
+	<a href="../../../../../use/github.com/russross/blackfriday/v2..nodeWalker*331af.root*48134.html" class="ident">root</a>     *<a href="#line-115" class="ident">Node</a>
+	<a href="../../../../../use/github.com/russross/blackfriday/v2..nodeWalker*331af.entering*4505b.html" class="ident">entering</a> <a href="../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>
+}
+
+<span class="keyword">func</span> <label for="r26" class="ident"><a href="../../../../../pkg/github.com/russross/blackfriday/v2.html#name-newNodeWalker" class="ident">newNodeWalker</a></label>(<label for="r27" class="ident">root</label> *<a href="#line-115" class="ident">Node</a>) *<a href="#line-297" class="ident">nodeWalker</a> {
+	<span class="keyword">return</span> &amp;<a href="#line-297" class="ident">nodeWalker</a>{
+		<a href="#line-298" class="ident">current</a>:  <label for="r27" class="ident">root</label>,
+		<a href="#line-299" class="ident">root</a>:     <label for="r27" class="ident">root</label>,
+		<a href="#line-300" class="ident">entering</a>: <a href="../../../../../pkg/builtin.html#name-true" class="ident">true</a>,
+	}
+}
+
+<span class="keyword">func</span> (<label for="r28" class="ident">nw</label> *<a href="#line-297" class="ident">nodeWalker</a>) <label for="r29" class="ident"><a href="../../../../../use/github.com/russross/blackfriday/v2..nodeWalker*331af.next*c6c1c.html" class="ident">next</a></label>() {
+	<span class="keyword">if</span> (!<label for="r28" class="ident">nw</label>.<a href="#line-298" class="ident">current</a>.<a href="#line-202" class="ident">isContainer</a>() || !<label for="r28" class="ident">nw</label>.<a href="#line-300" class="ident">entering</a>) &amp;&amp; <label for="r28" class="ident">nw</label>.<a href="#line-298" class="ident">current</a> == <label for="r28" class="ident">nw</label>.<a href="#line-299" class="ident">root</a> {
+		<label for="r28" class="ident">nw</label>.<a href="#line-298" class="ident">current</a> = <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+		<span class="keyword">return</span>
+	}
+	<span class="keyword">if</span> <label for="r28" class="ident">nw</label>.<a href="#line-300" class="ident">entering</a> &amp;&amp; <label for="r28" class="ident">nw</label>.<a href="#line-298" class="ident">current</a>.<a href="#line-202" class="ident">isContainer</a>() {
+		<span class="keyword">if</span> <label for="r28" class="ident">nw</label>.<a href="#line-298" class="ident">current</a>.<a href="#line-118" class="ident">FirstChild</a> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<label for="r28" class="ident">nw</label>.<a href="#line-298" class="ident">current</a> = <label for="r28" class="ident">nw</label>.<a href="#line-298" class="ident">current</a>.<a href="#line-118" class="ident">FirstChild</a>
+			<label for="r28" class="ident">nw</label>.<a href="#line-300" class="ident">entering</a> = <a href="../../../../../pkg/builtin.html#name-true" class="ident">true</a>
+		} <span class="keyword">else</span> {
+			<label for="r28" class="ident">nw</label>.<a href="#line-300" class="ident">entering</a> = <a href="../../../../../pkg/builtin.html#name-false" class="ident">false</a>
+		}
+	} <span class="keyword">else</span> <span class="keyword">if</span> <label for="r28" class="ident">nw</label>.<a href="#line-298" class="ident">current</a>.<a href="#line-121" class="ident">Next</a> == <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<label for="r28" class="ident">nw</label>.<a href="#line-298" class="ident">current</a> = <label for="r28" class="ident">nw</label>.<a href="#line-298" class="ident">current</a>.<a href="#line-117" class="ident">Parent</a>
+		<label for="r28" class="ident">nw</label>.<a href="#line-300" class="ident">entering</a> = <a href="../../../../../pkg/builtin.html#name-false" class="ident">false</a>
+	} <span class="keyword">else</span> {
+		<label for="r28" class="ident">nw</label>.<a href="#line-298" class="ident">current</a> = <label for="r28" class="ident">nw</label>.<a href="#line-298" class="ident">current</a>.<a href="#line-121" class="ident">Next</a>
+		<label for="r28" class="ident">nw</label>.<a href="#line-300" class="ident">entering</a> = <a href="../../../../../pkg/builtin.html#name-true" class="ident">true</a>
+	}
+}
+
+<span class="keyword">func</span> <label for="r30" class="ident"><a href="../../../../../pkg/github.com/russross/blackfriday/v2.html#name-dump" class="ident">dump</a></label>(<label for="r31" class="ident">ast</label> *<a href="#line-115" class="ident">Node</a>) {
+	<a href="../../../../../pkg/fmt.html" class="ident i1">fmt</a>.<a href="../../../../fmt/print.go.html#line-273" class="ident">Println</a>(<a href="#line-352" class="ident">dumpString</a>(<label for="r31" class="ident">ast</label>))
+}
+
+<span class="keyword">func</span> <label for="r32" class="ident"><a href="../../../../../pkg/github.com/russross/blackfriday/v2.html#name-dumpR" class="ident">dumpR</a></label>(<label for="r33" class="ident">ast</label> *<a href="#line-115" class="ident">Node</a>, <label for="r34" class="ident">depth</label> <a href="../../../../../pkg/builtin.html#name-int" class="ident">int</a>) <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a> {
+	<span class="keyword">if</span> <label for="r33" class="ident">ast</label> == <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <span class="lit-string">""</span>
+	}
+	<label for="r35" class="ident">indent</label> := <a href="../../../../../pkg/bytes.html" class="ident i0">bytes</a>.<a href="../../../../bytes/bytes.go.html#line-587" class="ident">Repeat</a>([]<a href="../../../../../pkg/builtin.html#name-byte" class="ident">byte</a>(<span class="lit-string">"\t"</span>), <label for="r34" class="ident">depth</label>)
+	<label for="r36" class="ident">content</label> := <label for="r33" class="ident">ast</label>.<a href="#line-123" class="ident">Literal</a>
+	<span class="keyword">if</span> <label for="r36" class="ident">content</label> == <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<label for="r36" class="ident">content</label> = <label for="r33" class="ident">ast</label>.<a href="#line-131" class="ident">content</a>
+	}
+	<label for="r37" class="ident">result</label> := <a href="../../../../../pkg/fmt.html" class="ident i1">fmt</a>.<a href="../../../../fmt/print.go.html#line-217" class="ident">Sprintf</a>(<span class="lit-string">"%s%s(%q)\n"</span>, <label for="r35" class="ident">indent</label>, <label for="r33" class="ident">ast</label>.<a href="#line-116" class="ident">Type</a>, <label for="r36" class="ident">content</label>)
+	<span class="keyword">for</span> <label for="r38" class="ident">n</label> := <label for="r33" class="ident">ast</label>.<a href="#line-118" class="ident">FirstChild</a>; <label for="r38" class="ident">n</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>; <label for="r38" class="ident">n</label> = <label for="r38" class="ident">n</label>.<a href="#line-121" class="ident">Next</a> {
+		<label for="r37" class="ident">result</label> += <label for="r32" class="ident">dumpR</label>(<label for="r38" class="ident">n</label>, <label for="r34" class="ident">depth</label>+<span class="lit-number">1</span>)
+	}
+	<span class="keyword">return</span> <label for="r37" class="ident">result</label>
+}
+
+<span class="keyword">func</span> <label for="r39" class="ident"><a href="../../../../../pkg/github.com/russross/blackfriday/v2.html#name-dumpString" class="ident">dumpString</a></label>(<label for="r40" class="ident">ast</label> *<a href="#line-115" class="ident">Node</a>) <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a> {
+	<span class="keyword">return</span> <a href="#line-336" class="ident">dumpR</a>(<label for="r40" class="ident">ast</label>, <span class="lit-number">0</span>)
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: client_conn_pool.go in package golang.org/x/net/http2</title>
+<link href="../../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	client_conn_pool.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../../pkg/golang.org/x/net/http2.html">golang.org/x/net/http2</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16],
+input[id=r17]:checked ~pre label[for=r17],
+input[id=r18]:checked ~pre label[for=r18],
+input[id=r19]:checked ~pre label[for=r19],
+input[id=r20]:checked ~pre label[for=r20],
+input[id=r21]:checked ~pre label[for=r21],
+input[id=r22]:checked ~pre label[for=r22],
+input[id=r23]:checked ~pre label[for=r23],
+input[id=r24]:checked ~pre label[for=r24],
+input[id=r25]:checked ~pre label[for=r25],
+input[id=r26]:checked ~pre label[for=r26],
+input[id=r27]:checked ~pre label[for=r27],
+input[id=r28]:checked ~pre label[for=r28],
+input[id=r29]:checked ~pre label[for=r29],
+input[id=r30]:checked ~pre label[for=r30],
+input[id=r31]:checked ~pre label[for=r31],
+input[id=r32]:checked ~pre label[for=r32],
+input[id=r33]:checked ~pre label[for=r33],
+input[id=r34]:checked ~pre label[for=r34],
+input[id=r35]:checked ~pre label[for=r35],
+input[id=r36]:checked ~pre label[for=r36],
+input[id=r37]:checked ~pre label[for=r37],
+input[id=r38]:checked ~pre label[for=r38],
+input[id=r39]:checked ~pre label[for=r39],
+input[id=r40]:checked ~pre label[for=r40],
+input[id=r41]:checked ~pre label[for=r41],
+input[id=r42]:checked ~pre label[for=r42],
+input[id=r43]:checked ~pre label[for=r43],
+input[id=r44]:checked ~pre label[for=r44],
+input[id=r45]:checked ~pre label[for=r45],
+input[id=r46]:checked ~pre label[for=r46],
+input[id=r47]:checked ~pre label[for=r47],
+input[id=r48]:checked ~pre label[for=r48],
+input[id=r49]:checked ~pre label[for=r49],
+input[id=r50]:checked ~pre label[for=r50],
+input[id=r51]:checked ~pre label[for=r51],
+input[id=r52]:checked ~pre label[for=r52],
+input[id=r53]:checked ~pre label[for=r53],
+input[id=r54]:checked ~pre label[for=r54],
+input[id=r55]:checked ~pre label[for=r55],
+input[id=r56]:checked ~pre label[for=r56],
+input[id=r57]:checked ~pre label[for=r57],
+input[id=r58]:checked ~pre label[for=r58],
+input[id=r59]:checked ~pre label[for=r59],
+input[id=r60]:checked ~pre label[for=r60],
+input[id=r61]:checked ~pre label[for=r61],
+input[id=r62]:checked ~pre label[for=r62],
+input[id=r63]:checked ~pre label[for=r63],
+input[id=r64]:checked ~pre label[for=r64],
+input[id=r65]:checked ~pre label[for=r65],
+input[id=r66]:checked ~pre label[for=r66],
+input[id=r67]:checked ~pre label[for=r67],
+input[id=r68]:checked ~pre label[for=r68],
+input[id=r69]:checked ~pre label[for=r69],
+input[id=r70]:checked ~pre label[for=r70],
+input[id=r71]:checked ~pre label[for=r71],
+input[id=r72]:checked ~pre label[for=r72],
+input[id=r73]:checked ~pre label[for=r73],
+input[id=r74]:checked ~pre label[for=r74],
+input[id=r75]:checked ~pre label[for=r75],
+input[id=r76]:checked ~pre label[for=r76],
+input[id=r77]:checked ~pre label[for=r77],
+input[id=r78]:checked ~pre label[for=r78],
+input[id=r79]:checked ~pre label[for=r79]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1,
+input[id=i2]:checked ~pre .i2
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="r17" type="radio" name="g"/>
+<input id="r18" type="radio" name="g"/>
+<input id="r19" type="radio" name="g"/>
+<input id="r20" type="radio" name="g"/>
+<input id="r21" type="radio" name="g"/>
+<input id="r22" type="radio" name="g"/>
+<input id="r23" type="radio" name="g"/>
+<input id="r24" type="radio" name="g"/>
+<input id="r25" type="radio" name="g"/>
+<input id="r26" type="radio" name="g"/>
+<input id="r27" type="radio" name="g"/>
+<input id="r28" type="radio" name="g"/>
+<input id="r29" type="radio" name="g"/>
+<input id="r30" type="radio" name="g"/>
+<input id="r31" type="radio" name="g"/>
+<input id="r32" type="radio" name="g"/>
+<input id="r33" type="radio" name="g"/>
+<input id="r34" type="radio" name="g"/>
+<input id="r35" type="radio" name="g"/>
+<input id="r36" type="radio" name="g"/>
+<input id="r37" type="radio" name="g"/>
+<input id="r38" type="radio" name="g"/>
+<input id="r39" type="radio" name="g"/>
+<input id="r40" type="radio" name="g"/>
+<input id="r41" type="radio" name="g"/>
+<input id="r42" type="radio" name="g"/>
+<input id="r43" type="radio" name="g"/>
+<input id="r44" type="radio" name="g"/>
+<input id="r45" type="radio" name="g"/>
+<input id="r46" type="radio" name="g"/>
+<input id="r47" type="radio" name="g"/>
+<input id="r48" type="radio" name="g"/>
+<input id="r49" type="radio" name="g"/>
+<input id="r50" type="radio" name="g"/>
+<input id="r51" type="radio" name="g"/>
+<input id="r52" type="radio" name="g"/>
+<input id="r53" type="radio" name="g"/>
+<input id="r54" type="radio" name="g"/>
+<input id="r55" type="radio" name="g"/>
+<input id="r56" type="radio" name="g"/>
+<input id="r57" type="radio" name="g"/>
+<input id="r58" type="radio" name="g"/>
+<input id="r59" type="radio" name="g"/>
+<input id="r60" type="radio" name="g"/>
+<input id="r61" type="radio" name="g"/>
+<input id="r62" type="radio" name="g"/>
+<input id="r63" type="radio" name="g"/>
+<input id="r64" type="radio" name="g"/>
+<input id="r65" type="radio" name="g"/>
+<input id="r66" type="radio" name="g"/>
+<input id="r67" type="radio" name="g"/>
+<input id="r68" type="radio" name="g"/>
+<input id="r69" type="radio" name="g"/>
+<input id="r70" type="radio" name="g"/>
+<input id="r71" type="radio" name="g"/>
+<input id="r72" type="radio" name="g"/>
+<input id="r73" type="radio" name="g"/>
+<input id="r74" type="radio" name="g"/>
+<input id="r75" type="radio" name="g"/>
+<input id="r76" type="radio" name="g"/>
+<input id="r77" type="radio" name="g"/>
+<input id="r78" type="radio" name="g"/>
+<input id="r79" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<input id="i2" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2015 The Go Authors. All rights reserved.</span><span class="comment"> Use of this source code is governed by a BSD-style</span><span class="comment"> license that can be found in the LICENSE file.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Transport code's client connection pooling.</span></div>
+<div class="code"><pre><code>
+<span class="keyword">package</span> http2
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"crypto/tls"</span></label>
+	<label for="i1"><span class="lit-string i1">"net/http"</span></label>
+	<label for="i2"><span class="lit-string i2">"sync"</span></label>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ClientConnPool manages a pool of HTTP/2 client connections.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../pkg/golang.org/x/net/http2.html#name-ClientConnPool" class="ident">ClientConnPool</a> <span class="keyword">interface</span> {
+	GetClientConn(req *<a href="../../../../../pkg/net/http.html" class="ident i1">http</a>.<a href="../../../../net/http/request.go.html#line-102" class="ident">Request</a>, addr <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>) (*<a href="transport.go.html#line-229" class="ident">ClientConn</a>, <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a>)
+	MarkDead(*<a href="transport.go.html#line-229" class="ident">ClientConn</a>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> clientConnPoolIdleCloser is the interface implemented by ClientConnPool</span><span class="comment"> implementations which can close their idle connections.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../pkg/golang.org/x/net/http2.html#name-clientConnPoolIdleCloser" class="ident">clientConnPoolIdleCloser</a> <span class="keyword">interface</span> {
+	<a href="#line-16" class="ident">ClientConnPool</a>
+	closeIdleConnections()
+}
+
+<span class="keyword">var</span> (
+	_ <a href="#line-23" class="ident">clientConnPoolIdleCloser</a> = (*<a href="#line-34" class="ident">clientConnPool</a>)(<a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>)
+	_ <a href="#line-23" class="ident">clientConnPoolIdleCloser</a> = <a href="#line-274" class="ident">noDialClientConnPool</a>{}
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> TODO: use singleflight for dialing and addConnCalls?</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../pkg/golang.org/x/net/http2.html#name-clientConnPool" class="ident">clientConnPool</a> <span class="keyword">struct</span> {
+	<a href="../../../../../use/golang.org/x/net/http2..clientConnPool*206ef.t*e3b98.html" class="ident">t</a> *<a href="transport.go.html#line-60" class="ident">Transport</a>
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> TODO: add support for sharing conns based on cert names</span><span class="comment">	 (e.g. share conn for googleapis.com and appspot.com)</span></div>
+<div class="code"><pre><code>	<a href="../../../../../use/golang.org/x/net/http2..clientConnPool*206ef.conns*4f74b.html" class="ident">conns</a>        <span class="keyword">map</span>[<a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>][]*<a href="transport.go.html#line-229" class="ident">ClientConn</a> <span class="comment">// key is host:port</span>
+	<a href="../../../../../use/golang.org/x/net/http2..clientConnPool*206ef.dialing*f966a.html" class="ident">dialing</a>      <span class="keyword">map</span>[<a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>]*<a href="#line-109" class="ident">dialCall</a>     <span class="comment">// currently in-flight dials</span>
+	<a href="../../../../../use/golang.org/x/net/http2..clientConnPool*206ef.keys*48a53.html" class="ident">keys</a>         <span class="keyword">map</span>[*<a href="transport.go.html#line-229" class="ident">ClientConn</a>][]<a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../use/golang.org/x/net/http2..clientConnPool*206ef.addConnCalls*c66c9.html" class="ident">addConnCalls</a> <span class="keyword">map</span>[<a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>]*<a href="#line-183" class="ident">addConnCall</a> <span class="comment">// in-flight addConnIfNeede calls</span>
+}
+
+<span class="keyword">func</span> (<label for="r0" class="ident">p</label> *<a href="#line-34" class="ident">clientConnPool</a>) <label for="r1" class="ident"><a href="../../../../../use/golang.org/x/net/http2..clientConnPool*206ef.GetClientConn.html" class="ident">GetClientConn</a></label>(<label for="r2" class="ident">req</label> *<a href="../../../../../pkg/net/http.html" class="ident i1">http</a>.<a href="../../../../net/http/request.go.html#line-102" class="ident">Request</a>, <label for="r3" class="ident">addr</label> <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>) (*<a href="transport.go.html#line-229" class="ident">ClientConn</a>, <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<span class="keyword">return</span> <label for="r0" class="ident">p</label>.<a href="#line-76" class="ident">getClientConn</a>(<label for="r2" class="ident">req</label>, <label for="r3" class="ident">addr</label>, <a href="#line-51" class="ident">dialOnMiss</a>)
+}
+
+<span class="keyword">const</span> (
+	<a href="../../../../../pkg/golang.org/x/net/http2.html#name-dialOnMiss" class="ident">dialOnMiss</a>   = <a href="../../../../../pkg/builtin.html#name-true" class="ident">true</a>
+	<a href="../../../../../pkg/golang.org/x/net/http2.html#name-noDialOnMiss" class="ident">noDialOnMiss</a> = <a href="../../../../../pkg/builtin.html#name-false" class="ident">false</a>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> shouldTraceGetConn reports whether getClientConn should call any</span><span class="comment"> ClientTrace.GetConn hook associated with the http.Request.</span><span class="comment"></span><span class="comment"> This complexity is needed to avoid double calls of the GetConn hook</span><span class="comment"> during the back-and-forth between net/http and x/net/http2 (when the</span><span class="comment"> net/http.Transport is upgraded to also speak http2), as well as support</span><span class="comment"> the case where x/net/http2 is being used directly.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> If our Transport wasn't made via ConfigureTransport, always</span><span class="comment">	 trace the GetConn hook if provided, because that means the</span><span class="comment">	 http2 package is being used directly and it's the one</span><span class="comment">	 dialing, as opposed to net/http.</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> <label for="r7" class="ident">_</label>, <label for="r8" class="ident">ok</label> := <label for="r4" class="ident">p</label>.<a href="#line-35" class="ident">t</a>.<a href="transport.go.html#line-76" class="ident">ConnPool</a>.(<a href="#line-274" class="ident">noDialClientConnPool</a>); !<label for="r8" class="ident">ok</label> {
+		<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-true" class="ident">true</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Otherwise, only use the GetConn hook if this connection has</span><span class="comment">	 been used previously for other requests. For fresh</span><span class="comment">	 connections, the net/http package does the dialing.</span></div>
+<div class="code"><pre><code>	<span class="keyword">return</span> !<label for="r6" class="ident">st</label>.<a href="transport.go.html#line-760" class="ident">freshConn</a>
+}
+
+<span class="keyword">func</span> (<label for="r9" class="ident">p</label> *<a href="#line-34" class="ident">clientConnPool</a>) <label for="r10" class="ident"><a href="../../../../../use/golang.org/x/net/http2..clientConnPool*206ef.getClientConn*7d2cc.html" class="ident">getClientConn</a></label>(<label for="r11" class="ident">req</label> *<a href="../../../../../pkg/net/http.html" class="ident i1">http</a>.<a href="../../../../net/http/request.go.html#line-102" class="ident">Request</a>, <label for="r12" class="ident">addr</label> <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>, <label for="r13" class="ident">dialOnMiss</label> <a href="../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>) (*<a href="transport.go.html#line-229" class="ident">ClientConn</a>, <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> It gets its own connection.</span></div>
+<div class="code"><pre><code>		<a href="transport.go.html#line-2707" class="ident">traceGetConn</a>(<label for="r11" class="ident">req</label>, <label for="r12" class="ident">addr</label>)
+		<span class="keyword">const</span> <label for="r14" class="ident">singleUse</label> = <a href="../../../../../pkg/builtin.html#name-true" class="ident">true</a>
+		<label for="r15" class="ident">cc</label>, <label for="r16" class="ident">err</label> := <label for="r9" class="ident">p</label>.<a href="#line-35" class="ident">t</a>.<a href="transport.go.html#line-567" class="ident">dialClientConn</a>(<label for="r12" class="ident">addr</label>, <label for="r14" class="ident">singleUse</label>)
+		<span class="keyword">if</span> <label for="r16" class="ident">err</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <label for="r16" class="ident">err</label>
+		}
+		<span class="keyword">return</span> <label for="r15" class="ident">cc</label>, <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+	}
+	<label for="r9" class="ident">p</label>.<a href="#line-37" class="ident">mu</a>.<a href="../../../../sync/mutex.go.html#line-72" class="ident">Lock</a>()
+	<span class="keyword">for</span> <label for="r17" class="ident">_</label>, <label for="r18" class="ident">cc</label> := <span class="keyword">range</span> <label for="r9" class="ident">p</label>.<a href="#line-40" class="ident">conns</a>[<label for="r12" class="ident">addr</label>] {
+		<span class="keyword">if</span> <label for="r19" class="ident">st</label> := <label for="r18" class="ident">cc</label>.<a href="transport.go.html#line-763" class="ident">idleState</a>(); <label for="r19" class="ident">st</label>.<a href="transport.go.html#line-759" class="ident">canTakeNewRequest</a> {
+			<span class="keyword">if</span> <label for="r9" class="ident">p</label>.<a href="#line-62" class="ident">shouldTraceGetConn</a>(<label for="r19" class="ident">st</label>) {
+				<a href="transport.go.html#line-2707" class="ident">traceGetConn</a>(<label for="r11" class="ident">req</label>, <label for="r12" class="ident">addr</label>)
+			}
+			<label for="r9" class="ident">p</label>.<a href="#line-37" class="ident">mu</a>.<a href="../../../../sync/mutex.go.html#line-179" class="ident">Unlock</a>()
+			<span class="keyword">return</span> <label for="r18" class="ident">cc</label>, <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+		}
+	}
+	<span class="keyword">if</span> !<label for="r13" class="ident">dialOnMiss</label> {
+		<label for="r9" class="ident">p</label>.<a href="#line-37" class="ident">mu</a>.<a href="../../../../sync/mutex.go.html#line-179" class="ident">Unlock</a>()
+		<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="transport.go.html#line-427" class="ident">ErrNoCachedConn</a>
+	}
+	<a href="transport.go.html#line-2707" class="ident">traceGetConn</a>(<label for="r11" class="ident">req</label>, <label for="r12" class="ident">addr</label>)
+	<label for="r20" class="ident">call</label> := <label for="r9" class="ident">p</label>.<a href="#line-118" class="ident">getStartDialLocked</a>(<label for="r12" class="ident">addr</label>)
+	<label for="r9" class="ident">p</label>.<a href="#line-37" class="ident">mu</a>.<a href="../../../../sync/mutex.go.html#line-179" class="ident">Unlock</a>()
+	&lt;-<label for="r20" class="ident">call</label>.<a href="#line-112" class="ident">done</a>
+	<span class="keyword">return</span> <label for="r20" class="ident">call</label>.<a href="#line-113" class="ident">res</a>, <label for="r20" class="ident">call</label>.<a href="#line-114" class="ident">err</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> dialCall is an in-flight Transport dial call to a host.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../pkg/golang.org/x/net/http2.html#name-dialCall" class="ident">dialCall</a> <span class="keyword">struct</span> {
+	_    <a href="http2.go.html#line-385" class="ident">incomparable</a>
+	<a href="../../../../../use/golang.org/x/net/http2..dialCall*f6c7a.p*148de.html" class="ident">p</a>    *<a href="#line-34" class="ident">clientConnPool</a>
+	<a href="../../../../../use/golang.org/x/net/http2..dialCall*f6c7a.done*a4c3e.html" class="ident">done</a> <span class="keyword">chan</span> <span class="keyword">struct</span>{} <span class="comment">// closed when done</span>
+	<a href="../../../../../use/golang.org/x/net/http2..dialCall*f6c7a.res*6eeb5.html" class="ident">res</a>  *<a href="transport.go.html#line-229" class="ident">ClientConn</a>   <span class="comment">// valid after done is closed</span>
+	<a href="../../../../../use/golang.org/x/net/http2..dialCall*f6c7a.err*d9eb2.html" class="ident">err</a>  <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a>         <span class="comment">// valid after done is closed</span>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> requires p.mu is held.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r21" class="ident">p</label> *<a href="#line-34" class="ident">clientConnPool</a>) <label for="r22" class="ident"><a href="../../../../../use/golang.org/x/net/http2..clientConnPool*206ef.getStartDialLocked*b9956.html" class="ident">getStartDialLocked</a></label>(<label for="r23" class="ident">addr</label> <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>) *<a href="#line-109" class="ident">dialCall</a> {
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> A dial is already in-flight. Don't start another.</span></div>
+<div class="code"><pre><code>		<span class="keyword">return</span> <label for="r24" class="ident">call</label>
+	}
+	<label for="r26" class="ident">call</label> := &amp;<a href="#line-109" class="ident">dialCall</a>{<a href="#line-111" class="ident">p</a>: <label for="r21" class="ident">p</label>, <a href="#line-112" class="ident">done</a>: <a href="../../../../runtime/chan.go.html#line-71">make</a>(<span class="keyword">chan</span> <span class="keyword">struct</span>{})}
+	<span class="keyword">if</span> <label for="r21" class="ident">p</label>.<a href="#line-41" class="ident">dialing</a> == <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<label for="r21" class="ident">p</label>.<a href="#line-41" class="ident">dialing</a> = <a href="../../../../../pkg/builtin.html#name-make" class="ident">make</a>(<span class="keyword">map</span>[<a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>]*<a href="#line-109" class="ident">dialCall</a>)
+	}
+	<label for="r21" class="ident">p</label>.<a href="#line-41" class="ident">dialing</a>[<label for="r23" class="ident">addr</label>] = <label for="r26" class="ident">call</label>
+	<span class="keyword">go</span> <label for="r26" class="ident">call</label>.<a href="#line-133" class="ident">dial</a>(<label for="r23" class="ident">addr</label>)
+	<span class="keyword">return</span> <label for="r26" class="ident">call</label>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> run in its own goroutine.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r27" class="ident">c</label> *<a href="#line-109" class="ident">dialCall</a>) <label for="r28" class="ident"><a href="../../../../../use/golang.org/x/net/http2..dialCall*f6c7a.dial*21446.html" class="ident">dial</a></label>(<label for="r29" class="ident">addr</label> <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>) {
+	<span class="keyword">const</span> <label for="r30" class="ident">singleUse</label> = <a href="../../../../../pkg/builtin.html#name-false" class="ident">false</a> <span class="comment">// shared conn</span>
+	<label for="r27" class="ident">c</label>.<a href="#line-113" class="ident">res</a>, <label for="r27" class="ident">c</label>.<a href="#line-114" class="ident">err</a> = <label for="r27" class="ident">c</label>.<a href="#line-111" class="ident">p</a>.<a href="#line-35" class="ident">t</a>.<a href="transport.go.html#line-567" class="ident">dialClientConn</a>(<label for="r29" class="ident">addr</label>, <label for="r30" class="ident">singleUse</label>)
+	<a href="../../../../../pkg/builtin.html#name-close" class="ident">close</a>(<label for="r27" class="ident">c</label>.<a href="#line-112" class="ident">done</a>)
+
+	<label for="r27" class="ident">c</label>.<a href="#line-111" class="ident">p</a>.<a href="#line-37" class="ident">mu</a>.<a href="../../../../sync/mutex.go.html#line-72" class="ident">Lock</a>()
+	<a href="../../../../../pkg/builtin.html#name-delete" class="ident">delete</a>(<label for="r27" class="ident">c</label>.<a href="#line-111" class="ident">p</a>.<a href="#line-41" class="ident">dialing</a>, <label for="r29" class="ident">addr</label>)
+	<span class="keyword">if</span> <label for="r27" class="ident">c</label>.<a href="#line-114" class="ident">err</a> == <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<label for="r27" class="ident">c</label>.<a href="#line-111" class="ident">p</a>.<a href="#line-206" class="ident">addConnLocked</a>(<label for="r29" class="ident">addr</label>, <label for="r27" class="ident">c</label>.<a href="#line-113" class="ident">res</a>)
+	}
+	<label for="r27" class="ident">c</label>.<a href="#line-111" class="ident">p</a>.<a href="#line-37" class="ident">mu</a>.<a href="../../../../sync/mutex.go.html#line-179" class="ident">Unlock</a>()
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> addConnIfNeeded makes a NewClientConn out of c if a connection for key doesn't</span><span class="comment"> already exist. It coalesces concurrent calls with the same key.</span><span class="comment"> This is used by the http1 Transport code when it creates a new connection. Because</span><span class="comment"> the http1 Transport doesn't de-dup TCP dials to outbound hosts (because it doesn't know</span><span class="comment"> the protocol), it can get into a situation where it has multiple TLS connections.</span><span class="comment"> This code decides which ones live or die.</span><span class="comment"> The return value used is whether c was used.</span><span class="comment"> c is never closed.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r31" class="ident">p</label> *<a href="#line-34" class="ident">clientConnPool</a>) <label for="r32" class="ident"><a href="../../../../../use/golang.org/x/net/http2..clientConnPool*206ef.addConnIfNeeded*6accf.html" class="ident">addConnIfNeeded</a></label>(<label for="r33" class="ident">key</label> <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>, <label for="r34" class="ident">t</label> *<a href="transport.go.html#line-60" class="ident">Transport</a>, <label for="r35" class="ident">c</label> *<a href="../../../../../pkg/crypto/tls.html" class="ident i0">tls</a>.<a href="../../../../crypto/tls/conn.go.html#line-26" class="ident">Conn</a>) (<label for="r36" class="ident">used</label> <a href="../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>, <label for="r37" class="ident">err</label> <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<label for="r31" class="ident">p</label>.<a href="#line-37" class="ident">mu</a>.<a href="../../../../sync/mutex.go.html#line-72" class="ident">Lock</a>()
+	<span class="keyword">for</span> <label for="r38" class="ident">_</label>, <label for="r39" class="ident">cc</label> := <span class="keyword">range</span> <label for="r31" class="ident">p</label>.<a href="#line-40" class="ident">conns</a>[<label for="r33" class="ident">key</label>] {
+		<span class="keyword">if</span> <label for="r39" class="ident">cc</label>.<a href="transport.go.html#line-750" class="ident">CanTakeNewRequest</a>() {
+			<label for="r31" class="ident">p</label>.<a href="#line-37" class="ident">mu</a>.<a href="../../../../sync/mutex.go.html#line-179" class="ident">Unlock</a>()
+			<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-false" class="ident">false</a>, <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+		}
+	}
+	<label for="r40" class="ident">call</label>, <label for="r41" class="ident">dup</label> := <label for="r31" class="ident">p</label>.<a href="#line-43" class="ident">addConnCalls</a>[<label for="r33" class="ident">key</label>]
+	<span class="keyword">if</span> !<label for="r41" class="ident">dup</label> {
+		<span class="keyword">if</span> <label for="r31" class="ident">p</label>.<a href="#line-43" class="ident">addConnCalls</a> == <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<label for="r31" class="ident">p</label>.<a href="#line-43" class="ident">addConnCalls</a> = <a href="../../../../../pkg/builtin.html#name-make" class="ident">make</a>(<span class="keyword">map</span>[<a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>]*<a href="#line-183" class="ident">addConnCall</a>)
+		}
+		<label for="r40" class="ident">call</label> = &amp;<a href="#line-183" class="ident">addConnCall</a>{
+			<a href="#line-185" class="ident">p</a>:    <label for="r31" class="ident">p</label>,
+			<a href="#line-186" class="ident">done</a>: <a href="../../../../runtime/chan.go.html#line-71">make</a>(<span class="keyword">chan</span> <span class="keyword">struct</span>{}),
+		}
+		<label for="r31" class="ident">p</label>.<a href="#line-43" class="ident">addConnCalls</a>[<label for="r33" class="ident">key</label>] = <label for="r40" class="ident">call</label>
+		<span class="keyword">go</span> <label for="r40" class="ident">call</label>.<a href="#line-190" class="ident">run</a>(<label for="r34" class="ident">t</label>, <label for="r33" class="ident">key</label>, <label for="r35" class="ident">c</label>)
+	}
+	<label for="r31" class="ident">p</label>.<a href="#line-37" class="ident">mu</a>.<a href="../../../../sync/mutex.go.html#line-179" class="ident">Unlock</a>()
+
+	&lt;-<label for="r40" class="ident">call</label>.<a href="#line-186" class="ident">done</a>
+	<span class="keyword">if</span> <label for="r40" class="ident">call</label>.<a href="#line-187" class="ident">err</a> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-false" class="ident">false</a>, <label for="r40" class="ident">call</label>.<a href="#line-187" class="ident">err</a>
+	}
+	<span class="keyword">return</span> !<label for="r41" class="ident">dup</label>, <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+}
+
+<span class="keyword">type</span> <a href="../../../../../pkg/golang.org/x/net/http2.html#name-addConnCall" class="ident">addConnCall</a> <span class="keyword">struct</span> {
+	_    <a href="http2.go.html#line-385" class="ident">incomparable</a>
+	<a href="../../../../../use/golang.org/x/net/http2..addConnCall*d6630.p*148de.html" class="ident">p</a>    *<a href="#line-34" class="ident">clientConnPool</a>
+	<a href="../../../../../use/golang.org/x/net/http2..addConnCall*d6630.done*a4c3e.html" class="ident">done</a> <span class="keyword">chan</span> <span class="keyword">struct</span>{} <span class="comment">// closed when done</span>
+	<a href="../../../../../use/golang.org/x/net/http2..addConnCall*d6630.err*d9eb2.html" class="ident">err</a>  <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a>
+}
+
+<span class="keyword">func</span> (<label for="r42" class="ident">c</label> *<a href="#line-183" class="ident">addConnCall</a>) <label for="r43" class="ident"><a href="../../../../../use/golang.org/x/net/http2..addConnCall*d6630.run*acba2.html" class="ident">run</a></label>(<label for="r44" class="ident">t</label> *<a href="transport.go.html#line-60" class="ident">Transport</a>, <label for="r45" class="ident">key</label> <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>, <label for="r46" class="ident">tc</label> *<a href="../../../../../pkg/crypto/tls.html" class="ident i0">tls</a>.<a href="../../../../crypto/tls/conn.go.html#line-26" class="ident">Conn</a>) {
+	<label for="r47" class="ident">cc</label>, <label for="r48" class="ident">err</label> := <label for="r44" class="ident">t</label>.<a href="transport.go.html#line-636" class="ident">NewClientConn</a>(<label for="r46" class="ident">tc</label>)
+
+	<label for="r49" class="ident">p</label> := <label for="r42" class="ident">c</label>.<a href="#line-185" class="ident">p</a>
+	<label for="r49" class="ident">p</label>.<a href="#line-37" class="ident">mu</a>.<a href="../../../../sync/mutex.go.html#line-72" class="ident">Lock</a>()
+	<span class="keyword">if</span> <label for="r48" class="ident">err</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<label for="r42" class="ident">c</label>.<a href="#line-187" class="ident">err</a> = <label for="r48" class="ident">err</label>
+	} <span class="keyword">else</span> {
+		<label for="r49" class="ident">p</label>.<a href="#line-206" class="ident">addConnLocked</a>(<label for="r45" class="ident">key</label>, <label for="r47" class="ident">cc</label>)
+	}
+	<a href="../../../../../pkg/builtin.html#name-delete" class="ident">delete</a>(<label for="r49" class="ident">p</label>.<a href="#line-43" class="ident">addConnCalls</a>, <label for="r45" class="ident">key</label>)
+	<label for="r49" class="ident">p</label>.<a href="#line-37" class="ident">mu</a>.<a href="../../../../sync/mutex.go.html#line-179" class="ident">Unlock</a>()
+	<a href="../../../../../pkg/builtin.html#name-close" class="ident">close</a>(<label for="r42" class="ident">c</label>.<a href="#line-186" class="ident">done</a>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> p.mu must be held</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r50" class="ident">p</label> *<a href="#line-34" class="ident">clientConnPool</a>) <label for="r51" class="ident"><a href="../../../../../use/golang.org/x/net/http2..clientConnPool*206ef.addConnLocked*540b4.html" class="ident">addConnLocked</a></label>(<label for="r52" class="ident">key</label> <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>, <label for="r53" class="ident">cc</label> *<a href="transport.go.html#line-229" class="ident">ClientConn</a>) {
+	<span class="keyword">for</span> <label for="r54" class="ident">_</label>, <label for="r55" class="ident">v</label> := <span class="keyword">range</span> <label for="r50" class="ident">p</label>.<a href="#line-40" class="ident">conns</a>[<label for="r52" class="ident">key</label>] {
+		<span class="keyword">if</span> <label for="r55" class="ident">v</label> == <label for="r53" class="ident">cc</label> {
+			<span class="keyword">return</span>
+		}
+	}
+	<span class="keyword">if</span> <label for="r50" class="ident">p</label>.<a href="#line-40" class="ident">conns</a> == <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<label for="r50" class="ident">p</label>.<a href="#line-40" class="ident">conns</a> = <a href="../../../../../pkg/builtin.html#name-make" class="ident">make</a>(<span class="keyword">map</span>[<a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>][]*<a href="transport.go.html#line-229" class="ident">ClientConn</a>)
+	}
+	<span class="keyword">if</span> <label for="r50" class="ident">p</label>.<a href="#line-42" class="ident">keys</a> == <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<label for="r50" class="ident">p</label>.<a href="#line-42" class="ident">keys</a> = <a href="../../../../../pkg/builtin.html#name-make" class="ident">make</a>(<span class="keyword">map</span>[*<a href="transport.go.html#line-229" class="ident">ClientConn</a>][]<a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>)
+	}
+	<label for="r50" class="ident">p</label>.<a href="#line-40" class="ident">conns</a>[<label for="r52" class="ident">key</label>] = <a href="../../../../../pkg/builtin.html#name-append" class="ident">append</a>(<label for="r50" class="ident">p</label>.<a href="#line-40" class="ident">conns</a>[<label for="r52" class="ident">key</label>], <label for="r53" class="ident">cc</label>)
+	<label for="r50" class="ident">p</label>.<a href="#line-42" class="ident">keys</a>[<label for="r53" class="ident">cc</label>] = <a href="../../../../../pkg/builtin.html#name-append" class="ident">append</a>(<label for="r50" class="ident">p</label>.<a href="#line-42" class="ident">keys</a>[<label for="r53" class="ident">cc</label>], <label for="r52" class="ident">key</label>)
+}
+
+<span class="keyword">func</span> (<label for="r56" class="ident">p</label> *<a href="#line-34" class="ident">clientConnPool</a>) <label for="r57" class="ident"><a href="../../../../../use/golang.org/x/net/http2..clientConnPool*206ef.MarkDead.html" class="ident">MarkDead</a></label>(<label for="r58" class="ident">cc</label> *<a href="transport.go.html#line-229" class="ident">ClientConn</a>) {
+	<label for="r56" class="ident">p</label>.<a href="#line-37" class="ident">mu</a>.<a href="../../../../sync/mutex.go.html#line-72" class="ident">Lock</a>()
+	<span class="keyword">defer</span> <label for="r56" class="ident">p</label>.<a href="#line-37" class="ident">mu</a>.<a href="../../../../sync/mutex.go.html#line-179" class="ident">Unlock</a>()
+	<span class="keyword">for</span> <label for="r59" class="ident">_</label>, <label for="r60" class="ident">key</label> := <span class="keyword">range</span> <label for="r56" class="ident">p</label>.<a href="#line-42" class="ident">keys</a>[<label for="r58" class="ident">cc</label>] {
+		<label for="r61" class="ident">vv</label>, <label for="r62" class="ident">ok</label> := <label for="r56" class="ident">p</label>.<a href="#line-40" class="ident">conns</a>[<label for="r60" class="ident">key</label>]
+		<span class="keyword">if</span> !<label for="r62" class="ident">ok</label> {
+			<span class="keyword">continue</span>
+		}
+		<label for="r63" class="ident">newList</label> := <a href="#line-256" class="ident">filterOutClientConn</a>(<label for="r61" class="ident">vv</label>, <label for="r58" class="ident">cc</label>)
+		<span class="keyword">if</span> <a href="../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r63" class="ident">newList</label>) &gt; <span class="lit-number">0</span> {
+			<label for="r56" class="ident">p</label>.<a href="#line-40" class="ident">conns</a>[<label for="r60" class="ident">key</label>] = <label for="r63" class="ident">newList</label>
+		} <span class="keyword">else</span> {
+			<a href="../../../../../pkg/builtin.html#name-delete" class="ident">delete</a>(<label for="r56" class="ident">p</label>.<a href="#line-40" class="ident">conns</a>, <label for="r60" class="ident">key</label>)
+		}
+	}
+	<a href="../../../../../pkg/builtin.html#name-delete" class="ident">delete</a>(<label for="r56" class="ident">p</label>.<a href="#line-42" class="ident">keys</a>, <label for="r58" class="ident">cc</label>)
+}
+
+<span class="keyword">func</span> (<label for="r64" class="ident">p</label> *<a href="#line-34" class="ident">clientConnPool</a>) <label for="r65" class="ident"><a href="../../../../../use/golang.org/x/net/http2..clientConnPool*206ef.closeIdleConnections*072ce.html" class="ident">closeIdleConnections</a></label>() {
+	<label for="r64" class="ident">p</label>.<a href="#line-37" class="ident">mu</a>.<a href="../../../../sync/mutex.go.html#line-72" class="ident">Lock</a>()
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> TODO: don't close a cc if it was just added to the pool</span><span class="comment">	 milliseconds ago and has never been used. There's currently</span><span class="comment">	 a small race window with the HTTP/1 Transport's integration</span><span class="comment">	 where it can add an idle conn just before using it, and</span><span class="comment">	 somebody else can concurrently call CloseIdleConns and</span><span class="comment">	 break some caller's RoundTrip.</span></div>
+<div class="code"><pre><code>	<span class="keyword">for</span> <label for="r66" class="ident">_</label>, <label for="r67" class="ident">vv</label> := <span class="keyword">range</span> <label for="r64" class="ident">p</label>.<a href="#line-40" class="ident">conns</a> {
+		<span class="keyword">for</span> <label for="r68" class="ident">_</label>, <label for="r69" class="ident">cc</label> := <span class="keyword">range</span> <label for="r67" class="ident">vv</label> {
+			<label for="r69" class="ident">cc</label>.<a href="transport.go.html#line-816" class="ident">closeIfIdle</a>()
+		}
+	}
+}
+
+<span class="keyword">func</span> <label for="r70" class="ident"><a href="../../../../../pkg/golang.org/x/net/http2.html#name-filterOutClientConn" class="ident">filterOutClientConn</a></label>(<label for="r71" class="ident">in</label> []*<a href="transport.go.html#line-229" class="ident">ClientConn</a>, <label for="r72" class="ident">exclude</label> *<a href="transport.go.html#line-229" class="ident">ClientConn</a>) []*<a href="transport.go.html#line-229" class="ident">ClientConn</a> {
+	<label for="r73" class="ident">out</label> := <label for="r71" class="ident">in</label>[:<span class="lit-number">0</span>]
+	<span class="keyword">for</span> <label for="r74" class="ident">_</label>, <label for="r75" class="ident">v</label> := <span class="keyword">range</span> <label for="r71" class="ident">in</label> {
+		<span class="keyword">if</span> <label for="r75" class="ident">v</label> != <label for="r72" class="ident">exclude</label> {
+			<label for="r73" class="ident">out</label> = <a href="../../../../../pkg/builtin.html#name-append" class="ident">append</a>(<label for="r73" class="ident">out</label>, <label for="r75" class="ident">v</label>)
+		}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> If we filtered it out, zero out the last item to prevent</span><span class="comment">	 the GC from seeing it.</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> <a href="../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r71" class="ident">in</label>) != <a href="../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r73" class="ident">out</label>) {
+		<label for="r71" class="ident">in</label>[<a href="../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r71" class="ident">in</label>)-<span class="lit-number">1</span>] = <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+	}
+	<span class="keyword">return</span> <label for="r73" class="ident">out</label>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> noDialClientConnPool is an implementation of http2.ClientConnPool</span><span class="comment"> which never dials. We let the HTTP/1.1 client dial and use its TLS</span><span class="comment"> connection instead.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../pkg/golang.org/x/net/http2.html#name-noDialClientConnPool" class="ident">noDialClientConnPool</a> <span class="keyword">struct</span>{ *<a href="#line-34" class="ident">clientConnPool</a> }
+
+<span class="keyword">func</span> (<label for="r76" class="ident">p</label> <a href="#line-274" class="ident">noDialClientConnPool</a>) <label for="r77" class="ident"><a href="../../../../../use/golang.org/x/net/http2..noDialClientConnPool*709bf.GetClientConn.html" class="ident">GetClientConn</a></label>(<label for="r78" class="ident">req</label> *<a href="../../../../../pkg/net/http.html" class="ident i1">http</a>.<a href="../../../../net/http/request.go.html#line-102" class="ident">Request</a>, <label for="r79" class="ident">addr</label> <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>) (*<a href="transport.go.html#line-229" class="ident">ClientConn</a>, <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<span class="keyword">return</span> <label for="r76" class="ident">p</label>.<a href="#line-76" class="ident">getClientConn</a>(<label for="r78" class="ident">req</label>, <label for="r79" class="ident">addr</label>, <a href="#line-52" class="ident">noDialOnMiss</a>)
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

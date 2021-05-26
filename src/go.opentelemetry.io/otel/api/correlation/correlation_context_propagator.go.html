@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: correlation_context_propagator.go in package go.opentelemetry.io/otel/api/correlation</title>
+<link href="../../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	correlation_context_propagator.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../../pkg/go.opentelemetry.io/otel/api/correlation.html">go.opentelemetry.io/otel/api/correlation</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16],
+input[id=r17]:checked ~pre label[for=r17],
+input[id=r18]:checked ~pre label[for=r18],
+input[id=r19]:checked ~pre label[for=r19],
+input[id=r20]:checked ~pre label[for=r20],
+input[id=r21]:checked ~pre label[for=r21],
+input[id=r22]:checked ~pre label[for=r22],
+input[id=r23]:checked ~pre label[for=r23],
+input[id=r24]:checked ~pre label[for=r24],
+input[id=r25]:checked ~pre label[for=r25],
+input[id=r26]:checked ~pre label[for=r26],
+input[id=r27]:checked ~pre label[for=r27]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1,
+input[id=i2]:checked ~pre .i2,
+input[id=i3]:checked ~pre .i3,
+input[id=i4]:checked ~pre .i4
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="r17" type="radio" name="g"/>
+<input id="r18" type="radio" name="g"/>
+<input id="r19" type="radio" name="g"/>
+<input id="r20" type="radio" name="g"/>
+<input id="r21" type="radio" name="g"/>
+<input id="r22" type="radio" name="g"/>
+<input id="r23" type="radio" name="g"/>
+<input id="r24" type="radio" name="g"/>
+<input id="r25" type="radio" name="g"/>
+<input id="r26" type="radio" name="g"/>
+<input id="r27" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<input id="i2" type="radio" name="i"/>
+<input id="i3" type="radio" name="i"/>
+<input id="i4" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright The OpenTelemetry Authors</span><span class="comment"></span><span class="comment"> Licensed under the Apache License, Version 2.0 (the "License");</span><span class="comment"> you may not use this file except in compliance with the License.</span><span class="comment"> You may obtain a copy of the License at</span><span class="comment"></span><span class="comment">     http://www.apache.org/licenses/LICENSE-2.0</span><span class="comment"></span><span class="comment"> Unless required by applicable law or agreed to in writing, software</span><span class="comment"> distributed under the License is distributed on an "AS IS" BASIS,</span><span class="comment"> WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span><span class="comment"> See the License for the specific language governing permissions and</span><span class="comment"> limitations under the License.</span></div>
+<div class="code"><pre><code>
+<span class="keyword">package</span> correlation
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"context"</span></label>
+	<label for="i1"><span class="lit-string i1">"net/url"</span></label>
+	<label for="i2"><span class="lit-string i2">"strings"</span></label>
+
+	<label for="i3"><span class="lit-string i3">"go.opentelemetry.io/otel/api/propagation"</span></label>
+	<label for="i4"><span class="lit-string i4">"go.opentelemetry.io/otel/label"</span></label>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Temporary header name until W3C finalizes format.</span><span class="comment"> https://github.com/open-telemetry/opentelemetry-specification/blob/18b2752ebe6c7f0cdd8c7b2bcbdceb0ae3f5ad95/specification/correlationcontext/api.md#header-name</span></div>
+<div class="code"><pre><code><span class="keyword">const</span> <a href="../../../../../pkg/go.opentelemetry.io/otel/api/correlation.html#name-correlationContextHeader" class="ident">correlationContextHeader</a> = <span class="lit-string">"otcorrelations"</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> CorrelationContext propagates Key:Values in W3C CorrelationContext</span><span class="comment"> format.</span><span class="comment"> nolint:golint</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../pkg/go.opentelemetry.io/otel/api/correlation.html#name-CorrelationContext" class="ident">CorrelationContext</a> <span class="keyword">struct</span>{}
+
+<span class="keyword">var</span> _ <a href="../../../../../pkg/go.opentelemetry.io/otel/api/propagation.html" class="ident i3">propagation</a>.<a href="../propagation/propagation.go.html#line-77" class="ident">HTTPPropagator</a> = <a href="#line-33" class="ident">CorrelationContext</a>{}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> DefaultHTTPPropagator returns the default context correlation HTTP</span><span class="comment"> propagator.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r0" class="ident"><a href="../../../../../pkg/go.opentelemetry.io/otel/api/correlation.html#name-DefaultHTTPPropagator" class="ident">DefaultHTTPPropagator</a></label>() <a href="../../../../../pkg/go.opentelemetry.io/otel/api/propagation.html" class="ident i3">propagation</a>.<a href="../propagation/propagation.go.html#line-77" class="ident">HTTPPropagator</a> {
+	<span class="keyword">return</span> <a href="#line-33" class="ident">CorrelationContext</a>{}
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Inject implements HTTPInjector.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<a href="#line-33" class="ident">CorrelationContext</a>) <label for="r1" class="ident"><a href="../../../../../use/go.opentelemetry.io/otel/api/correlation..CorrelationContext.Inject.html" class="ident">Inject</a></label>(<label for="r2" class="ident">ctx</label> <a href="../../../../../pkg/context.html" class="ident i0">context</a>.<a href="../../../../context/context.go.html#line-62" class="ident">Context</a>, <label for="r3" class="ident">supplier</label> <a href="../../../../../pkg/go.opentelemetry.io/otel/api/propagation.html" class="ident i3">propagation</a>.<a href="../propagation/propagation.go.html#line-24" class="ident">HTTPSupplier</a>) {
+	<label for="r4" class="ident">correlationCtx</label> := <a href="context.go.html#line-160" class="ident">MapFromContext</a>(<label for="r2" class="ident">ctx</label>)
+	<label for="r5" class="ident">firstIter</label> := <a href="../../../../../pkg/builtin.html#name-true" class="ident">true</a>
+	<span class="keyword">var</span> <label for="r6" class="ident">headerValueBuilder</label> <a href="../../../../../pkg/strings.html" class="ident i2">strings</a>.<a href="../../../../strings/builder.go.html#line-15" class="ident">Builder</a>
+	<label for="r4" class="ident">correlationCtx</label>.<a href="map.go.html#line-167" class="ident">Foreach</a>(<span class="keyword">func</span>(<label for="r7" class="ident">kv</label> <a href="../../../../../pkg/go.opentelemetry.io/otel/label.html" class="ident i4">label</a>.<a href="../../label/kv.go.html#line-24" class="ident">KeyValue</a>) <a href="../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> {
+		<span class="keyword">if</span> !<label for="r5" class="ident">firstIter</label> {
+			<label for="r6" class="ident">headerValueBuilder</label>.<a href="../../../../strings/builder.go.html#line-104" class="ident">WriteRune</a>(<span class="lit-number">','</span>)
+		}
+		<label for="r5" class="ident">firstIter</label> = <a href="../../../../../pkg/builtin.html#name-false" class="ident">false</a>
+		<label for="r6" class="ident">headerValueBuilder</label>.<a href="../../../../strings/builder.go.html#line-121" class="ident">WriteString</a>(<a href="../../../../../pkg/net/url.html" class="ident i1">url</a>.<a href="../../../../net/url/url.go.html#line-274" class="ident">QueryEscape</a>(<a href="../../../../../pkg/strings.html" class="ident i2">strings</a>.<a href="../../../../strings/strings.go.html#line-867" class="ident">TrimSpace</a>((<a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>)(<label for="r7" class="ident">kv</label>.<a href="../../label/kv.go.html#line-25" class="ident">Key</a>))))
+		<label for="r6" class="ident">headerValueBuilder</label>.<a href="../../../../strings/builder.go.html#line-104" class="ident">WriteRune</a>(<span class="lit-number">'='</span>)
+		<label for="r6" class="ident">headerValueBuilder</label>.<a href="../../../../strings/builder.go.html#line-121" class="ident">WriteString</a>(<a href="../../../../../pkg/net/url.html" class="ident i1">url</a>.<a href="../../../../net/url/url.go.html#line-274" class="ident">QueryEscape</a>(<a href="../../../../../pkg/strings.html" class="ident i2">strings</a>.<a href="../../../../strings/strings.go.html#line-867" class="ident">TrimSpace</a>(<label for="r7" class="ident">kv</label>.<a href="../../label/kv.go.html#line-26" class="ident">Value</a>.<a href="../../label/value.go.html#line-250" class="ident">Emit</a>())))
+		<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-true" class="ident">true</a>
+	})
+	<span class="keyword">if</span> <label for="r6" class="ident">headerValueBuilder</label>.<a href="../../../../strings/builder.go.html#line-52" class="ident">Len</a>() &gt; <span class="lit-number">0</span> {
+		<label for="r8" class="ident">headerString</label> := <label for="r6" class="ident">headerValueBuilder</label>.<a href="../../../../strings/builder.go.html#line-47" class="ident">String</a>()
+		<label for="r3" class="ident">supplier</label>.<a href="../propagation/propagation.go.html#line-30" class="ident">Set</a>(<a href="#line-28" class="ident">correlationContextHeader</a>, <label for="r8" class="ident">headerString</label>)
+	}
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Extract implements HTTPExtractor.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<a href="#line-33" class="ident">CorrelationContext</a>) <label for="r9" class="ident"><a href="../../../../../use/go.opentelemetry.io/otel/api/correlation..CorrelationContext.Extract.html" class="ident">Extract</a></label>(<label for="r10" class="ident">ctx</label> <a href="../../../../../pkg/context.html" class="ident i0">context</a>.<a href="../../../../context/context.go.html#line-62" class="ident">Context</a>, <label for="r11" class="ident">supplier</label> <a href="../../../../../pkg/go.opentelemetry.io/otel/api/propagation.html" class="ident i3">propagation</a>.<a href="../propagation/propagation.go.html#line-24" class="ident">HTTPSupplier</a>) <a href="../../../../../pkg/context.html" class="ident i0">context</a>.<a href="../../../../context/context.go.html#line-62" class="ident">Context</a> {
+	<label for="r12" class="ident">correlationContext</label> := <label for="r11" class="ident">supplier</label>.<a href="../propagation/propagation.go.html#line-26" class="ident">Get</a>(<a href="#line-28" class="ident">correlationContextHeader</a>)
+	<span class="keyword">if</span> <label for="r12" class="ident">correlationContext</label> == <span class="lit-string">""</span> {
+		<span class="keyword">return</span> <label for="r10" class="ident">ctx</label>
+	}
+
+	<label for="r13" class="ident">contextValues</label> := <a href="../../../../../pkg/strings.html" class="ident i2">strings</a>.<a href="../../../../strings/strings.go.html#line-299" class="ident">Split</a>(<label for="r12" class="ident">correlationContext</label>, <span class="lit-string">","</span>)
+	<label for="r14" class="ident">keyValues</label> := <a href="../../../../../pkg/builtin.html#name-make" class="ident">make</a>([]<a href="../../../../../pkg/go.opentelemetry.io/otel/label.html" class="ident i4">label</a>.<a href="../../label/kv.go.html#line-24" class="ident">KeyValue</a>, <span class="lit-number">0</span>, <a href="../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r13" class="ident">contextValues</label>))
+	<span class="keyword">for</span> <label for="r15" class="ident">_</label>, <label for="r16" class="ident">contextValue</label> := <span class="keyword">range</span> <label for="r13" class="ident">contextValues</label> {
+		<label for="r17" class="ident">valueAndProps</label> := <a href="../../../../../pkg/strings.html" class="ident i2">strings</a>.<a href="../../../../strings/strings.go.html#line-299" class="ident">Split</a>(<label for="r16" class="ident">contextValue</label>, <span class="lit-string">";"</span>)
+		<span class="keyword">if</span> <a href="../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r17" class="ident">valueAndProps</label>) &lt; <span class="lit-number">1</span> {
+			<span class="keyword">continue</span>
+		}
+		<label for="r18" class="ident">nameValue</label> := <a href="../../../../../pkg/strings.html" class="ident i2">strings</a>.<a href="../../../../strings/strings.go.html#line-299" class="ident">Split</a>(<label for="r17" class="ident">valueAndProps</label>[<span class="lit-number">0</span>], <span class="lit-string">"="</span>)
+		<span class="keyword">if</span> <a href="../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r18" class="ident">nameValue</label>) &lt; <span class="lit-number">2</span> {
+			<span class="keyword">continue</span>
+		}
+		<label for="r19" class="ident">name</label>, <label for="r20" class="ident">err</label> := <a href="../../../../../pkg/net/url.html" class="ident i1">url</a>.<a href="../../../../net/url/url.go.html#line-182" class="ident">QueryUnescape</a>(<label for="r18" class="ident">nameValue</label>[<span class="lit-number">0</span>])
+		<span class="keyword">if</span> <label for="r20" class="ident">err</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<span class="keyword">continue</span>
+		}
+		<label for="r21" class="ident">trimmedName</label> := <a href="../../../../../pkg/strings.html" class="ident i2">strings</a>.<a href="../../../../strings/strings.go.html#line-867" class="ident">TrimSpace</a>(<label for="r19" class="ident">name</label>)
+		<label for="r22" class="ident">value</label>, <label for="r20" class="ident">err</label> := <a href="../../../../../pkg/net/url.html" class="ident i1">url</a>.<a href="../../../../net/url/url.go.html#line-182" class="ident">QueryUnescape</a>(<label for="r18" class="ident">nameValue</label>[<span class="lit-number">1</span>])
+		<span class="keyword">if</span> <label for="r20" class="ident">err</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<span class="keyword">continue</span>
+		}
+		<label for="r23" class="ident">trimmedValue</label> := <a href="../../../../../pkg/strings.html" class="ident i2">strings</a>.<a href="../../../../strings/strings.go.html#line-867" class="ident">TrimSpace</a>(<label for="r22" class="ident">value</label>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> TODO (skaris): properties defiend https://w3c.github.io/correlation-context/, are currently</span><span class="comment">		 just put as part of the value.</span></div>
+<div class="code"><pre><code>		<span class="keyword">var</span> <label for="r24" class="ident">trimmedValueWithProps</label> <a href="../../../../../pkg/strings.html" class="ident i2">strings</a>.<a href="../../../../strings/builder.go.html#line-15" class="ident">Builder</a>
+		<label for="r24" class="ident">trimmedValueWithProps</label>.<a href="../../../../strings/builder.go.html#line-121" class="ident">WriteString</a>(<label for="r23" class="ident">trimmedValue</label>)
+		<span class="keyword">for</span> <label for="r25" class="ident">_</label>, <label for="r26" class="ident">prop</label> := <span class="keyword">range</span> <label for="r17" class="ident">valueAndProps</label>[<span class="lit-number">1</span>:] {
+			<label for="r24" class="ident">trimmedValueWithProps</label>.<a href="../../../../strings/builder.go.html#line-104" class="ident">WriteRune</a>(<span class="lit-number">';'</span>)
+			<label for="r24" class="ident">trimmedValueWithProps</label>.<a href="../../../../strings/builder.go.html#line-121" class="ident">WriteString</a>(<label for="r26" class="ident">prop</label>)
+		}
+
+		<label for="r14" class="ident">keyValues</label> = <a href="../../../../../pkg/builtin.html#name-append" class="ident">append</a>(<label for="r14" class="ident">keyValues</label>, <a href="../../../../../pkg/go.opentelemetry.io/otel/label.html" class="ident i4">label</a>.<a href="../../label/kv.go.html#line-73" class="ident">String</a>(<label for="r21" class="ident">trimmedName</label>, <label for="r24" class="ident">trimmedValueWithProps</label>.<a href="../../../../strings/builder.go.html#line-47" class="ident">String</a>()))
+	}
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Only update the context if valid values were found</span></div>
+<div class="code"><pre><code>		<span class="keyword">return</span> <a href="context.go.html#line-137" class="ident">ContextWithMap</a>(<label for="r10" class="ident">ctx</label>, <a href="map.go.html#line-61" class="ident">NewMap</a>(<a href="map.go.html#line-29" class="ident">MapUpdate</a>{
+			<a href="map.go.html#line-44" class="ident">MultiKV</a>: <label for="r14" class="ident">keyValues</label>,
+		}))
+	}
+
+	<span class="keyword">return</span> <label for="r10" class="ident">ctx</label>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> GetAllKeys implements HTTPPropagator.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<a href="#line-33" class="ident">CorrelationContext</a>) <label for="r27" class="ident"><a href="../../../../../use/go.opentelemetry.io/otel/api/correlation..CorrelationContext.GetAllKeys.html" class="ident">GetAllKeys</a></label>() []<a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a> {
+	<span class="keyword">return</span> []<a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>{<a href="#line-28" class="ident">correlationContextHeader</a>}
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

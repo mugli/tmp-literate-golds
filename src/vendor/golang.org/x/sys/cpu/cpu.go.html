@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: cpu.go in package vendor/golang.org/x/sys/cpu</title>
+<link href="../../../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	cpu.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../../../pkg/vendor/golang.org/x/sys/cpu.html">vendor/golang.org/x/sys/cpu</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2018 The Go Authors. All rights reserved.</span><span class="comment"> Use of this source code is governed by a BSD-style</span><span class="comment"> license that can be found in the LICENSE file.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Package cpu implements processor feature detection for</span><span class="comment"> various CPU architectures.</span></div>
+<div class="code"><pre><code><span class="keyword">package</span> cpu
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"os"</span></label>
+	<label for="i1"><span class="lit-string i1">"strings"</span></label>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Initialized reports whether the CPU features were initialized.</span><span class="comment"></span><span class="comment"> For some GOOS/GOARCH combinations initialization of the CPU features depends</span><span class="comment"> on reading an operating specific file, e.g. /proc/self/auxv on linux/arm</span><span class="comment"> Initialized will report false if reading the file fails.</span></div>
+<div class="code"><pre><code><span class="keyword">var</span> <a href="../../../../../../pkg/vendor/golang.org/x/sys/cpu.html#name-Initialized" class="ident">Initialized</a> <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> CacheLinePad is used to pad structs to avoid false sharing.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../../pkg/vendor/golang.org/x/sys/cpu.html#name-CacheLinePad" class="ident">CacheLinePad</a> <span class="keyword">struct</span>{ _ [<a href="cpu_x86.go.html#line-11" class="ident">cacheLineSize</a>]<a href="../../../../../../pkg/builtin.html#name-byte" class="ident">byte</a> }
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> X86 contains the supported CPU features of the</span><span class="comment"> current X86/AMD64 platform. If the current platform</span><span class="comment"> is not X86/AMD64 then all feature flags are false.</span><span class="comment"></span><span class="comment"> X86 is padded to avoid false sharing. Further the HasAVX</span><span class="comment"> and HasAVX2 are only set if the OS supports XMM and YMM</span><span class="comment"> registers in addition to the CPUID feature bit being set.</span></div>
+<div class="code"><pre><code><span class="keyword">var</span> <a href="../../../../../../pkg/vendor/golang.org/x/sys/cpu.html#name-X86" class="ident">X86</a> <span class="keyword">struct</span> {
+	_                   <a href="#line-22" class="ident">CacheLinePad</a>
+	HasAES              <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// AES hardware implementation (AES NI)</span>
+	HasADX              <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// Multi-precision add-carry instruction extensions</span>
+	HasAVX              <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// Advanced vector extension</span>
+	HasAVX2             <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// Advanced vector extension 2</span>
+	HasAVX512           <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// Advanced vector extension 512</span>
+	HasAVX512F          <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// Advanced vector extension 512 Foundation Instructions</span>
+	HasAVX512CD         <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// Advanced vector extension 512 Conflict Detection Instructions</span>
+	HasAVX512ER         <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// Advanced vector extension 512 Exponential and Reciprocal Instructions</span>
+	HasAVX512PF         <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// Advanced vector extension 512 Prefetch Instructions Instructions</span>
+	HasAVX512VL         <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// Advanced vector extension 512 Vector Length Extensions</span>
+	HasAVX512BW         <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// Advanced vector extension 512 Byte and Word Instructions</span>
+	HasAVX512DQ         <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// Advanced vector extension 512 Doubleword and Quadword Instructions</span>
+	HasAVX512IFMA       <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// Advanced vector extension 512 Integer Fused Multiply Add</span>
+	HasAVX512VBMI       <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// Advanced vector extension 512 Vector Byte Manipulation Instructions</span>
+	HasAVX5124VNNIW     <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// Advanced vector extension 512 Vector Neural Network Instructions Word variable precision</span>
+	HasAVX5124FMAPS     <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// Advanced vector extension 512 Fused Multiply Accumulation Packed Single precision</span>
+	HasAVX512VPOPCNTDQ  <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// Advanced vector extension 512 Double and quad word population count instructions</span>
+	HasAVX512VPCLMULQDQ <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// Advanced vector extension 512 Vector carry-less multiply operations</span>
+	HasAVX512VNNI       <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// Advanced vector extension 512 Vector Neural Network Instructions</span>
+	HasAVX512GFNI       <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// Advanced vector extension 512 Galois field New Instructions</span>
+	HasAVX512VAES       <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// Advanced vector extension 512 Vector AES instructions</span>
+	HasAVX512VBMI2      <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// Advanced vector extension 512 Vector Byte Manipulation Instructions 2</span>
+	HasAVX512BITALG     <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// Advanced vector extension 512 Bit Algorithms</span>
+	HasAVX512BF16       <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// Advanced vector extension 512 BFloat16 Instructions</span>
+	HasBMI1             <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// Bit manipulation instruction set 1</span>
+	HasBMI2             <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// Bit manipulation instruction set 2</span>
+	HasERMS             <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// Enhanced REP for MOVSB and STOSB</span>
+	HasFMA              <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// Fused-multiply-add instructions</span>
+	HasOSXSAVE          <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// OS supports XSAVE/XRESTOR for saving/restoring XMM registers.</span>
+	HasPCLMULQDQ        <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// PCLMULQDQ instruction - most often used for AES-GCM</span>
+	HasPOPCNT           <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// Hamming weight instruction POPCNT.</span>
+	HasRDRAND           <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// RDRAND instruction (on-chip random number generator)</span>
+	HasRDSEED           <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// RDSEED instruction (on-chip random number generator)</span>
+	HasSSE2             <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// Streaming SIMD extension 2 (always available on amd64)</span>
+	HasSSE3             <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// Streaming SIMD extension 3</span>
+	HasSSSE3            <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// Supplemental streaming SIMD extension 3</span>
+	HasSSE41            <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// Streaming SIMD extension 4 and 4.1</span>
+	HasSSE42            <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// Streaming SIMD extension 4 and 4.2</span>
+	_                   <a href="#line-22" class="ident">CacheLinePad</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ARM64 contains the supported CPU features of the</span><span class="comment"> current ARMv8(aarch64) platform. If the current platform</span><span class="comment"> is not arm64 then all feature flags are false.</span></div>
+<div class="code"><pre><code><span class="keyword">var</span> <a href="../../../../../../pkg/vendor/golang.org/x/sys/cpu.html#name-ARM64" class="ident">ARM64</a> <span class="keyword">struct</span> {
+	_           <a href="#line-22" class="ident">CacheLinePad</a>
+	HasFP       <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// Floating-point instruction set (always available)</span>
+	HasASIMD    <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// Advanced SIMD (always available)</span>
+	HasEVTSTRM  <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// Event stream support</span>
+	HasAES      <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// AES hardware implementation</span>
+	HasPMULL    <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// Polynomial multiplication instruction set</span>
+	HasSHA1     <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// SHA1 hardware implementation</span>
+	HasSHA2     <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// SHA2 hardware implementation</span>
+	HasCRC32    <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// CRC32 hardware implementation</span>
+	HasATOMICS  <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// Atomic memory operation instruction set</span>
+	HasFPHP     <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// Half precision floating-point instruction set</span>
+	HasASIMDHP  <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// Advanced SIMD half precision instruction set</span>
+	HasCPUID    <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// CPUID identification scheme registers</span>
+	HasASIMDRDM <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// Rounding double multiply add/subtract instruction set</span>
+	HasJSCVT    <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// Javascript conversion from floating-point to integer</span>
+	HasFCMA     <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// Floating-point multiplication and addition of complex numbers</span>
+	HasLRCPC    <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// Release Consistent processor consistent support</span>
+	HasDCPOP    <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// Persistent memory support</span>
+	HasSHA3     <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// SHA3 hardware implementation</span>
+	HasSM3      <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// SM3 hardware implementation</span>
+	HasSM4      <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// SM4 hardware implementation</span>
+	HasASIMDDP  <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// Advanced SIMD double precision instruction set</span>
+	HasSHA512   <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// SHA512 hardware implementation</span>
+	HasSVE      <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// Scalable Vector Extensions</span>
+	HasASIMDFHM <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// Advanced SIMD multiplication FP16 to FP32</span>
+	_           <a href="#line-22" class="ident">CacheLinePad</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ARM contains the supported CPU features of the current ARM (32-bit) platform.</span><span class="comment"> All feature flags are false if:</span><span class="comment">   1. the current platform is not arm, or</span><span class="comment">   2. the current operating system is not Linux.</span></div>
+<div class="code"><pre><code><span class="keyword">var</span> <a href="../../../../../../pkg/vendor/golang.org/x/sys/cpu.html#name-ARM" class="ident">ARM</a> <span class="keyword">struct</span> {
+	_           <a href="#line-22" class="ident">CacheLinePad</a>
+	HasSWP      <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// SWP instruction support</span>
+	HasHALF     <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// Half-word load and store support</span>
+	HasTHUMB    <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// ARM Thumb instruction set</span>
+	Has26BIT    <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// Address space limited to 26-bits</span>
+	HasFASTMUL  <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// 32-bit operand, 64-bit result multiplication support</span>
+	HasFPA      <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// Floating point arithmetic support</span>
+	HasVFP      <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// Vector floating point support</span>
+	HasEDSP     <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// DSP Extensions support</span>
+	HasJAVA     <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// Java instruction set</span>
+	HasIWMMXT   <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// Intel Wireless MMX technology support</span>
+	HasCRUNCH   <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// MaverickCrunch context switching and handling</span>
+	HasTHUMBEE  <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// Thumb EE instruction set</span>
+	HasNEON     <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// NEON instruction set</span>
+	HasVFPv3    <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// Vector floating point version 3 support</span>
+	HasVFPv3D16 <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// Vector floating point version 3 D8-D15</span>
+	HasTLS      <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// Thread local storage support</span>
+	HasVFPv4    <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// Vector floating point version 4 support</span>
+	HasIDIVA    <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// Integer divide instruction support in ARM mode</span>
+	HasIDIVT    <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// Integer divide instruction support in Thumb mode</span>
+	HasVFPD32   <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// Vector floating point version 3 D15-D31</span>
+	HasLPAE     <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// Large Physical Address Extensions</span>
+	HasEVTSTRM  <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// Event stream support</span>
+	HasAES      <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// AES hardware implementation</span>
+	HasPMULL    <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// Polynomial multiplication instruction set</span>
+	HasSHA1     <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// SHA1 hardware implementation</span>
+	HasSHA2     <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// SHA2 hardware implementation</span>
+	HasCRC32    <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// CRC32 hardware implementation</span>
+	_           <a href="#line-22" class="ident">CacheLinePad</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> MIPS64X contains the supported CPU features of the current mips64/mips64le</span><span class="comment"> platforms. If the current platform is not mips64/mips64le or the current</span><span class="comment"> operating system is not Linux then all feature flags are false.</span></div>
+<div class="code"><pre><code><span class="keyword">var</span> <a href="../../../../../../pkg/vendor/golang.org/x/sys/cpu.html#name-MIPS64X" class="ident">MIPS64X</a> <span class="keyword">struct</span> {
+	_      <a href="#line-22" class="ident">CacheLinePad</a>
+	HasMSA <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// MIPS SIMD architecture</span>
+	_      <a href="#line-22" class="ident">CacheLinePad</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> PPC64 contains the supported CPU features of the current ppc64/ppc64le platforms.</span><span class="comment"> If the current platform is not ppc64/ppc64le then all feature flags are false.</span><span class="comment"></span><span class="comment"> For ppc64/ppc64le, it is safe to check only for ISA level starting on ISA v3.00,</span><span class="comment"> since there are no optional categories. There are some exceptions that also</span><span class="comment"> require kernel support to work (DARN, SCV), so there are feature bits for</span><span class="comment"> those as well. The minimum processor requirement is POWER8 (ISA 2.07).</span><span class="comment"> The struct is padded to avoid false sharing.</span></div>
+<div class="code"><pre><code><span class="keyword">var</span> <a href="../../../../../../pkg/vendor/golang.org/x/sys/cpu.html#name-PPC64" class="ident">PPC64</a> <span class="keyword">struct</span> {
+	_        <a href="#line-22" class="ident">CacheLinePad</a>
+	HasDARN  <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// Hardware random number generator (requires kernel enablement)</span>
+	HasSCV   <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// Syscall vectored (requires kernel enablement)</span>
+	IsPOWER8 <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// ISA v2.07 (POWER8)</span>
+	IsPOWER9 <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// ISA v3.00 (POWER9)</span>
+	_        <a href="#line-22" class="ident">CacheLinePad</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> S390X contains the supported CPU features of the current IBM Z</span><span class="comment"> (s390x) platform. If the current platform is not IBM Z then all</span><span class="comment"> feature flags are false.</span><span class="comment"></span><span class="comment"> S390X is padded to avoid false sharing. Further HasVX is only set</span><span class="comment"> if the OS supports vector registers in addition to the STFLE</span><span class="comment"> feature bit being set.</span></div>
+<div class="code"><pre><code><span class="keyword">var</span> <a href="../../../../../../pkg/vendor/golang.org/x/sys/cpu.html#name-S390X" class="ident">S390X</a> <span class="keyword">struct</span> {
+	_         <a href="#line-22" class="ident">CacheLinePad</a>
+	HasZARCH  <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// z/Architecture mode is active [mandatory]</span>
+	HasSTFLE  <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// store facility list extended</span>
+	HasLDISP  <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// long (20-bit) displacements</span>
+	HasEIMM   <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// 32-bit immediates</span>
+	HasDFP    <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// decimal floating point</span>
+	HasETF3EH <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// ETF-3 enhanced</span>
+	HasMSA    <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// message security assist (CPACF)</span>
+	HasAES    <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// KM-AES{128,192,256} functions</span>
+	HasAESCBC <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// KMC-AES{128,192,256} functions</span>
+	HasAESCTR <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// KMCTR-AES{128,192,256} functions</span>
+	HasAESGCM <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// KMA-GCM-AES{128,192,256} functions</span>
+	HasGHASH  <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// KIMD-GHASH function</span>
+	HasSHA1   <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// K{I,L}MD-SHA-1 functions</span>
+	HasSHA256 <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// K{I,L}MD-SHA-256 functions</span>
+	HasSHA512 <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// K{I,L}MD-SHA-512 functions</span>
+	HasSHA3   <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// K{I,L}MD-SHA3-{224,256,384,512} and K{I,L}MD-SHAKE-{128,256} functions</span>
+	HasVX     <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// vector facility</span>
+	HasVXE    <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// vector-enhancements facility 1</span>
+	_         <a href="#line-22" class="ident">CacheLinePad</a>
+}
+
+<span class="keyword">func</span> <label for="r0" class="ident"><a href="../../../../../../pkg/vendor/golang.org/x/sys/cpu.html#name-init" class="ident">init</a></label>() {
+	<a href="cpu_x86.go.html#line-58" class="ident">archInit</a>()
+	<a href="cpu_x86.go.html#line-13" class="ident">initOptions</a>()
+	<a href="#line-219" class="ident">processOptions</a>()
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> options contains the cpu debug options that can be used in GODEBUG.</span><span class="comment"> Options are arch dependent and are added by the arch specific initOptions functions.</span><span class="comment"> Features that are mandatory for the specific GOARCH should have the Required field set</span><span class="comment"> (e.g. SSE2 on amd64).</span></div>
+<div class="code"><pre><code><span class="keyword">var</span> <a href="../../../../../../pkg/vendor/golang.org/x/sys/cpu.html#name-options" class="ident">options</a> []<a href="#line-211" class="ident">option</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Option names should be lower case. e.g. avx instead of AVX.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../../pkg/vendor/golang.org/x/sys/cpu.html#name-option" class="ident">option</a> <span class="keyword">struct</span> {
+	<a href="../../../../../../use/vendor/golang.org/x/sys/cpu..option*a11a7.Name.html" class="ident">Name</a>      <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../../use/vendor/golang.org/x/sys/cpu..option*a11a7.Feature.html" class="ident">Feature</a>   *<a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>
+	<a href="../../../../../../use/vendor/golang.org/x/sys/cpu..option*a11a7.Specified.html" class="ident">Specified</a> <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// whether feature value was specified in GODEBUG</span>
+	<a href="../../../../../../use/vendor/golang.org/x/sys/cpu..option*a11a7.Enable.html" class="ident">Enable</a>    <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// whether feature should be enabled</span>
+	<a href="../../../../../../use/vendor/golang.org/x/sys/cpu..option*a11a7.Required.html" class="ident">Required</a>  <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a> <span class="comment">// whether feature is mandatory and can not be disabled</span>
+}
+
+<span class="keyword">func</span> <label for="r1" class="ident"><a href="../../../../../../pkg/vendor/golang.org/x/sys/cpu.html#name-processOptions" class="ident">processOptions</a></label>() {
+	<label for="r2" class="ident">env</label> := <a href="../../../../../../pkg/os.html" class="ident i0">os</a>.<a href="../../../../../os/env.go.html#line-101" class="ident">Getenv</a>(<span class="lit-string">"GODEBUG"</span>)
+<label for="r3" class="ident">field</label>:
+	<span class="keyword">for</span> <label for="r2" class="ident">env</label> != <span class="lit-string">""</span> {
+		<label for="r4" class="ident">field</label> := <span class="lit-string">""</span>
+		<label for="r5" class="ident">i</label> := <a href="../../../../../../pkg/strings.html" class="ident i1">strings</a>.<a href="../../../../../strings/strings.go.html#line-113" class="ident">IndexByte</a>(<label for="r2" class="ident">env</label>, <span class="lit-number">','</span>)
+		<span class="keyword">if</span> <label for="r5" class="ident">i</label> &lt; <span class="lit-number">0</span> {
+			<label for="r4" class="ident">field</label>, <label for="r2" class="ident">env</label> = <label for="r2" class="ident">env</label>, <span class="lit-string">""</span>
+		} <span class="keyword">else</span> {
+			<label for="r4" class="ident">field</label>, <label for="r2" class="ident">env</label> = <label for="r2" class="ident">env</label>[:<label for="r5" class="ident">i</label>], <label for="r2" class="ident">env</label>[<label for="r5" class="ident">i</label>+<span class="lit-number">1</span>:]
+		}
+		<span class="keyword">if</span> <a href="../../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r4" class="ident">field</label>) &lt; <span class="lit-number">4</span> || <label for="r4" class="ident">field</label>[:<span class="lit-number">4</span>] != <span class="lit-string">"cpu."</span> {
+			<span class="keyword">continue</span>
+		}
+		<label for="r5" class="ident">i</label> = <a href="../../../../../../pkg/strings.html" class="ident i1">strings</a>.<a href="../../../../../strings/strings.go.html#line-113" class="ident">IndexByte</a>(<label for="r4" class="ident">field</label>, <span class="lit-number">'='</span>)
+		<span class="keyword">if</span> <label for="r5" class="ident">i</label> &lt; <span class="lit-number">0</span> {
+			<a href="../../../../../../pkg/builtin.html#name-print" class="ident">print</a>(<span class="lit-string">"GODEBUG sys/cpu: no value specified for \""</span>, <label for="r4" class="ident">field</label>, <span class="lit-string">"\"\n"</span>)
+			<span class="keyword">continue</span>
+		}
+		<label for="r6" class="ident">key</label>, <label for="r7" class="ident">value</label> := <label for="r4" class="ident">field</label>[<span class="lit-number">4</span>:<label for="r5" class="ident">i</label>], <label for="r4" class="ident">field</label>[<label for="r5" class="ident">i</label>+<span class="lit-number">1</span>:] <span class="comment">// e.g. "SSE2", "on"</span>
+
+		<span class="keyword">var</span> <label for="r8" class="ident">enable</label> <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>
+		<span class="keyword">switch</span> <label for="r7" class="ident">value</label> {
+		<span class="keyword">case</span> <span class="lit-string">"on"</span>:
+			<label for="r8" class="ident">enable</label> = <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>
+		<span class="keyword">case</span> <span class="lit-string">"off"</span>:
+			<label for="r8" class="ident">enable</label> = <a href="../../../../../../pkg/builtin.html#name-false" class="ident">false</a>
+		<span class="keyword">default</span>:
+			<a href="../../../../../../pkg/builtin.html#name-print" class="ident">print</a>(<span class="lit-string">"GODEBUG sys/cpu: value \""</span>, <label for="r7" class="ident">value</label>, <span class="lit-string">"\" not supported for cpu option \""</span>, <label for="r6" class="ident">key</label>, <span class="lit-string">"\"\n"</span>)
+			<span class="keyword">continue</span> <label for="r3" class="ident">field</label>
+		}
+
+		<span class="keyword">if</span> <label for="r6" class="ident">key</label> == <span class="lit-string">"all"</span> {
+			<span class="keyword">for</span> <label for="r9" class="ident">i</label> := <span class="keyword">range</span> <a href="#line-208" class="ident">options</a> {
+				<a href="#line-208" class="ident">options</a>[<label for="r9" class="ident">i</label>].<a href="#line-214" class="ident">Specified</a> = <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>
+				<a href="#line-208" class="ident">options</a>[<label for="r9" class="ident">i</label>].<a href="#line-215" class="ident">Enable</a> = <label for="r8" class="ident">enable</label> || <a href="#line-208" class="ident">options</a>[<label for="r9" class="ident">i</label>].<a href="#line-216" class="ident">Required</a>
+			}
+			<span class="keyword">continue</span> <label for="r3" class="ident">field</label>
+		}
+
+		<span class="keyword">for</span> <label for="r10" class="ident">i</label> := <span class="keyword">range</span> <a href="#line-208" class="ident">options</a> {
+			<span class="keyword">if</span> <a href="#line-208" class="ident">options</a>[<label for="r10" class="ident">i</label>].<a href="#line-212" class="ident">Name</a> == <label for="r6" class="ident">key</label> {
+				<a href="#line-208" class="ident">options</a>[<label for="r10" class="ident">i</label>].<a href="#line-214" class="ident">Specified</a> = <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>
+				<a href="#line-208" class="ident">options</a>[<label for="r10" class="ident">i</label>].<a href="#line-215" class="ident">Enable</a> = <label for="r8" class="ident">enable</label>
+				<span class="keyword">continue</span> <label for="r3" class="ident">field</label>
+			}
+		}
+
+		<a href="../../../../../../pkg/builtin.html#name-print" class="ident">print</a>(<span class="lit-string">"GODEBUG sys/cpu: unknown cpu feature \""</span>, <label for="r6" class="ident">key</label>, <span class="lit-string">"\"\n"</span>)
+	}
+
+	<span class="keyword">for</span> <label for="r11" class="ident">_</label>, <label for="r12" class="ident">o</label> := <span class="keyword">range</span> <a href="#line-208" class="ident">options</a> {
+		<span class="keyword">if</span> !<label for="r12" class="ident">o</label>.<a href="#line-214" class="ident">Specified</a> {
+			<span class="keyword">continue</span>
+		}
+
+		<span class="keyword">if</span> <label for="r12" class="ident">o</label>.<a href="#line-215" class="ident">Enable</a> &amp;&amp; !*<label for="r12" class="ident">o</label>.<a href="#line-213" class="ident">Feature</a> {
+			<a href="../../../../../../pkg/builtin.html#name-print" class="ident">print</a>(<span class="lit-string">"GODEBUG sys/cpu: can not enable \""</span>, <label for="r12" class="ident">o</label>.<a href="#line-212" class="ident">Name</a>, <span class="lit-string">"\", missing CPU support\n"</span>)
+			<span class="keyword">continue</span>
+		}
+
+		<span class="keyword">if</span> !<label for="r12" class="ident">o</label>.<a href="#line-215" class="ident">Enable</a> &amp;&amp; <label for="r12" class="ident">o</label>.<a href="#line-216" class="ident">Required</a> {
+			<a href="../../../../../../pkg/builtin.html#name-print" class="ident">print</a>(<span class="lit-string">"GODEBUG sys/cpu: can not disable \""</span>, <label for="r12" class="ident">o</label>.<a href="#line-212" class="ident">Name</a>, <span class="lit-string">"\", required CPU feature\n"</span>)
+			<span class="keyword">continue</span>
+		}
+
+		*<label for="r12" class="ident">o</label>.<a href="#line-213" class="ident">Feature</a> = <label for="r12" class="ident">o</label>.<a href="#line-215" class="ident">Enable</a>
+	}
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

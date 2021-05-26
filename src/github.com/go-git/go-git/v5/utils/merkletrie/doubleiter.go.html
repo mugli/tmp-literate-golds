@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: doubleiter.go in package github.com/go-git/go-git/v5/utils/merkletrie</title>
+<link href="../../../../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	doubleiter.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../../../../pkg/github.com/go-git/go-git/v5/utils/merkletrie.html">github.com/go-git/go-git/v5/utils/merkletrie</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16],
+input[id=r17]:checked ~pre label[for=r17],
+input[id=r18]:checked ~pre label[for=r18],
+input[id=r19]:checked ~pre label[for=r19],
+input[id=r20]:checked ~pre label[for=r20],
+input[id=r21]:checked ~pre label[for=r21],
+input[id=r22]:checked ~pre label[for=r22],
+input[id=r23]:checked ~pre label[for=r23],
+input[id=r24]:checked ~pre label[for=r24],
+input[id=r25]:checked ~pre label[for=r25],
+input[id=r26]:checked ~pre label[for=r26],
+input[id=r27]:checked ~pre label[for=r27],
+input[id=r28]:checked ~pre label[for=r28],
+input[id=r29]:checked ~pre label[for=r29],
+input[id=r30]:checked ~pre label[for=r30]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1,
+input[id=i2]:checked ~pre .i2
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="r17" type="radio" name="g"/>
+<input id="r18" type="radio" name="g"/>
+<input id="r19" type="radio" name="g"/>
+<input id="r20" type="radio" name="g"/>
+<input id="r21" type="radio" name="g"/>
+<input id="r22" type="radio" name="g"/>
+<input id="r23" type="radio" name="g"/>
+<input id="r24" type="radio" name="g"/>
+<input id="r25" type="radio" name="g"/>
+<input id="r26" type="radio" name="g"/>
+<input id="r27" type="radio" name="g"/>
+<input id="r28" type="radio" name="g"/>
+<input id="r29" type="radio" name="g"/>
+<input id="r30" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<input id="i2" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+</div>
+<div class="code"><pre><code><span class="keyword">package</span> merkletrie
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"fmt"</span></label>
+	<label for="i1"><span class="lit-string i1">"io"</span></label>
+
+	<label for="i2"><span class="lit-string i2">"github.com/go-git/go-git/v5/utils/merkletrie/noder"</span></label>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> A doubleIter is a convenience type to keep track of the current</span><span class="comment"> noders in two merkletries that are going to be iterated in parallel.</span><span class="comment"> It has methods for:</span><span class="comment"></span><span class="comment"> - iterating over the merkletries, both at the same time or</span><span class="comment"> individually: nextFrom, nextTo, nextBoth, stepBoth</span><span class="comment"></span><span class="comment"> - checking if there are noders left in one or both of them with the</span><span class="comment"> remaining method and its associated returned type.</span><span class="comment"></span><span class="comment"> - comparing the current noders of both merkletries in several ways,</span><span class="comment"> with the compare method and its associated returned type.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../../../pkg/github.com/go-git/go-git/v5/utils/merkletrie.html#name-doubleIter" class="ident">doubleIter</a> <span class="keyword">struct</span> {
+	<a href="../../../../../../../use/github.com/go-git/go-git/v5/utils/merkletrie..doubleIter*5c565.from*75857.html" class="ident">from</a> <span class="keyword">struct</span> {
+		iter    *<a href="iter.go.html#line-47" class="ident">Iter</a>
+		current <a href="../../../../../../../pkg/github.com/go-git/go-git/v5/utils/merkletrie/noder.html" class="ident i2">noder</a>.<a href="noder/path.go.html#line-16" class="ident">Path</a> <span class="comment">// nil if no more nodes</span>
+	}
+	<a href="../../../../../../../use/github.com/go-git/go-git/v5/utils/merkletrie..doubleIter*5c565.to*663ea.html" class="ident">to</a> <span class="keyword">struct</span> {
+		iter    *<a href="iter.go.html#line-47" class="ident">Iter</a>
+		current <a href="../../../../../../../pkg/github.com/go-git/go-git/v5/utils/merkletrie/noder.html" class="ident i2">noder</a>.<a href="noder/path.go.html#line-16" class="ident">Path</a> <span class="comment">// nil if no more nodes</span>
+	}
+	<a href="../../../../../../../use/github.com/go-git/go-git/v5/utils/merkletrie..doubleIter*5c565.hashEqual*fdfa0.html" class="ident">hashEqual</a> <a href="../../../../../../../pkg/github.com/go-git/go-git/v5/utils/merkletrie/noder.html" class="ident i2">noder</a>.<a href="noder/noder.go.html#line-25" class="ident">Equal</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> NewdoubleIter returns a new doubleIter for the merkletries "from" and</span><span class="comment"> "to".  The hashEqual callback function will be used by the doubleIter</span><span class="comment"> to compare the hash of the noders in the merkletries.  The doubleIter</span><span class="comment"> will be initialized to the first elements in each merkletrie if any.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r0" class="ident"><a href="../../../../../../../pkg/github.com/go-git/go-git/v5/utils/merkletrie.html#name-newDoubleIter" class="ident">newDoubleIter</a></label>(<label for="r1" class="ident">from</label>, <label for="r2" class="ident">to</label> <a href="../../../../../../../pkg/github.com/go-git/go-git/v5/utils/merkletrie/noder.html" class="ident i2">noder</a>.<a href="noder/noder.go.html#line-35" class="ident">Noder</a>, <label for="r3" class="ident">hashEqual</label> <a href="../../../../../../../pkg/github.com/go-git/go-git/v5/utils/merkletrie/noder.html" class="ident i2">noder</a>.<a href="noder/noder.go.html#line-25" class="ident">Equal</a>) (
+	*<a href="#line-22" class="ident">doubleIter</a>, <a href="../../../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<span class="keyword">var</span> <label for="r4" class="ident">ii</label> <a href="#line-22" class="ident">doubleIter</a>
+	<span class="keyword">var</span> <label for="r5" class="ident">err</label> <a href="../../../../../../../pkg/builtin.html#name-error" class="ident">error</a>
+
+	<span class="keyword">if</span> <label for="r4" class="ident">ii</label>.<a href="#line-23" class="ident">from</a>.<a href="#line-24" class="ident">iter</a>, <label for="r5" class="ident">err</label> = <a href="iter.go.html#line-70" class="ident">NewIter</a>(<label for="r1" class="ident">from</label>); <label for="r5" class="ident">err</label> != <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="../../../../../../../pkg/fmt.html" class="ident i0">fmt</a>.<a href="../../../../../../fmt/errors.go.html#line-17" class="ident">Errorf</a>(<span class="lit-string">"from: %s"</span>, <label for="r5" class="ident">err</label>)
+	}
+	<span class="keyword">if</span> <label for="r4" class="ident">ii</label>.<a href="#line-23" class="ident">from</a>.<a href="#line-25" class="ident">current</a>, <label for="r5" class="ident">err</label> = <label for="r4" class="ident">ii</label>.<a href="#line-23" class="ident">from</a>.<a href="#line-24" class="ident">iter</a>.<a href="iter.go.html#line-121" class="ident">Next</a>(); <a href="#line-62" class="ident">turnEOFIntoNil</a>(<label for="r5" class="ident">err</label>) != <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="../../../../../../../pkg/fmt.html" class="ident i0">fmt</a>.<a href="../../../../../../fmt/errors.go.html#line-17" class="ident">Errorf</a>(<span class="lit-string">"from: %s"</span>, <label for="r5" class="ident">err</label>)
+	}
+
+	<span class="keyword">if</span> <label for="r4" class="ident">ii</label>.<a href="#line-27" class="ident">to</a>.<a href="#line-28" class="ident">iter</a>, <label for="r5" class="ident">err</label> = <a href="iter.go.html#line-70" class="ident">NewIter</a>(<label for="r2" class="ident">to</label>); <label for="r5" class="ident">err</label> != <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="../../../../../../../pkg/fmt.html" class="ident i0">fmt</a>.<a href="../../../../../../fmt/errors.go.html#line-17" class="ident">Errorf</a>(<span class="lit-string">"to: %s"</span>, <label for="r5" class="ident">err</label>)
+	}
+	<span class="keyword">if</span> <label for="r4" class="ident">ii</label>.<a href="#line-27" class="ident">to</a>.<a href="#line-29" class="ident">current</a>, <label for="r5" class="ident">err</label> = <label for="r4" class="ident">ii</label>.<a href="#line-27" class="ident">to</a>.<a href="#line-28" class="ident">iter</a>.<a href="iter.go.html#line-121" class="ident">Next</a>(); <a href="#line-62" class="ident">turnEOFIntoNil</a>(<label for="r5" class="ident">err</label>) != <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="../../../../../../../pkg/fmt.html" class="ident i0">fmt</a>.<a href="../../../../../../fmt/errors.go.html#line-17" class="ident">Errorf</a>(<span class="lit-string">"to: %s"</span>, <label for="r5" class="ident">err</label>)
+	}
+
+	<label for="r4" class="ident">ii</label>.<a href="#line-31" class="ident">hashEqual</a> = <label for="r3" class="ident">hashEqual</label>
+
+	<span class="keyword">return</span> &amp;<label for="r4" class="ident">ii</label>, <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+}
+
+<span class="keyword">func</span> <label for="r6" class="ident"><a href="../../../../../../../pkg/github.com/go-git/go-git/v5/utils/merkletrie.html#name-turnEOFIntoNil" class="ident">turnEOFIntoNil</a></label>(<label for="r7" class="ident">e</label> <a href="../../../../../../../pkg/builtin.html#name-error" class="ident">error</a>) <a href="../../../../../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<span class="keyword">if</span> <label for="r7" class="ident">e</label> != <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> &amp;&amp; <label for="r7" class="ident">e</label> != <a href="../../../../../../../pkg/io.html" class="ident i1">io</a>.<a href="../../../../../../io/io.go.html#line-44" class="ident">EOF</a> {
+		<span class="keyword">return</span> <label for="r7" class="ident">e</label>
+	}
+	<span class="keyword">return</span> <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> NextBoth makes d advance to the next noder in both merkletries.  If</span><span class="comment"> any of them is a directory, it skips its contents.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r8" class="ident">d</label> *<a href="#line-22" class="ident">doubleIter</a>) <label for="r9" class="ident"><a href="../../../../../../../use/github.com/go-git/go-git/v5/utils/merkletrie..doubleIter*5c565.nextBoth*3f235.html" class="ident">nextBoth</a></label>() <a href="../../../../../../../pkg/builtin.html#name-error" class="ident">error</a> {
+	<span class="keyword">if</span> <label for="r10" class="ident">err</label> := <label for="r8" class="ident">d</label>.<a href="#line-84" class="ident">nextFrom</a>(); <label for="r10" class="ident">err</label> != <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <label for="r10" class="ident">err</label>
+	}
+	<span class="keyword">if</span> <label for="r11" class="ident">err</label> := <label for="r8" class="ident">d</label>.<a href="#line-91" class="ident">nextTo</a>(); <label for="r11" class="ident">err</label> != <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <label for="r11" class="ident">err</label>
+	}
+
+	<span class="keyword">return</span> <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> NextFrom makes d advance to the next noder in the "from" merkletrie,</span><span class="comment"> skipping its contents if it is a directory.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r12" class="ident">d</label> *<a href="#line-22" class="ident">doubleIter</a>) <label for="r13" class="ident"><a href="../../../../../../../use/github.com/go-git/go-git/v5/utils/merkletrie..doubleIter*5c565.nextFrom*f7419.html" class="ident">nextFrom</a></label>() (<label for="r14" class="ident">err</label> <a href="../../../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<label for="r12" class="ident">d</label>.<a href="#line-23" class="ident">from</a>.<a href="#line-25" class="ident">current</a>, <label for="r14" class="ident">err</label> = <label for="r12" class="ident">d</label>.<a href="#line-23" class="ident">from</a>.<a href="#line-24" class="ident">iter</a>.<a href="iter.go.html#line-121" class="ident">Next</a>()
+	<span class="keyword">return</span> <a href="#line-62" class="ident">turnEOFIntoNil</a>(<label for="r14" class="ident">err</label>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> NextTo makes d advance to the next noder in the "to" merkletrie,</span><span class="comment"> skipping its contents if it is a directory.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r15" class="ident">d</label> *<a href="#line-22" class="ident">doubleIter</a>) <label for="r16" class="ident"><a href="../../../../../../../use/github.com/go-git/go-git/v5/utils/merkletrie..doubleIter*5c565.nextTo*6d667.html" class="ident">nextTo</a></label>() (<label for="r17" class="ident">err</label> <a href="../../../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<label for="r15" class="ident">d</label>.<a href="#line-27" class="ident">to</a>.<a href="#line-29" class="ident">current</a>, <label for="r17" class="ident">err</label> = <label for="r15" class="ident">d</label>.<a href="#line-27" class="ident">to</a>.<a href="#line-28" class="ident">iter</a>.<a href="iter.go.html#line-121" class="ident">Next</a>()
+	<span class="keyword">return</span> <a href="#line-62" class="ident">turnEOFIntoNil</a>(<label for="r17" class="ident">err</label>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> StepBoth makes d advance to the next noder in both merkletries,</span><span class="comment"> getting deeper into directories if that is the case.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r18" class="ident">d</label> *<a href="#line-22" class="ident">doubleIter</a>) <label for="r19" class="ident"><a href="../../../../../../../use/github.com/go-git/go-git/v5/utils/merkletrie..doubleIter*5c565.stepBoth*bb663.html" class="ident">stepBoth</a></label>() (<label for="r20" class="ident">err</label> <a href="../../../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<span class="keyword">if</span> <label for="r18" class="ident">d</label>.<a href="#line-23" class="ident">from</a>.<a href="#line-25" class="ident">current</a>, <label for="r20" class="ident">err</label> = <label for="r18" class="ident">d</label>.<a href="#line-23" class="ident">from</a>.<a href="#line-24" class="ident">iter</a>.<a href="iter.go.html#line-129" class="ident">Step</a>(); <a href="#line-62" class="ident">turnEOFIntoNil</a>(<label for="r20" class="ident">err</label>) != <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <label for="r20" class="ident">err</label>
+	}
+	<span class="keyword">if</span> <label for="r18" class="ident">d</label>.<a href="#line-27" class="ident">to</a>.<a href="#line-29" class="ident">current</a>, <label for="r20" class="ident">err</label> = <label for="r18" class="ident">d</label>.<a href="#line-27" class="ident">to</a>.<a href="#line-28" class="ident">iter</a>.<a href="iter.go.html#line-129" class="ident">Step</a>(); <a href="#line-62" class="ident">turnEOFIntoNil</a>(<label for="r20" class="ident">err</label>) != <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <label for="r20" class="ident">err</label>
+	}
+	<span class="keyword">return</span> <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Remaining returns if there are no more noders in the tree, if both</span><span class="comment"> have noders or if one of them doesn't.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r21" class="ident">d</label> *<a href="#line-22" class="ident">doubleIter</a>) <label for="r22" class="ident"><a href="../../../../../../../use/github.com/go-git/go-git/v5/utils/merkletrie..doubleIter*5c565.remaining*43e3e.html" class="ident">remaining</a></label>() <a href="#line-128" class="ident">remaining</a> {
+	<span class="keyword">if</span> <label for="r21" class="ident">d</label>.<a href="#line-23" class="ident">from</a>.<a href="#line-25" class="ident">current</a> == <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> &amp;&amp; <label for="r21" class="ident">d</label>.<a href="#line-27" class="ident">to</a>.<a href="#line-29" class="ident">current</a> == <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="#line-131" class="ident">noMoreNoders</a>
+	}
+
+	<span class="keyword">if</span> <label for="r21" class="ident">d</label>.<a href="#line-23" class="ident">from</a>.<a href="#line-25" class="ident">current</a> == <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> &amp;&amp; <label for="r21" class="ident">d</label>.<a href="#line-27" class="ident">to</a>.<a href="#line-29" class="ident">current</a> != <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="#line-132" class="ident">onlyToRemains</a>
+	}
+
+	<span class="keyword">if</span> <label for="r21" class="ident">d</label>.<a href="#line-23" class="ident">from</a>.<a href="#line-25" class="ident">current</a> != <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> &amp;&amp; <label for="r21" class="ident">d</label>.<a href="#line-27" class="ident">to</a>.<a href="#line-29" class="ident">current</a> == <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="#line-133" class="ident">onlyFromRemains</a>
+	}
+
+	<span class="keyword">return</span> <a href="#line-134" class="ident">bothHaveNodes</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Remaining values tells you whether both trees still have noders, or</span><span class="comment"> only one of them or none of them.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../../../pkg/github.com/go-git/go-git/v5/utils/merkletrie.html#name-remaining" class="ident">remaining</a> <a href="../../../../../../../pkg/builtin.html#name-int" class="ident">int</a>
+
+<span class="keyword">const</span> (
+	<a href="../../../../../../../pkg/github.com/go-git/go-git/v5/utils/merkletrie.html#name-noMoreNoders" class="ident">noMoreNoders</a> <a href="#line-128" class="ident">remaining</a> = <a href="../../../../../../../pkg/builtin.html#name-iota" class="ident">iota</a>
+	<a href="../../../../../../../pkg/github.com/go-git/go-git/v5/utils/merkletrie.html#name-onlyToRemains" class="ident">onlyToRemains</a>
+	<a href="../../../../../../../pkg/github.com/go-git/go-git/v5/utils/merkletrie.html#name-onlyFromRemains" class="ident">onlyFromRemains</a>
+	<a href="../../../../../../../pkg/github.com/go-git/go-git/v5/utils/merkletrie.html#name-bothHaveNodes" class="ident">bothHaveNodes</a>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Compare returns the comparison between the current elements in the</span><span class="comment"> merkletries.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r23" class="ident">d</label> *<a href="#line-22" class="ident">doubleIter</a>) <label for="r24" class="ident"><a href="../../../../../../../use/github.com/go-git/go-git/v5/utils/merkletrie..doubleIter*5c565.compare*12416.html" class="ident">compare</a></label>() (<label for="r25" class="ident">s</label> <a href="#line-167" class="ident">comparison</a>, <label for="r26" class="ident">err</label> <a href="../../../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<label for="r25" class="ident">s</label>.<a href="#line-172" class="ident">sameHash</a> = <label for="r23" class="ident">d</label>.<a href="#line-31" class="ident">hashEqual</a>(<label for="r23" class="ident">d</label>.<a href="#line-23" class="ident">from</a>.<a href="#line-25" class="ident">current</a>, <label for="r23" class="ident">d</label>.<a href="#line-27" class="ident">to</a>.<a href="#line-29" class="ident">current</a>)
+
+	<label for="r27" class="ident">fromIsDir</label> := <label for="r23" class="ident">d</label>.<a href="#line-23" class="ident">from</a>.<a href="#line-25" class="ident">current</a>.<a href="noder/path.go.html#line-49" class="ident">IsDir</a>()
+	<label for="r28" class="ident">toIsDir</label> := <label for="r23" class="ident">d</label>.<a href="#line-27" class="ident">to</a>.<a href="#line-29" class="ident">current</a>.<a href="noder/path.go.html#line-49" class="ident">IsDir</a>()
+
+	<label for="r25" class="ident">s</label>.<a href="#line-182" class="ident">bothAreDirs</a> = <label for="r27" class="ident">fromIsDir</label> &amp;&amp; <label for="r28" class="ident">toIsDir</label>
+	<label for="r25" class="ident">s</label>.<a href="#line-174" class="ident">bothAreFiles</a> = !<label for="r27" class="ident">fromIsDir</label> &amp;&amp; !<label for="r28" class="ident">toIsDir</label>
+	<label for="r25" class="ident">s</label>.<a href="#line-180" class="ident">fileAndDir</a> = !<label for="r25" class="ident">s</label>.<a href="#line-182" class="ident">bothAreDirs</a> &amp;&amp; !<label for="r25" class="ident">s</label>.<a href="#line-174" class="ident">bothAreFiles</a>
+
+	<label for="r29" class="ident">fromNumChildren</label>, <label for="r26" class="ident">err</label> := <label for="r23" class="ident">d</label>.<a href="#line-23" class="ident">from</a>.<a href="#line-25" class="ident">current</a>.<a href="noder/path.go.html#line-60" class="ident">NumChildren</a>()
+	<span class="keyword">if</span> <label for="r26" class="ident">err</label> != <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="#line-167" class="ident">comparison</a>{}, <a href="../../../../../../../pkg/fmt.html" class="ident i0">fmt</a>.<a href="../../../../../../fmt/errors.go.html#line-17" class="ident">Errorf</a>(<span class="lit-string">"from: %s"</span>, <label for="r26" class="ident">err</label>)
+	}
+
+	<label for="r30" class="ident">toNumChildren</label>, <label for="r26" class="ident">err</label> := <label for="r23" class="ident">d</label>.<a href="#line-27" class="ident">to</a>.<a href="#line-29" class="ident">current</a>.<a href="noder/path.go.html#line-60" class="ident">NumChildren</a>()
+	<span class="keyword">if</span> <label for="r26" class="ident">err</label> != <a href="../../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="#line-167" class="ident">comparison</a>{}, <a href="../../../../../../../pkg/fmt.html" class="ident i0">fmt</a>.<a href="../../../../../../fmt/errors.go.html#line-17" class="ident">Errorf</a>(<span class="lit-string">"to: %s"</span>, <label for="r26" class="ident">err</label>)
+	}
+
+	<label for="r25" class="ident">s</label>.<a href="#line-184" class="ident">fromIsEmptyDir</a> = <label for="r27" class="ident">fromIsDir</label> &amp;&amp; <label for="r29" class="ident">fromNumChildren</label> == <span class="lit-number">0</span>
+	<label for="r25" class="ident">s</label>.<a href="#line-186" class="ident">toIsEmptyDir</a> = <label for="r28" class="ident">toIsDir</label> &amp;&amp; <label for="r30" class="ident">toNumChildren</label> == <span class="lit-number">0</span>
+
+	<span class="keyword">return</span>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Answers to a lot of questions you can ask about how to noders are</span><span class="comment"> equal or different.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> the following are only valid if both nodes have the same name</span><span class="comment">	 (i.e. nameComparison == 0)</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Do both nodes have the same hash?</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Are both nodes files?</span></div>
+<div class="code"><pre><code>	<a href="../../../../../../../use/github.com/go-git/go-git/v5/utils/merkletrie..comparison*c271f.bothAreFiles*7328b.html" class="ident">bothAreFiles</a> <a href="../../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> the following are only valid if any of the noders are dirs,</span><span class="comment">	 this is, if !bothAreFiles</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Is one a file and the other a dir?</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Are both nodes dirs?</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Is the from node an empty dir?</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Is the to Node an empty dir?</span></div>
+<div class="code"><pre><code>	<a href="../../../../../../../use/github.com/go-git/go-git/v5/utils/merkletrie..comparison*c271f.toIsEmptyDir*0ec0e.html" class="ident">toIsEmptyDir</a> <a href="../../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: gcc_darwin_amd64.c in package runtime/cgo</title>
+<link href="../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	gcc_darwin_amd64.c
+
+<span class="title">Belonging Package</span>
+	<a href="../../../pkg/runtime/cgo.html">runtime/cgo</a>
+</code></pre>
+<div id="container"><div class="section">
+<div class="doc">
+</div>
+<div class="code"><pre><code>// Copyright 2009 The Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+#include &lt;string.h&gt; /* for strerror */
+#include &lt;pthread.h&gt;
+#include &lt;signal.h&gt;
+#include "libcgo.h"
+#include "libcgo_unix.h"
+
+static void* threadentry(void*);
+
+void
+x_cgo_init(G *g)
+{
+	pthread_attr_t attr;
+	size_t size;
+
+	pthread_attr_init(&amp;attr);
+	pthread_attr_getstacksize(&amp;attr, &amp;size);
+	g-&gt;stacklo = (uintptr)&amp;attr - size + 4096;
+	pthread_attr_destroy(&amp;attr);
+}
+
+
+void
+_cgo_sys_thread_start(ThreadStart *ts)
+{
+	pthread_attr_t attr;
+	sigset_t ign, oset;
+	pthread_t p;
+	size_t size;
+	int err;
+
+	sigfillset(&amp;ign);
+	pthread_sigmask(SIG_SETMASK, &amp;ign, &amp;oset);
+
+	pthread_attr_init(&amp;attr);
+	pthread_attr_getstacksize(&amp;attr, &amp;size);
+	// Leave stacklo=0 and set stackhi=size; mstart will do the rest.
+	ts-&gt;g-&gt;stackhi = size;
+	err = _cgo_try_pthread_create(&amp;p, &amp;attr, threadentry, ts);
+
+	pthread_sigmask(SIG_SETMASK, &amp;oset, nil);
+
+	if (err != 0) {
+		fprintf(stderr, "runtime/cgo: pthread_create failed: %s\n", strerror(err));
+		abort();
+	}
+}
+
+static void*
+threadentry(void *v)
+{
+	ThreadStart ts;
+
+	ts = *(ThreadStart*)v;
+	free(v);
+
+	// Move the g pointer into the slot reserved in thread local storage.
+	// Constant must match the one in cmd/link/internal/ld/sym.go.
+	asm volatile("movq %0, %%gs:0x30" :: "r"(ts.g));
+
+	crosscall_amd64(ts.fn);
+	return nil;
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

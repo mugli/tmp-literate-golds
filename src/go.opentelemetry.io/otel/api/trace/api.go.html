@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: api.go in package go.opentelemetry.io/otel/api/trace</title>
+<link href="../../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	api.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../../pkg/go.opentelemetry.io/otel/api/trace.html">go.opentelemetry.io/otel/api/trace</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16],
+input[id=r17]:checked ~pre label[for=r17],
+input[id=r18]:checked ~pre label[for=r18],
+input[id=r19]:checked ~pre label[for=r19],
+input[id=r20]:checked ~pre label[for=r20],
+input[id=r21]:checked ~pre label[for=r21],
+input[id=r22]:checked ~pre label[for=r22],
+input[id=r23]:checked ~pre label[for=r23],
+input[id=r24]:checked ~pre label[for=r24],
+input[id=r25]:checked ~pre label[for=r25],
+input[id=r26]:checked ~pre label[for=r26],
+input[id=r27]:checked ~pre label[for=r27],
+input[id=r28]:checked ~pre label[for=r28],
+input[id=r29]:checked ~pre label[for=r29],
+input[id=r30]:checked ~pre label[for=r30],
+input[id=r31]:checked ~pre label[for=r31],
+input[id=r32]:checked ~pre label[for=r32]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1,
+input[id=i2]:checked ~pre .i2,
+input[id=i3]:checked ~pre .i3
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="r17" type="radio" name="g"/>
+<input id="r18" type="radio" name="g"/>
+<input id="r19" type="radio" name="g"/>
+<input id="r20" type="radio" name="g"/>
+<input id="r21" type="radio" name="g"/>
+<input id="r22" type="radio" name="g"/>
+<input id="r23" type="radio" name="g"/>
+<input id="r24" type="radio" name="g"/>
+<input id="r25" type="radio" name="g"/>
+<input id="r26" type="radio" name="g"/>
+<input id="r27" type="radio" name="g"/>
+<input id="r28" type="radio" name="g"/>
+<input id="r29" type="radio" name="g"/>
+<input id="r30" type="radio" name="g"/>
+<input id="r31" type="radio" name="g"/>
+<input id="r32" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<input id="i2" type="radio" name="i"/>
+<input id="i3" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright The OpenTelemetry Authors</span><span class="comment"></span><span class="comment"> Licensed under the Apache License, Version 2.0 (the "License");</span><span class="comment"> you may not use this file except in compliance with the License.</span><span class="comment"> You may obtain a copy of the License at</span><span class="comment"></span><span class="comment">     http://www.apache.org/licenses/LICENSE-2.0</span><span class="comment"></span><span class="comment"> Unless required by applicable law or agreed to in writing, software</span><span class="comment"> distributed under the License is distributed on an "AS IS" BASIS,</span><span class="comment"> WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span><span class="comment"> See the License for the specific language governing permissions and</span><span class="comment"> limitations under the License.</span></div>
+<div class="code"><pre><code>
+<span class="keyword">package</span> trace
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"context"</span></label>
+	<label for="i1"><span class="lit-string i1">"time"</span></label>
+
+	<label for="i2"><span class="lit-string i2">"go.opentelemetry.io/otel/codes"</span></label>
+	<label for="i3"><span class="lit-string i3">"go.opentelemetry.io/otel/label"</span></label>
+)
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Tracer creates an implementation of the Tracer interface.</span><span class="comment">	 The instrumentationName must be the name of the library providing</span><span class="comment">	 instrumentation. This name may be the same as the instrumented code</span><span class="comment">	 only if that code provides built-in instrumentation. If the</span><span class="comment">	 instrumentationName is empty, then a implementation defined default</span><span class="comment">	 name will be used instead.</span></div>
+<div class="code"><pre><code>	Tracer(instrumentationName <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>, opts ...<a href="#line-44" class="ident">TracerOption</a>) <a href="#line-53" class="ident">Tracer</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> TODO (MrAlias): unify this API option design:</span><span class="comment"> https://github.com/open-telemetry/opentelemetry-go/issues/536</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> TracerConfig contains options for a Tracer.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../pkg/go.opentelemetry.io/otel/api/trace.html#name-TracerConfig" class="ident">TracerConfig</a> <span class="keyword">struct</span> {
+	<a href="../../../../../use/go.opentelemetry.io/otel/api/trace..TracerConfig.InstrumentationVersion.html" class="ident">InstrumentationVersion</a> <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> TracerOption configures a TracerConfig option.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../pkg/go.opentelemetry.io/otel/api/trace.html#name-TracerOption" class="ident">TracerOption</a> <span class="keyword">func</span>(*<a href="#line-39" class="ident">TracerConfig</a>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> WithInstrumentationVersion sets the instrumentation version for a Tracer.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r0" class="ident"><a href="../../../../../pkg/go.opentelemetry.io/otel/api/trace.html#name-WithInstrumentationVersion" class="ident">WithInstrumentationVersion</a></label>(<label for="r1" class="ident">version</label> <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>) <a href="#line-44" class="ident">TracerOption</a> {
+	<span class="keyword">return</span> <span class="keyword">func</span>(<label for="r2" class="ident">c</label> *<a href="#line-39" class="ident">TracerConfig</a>) {
+		<label for="r2" class="ident">c</label>.<a href="#line-40" class="ident">InstrumentationVersion</a> = <label for="r1" class="ident">version</label>
+	}
+}
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Start a span.</span></div>
+<div class="code"><pre><code>	Start(ctx <a href="../../../../../pkg/context.html" class="ident i0">context</a>.<a href="../../../../context/context.go.html#line-62" class="ident">Context</a>, spanName <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>, opts ...<a href="#line-141" class="ident">StartOption</a>) (<a href="../../../../../pkg/context.html" class="ident i0">context</a>.<a href="../../../../context/context.go.html#line-62" class="ident">Context</a>, <a href="#line-97" class="ident">Span</a>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> EndConfig provides options to set properties of span at the time of ending</span><span class="comment"> the span.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../pkg/go.opentelemetry.io/otel/api/trace.html#name-EndConfig" class="ident">EndConfig</a> <span class="keyword">struct</span> {
+	<a href="../../../../../use/go.opentelemetry.io/otel/api/trace..EndConfig.EndTime.html" class="ident">EndTime</a> <a href="../../../../../pkg/time.html" class="ident i1">time</a>.<a href="../../../../time/time.go.html#line-127" class="ident">Time</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> EndOption applies changes to EndConfig that sets options when the span is ended.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../pkg/go.opentelemetry.io/otel/api/trace.html#name-EndOption" class="ident">EndOption</a> <span class="keyword">func</span>(*<a href="#line-60" class="ident">EndConfig</a>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> WithEndTime sets the end time of the span to provided time t, when it is ended.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r3" class="ident"><a href="../../../../../pkg/go.opentelemetry.io/otel/api/trace.html#name-WithEndTime" class="ident">WithEndTime</a></label>(<label for="r4" class="ident">t</label> <a href="../../../../../pkg/time.html" class="ident i1">time</a>.<a href="../../../../time/time.go.html#line-127" class="ident">Time</a>) <a href="#line-65" class="ident">EndOption</a> {
+	<span class="keyword">return</span> <span class="keyword">func</span>(<label for="r5" class="ident">c</label> *<a href="#line-60" class="ident">EndConfig</a>) {
+		<label for="r5" class="ident">c</label>.<a href="#line-61" class="ident">EndTime</a> = <label for="r4" class="ident">t</label>
+	}
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ErrorConfig provides options to set properties of an error event at the time it is recorded.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../pkg/go.opentelemetry.io/otel/api/trace.html#name-ErrorConfig" class="ident">ErrorConfig</a> <span class="keyword">struct</span> {
+	<a href="../../../../../use/go.opentelemetry.io/otel/api/trace..ErrorConfig.Timestamp.html" class="ident">Timestamp</a>  <a href="../../../../../pkg/time.html" class="ident i1">time</a>.<a href="../../../../time/time.go.html#line-127" class="ident">Time</a>
+	<a href="../../../../../use/go.opentelemetry.io/otel/api/trace..ErrorConfig.StatusCode.html" class="ident">StatusCode</a> <a href="../../../../../pkg/go.opentelemetry.io/otel/codes.html" class="ident i2">codes</a>.<a href="../../codes/codes.go.html#line-28" class="ident">Code</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ErrorOption applies changes to ErrorConfig that sets options when an error event is recorded.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../pkg/go.opentelemetry.io/otel/api/trace.html#name-ErrorOption" class="ident">ErrorOption</a> <span class="keyword">func</span>(*<a href="#line-75" class="ident">ErrorConfig</a>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> WithErrorTime sets the time at which the error event should be recorded.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r6" class="ident"><a href="../../../../../pkg/go.opentelemetry.io/otel/api/trace.html#name-WithErrorTime" class="ident">WithErrorTime</a></label>(<label for="r7" class="ident">t</label> <a href="../../../../../pkg/time.html" class="ident i1">time</a>.<a href="../../../../time/time.go.html#line-127" class="ident">Time</a>) <a href="#line-81" class="ident">ErrorOption</a> {
+	<span class="keyword">return</span> <span class="keyword">func</span>(<label for="r8" class="ident">c</label> *<a href="#line-75" class="ident">ErrorConfig</a>) {
+		<label for="r8" class="ident">c</label>.<a href="#line-76" class="ident">Timestamp</a> = <label for="r7" class="ident">t</label>
+	}
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> WithErrorStatus indicates the span status that should be set when recording an error event.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r9" class="ident"><a href="../../../../../pkg/go.opentelemetry.io/otel/api/trace.html#name-WithErrorStatus" class="ident">WithErrorStatus</a></label>(<label for="r10" class="ident">s</label> <a href="../../../../../pkg/go.opentelemetry.io/otel/codes.html" class="ident i2">codes</a>.<a href="../../codes/codes.go.html#line-28" class="ident">Code</a>) <a href="#line-81" class="ident">ErrorOption</a> {
+	<span class="keyword">return</span> <span class="keyword">func</span>(<label for="r11" class="ident">c</label> *<a href="#line-75" class="ident">ErrorConfig</a>) {
+		<label for="r11" class="ident">c</label>.<a href="#line-77" class="ident">StatusCode</a> = <label for="r10" class="ident">s</label>
+	}
+}
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Tracer returns tracer used to create this span. Tracer cannot be nil.</span></div>
+<div class="code"><pre><code>	Tracer() <a href="#line-53" class="ident">Tracer</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> End completes the span. No updates are allowed to span after it</span><span class="comment">	 ends. The only exception is setting status of the span.</span></div>
+<div class="code"><pre><code>	End(options ...<a href="#line-65" class="ident">EndOption</a>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> AddEvent adds an event to the span.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> AddEventWithTimestamp adds an event with a custom timestamp</span><span class="comment">	 to the span.</span></div>
+<div class="code"><pre><code>	AddEventWithTimestamp(ctx <a href="../../../../../pkg/context.html" class="ident i0">context</a>.<a href="../../../../context/context.go.html#line-62" class="ident">Context</a>, timestamp <a href="../../../../../pkg/time.html" class="ident i1">time</a>.<a href="../../../../time/time.go.html#line-127" class="ident">Time</a>, name <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>, attrs ...<a href="../../../../../pkg/go.opentelemetry.io/otel/label.html" class="ident i3">label</a>.<a href="../../label/kv.go.html#line-24" class="ident">KeyValue</a>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> IsRecording returns true if the span is active and recording events is enabled.</span></div>
+<div class="code"><pre><code>	IsRecording() <a href="../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> RecordError records an error as a span event.</span></div>
+<div class="code"><pre><code>	RecordError(ctx <a href="../../../../../pkg/context.html" class="ident i0">context</a>.<a href="../../../../context/context.go.html#line-62" class="ident">Context</a>, err <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a>, opts ...<a href="#line-81" class="ident">ErrorOption</a>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> SpanContext returns span context of the span. Returned SpanContext is usable</span><span class="comment">	 even after the span ends.</span></div>
+<div class="code"><pre><code>	SpanContext() <a href="span_context.go.html#line-156" class="ident">SpanContext</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> SetStatus sets the status of the span in the form of a code</span><span class="comment">	 and a message.  SetStatus overrides the value of previous</span><span class="comment">	 calls to SetStatus on the Span.</span><span class="comment">	</span><span class="comment">	 The default span status is OK, so it is not necessary to</span><span class="comment">	 explicitly set an OK status on successful Spans unless it</span><span class="comment">	 is to add an OK message or to override a previous status on the Span.</span></div>
+<div class="code"><pre><code>	SetStatus(<a href="../../../../../pkg/go.opentelemetry.io/otel/codes.html" class="ident i2">codes</a>.<a href="../../codes/codes.go.html#line-28" class="ident">Code</a>, <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> SetName sets the name of the span.</span></div>
+<div class="code"><pre><code>	SetName(name <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Set span attributes</span></div>
+<div class="code"><pre><code>	SetAttributes(...<a href="../../../../../pkg/go.opentelemetry.io/otel/label.html" class="ident i3">label</a>.<a href="../../label/kv.go.html#line-24" class="ident">KeyValue</a>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Set singular span attribute, with type inference.</span></div>
+<div class="code"><pre><code>	SetAttribute(<a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>, <span class="keyword">interface</span>{})
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> StartOption applies changes to StartConfig that sets options at span start time.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../pkg/go.opentelemetry.io/otel/api/trace.html#name-StartOption" class="ident">StartOption</a> <span class="keyword">func</span>(*<a href="#line-145" class="ident">StartConfig</a>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> StartConfig provides options to set properties of span at the time of starting</span><span class="comment"> a new span.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../pkg/go.opentelemetry.io/otel/api/trace.html#name-StartConfig" class="ident">StartConfig</a> <span class="keyword">struct</span> {
+	<a href="../../../../../use/go.opentelemetry.io/otel/api/trace..StartConfig.Attributes.html" class="ident">Attributes</a> []<a href="../../../../../pkg/go.opentelemetry.io/otel/label.html" class="ident i3">label</a>.<a href="../../label/kv.go.html#line-24" class="ident">KeyValue</a>
+	<a href="../../../../../use/go.opentelemetry.io/otel/api/trace..StartConfig.StartTime.html" class="ident">StartTime</a>  <a href="../../../../../pkg/time.html" class="ident i1">time</a>.<a href="../../../../time/time.go.html#line-127" class="ident">Time</a>
+	<a href="../../../../../use/go.opentelemetry.io/otel/api/trace..StartConfig.Links.html" class="ident">Links</a>      []<a href="#line-165" class="ident">Link</a>
+	<a href="../../../../../use/go.opentelemetry.io/otel/api/trace..StartConfig.Record.html" class="ident">Record</a>     <a href="../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>
+	<a href="../../../../../use/go.opentelemetry.io/otel/api/trace..StartConfig.NewRoot.html" class="ident">NewRoot</a>    <a href="../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>
+	<a href="../../../../../use/go.opentelemetry.io/otel/api/trace..StartConfig.SpanKind.html" class="ident">SpanKind</a>   <a href="#line-172" class="ident">SpanKind</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Link is used to establish relationship between two spans within the same Trace or</span><span class="comment"> across different Traces. Few examples of Link usage.</span><span class="comment">   1. Batch Processing: A batch of elements may contain elements associated with one</span><span class="comment">      or more traces/spans. Since there can only be one parent SpanContext, Link is</span><span class="comment">      used to keep reference to SpanContext of all elements in the batch.</span><span class="comment">   2. Public Endpoint: A SpanContext in incoming client request on a public endpoint</span><span class="comment">      is untrusted from service provider perspective. In such case it is advisable to</span><span class="comment">      start a new trace with appropriate sampling decision.</span><span class="comment">      However, it is desirable to associate incoming SpanContext to new trace initiated</span><span class="comment">      on service provider side so two traces (from Client and from Service Provider) can</span><span class="comment">      be correlated.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../pkg/go.opentelemetry.io/otel/api/trace.html#name-Link" class="ident">Link</a> <span class="keyword">struct</span> {
+	<a href="span_context.go.html#line-156" class="ident">SpanContext</a>
+	<a href="../../../../../use/go.opentelemetry.io/otel/api/trace..Link.Attributes.html" class="ident">Attributes</a> []<a href="../../../../../pkg/go.opentelemetry.io/otel/label.html" class="ident i3">label</a>.<a href="../../label/kv.go.html#line-24" class="ident">KeyValue</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> SpanKind represents the role of a Span inside a Trace. Often, this defines how a Span</span><span class="comment"> will be processed and visualized by various backends.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../pkg/go.opentelemetry.io/otel/api/trace.html#name-SpanKind" class="ident">SpanKind</a> <a href="../../../../../pkg/builtin.html#name-int" class="ident">int</a>
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> As a convenience, these match the proto definition, see</span><span class="comment">	 opentelemetry/proto/trace/v1/trace.proto</span><span class="comment">	</span><span class="comment">	 The unspecified value is not a valid `SpanKind`.  Use</span><span class="comment">	 `ValidateSpanKind()` to coerce a span kind to a valid</span><span class="comment">	 value.</span></div>
+<div class="code"><pre><code>	<a href="../../../../../pkg/go.opentelemetry.io/otel/api/trace.html#name-SpanKindUnspecified" class="ident">SpanKindUnspecified</a> <a href="#line-172" class="ident">SpanKind</a> = <span class="lit-number">0</span>
+	<a href="../../../../../pkg/go.opentelemetry.io/otel/api/trace.html#name-SpanKindInternal" class="ident">SpanKindInternal</a>    <a href="#line-172" class="ident">SpanKind</a> = <span class="lit-number">1</span>
+	<a href="../../../../../pkg/go.opentelemetry.io/otel/api/trace.html#name-SpanKindServer" class="ident">SpanKindServer</a>      <a href="#line-172" class="ident">SpanKind</a> = <span class="lit-number">2</span>
+	<a href="../../../../../pkg/go.opentelemetry.io/otel/api/trace.html#name-SpanKindClient" class="ident">SpanKindClient</a>      <a href="#line-172" class="ident">SpanKind</a> = <span class="lit-number">3</span>
+	<a href="../../../../../pkg/go.opentelemetry.io/otel/api/trace.html#name-SpanKindProducer" class="ident">SpanKindProducer</a>    <a href="#line-172" class="ident">SpanKind</a> = <span class="lit-number">4</span>
+	<a href="../../../../../pkg/go.opentelemetry.io/otel/api/trace.html#name-SpanKindConsumer" class="ident">SpanKindConsumer</a>    <a href="#line-172" class="ident">SpanKind</a> = <span class="lit-number">5</span>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ValidateSpanKind returns a valid span kind value.  This will coerce</span><span class="comment"> invalid values into the default value, SpanKindInternal.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r12" class="ident"><a href="../../../../../pkg/go.opentelemetry.io/otel/api/trace.html#name-ValidateSpanKind" class="ident">ValidateSpanKind</a></label>(<label for="r13" class="ident">spanKind</label> <a href="#line-172" class="ident">SpanKind</a>) <a href="#line-172" class="ident">SpanKind</a> {
+	<span class="keyword">switch</span> <label for="r13" class="ident">spanKind</label> {
+	<span class="keyword">case</span> <a href="#line-182" class="ident">SpanKindInternal</a>,
+		<a href="#line-183" class="ident">SpanKindServer</a>,
+		<a href="#line-184" class="ident">SpanKindClient</a>,
+		<a href="#line-185" class="ident">SpanKindProducer</a>,
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> valid</span></div>
+<div class="code"><pre><code>		<span class="keyword">return</span> <label for="r13" class="ident">spanKind</label>
+	<span class="keyword">default</span>:
+		<span class="keyword">return</span> <a href="#line-182" class="ident">SpanKindInternal</a>
+	}
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> String returns the specified name of the SpanKind in lower-case.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r14" class="ident">sk</label> <a href="#line-172" class="ident">SpanKind</a>) <label for="r15" class="ident"><a href="../../../../../use/go.opentelemetry.io/otel/api/trace..SpanKind.String.html" class="ident">String</a></label>() <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a> {
+	<span class="keyword">switch</span> <label for="r14" class="ident">sk</label> {
+	<span class="keyword">case</span> <a href="#line-182" class="ident">SpanKindInternal</a>:
+		<span class="keyword">return</span> <span class="lit-string">"internal"</span>
+	<span class="keyword">case</span> <a href="#line-183" class="ident">SpanKindServer</a>:
+		<span class="keyword">return</span> <span class="lit-string">"server"</span>
+	<span class="keyword">case</span> <a href="#line-184" class="ident">SpanKindClient</a>:
+		<span class="keyword">return</span> <span class="lit-string">"client"</span>
+	<span class="keyword">case</span> <a href="#line-185" class="ident">SpanKindProducer</a>:
+		<span class="keyword">return</span> <span class="lit-string">"producer"</span>
+	<span class="keyword">case</span> <a href="#line-186" class="ident">SpanKindConsumer</a>:
+		<span class="keyword">return</span> <span class="lit-string">"consumer"</span>
+	<span class="keyword">default</span>:
+		<span class="keyword">return</span> <span class="lit-string">"unspecified"</span>
+	}
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> WithStartTime sets the start time of the span to provided time t, when it is started.</span><span class="comment"> In absence of this option, wall clock time is used as start time.</span><span class="comment"> This option is typically used when starting of the span is delayed.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r16" class="ident"><a href="../../../../../pkg/go.opentelemetry.io/otel/api/trace.html#name-WithStartTime" class="ident">WithStartTime</a></label>(<label for="r17" class="ident">t</label> <a href="../../../../../pkg/time.html" class="ident i1">time</a>.<a href="../../../../time/time.go.html#line-127" class="ident">Time</a>) <a href="#line-141" class="ident">StartOption</a> {
+	<span class="keyword">return</span> <span class="keyword">func</span>(<label for="r18" class="ident">c</label> *<a href="#line-145" class="ident">StartConfig</a>) {
+		<label for="r18" class="ident">c</label>.<a href="#line-147" class="ident">StartTime</a> = <label for="r17" class="ident">t</label>
+	}
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> WithAttributes sets attributes to span. These attributes provides additional</span><span class="comment"> data about the span.</span><span class="comment"> Multiple `WithAttributes` options appends the attributes preserving the order.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r19" class="ident"><a href="../../../../../pkg/go.opentelemetry.io/otel/api/trace.html#name-WithAttributes" class="ident">WithAttributes</a></label>(<label for="r20" class="ident">attrs</label> ...<a href="../../../../../pkg/go.opentelemetry.io/otel/label.html" class="ident i3">label</a>.<a href="../../label/kv.go.html#line-24" class="ident">KeyValue</a>) <a href="#line-141" class="ident">StartOption</a> {
+	<span class="keyword">return</span> <span class="keyword">func</span>(<label for="r21" class="ident">c</label> *<a href="#line-145" class="ident">StartConfig</a>) {
+		<label for="r21" class="ident">c</label>.<a href="#line-146" class="ident">Attributes</a> = <a href="../../../../../pkg/builtin.html#name-append" class="ident">append</a>(<label for="r21" class="ident">c</label>.<a href="#line-146" class="ident">Attributes</a>, <label for="r20" class="ident">attrs</label>...)
+	}
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> WithRecord specifies that the span should be recorded.</span><span class="comment"> Note that the implementation may still override this preference,</span><span class="comment"> e.g., if the span is a child in an unsampled trace.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r22" class="ident"><a href="../../../../../pkg/go.opentelemetry.io/otel/api/trace.html#name-WithRecord" class="ident">WithRecord</a></label>() <a href="#line-141" class="ident">StartOption</a> {
+	<span class="keyword">return</span> <span class="keyword">func</span>(<label for="r23" class="ident">c</label> *<a href="#line-145" class="ident">StartConfig</a>) {
+		<label for="r23" class="ident">c</label>.<a href="#line-149" class="ident">Record</a> = <a href="../../../../../pkg/builtin.html#name-true" class="ident">true</a>
+	}
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> WithNewRoot specifies that the current span or remote span context</span><span class="comment"> in context passed to `Start` should be ignored when deciding about</span><span class="comment"> a parent, which effectively means creating a span with new trace</span><span class="comment"> ID. The current span and the remote span context may be added as</span><span class="comment"> links to the span by the implementation.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r24" class="ident"><a href="../../../../../pkg/go.opentelemetry.io/otel/api/trace.html#name-WithNewRoot" class="ident">WithNewRoot</a></label>() <a href="#line-141" class="ident">StartOption</a> {
+	<span class="keyword">return</span> <span class="keyword">func</span>(<label for="r25" class="ident">c</label> *<a href="#line-145" class="ident">StartConfig</a>) {
+		<label for="r25" class="ident">c</label>.<a href="#line-150" class="ident">NewRoot</a> = <a href="../../../../../pkg/builtin.html#name-true" class="ident">true</a>
+	}
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> LinkedTo allows instantiating a Span with initial Links.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r26" class="ident"><a href="../../../../../pkg/go.opentelemetry.io/otel/api/trace.html#name-LinkedTo" class="ident">LinkedTo</a></label>(<label for="r27" class="ident">sc</label> <a href="span_context.go.html#line-156" class="ident">SpanContext</a>, <label for="r28" class="ident">attrs</label> ...<a href="../../../../../pkg/go.opentelemetry.io/otel/label.html" class="ident i3">label</a>.<a href="../../label/kv.go.html#line-24" class="ident">KeyValue</a>) <a href="#line-141" class="ident">StartOption</a> {
+	<span class="keyword">return</span> <span class="keyword">func</span>(<label for="r29" class="ident">c</label> *<a href="#line-145" class="ident">StartConfig</a>) {
+		<label for="r29" class="ident">c</label>.<a href="#line-148" class="ident">Links</a> = <a href="../../../../../pkg/builtin.html#name-append" class="ident">append</a>(<label for="r29" class="ident">c</label>.<a href="#line-148" class="ident">Links</a>, <a href="#line-165" class="ident">Link</a>{<label for="r27" class="ident">sc</label>, <label for="r28" class="ident">attrs</label>})
+	}
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> WithSpanKind specifies the role a Span on a Trace.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r30" class="ident"><a href="../../../../../pkg/go.opentelemetry.io/otel/api/trace.html#name-WithSpanKind" class="ident">WithSpanKind</a></label>(<label for="r31" class="ident">sk</label> <a href="#line-172" class="ident">SpanKind</a>) <a href="#line-141" class="ident">StartOption</a> {
+	<span class="keyword">return</span> <span class="keyword">func</span>(<label for="r32" class="ident">c</label> *<a href="#line-145" class="ident">StartConfig</a>) {
+		<label for="r32" class="ident">c</label>.<a href="#line-151" class="ident">SpanKind</a> = <label for="r31" class="ident">sk</label>
+	}
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

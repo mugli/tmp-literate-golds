@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: allocs.go in package testing</title>
+<link href="../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	allocs.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../pkg/testing.html">testing</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2013 The Go Authors. All rights reserved.</span><span class="comment"> Use of this source code is governed by a BSD-style</span><span class="comment"> license that can be found in the LICENSE file.</span></div>
+<div class="code"><pre><code>
+<span class="keyword">package</span> testing
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"runtime"</span></label>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> AllocsPerRun returns the average number of allocations during calls to f.</span><span class="comment"> Although the return value has type float64, it will always be an integral value.</span><span class="comment"></span><span class="comment"> To compute the number of allocations, the function will first be run once as</span><span class="comment"> a warm-up. The average number of allocations over the specified number of</span><span class="comment"> runs will then be measured and returned.</span><span class="comment"></span><span class="comment"> AllocsPerRun sets GOMAXPROCS to 1 during its measurement and will restore</span><span class="comment"> it before returning.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r0" class="ident"><a href="../../pkg/testing.html#name-AllocsPerRun" class="ident">AllocsPerRun</a></label>(<label for="r1" class="ident">runs</label> <a href="../../pkg/builtin.html#name-int" class="ident">int</a>, <label for="r2" class="ident">f</label> <span class="keyword">func</span>()) (<label for="r3" class="ident">avg</label> <a href="../../pkg/builtin.html#name-float64" class="ident">float64</a>) {
+	<span class="keyword">defer</span> <a href="../../pkg/runtime.html" class="ident i0">runtime</a>.<a href="../runtime/debug.go.html#line-16" class="ident">GOMAXPROCS</a>(<a href="../../pkg/runtime.html" class="ident i0">runtime</a>.<a href="../runtime/debug.go.html#line-16" class="ident">GOMAXPROCS</a>(<span class="lit-number">1</span>))
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Warm up the function</span></div>
+<div class="code"><pre><code>	<label for="r2" class="ident">f</label>()
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Measure the starting statistics</span></div>
+<div class="code"><pre><code>	<span class="keyword">var</span> <label for="r4" class="ident">memstats</label> <a href="../../pkg/runtime.html" class="ident i0">runtime</a>.<a href="../runtime/mstats.go.html#line-173" class="ident">MemStats</a>
+	<a href="../../pkg/runtime.html" class="ident i0">runtime</a>.<a href="../runtime/mstats.go.html#line-472" class="ident">ReadMemStats</a>(&amp;<label for="r4" class="ident">memstats</label>)
+	<label for="r5" class="ident">mallocs</label> := <span class="lit-number">0</span> - <label for="r4" class="ident">memstats</label>.<a href="../runtime/mstats.go.html#line-206" class="ident">Mallocs</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Run the function the specified number of times</span></div>
+<div class="code"><pre><code>	<span class="keyword">for</span> <label for="r6" class="ident">i</label> := <span class="lit-number">0</span>; <label for="r6" class="ident">i</label> &lt; <label for="r1" class="ident">runs</label>; <label for="r6" class="ident">i</label>++ {
+		<label for="r2" class="ident">f</label>()
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Read the final statistics</span></div>
+<div class="code"><pre><code>	<a href="../../pkg/runtime.html" class="ident i0">runtime</a>.<a href="../runtime/mstats.go.html#line-472" class="ident">ReadMemStats</a>(&amp;<label for="r4" class="ident">memstats</label>)
+	<label for="r5" class="ident">mallocs</label> += <label for="r4" class="ident">memstats</label>.<a href="../runtime/mstats.go.html#line-206" class="ident">Mallocs</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Average the mallocs over the runs (not counting the warm-up).</span><span class="comment">	 We are forced to return a float64 because the API is silly, but do</span><span class="comment">	 the division as integers so we can ask if AllocsPerRun()==1</span><span class="comment">	 instead of AllocsPerRun()&lt;2.</span></div>
+<div class="code"><pre><code>	<span class="keyword">return</span> <a href="../../pkg/builtin.html#name-float64" class="ident">float64</a>(<label for="r5" class="ident">mallocs</label> / <a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a>(<label for="r1" class="ident">runs</label>))
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

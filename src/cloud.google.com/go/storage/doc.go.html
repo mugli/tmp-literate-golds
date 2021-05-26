@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: doc.go in package cloud.google.com/go/storage</title>
+<link href="../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	doc.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../pkg/cloud.google.com/go/storage.html">cloud.google.com/go/storage</a>
+</code></pre>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2016 Google LLC</span><span class="comment"></span><span class="comment"> Licensed under the Apache License, Version 2.0 (the "License");</span><span class="comment"> you may not use this file except in compliance with the License.</span><span class="comment"> You may obtain a copy of the License at</span><span class="comment"></span><span class="comment">      http://www.apache.org/licenses/LICENSE-2.0</span><span class="comment"></span><span class="comment"> Unless required by applicable law or agreed to in writing, software</span><span class="comment"> distributed under the License is distributed on an "AS IS" BASIS,</span><span class="comment"> WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span><span class="comment"> See the License for the specific language governing permissions and</span><span class="comment"> limitations under the License.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"></span><span class="comment">Package storage provides an easy way to work with Google Cloud Storage.</span><span class="comment">Google Cloud Storage stores data in named objects, which are grouped into buckets.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">More information about Google Cloud Storage is available at</span><span class="comment">https:cloud.google.com/storage/docs.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">See https:godoc.org/cloud.google.com/go for authentication, timeouts,</span><span class="comment">connection pooling and similar aspects of this package.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">All of the methods of this package use exponential backoff to retry calls that fail</span><span class="comment">with certain errors, as described in</span><span class="comment">https:cloud.google.com/storage/docs/exponential-backoff. Retrying continues</span><span class="comment">indefinitely unless the controlling context is canceled or the client is closed. See</span><span class="comment">context.WithTimeout and context.WithCancel.</span></div>
+<div class="code"><pre><code>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Creating a Client</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">To start working with this package, create a client:</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">    ctx := context.Background()</span><span class="comment">    client, err := storage.NewClient(ctx)</span><span class="comment">    if err != nil {</span><span class="comment">         TODO: Handle error.</span><span class="comment">    }</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">The client will use your default application credentials.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">If you only wish to access public data, you can create</span><span class="comment">an unauthenticated client with</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">    client, err := storage.NewClient(ctx, option.WithoutAuthentication())</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Buckets</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">A Google Cloud Storage bucket is a collection of objects. To work with a</span><span class="comment">bucket, make a bucket handle:</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">    bkt := client.Bucket(bucketName)</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">A handle is a reference to a bucket. You can have a handle even if the</span><span class="comment">bucket doesn't exist yet. To create a bucket in Google Cloud Storage,</span><span class="comment">call Create on the handle:</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">    if err := bkt.Create(ctx, projectID, nil); err != nil {</span><span class="comment">         TODO: Handle error.</span><span class="comment">    }</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Note that although buckets are associated with projects, bucket names are</span><span class="comment">global across all projects.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Each bucket has associated metadata, represented in this package by</span><span class="comment">BucketAttrs. The third argument to BucketHandle.Create allows you to set</span><span class="comment">the initial BucketAttrs of a bucket. To retrieve a bucket's attributes, use</span><span class="comment">Attrs:</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">    attrs, err := bkt.Attrs(ctx)</span><span class="comment">    if err != nil {</span><span class="comment">         TODO: Handle error.</span><span class="comment">    }</span><span class="comment">    fmt.Printf("bucket %s, created at %s, is located in %s with storage class %s\n",</span><span class="comment">        attrs.Name, attrs.Created, attrs.Location, attrs.StorageClass)</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Objects</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">An object holds arbitrary data as a sequence of bytes, like a file. You</span><span class="comment">refer to objects using a handle, just as with buckets, but unlike buckets</span><span class="comment">you don't explicitly create an object. Instead, the first time you write</span><span class="comment">to an object it will be created. You can use the standard Go io.Reader</span><span class="comment">and io.Writer interfaces to read and write object data:</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">    obj := bkt.Object("data")</span><span class="comment">     Write something to obj.</span><span class="comment">     w implements io.Writer.</span><span class="comment">    w := obj.NewWriter(ctx)</span><span class="comment">     Write some text to obj. This will either create the object or overwrite whatever is there already.</span><span class="comment">    if _, err := fmt.Fprintf(w, "This object contains text.\n"); err != nil {</span><span class="comment">         TODO: Handle error.</span><span class="comment">    }</span><span class="comment">     Close, just like writing a file.</span><span class="comment">    if err := w.Close(); err != nil {</span><span class="comment">         TODO: Handle error.</span><span class="comment">    }</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">     Read it back.</span><span class="comment">    r, err := obj.NewReader(ctx)</span><span class="comment">    if err != nil {</span><span class="comment">         TODO: Handle error.</span><span class="comment">    }</span><span class="comment">    defer r.Close()</span><span class="comment">    if _, err := io.Copy(os.Stdout, r); err != nil {</span><span class="comment">         TODO: Handle error.</span><span class="comment">    }</span><span class="comment">     Prints "This object contains text."</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Objects also have attributes, which you can fetch with Attrs:</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">    objAttrs, err := obj.Attrs(ctx)</span><span class="comment">    if err != nil {</span><span class="comment">         TODO: Handle error.</span><span class="comment">    }</span><span class="comment">    fmt.Printf("object %s has size %d and can be read using %s\n",</span><span class="comment">        objAttrs.Name, objAttrs.Size, objAttrs.MediaLink)</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Listing objects</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Listing objects in a bucket is done with the Bucket.Objects method:</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">    query := &amp;storage.Query{Prefix: ""}</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">    var names []string</span><span class="comment">    it := bkt.Objects(ctx, query)</span><span class="comment">    for {</span><span class="comment">        attrs, err := it.Next()</span><span class="comment">        if err == iterator.Done {</span><span class="comment">            break</span><span class="comment">        }</span><span class="comment">        if err != nil {</span><span class="comment">            log.Fatal(err)</span><span class="comment">        }</span><span class="comment">        names = append(names, attrs.Name)</span><span class="comment">    }</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">If only a subset of object attributes is needed when listing, specifying this</span><span class="comment">subset using Query.SetAttrSelection may speed up the listing process:</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">    query := &amp;storage.Query{Prefix: ""}</span><span class="comment">    query.SetAttrSelection([]string{"Name"})</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">     ... as before</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">ACLs</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Both objects and buckets have ACLs (Access Control Lists). An ACL is a list of</span><span class="comment">ACLRules, each of which specifies the role of a user, group or project. ACLs</span><span class="comment">are suitable for fine-grained control, but you may prefer using IAM to control</span><span class="comment">access at the project level (see</span><span class="comment">https:cloud.google.com/storage/docs/access-control/iam).</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">To list the ACLs of a bucket or object, obtain an ACLHandle and call its List method:</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">    acls, err := obj.ACL().List(ctx)</span><span class="comment">    if err != nil {</span><span class="comment">         TODO: Handle error.</span><span class="comment">    }</span><span class="comment">    for _, rule := range acls {</span><span class="comment">        fmt.Printf("%s has role %s\n", rule.Entity, rule.Role)</span><span class="comment">    }</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">You can also set and delete ACLs.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Conditions</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Every object has a generation and a metageneration. The generation changes</span><span class="comment">whenever the content changes, and the metageneration changes whenever the</span><span class="comment">metadata changes. Conditions let you check these values before an operation;</span><span class="comment">the operation only executes if the conditions match. You can use conditions to</span><span class="comment">prevent race conditions in read-modify-write operations.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">For example, say you've read an object's metadata into objAttrs. Now</span><span class="comment">you want to write to that object, but only if its contents haven't changed</span><span class="comment">since you read it. Here is how to express that:</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">    w = obj.If(storage.Conditions{GenerationMatch: objAttrs.Generation}).NewWriter(ctx)</span><span class="comment">     Proceed with writing as above.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Signed URLs</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">You can obtain a URL that lets anyone read or write an object for a limited time.</span><span class="comment">You don't need to create a client to do this. See the documentation of</span><span class="comment">SignedURL for details.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">    url, err := storage.SignedURL(bucketName, "shared-object", opts)</span><span class="comment">    if err != nil {</span><span class="comment">         TODO: Handle error.</span><span class="comment">    }</span><span class="comment">    fmt.Println(url)</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Post Policy V4 Signed Request</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">A type of signed request that allows uploads through HTML forms directly to Cloud Storage with</span><span class="comment">temporary permission. Conditions can be applied to restrict how the HTML form is used and exercised</span><span class="comment">by a user.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">For more information, please see https:cloud.google.com/storage/docs/xml-api/post-object as well</span><span class="comment">as the documentation of GenerateSignedPostPolicyV4.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">    pv4, err := storage.GenerateSignedPostPolicyV4(bucketName, objectName, opts)</span><span class="comment">    if err != nil {</span><span class="comment">         TODO: Handle error.</span><span class="comment">    }</span><span class="comment">    fmt.Printf("URL: %s\nFields; %v\n", pv4.URL, pv4.Fields)</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Errors</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">Errors returned by this client are often of the type [`googleapi.Error`](https:godoc.org/google.golang.org/api/googleapi#Error).</span><span class="comment">These errors can be introspected for more information by type asserting to the richer `googleapi.Error` type. For example:</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">	if e, ok := err.(*googleapi.Error); ok {</span><span class="comment">		  if e.Code == 409 { ... }</span><span class="comment">	}</span><span class="comment"></span></div>
+<div class="code"><pre><code></code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Package: github.com/go-git/go-git/v5/plumbing/format/index</title>
+<link href="../../../../../../../css/light-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="package-details"><code><span style="font-size:xx-large;">package <b>index</b></span>
+
+<span class="title">Import Path</span>
+	<a href="../../../../../../../index.html#pkg-github.com/go-git/go-git/v5/plumbing/format/index">github.com/go-git/go-git/v5/plumbing/format/index</a><i> (on <a href="https://pkg.go.dev/github.com/go-git/go-git/v5/plumbing/format/index" target="_blank">go.dev</a>)</i>
+
+<span class="title">Dependency Relation</span>
+	imports <a href="../../../../../../../dep/github.com/go-git/go-git/v5/plumbing/format/index.html">17 packages</a>, and imported by <a href="../../../../../../../dep/github.com/go-git/go-git/v5/plumbing/format/index.html#imported-by">5 packages</a>
+
+<div id="files"><span class="title">Involved Source Files</span>
+
+	<span class="nodocs">      <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/decoder.go.html">decoder.go</a></span>
+	<input type='checkbox' checked class="fold" id="file-1-fold-content"><label for="file-1-fold-content">   <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/doc.go.html#doc">d➜</a> <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/doc.go.html">doc.go</a></label><span id='file-1-fold-content-items' class="fold-items">
+		Package index implements encoding and decoding of index format files.
+
+		   Git index format
+		   ================
+
+		   == The Git index file has the following format
+
+		     All binary numbers are in network byte order. Version 2 is described
+		     here unless stated otherwise.
+
+		     - A 12-byte header consisting of
+
+		       4-byte signature:
+		         The signature is { 'D', 'I', 'R', 'C' } (stands for "dircache")
+
+		       4-byte version number:
+		         The current supported versions are 2, 3 and 4.
+
+		       32-bit number of index entries.
+
+		     - A number of sorted index entries (see below).
+
+		     - Extensions
+
+		       Extensions are identified by signature. Optional extensions can
+		       be ignored if Git does not understand them.
+
+		       Git currently supports cached tree and resolve undo extensions.
+
+		       4-byte extension signature. If the first byte is 'A'..'Z' the
+		       extension is optional and can be ignored.
+
+		       32-bit size of the extension
+
+		       Extension data
+
+		     - 160-bit SHA-1 over the content of the index file before this
+		       checksum.
+
+		   == Index entry
+
+		     Index entries are sorted in ascending order on the name field,
+		     interpreted as a string of unsigned bytes (i.e. memcmp() order, no
+		     localization, no special casing of directory separator '/'). Entries
+		     with the same name are sorted by their stage field.
+
+		     32-bit ctime seconds, the last time a file's metadata changed
+		       this is stat(2) data
+
+		     32-bit ctime nanosecond fractions
+		       this is stat(2) data
+
+		     32-bit mtime seconds, the last time a file's data changed
+		       this is stat(2) data
+
+		     32-bit mtime nanosecond fractions
+		       this is stat(2) data
+
+		     32-bit dev
+		       this is stat(2) data
+
+		     32-bit ino
+		       this is stat(2) data
+
+		     32-bit mode, split into (high to low bits)
+
+		       4-bit object type
+		         valid values in binary are 1000 (regular file), 1010 (symbolic link)
+		         and 1110 (gitlink)
+
+		       3-bit unused
+
+		       9-bit unix permission. Only 0755 and 0644 are valid for regular files.
+		       Symbolic links and gitlinks have value 0 in this field.
+
+		     32-bit uid
+		       this is stat(2) data
+
+		     32-bit gid
+		       this is stat(2) data
+
+		     32-bit file size
+		       This is the on-disk size from stat(2), truncated to 32-bit.
+
+		     160-bit SHA-1 for the represented object
+
+		     A 16-bit 'flags' field split into (high to low bits)
+
+		       1-bit assume-valid flag
+
+		       1-bit extended flag (must be zero in version 2)
+
+		       2-bit stage (during merge)
+
+		       12-bit name length if the length is less than 0xFFF; otherwise 0xFFF
+		       is stored in this field.
+
+		     (Version 3 or later) A 16-bit field, only applicable if the
+		     "extended flag" above is 1, split into (high to low bits).
+
+		       1-bit reserved for future
+
+		       1-bit skip-worktree flag (used by sparse checkout)
+
+		       1-bit intent-to-add flag (used by "git add -N")
+
+		       13-bit unused, must be zero
+
+		     Entry path name (variable length) relative to top level directory
+		       (without leading slash). '/' is used as path separator. The special
+		       path components ".", ".." and ".git" (without quotes) are disallowed.
+		       Trailing slash is also disallowed.
+
+		       The exact encoding is undefined, but the '.' and '/' characters
+		       are encoded in 7-bit ASCII and the encoding cannot contain a NUL
+		       byte (iow, this is a UNIX pathname).
+
+		     (Version 4) In version 4, the entry path name is prefix-compressed
+		       relative to the path name for the previous entry (the very first
+		       entry is encoded as if the path name for the previous entry is an
+		       empty string).  At the beginning of an entry, an integer N in the
+		       variable width encoding (the same encoding as the offset is encoded
+		       for OFS_DELTA pack entries; see pack-format.txt) is stored, followed
+		       by a NUL-terminated string S.  Removing N bytes from the end of the
+		       path name for the previous entry, and replacing it with the string S
+		       yields the path name for this entry.
+
+		     1-8 nul bytes as necessary to pad the entry to a multiple of eight bytes
+		     while keeping the name NUL-terminated.
+
+		     (Version 4) In version 4, the padding after the pathname does not
+		     exist.
+
+		     Interpretation of index entries in split index mode is completely
+		     different. See below for details.
+
+		   == Extensions
+
+		   === Cached tree
+
+		     Cached tree extension contains pre-computed hashes for trees that can
+		     be derived from the index. It helps speed up tree object generation
+		     from index for a new commit.
+
+		     When a path is updated in index, the path must be invalidated and
+		     removed from tree cache.
+
+		     The signature for this extension is { 'T', 'R', 'E', 'E' }.
+
+		     A series of entries fill the entire extension; each of which
+		     consists of:
+
+		     - NUL-terminated path component (relative to its parent directory);
+
+		     - ASCII decimal number of entries in the index that is covered by the
+		       tree this entry represents (entry_count);
+
+		     - A space (ASCII 32);
+
+		     - ASCII decimal number that represents the number of subtrees this
+		       tree has;
+
+		     - A newline (ASCII 10); and
+
+		     - 160-bit object name for the object that would result from writing
+		       this span of index as a tree.
+
+		     An entry can be in an invalidated state and is represented by having
+		     a negative number in the entry_count field. In this case, there is no
+		     object name and the next entry starts immediately after the newline.
+		     When writing an invalid entry, -1 should always be used as entry_count.
+
+		     The entries are written out in the top-down, depth-first order.  The
+		     first entry represents the root level of the repository, followed by the
+		     first subtree--let's call this A--of the root level (with its name
+		     relative to the root level), followed by the first subtree of A (with
+		     its name relative to A), ...
+
+		   === Resolve undo
+
+		     A conflict is represented in the index as a set of higher stage entries.
+		     When a conflict is resolved (e.g. with "git add path"), these higher
+		     stage entries will be removed and a stage-0 entry with proper resolution
+		     is added.
+
+		     When these higher stage entries are removed, they are saved in the
+		     resolve undo extension, so that conflicts can be recreated (e.g. with
+		     "git checkout -m"), in case users want to redo a conflict resolution
+		     from scratch.
+
+		     The signature for this extension is { 'R', 'E', 'U', 'C' }.
+
+		     A series of entries fill the entire extension; each of which
+		     consists of:
+
+		     - NUL-terminated pathname the entry describes (relative to the root of
+		       the repository, i.e. full pathname);
+
+		     - Three NUL-terminated ASCII octal numbers, entry mode of entries in
+		       stage 1 to 3 (a missing stage is represented by "0" in this field);
+		       and
+
+		     - At most three 160-bit object names of the entry in stages from 1 to 3
+		       (nothing is written for a missing stage).
+
+		   === Split index
+
+		     In split index mode, the majority of index entries could be stored
+		     in a separate file. This extension records the changes to be made on
+		     top of that to produce the final index.
+
+		     The signature for this extension is { 'l', 'i', 'n', 'k' }.
+
+		     The extension consists of:
+
+		     - 160-bit SHA-1 of the shared index file. The shared index file path
+		       is $GIT_DIR/sharedindex.&lt;SHA-1&gt;. If all 160 bits are zero, the
+		       index does not require a shared index file.
+
+		     - An ewah-encoded delete bitmap, each bit represents an entry in the
+		       shared index. If a bit is set, its corresponding entry in the
+		       shared index will be removed from the final index.  Note, because
+		       a delete operation changes index entry positions, but we do need
+		       original positions in replace phase, it's best to just mark
+		       entries for removal, then do a mass deletion after replacement.
+
+		     - An ewah-encoded replace bitmap, each bit represents an entry in
+		       the shared index. If a bit is set, its corresponding entry in the
+		       shared index will be replaced with an entry in this index
+		       file. All replaced entries are stored in sorted order in this
+		       index. The first "1" bit in the replace bitmap corresponds to the
+		       first index entry, the second "1" bit to the second entry and so
+		       on. Replaced entries may have empty path names to save space.
+
+		     The remaining index entries after replaced ones will be added to the
+		     final index. These added entries are also sorted by entry name then
+		     stage.
+
+		   == Untracked cache
+
+		     Untracked cache saves the untracked file list and necessary data to
+		     verify the cache. The signature for this extension is { 'U', 'N',
+		     'T', 'R' }.
+
+		     The extension starts with
+
+		     - A sequence of NUL-terminated strings, preceded by the size of the
+		       sequence in variable width encoding. Each string describes the
+		       environment where the cache can be used.
+
+		     - Stat data of $GIT_DIR/info/exclude. See "Index entry" section from
+		       ctime field until "file size".
+
+		     - Stat data of plumbing.excludesfile
+
+		     - 32-bit dir_flags (see struct dir_struct)
+
+		     - 160-bit SHA-1 of $GIT_DIR/info/exclude. Null SHA-1 means the file
+		       does not exist.
+
+		     - 160-bit SHA-1 of plumbing.excludesfile. Null SHA-1 means the file does
+		       not exist.
+
+		     - NUL-terminated string of per-dir exclude file name. This usually
+		       is ".gitignore".
+
+		     - The number of following directory blocks, variable width
+		       encoding. If this number is zero, the extension ends here with a
+		       following NUL.
+
+		     - A number of directory blocks in depth-first-search order, each
+		       consists of
+
+		       - The number of untracked entries, variable width encoding.
+
+		       - The number of sub-directory blocks, variable width encoding.
+
+		       - The directory name terminated by NUL.
+
+		       - A number of untracked file/dir names terminated by NUL.
+
+		   The remaining data of each directory block is grouped by type:
+
+		     - An ewah bitmap, the n-th bit marks whether the n-th directory has
+		       valid untracked cache entries.
+
+		     - An ewah bitmap, the n-th bit records "check-only" bit of
+		       read_directory_recursive() for the n-th directory.
+
+		     - An ewah bitmap, the n-th bit indicates whether SHA-1 and stat data
+		       is valid for the n-th directory and exists in the next data.
+
+		     - An array of stat data. The n-th data corresponds with the n-th
+		       "one" bit in the previous ewah bitmap.
+
+		     - An array of SHA-1. The n-th SHA-1 corresponds with the n-th "one" bit
+		       in the previous ewah bitmap.
+
+		     - One NUL.
+
+		  == File System Monitor cache
+
+		    The file system monitor cache tracks files for which the core.fsmonitor
+		    hook has told us about changes.  The signature for this extension is
+		    { 'F', 'S', 'M', 'N' }.
+
+		    The extension starts with
+
+		    - 32-bit version number: the current supported version is 1.
+
+		    - 64-bit time: the extension data reflects all changes through the given
+		      time which is stored as the nanoseconds elapsed since midnight,
+		      January 1, 1970.
+
+		   - 32-bit bitmap size: the size of the CE_FSMONITOR_VALID bitmap.
+
+		   - An ewah bitmap, the n-th bit indicates whether the n-th index entry
+		     is not CE_FSMONITOR_VALID.
+
+		 == End of Index Entry
+
+		   The End of Index Entry (EOIE) is used to locate the end of the variable
+		   length index entries and the beginning of the extensions. Code can take
+		   advantage of this to quickly locate the index extensions without having
+		   to parse through all of the index entries.
+
+		   Because it must be able to be loaded before the variable length cache
+		   entries and other index extensions, this extension must be written last.
+		   The signature for this extension is { 'E', 'O', 'I', 'E' }.
+
+		   The extension consists of:
+
+		   - 32-bit offset to the end of the index entries
+
+		   - 160-bit SHA-1 over the extension types and their sizes (but not
+		     their contents).  E.g. if we have "TREE" extension that is N-bytes
+		     long, "REUC" extension that is M-bytes long, followed by "EOIE",
+		     then the hash would be:
+
+		     SHA-1("TREE" + &lt;binary representation of N&gt; +
+		       "REUC" + &lt;binary representation of M&gt;)
+
+		 == Index Entry Offset Table
+
+		   The Index Entry Offset Table (IEOT) is used to help address the CPU
+		   cost of loading the index by enabling multi-threading the process of
+		   converting cache entries from the on-disk format to the in-memory format.
+		   The signature for this extension is { 'I', 'E', 'O', 'T' }.
+
+		   The extension consists of:
+
+		   - 32-bit version (currently 1)
+
+		   - A number of index offset entries each consisting of:
+
+		   - 32-bit offset from the beginning of the file to the first cache entry
+		     in this block of entries.
+
+		   - 32-bit count of cache entries in this blockpackage index
+</span>
+	<span class="nodocs">      <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/encoder.go.html">encoder.go</a></span>
+	<span class="nodocs">      <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/index.go.html">index.go</a></span>
+	<span class="nodocs">      <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/match.go.html">match.go</a></span></div>
+<div id="exported-types"><span class="title">Package-Level Type Names<span class="title-stat"><i> (total 14, in which 10 are exported)</i></span></span>
+
+<div id="exported-types-buttons" class="js-on">	/* sort exporteds by: <label id="sort-types-by-alphabet" class="button">alphabet</label> | <label id="sort-types-by-popularity" class="button">popularity</label> */</div><div class="anchor type-res" id="name-Decoder" data-popularity="625">	<input type='checkbox' class="fold" id="Decoder-fold-content"><label for="Decoder-fold-content"> <a href="../../../../../../../use/github.com/go-git/go-git/v5/plumbing/format/index..Decoder.html">type</a> <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/decoder.go.html#line-42">Decoder</a> <i>(struct)</i></label><span id='Decoder-fold-content-docs' class="fold-docs">
+		A Decoder reads and decodes index files from an input stream.
+
+		<input type='checkbox' class="fold" id="Decoder-fold-fields"><label for="Decoder-fold-fields">Fields (<i>total 4, none are exported</i>)</label><span id='Decoder-fold-fields-items' class="fold-items">
+			<input type='checkbox' class="showhide" id="Decoder-showhide-fields"><i><label for="Decoder-showhide-fields" class="show-inline">/* 4 unexporteds ... */</label><label for="Decoder-showhide-fields" class="hide-inline">/* 4 unexporteds: */</label></i><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/decoder.go.html#line-47">extReader</a> <i>*<a href="../../../../../../bufio.html">bufio</a>.<a href="../../../../../../bufio.html#name-Reader">Reader</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/decoder.go.html#line-44">hash</a> <i><a href="../../../../../../hash.html">hash</a>.<a href="../../../../../../hash.html#name-Hash">Hash</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/decoder.go.html#line-45">lastEntry</a> <i>*<a href="#name-Entry">Entry</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/decoder.go.html#line-43">r</a> <i><a href="../../../../../../io.html">io</a>.<a href="../../../../../../io.html#name-Reader">Reader</a></i></span></i></span></span>
+		<input type='checkbox' class="fold" id="Decoder-fold-methods"><label for="Decoder-fold-methods">Methods (<i>total 11, in which 1 are exported</i>)</label><span id='Decoder-fold-methods-items' class="fold-items"><span>
+			<input type='checkbox' class="fold" id="Decoder-fold-method-Decode"><label for="Decoder-fold-method-Decode">(*T) <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/decoder.go.html#line-62">Decode</a>(idx *<a href="#name-Index">Index</a>) <a href="../../../../../../builtin.html#name-error">error</a></label><span id='Decoder-fold-method-Decode-docs' class="fold-docs">
+				Decode reads the whole index object from its input and stores it in the
+				value pointed to by idx.
+</span></span>
+			<input type='checkbox' class="showhide" id="Decoder-showhide-methods"><i><label for="Decoder-showhide-methods" class="show-inline">/* 10 unexporteds ... */</label><label for="Decoder-showhide-methods" class="hide-inline">/* 10 unexporteds: */</label></i><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/decoder.go.html#line-189">doReadEntryName</a>(len <a href="../../../../../../builtin.html#name-uint16">uint16</a>) (<a href="../../../../../../builtin.html#name-string">string</a>, <a href="../../../../../../builtin.html#name-error">error</a>)</span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/decoder.go.html#line-170">doReadEntryNameV4</a>() (<a href="../../../../../../builtin.html#name-string">string</a>, <a href="../../../../../../builtin.html#name-error">error</a>)</span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/decoder.go.html#line-284">getExtensionReader</a>() (*<a href="../../../../../../bufio.html">bufio</a>.<a href="../../../../../../bufio.html#name-Reader">Reader</a>, <a href="../../../../../../builtin.html#name-error">error</a>)</span></i></span><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="Decoder-fold-method-padEntry"><label for="Decoder-fold-method-padEntry">(*T) <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/decoder.go.html#line-198">padEntry</a>(idx *<a href="#name-Index">Index</a>, e *<a href="#name-Entry">Entry</a>, read <a href="../../../../../../builtin.html#name-int">int</a>) <a href="../../../../../../builtin.html#name-error">error</a></label><span id='Decoder-fold-method-padEntry-docs' class="fold-docs">
+				Index entries are padded out to the next 8 byte alignment
+				for historical reasons related to how C Git read the files.
+</span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/decoder.go.html#line-294">readChecksum</a>(expected []<a href="../../../../../../builtin.html#name-byte">byte</a>, alreadyRead [4]<a href="../../../../../../builtin.html#name-byte">byte</a>) <a href="../../../../../../builtin.html#name-error">error</a></span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/decoder.go.html#line-81">readEntries</a>(idx *<a href="#name-Index">Index</a>, count <a href="../../../../../../builtin.html#name-int">int</a>) <a href="../../../../../../builtin.html#name-error">error</a></span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/decoder.go.html#line-95">readEntry</a>(idx *<a href="#name-Index">Index</a>) (*<a href="#name-Entry">Entry</a>, <a href="../../../../../../builtin.html#name-error">error</a>)</span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/decoder.go.html#line-148">readEntryName</a>(idx *<a href="#name-Index">Index</a>, e *<a href="#name-Entry">Entry</a>, flags <a href="../../../../../../builtin.html#name-uint16">uint16</a>) <a href="../../../../../../builtin.html#name-error">error</a></span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/decoder.go.html#line-242">readExtension</a>(idx *<a href="#name-Index">Index</a>, header []<a href="../../../../../../builtin.html#name-byte">byte</a>) <a href="../../../../../../builtin.html#name-error">error</a></span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/decoder.go.html#line-209">readExtensions</a>(idx *<a href="#name-Index">Index</a>) <a href="../../../../../../builtin.html#name-error">error</a></span></i></span></span>
+		<input type='checkbox' class="fold" id="Decoder-fold-results"><label for="Decoder-fold-results">As Outputs Of (<i>at least one exported</i>)</label><span id='Decoder-fold-results-items' class="fold-items"><span>
+			func <a href="#name-NewDecoder">NewDecoder</a>(r <a href="../../../../../../io.html">io</a>.<a href="../../../../../../io.html#name-Reader">Reader</a>) *<b>Decoder</b></span></span>
+
+</span></div><div class="anchor type-res" id="name-Encoder" data-popularity="425">	<input type='checkbox' class="fold" id="Encoder-fold-content"><label for="Encoder-fold-content"> <a href="../../../../../../../use/github.com/go-git/go-git/v5/plumbing/format/index..Encoder.html">type</a> <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/encoder.go.html#line-25">Encoder</a> <i>(struct)</i></label><span id='Encoder-fold-content-docs' class="fold-docs">
+		An Encoder writes an Index to an output stream.
+
+		<input type='checkbox' class="fold" id="Encoder-fold-fields"><label for="Encoder-fold-fields">Fields (<i>total 2, neither is exported</i>)</label><span id='Encoder-fold-fields-items' class="fold-items">
+			<input type='checkbox' class="showhide" id="Encoder-showhide-fields"><i><label for="Encoder-showhide-fields" class="show-inline">/* 2 unexporteds ... */</label><label for="Encoder-showhide-fields" class="hide-inline">/* 2 unexporteds: */</label></i><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/encoder.go.html#line-27">hash</a> <i><a href="../../../../../../hash.html">hash</a>.<a href="../../../../../../hash.html#name-Hash">Hash</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/encoder.go.html#line-26">w</a> <i><a href="../../../../../../io.html">io</a>.<a href="../../../../../../io.html#name-Writer">Writer</a></i></span></i></span></span>
+		<input type='checkbox' class="fold" id="Encoder-fold-methods"><label for="Encoder-fold-methods">Methods (<i>total 7, in which 1 are exported</i>)</label><span id='Encoder-fold-methods-items' class="fold-items"><span>
+			<input type='checkbox' class="fold" id="Encoder-fold-method-Encode"><label for="Encoder-fold-method-Encode">(*T) <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/encoder.go.html#line-38">Encode</a>(idx *<a href="#name-Index">Index</a>) <a href="../../../../../../builtin.html#name-error">error</a></label><span id='Encoder-fold-method-Encode-docs' class="fold-docs">
+				Encode writes the Index to the stream of the encoder.
+</span></span>
+			<input type='checkbox' class="showhide" id="Encoder-showhide-methods"><i><label for="Encoder-showhide-methods" class="show-inline">/* 6 unexporteds ... */</label><label for="Encoder-showhide-methods" class="hide-inline">/* 6 unexporteds: */</label></i><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/encoder.go.html#line-64">encodeEntries</a>(idx *<a href="#name-Index">Index</a>) <a href="../../../../../../builtin.html#name-error">error</a></span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/encoder.go.html#line-81">encodeEntry</a>(entry *<a href="#name-Entry">Entry</a>) <a href="../../../../../../builtin.html#name-error">error</a></span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/encoder.go.html#line-142">encodeFooter</a>() <a href="../../../../../../builtin.html#name-error">error</a></span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/encoder.go.html#line-56">encodeHeader</a>(idx *<a href="#name-Index">Index</a>) <a href="../../../../../../builtin.html#name-error">error</a></span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/encoder.go.html#line-135">padEntry</a>(wrote <a href="../../../../../../builtin.html#name-int">int</a>) <a href="../../../../../../builtin.html#name-error">error</a></span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/encoder.go.html#line-123">timeToUint32</a>(t *<a href="../../../../../../time.html">time</a>.<a href="../../../../../../time.html#name-Time">Time</a>) (<a href="../../../../../../builtin.html#name-uint32">uint32</a>, <a href="../../../../../../builtin.html#name-uint32">uint32</a>, <a href="../../../../../../builtin.html#name-error">error</a>)</span></i></span></span>
+		<input type='checkbox' class="fold" id="Encoder-fold-results"><label for="Encoder-fold-results">As Outputs Of (<i>at least one exported</i>)</label><span id='Encoder-fold-results-items' class="fold-items"><span>
+			func <a href="#name-NewEncoder">NewEncoder</a>(w <a href="../../../../../../io.html">io</a>.<a href="../../../../../../io.html#name-Writer">Writer</a>) *<b>Encoder</b></span></span>
+
+</span></div><div class="anchor type-res" id="name-EndOfIndexEntry" data-popularity="0">	<input type='checkbox' class="fold" id="EndOfIndexEntry-fold-content"><label for="EndOfIndexEntry-fold-content"> <a href="../../../../../../../use/github.com/go-git/go-git/v5/plumbing/format/index..EndOfIndexEntry.html">type</a> <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/index.go.html#line-207">EndOfIndexEntry</a> <i>(struct)</i></label><span id='EndOfIndexEntry-fold-content-docs' class="fold-docs">
+		EndOfIndexEntry is the End of Index Entry (EOIE) is used to locate the end of
+		the variable length index entries and the beginning of the extensions. Code
+		can take advantage of this to quickly locate the index extensions without
+		having to parse through all of the index entries.
+
+		 Because it must be able to be loaded before the variable length cache
+		 entries and other index extensions, this extension must be written last.
+
+		<input type='checkbox' class="fold" id="EndOfIndexEntry-fold-fields"><label for="EndOfIndexEntry-fold-fields">Fields (<i>total 2, both are exported</i>)</label><span id='EndOfIndexEntry-fold-fields-items' class="fold-items"><span>
+			<input type='checkbox' class="fold" id="EndOfIndexEntry-fold-field-Hash"><label for="EndOfIndexEntry-fold-field-Hash"><a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/index.go.html#line-212">Hash</a> <i><a href="../../plumbing.html">plumbing</a>.<a href="../../plumbing.html#name-Hash">Hash</a></i></label><span id='EndOfIndexEntry-fold-field-Hash-docs' class="fold-docs">
+				Hash is a SHA-1 over the extension types and their sizes (but not
+					their contents).
+</span></span><span>
+			<input type='checkbox' class="fold" id="EndOfIndexEntry-fold-field-Offset"><label for="EndOfIndexEntry-fold-field-Offset"><a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/index.go.html#line-209">Offset</a> <i><a href="../../../../../../builtin.html#name-uint32">uint32</a></i></label><span id='EndOfIndexEntry-fold-field-Offset-docs' class="fold-docs">
+				Offset to the end of the index entries
+</span></span></span>
+
+</span></div><div class="anchor type-res" id="name-Entry" data-popularity="765">	<input type='checkbox' class="fold" id="Entry-fold-content"><label for="Entry-fold-content"> <a href="../../../../../../../use/github.com/go-git/go-git/v5/plumbing/format/index..Entry.html">type</a> <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/index.go.html#line-125">Entry</a> <i>(struct)</i></label><span id='Entry-fold-content-docs' class="fold-docs">
+		Entry represents a single file (or stage of a file) in the cache. An entry
+		represents exactly one stage of a file. If a file path is unmerged then
+		multiple Entry instances may appear for the same path name.
+
+		<input type='checkbox' class="fold" id="Entry-fold-fields"><label for="Entry-fold-fields">Fields (<i>total 13, all are exported</i>)</label><span id='Entry-fold-fields-items' class="fold-items"><span>
+			<input type='checkbox' class="fold" id="Entry-fold-field-CreatedAt"><label for="Entry-fold-field-CreatedAt"><a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/index.go.html#line-131">CreatedAt</a> <i><a href="../../../../../../time.html">time</a>.<a href="../../../../../../time.html#name-Time">Time</a></i></label><span id='Entry-fold-field-CreatedAt-docs' class="fold-docs">
+				CreatedAt time when the tracked path was created
+</span></span><span>
+			<input type='checkbox' class="fold" id="Entry-fold-field-Dev"><label for="Entry-fold-field-Dev"><a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/index.go.html#line-135">Dev</a> <i><a href="../../../../../../builtin.html#name-uint32">uint32</a></i></label><span id='Entry-fold-field-Dev-docs' class="fold-docs">
+				Dev and Inode of the tracked path
+</span></span><span>
+			<input type='checkbox' class="fold" id="Entry-fold-field-GID"><label for="Entry-fold-field-GID"><a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/index.go.html#line-139">GID</a> <i><a href="../../../../../../builtin.html#name-uint32">uint32</a></i></label><span id='Entry-fold-field-GID-docs' class="fold-docs">
+				UID and GID, userid and group id of the owner
+</span></span><span>
+			<input type='checkbox' class="fold" id="Entry-fold-field-Hash"><label for="Entry-fold-field-Hash"><a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/index.go.html#line-127">Hash</a> <i><a href="../../plumbing.html">plumbing</a>.<a href="../../plumbing.html#name-Hash">Hash</a></i></label><span id='Entry-fold-field-Hash-docs' class="fold-docs">
+				Hash is the SHA1 of the represented file
+</span></span><span>
+			<input type='checkbox' class="fold" id="Entry-fold-field-Inode"><label for="Entry-fold-field-Inode"><a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/index.go.html#line-135">Inode</a> <i><a href="../../../../../../builtin.html#name-uint32">uint32</a></i></label><span id='Entry-fold-field-Inode-docs' class="fold-docs">
+				Dev and Inode of the tracked path
+</span></span><span>
+			<input type='checkbox' class="fold" id="Entry-fold-field-IntentToAdd"><label for="Entry-fold-field-IntentToAdd"><a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/index.go.html#line-150">IntentToAdd</a> <i><a href="../../../../../../builtin.html#name-bool">bool</a></i></label><span id='Entry-fold-field-IntentToAdd-docs' class="fold-docs">
+				IntentToAdd record only the fact that the path will be added later
+				https://git-scm.com/docs/git-add ("git add -N")
+</span></span><span>
+			<input type='checkbox' class="fold" id="Entry-fold-field-Mode"><label for="Entry-fold-field-Mode"><a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/index.go.html#line-137">Mode</a> <i><a href="../filemode.html">filemode</a>.<a href="../filemode.html#name-FileMode">FileMode</a></i></label><span id='Entry-fold-field-Mode-docs' class="fold-docs">
+				Mode of the path
+</span></span><span>
+			<input type='checkbox' class="fold" id="Entry-fold-field-ModifiedAt"><label for="Entry-fold-field-ModifiedAt"><a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/index.go.html#line-133">ModifiedAt</a> <i><a href="../../../../../../time.html">time</a>.<a href="../../../../../../time.html#name-Time">Time</a></i></label><span id='Entry-fold-field-ModifiedAt-docs' class="fold-docs">
+				ModifiedAt time when the tracked path was changed
+</span></span><span>
+			<input type='checkbox' class="fold" id="Entry-fold-field-Name"><label for="Entry-fold-field-Name"><a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/index.go.html#line-129">Name</a> <i><a href="../../../../../../builtin.html#name-string">string</a></i></label><span id='Entry-fold-field-Name-docs' class="fold-docs">
+				Name is the  Entry path name relative to top level directory
+</span></span><span>
+			<input type='checkbox' class="fold" id="Entry-fold-field-Size"><label for="Entry-fold-field-Size"><a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/index.go.html#line-141">Size</a> <i><a href="../../../../../../builtin.html#name-uint32">uint32</a></i></label><span id='Entry-fold-field-Size-docs' class="fold-docs">
+				Size is the length in bytes for regular files
+</span></span><span>
+			<input type='checkbox' class="fold" id="Entry-fold-field-SkipWorktree"><label for="Entry-fold-field-SkipWorktree"><a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/index.go.html#line-147">SkipWorktree</a> <i><a href="../../../../../../builtin.html#name-bool">bool</a></i></label><span id='Entry-fold-field-SkipWorktree-docs' class="fold-docs">
+				SkipWorktree used in sparse checkouts
+				https://git-scm.com/docs/git-read-tree#_sparse_checkout
+</span></span><span>
+			<input type='checkbox' class="fold" id="Entry-fold-field-Stage"><label for="Entry-fold-field-Stage"><a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/index.go.html#line-144">Stage</a> <i><a href="#name-Stage">Stage</a></i></label><span id='Entry-fold-field-Stage-docs' class="fold-docs">
+				Stage on a merge is defines what stage is representing this entry
+				https://git-scm.com/book/en/v2/Git-Tools-Advanced-Merging
+</span></span><span>
+			<input type='checkbox' class="fold" id="Entry-fold-field-UID"><label for="Entry-fold-field-UID"><a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/index.go.html#line-139">UID</a> <i><a href="../../../../../../builtin.html#name-uint32">uint32</a></i></label><span id='Entry-fold-field-UID-docs' class="fold-docs">
+				UID and GID, userid and group id of the owner
+</span></span></span>
+		<input type='checkbox' class="fold" id="Entry-fold-methods"><label for="Entry-fold-methods">Methods (<i>only one, which is exported</i>)</label><span id='Entry-fold-methods-items' class="fold-items"><span>
+			<span class="nodocs">( T) <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/index.go.html#line-153">String</a>() <a href="../../../../../../builtin.html#name-string">string</a></span></span></span>
+		<input type='checkbox' class="fold" id="Entry-fold-impls"><label for="Entry-fold-impls">Implements (<i>at least 4, in which 2 are exported</i>)</label><span id='Entry-fold-impls-items' class="fold-items"><span>
+			 T : expvar.<a href="../../../../../../expvar.html#name-Var">Var</a></span><span>
+			 T : fmt.<a href="../../../../../../fmt.html#name-Stringer">Stringer</a></span>
+			<input type='checkbox' class="showhide" id="Entry-showhide-impls"><i><label for="Entry-showhide-impls" class="show-inline">/* 2+ unexporteds ... */</label><label for="Entry-showhide-impls" class="hide-inline">/* 2+ unexporteds: */</label></i><span class="hidden"><i>
+			 T : context.<a href="../../../../../../context.html#name-stringer">stringer</a></i></span><span class="hidden"><i>
+			 T : runtime.<a href="../../../../../../runtime.html#name-stringer">stringer</a></i></span></span>
+		<input type='checkbox' class="fold" id="Entry-fold-results"><label for="Entry-fold-results">As Outputs Of (<i>at least 5, in which 4 are exported</i>)</label><span id='Entry-fold-results-items' class="fold-items"><span>
+			func (*<a href="#name-Index">Index</a>).<a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/index.go.html#line-60">Add</a>(path <a href="../../../../../../builtin.html#name-string">string</a>) *<b>Entry</b></span><span>
+			func (*<a href="#name-Index">Index</a>).<a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/index.go.html#line-70">Entry</a>(path <a href="../../../../../../builtin.html#name-string">string</a>) (*<b>Entry</b>, <a href="../../../../../../builtin.html#name-error">error</a>)</span><span>
+			func (*<a href="#name-Index">Index</a>).<a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/index.go.html#line-96">Glob</a>(pattern <a href="../../../../../../builtin.html#name-string">string</a>) (matches []*<b>Entry</b>, err <a href="../../../../../../builtin.html#name-error">error</a>)</span><span>
+			func (*<a href="#name-Index">Index</a>).<a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/index.go.html#line-82">Remove</a>(path <a href="../../../../../../builtin.html#name-string">string</a>) (*<b>Entry</b>, <a href="../../../../../../builtin.html#name-error">error</a>)</span>
+			<input type='checkbox' class="showhide" id="Entry-showhide-inputofs"><i><label for="Entry-showhide-inputofs" class="show-inline">/* at least one unexported ... */</label><label for="Entry-showhide-inputofs" class="hide-inline">/* at least one unexported: */</label></i><span class="hidden"><i>
+			func (*<a href="#name-Decoder">Decoder</a>).<a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/decoder.go.html#line-95">readEntry</a>(idx *<a href="#name-Index">Index</a>) (*<b>Entry</b>, <a href="../../../../../../builtin.html#name-error">error</a>)</i></span></span>
+		<input type='checkbox' class="fold" id="Entry-fold-params"><label for="Entry-fold-params">As Inputs Of (<i>at least 4, none are exported</i>)</label><span id='Entry-fold-params-items' class="fold-items">
+			<input type='checkbox' class="showhide" id="Entry-showhide-outputofs"><i><label for="Entry-showhide-outputofs" class="show-inline">/* 4+ unexporteds ... */</label><label for="Entry-showhide-outputofs" class="hide-inline">/* 4+ unexporteds: */</label></i><span class="hidden"><i>
+			func (*<a href="#name-Decoder">Decoder</a>).<a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/decoder.go.html#line-198">padEntry</a>(idx *<a href="#name-Index">Index</a>, e *<b>Entry</b>, read <a href="../../../../../../builtin.html#name-int">int</a>) <a href="../../../../../../builtin.html#name-error">error</a></i></span><span class="hidden"><i>
+			func (*<a href="#name-Decoder">Decoder</a>).<a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/decoder.go.html#line-148">readEntryName</a>(idx *<a href="#name-Index">Index</a>, e *<b>Entry</b>, flags <a href="../../../../../../builtin.html#name-uint16">uint16</a>) <a href="../../../../../../builtin.html#name-error">error</a></i></span><span class="hidden"><i>
+			func (*<a href="#name-Encoder">Encoder</a>).<a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/encoder.go.html#line-81">encodeEntry</a>(entry *<b>Entry</b>) <a href="../../../../../../builtin.html#name-error">error</a></i></span><span class="hidden"><i>
+			func github.com/go-git/go-git/v5.(*<a href="../../../v5.html#name-Worktree">Worktree</a>).<a href="../../../../../../../src/github.com/go-git/go-git/v5/worktree_status.go.html#line-480">doUpdateFileToIndex</a>(e *<b>Entry</b>, filename <a href="../../../../../../builtin.html#name-string">string</a>, h <a href="../../plumbing.html">plumbing</a>.<a href="../../plumbing.html#name-Hash">Hash</a>) <a href="../../../../../../builtin.html#name-error">error</a></i></span></span>
+
+</span></div><div class="anchor type-res" id="name-Index" data-popularity="1590">	<input type='checkbox' class="fold" id="Index-fold-content"><label for="Index-fold-content"> <a href="../../../../../../../use/github.com/go-git/go-git/v5/plumbing/format/index..Index.html">type</a> <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/index.go.html#line-44">Index</a> <i>(struct)</i></label><span id='Index-fold-content-docs' class="fold-docs">
+		Index contains the information about which objects are currently checked out
+		in the worktree, having information about the working files. Changes in
+		worktree are detected using this Index. The Index is also used during merges
+
+		<input type='checkbox' class="fold" id="Index-fold-fields"><label for="Index-fold-fields">Fields (<i>total 5, all are exported</i>)</label><span id='Index-fold-fields-items' class="fold-items"><span>
+			<input type='checkbox' class="fold" id="Index-fold-field-Cache"><label for="Index-fold-field-Cache"><a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/index.go.html#line-51">Cache</a> <i>*<a href="#name-Tree">Tree</a></i></label><span id='Index-fold-field-Cache-docs' class="fold-docs">
+				Cache represents the 'Cached tree' extension
+</span></span><span>
+			<input type='checkbox' class="fold" id="Index-fold-field-EndOfIndexEntry"><label for="Index-fold-field-EndOfIndexEntry"><a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/index.go.html#line-55">EndOfIndexEntry</a> <i>*<a href="#name-EndOfIndexEntry">EndOfIndexEntry</a></i></label><span id='Index-fold-field-EndOfIndexEntry-docs' class="fold-docs">
+				EndOfIndexEntry represents the 'End of Index Entry' extension
+</span></span><span>
+			<input type='checkbox' class="fold" id="Index-fold-field-Entries"><label for="Index-fold-field-Entries"><a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/index.go.html#line-49">Entries</a> <i>[]*<a href="#name-Entry">Entry</a></i></label><span id='Index-fold-field-Entries-docs' class="fold-docs">
+				Entries collection of entries represented by this Index. The order of
+				this collection is not guaranteed
+</span></span><span>
+			<input type='checkbox' class="fold" id="Index-fold-field-ResolveUndo"><label for="Index-fold-field-ResolveUndo"><a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/index.go.html#line-53">ResolveUndo</a> <i>*<a href="#name-ResolveUndo">ResolveUndo</a></i></label><span id='Index-fold-field-ResolveUndo-docs' class="fold-docs">
+				ResolveUndo represents the 'Resolve undo' extension
+</span></span><span>
+			<input type='checkbox' class="fold" id="Index-fold-field-Version"><label for="Index-fold-field-Version"><a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/index.go.html#line-46">Version</a> <i><a href="../../../../../../builtin.html#name-uint32">uint32</a></i></label><span id='Index-fold-field-Version-docs' class="fold-docs">
+				Version is index version
+</span></span></span>
+		<input type='checkbox' class="fold" id="Index-fold-methods"><label for="Index-fold-methods">Methods (<i>total 5, all are exported</i>)</label><span id='Index-fold-methods-items' class="fold-items"><span>
+			<input type='checkbox' class="fold" id="Index-fold-method-Add"><label for="Index-fold-method-Add">(*T) <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/index.go.html#line-60">Add</a>(path <a href="../../../../../../builtin.html#name-string">string</a>) *<a href="#name-Entry">Entry</a></label><span id='Index-fold-method-Add-docs' class="fold-docs">
+				Add creates a new Entry and returns it. The caller should first check that
+				another entry with the same path does not exist.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Index-fold-method-Entry"><label for="Index-fold-method-Entry">(*T) <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/index.go.html#line-70">Entry</a>(path <a href="../../../../../../builtin.html#name-string">string</a>) (*<a href="#name-Entry">Entry</a>, <a href="../../../../../../builtin.html#name-error">error</a>)</label><span id='Index-fold-method-Entry-docs' class="fold-docs">
+				Entry returns the entry that match the given path, if any.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Index-fold-method-Glob"><label for="Index-fold-method-Glob">(*T) <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/index.go.html#line-96">Glob</a>(pattern <a href="../../../../../../builtin.html#name-string">string</a>) (matches []*<a href="#name-Entry">Entry</a>, err <a href="../../../../../../builtin.html#name-error">error</a>)</label><span id='Index-fold-method-Glob-docs' class="fold-docs">
+				Glob returns the all entries matching pattern or nil if there is no matching
+				entry. The syntax of patterns is the same as in filepath.Glob.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Index-fold-method-Remove"><label for="Index-fold-method-Remove">(*T) <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/index.go.html#line-82">Remove</a>(path <a href="../../../../../../builtin.html#name-string">string</a>) (*<a href="#name-Entry">Entry</a>, <a href="../../../../../../builtin.html#name-error">error</a>)</label><span id='Index-fold-method-Remove-docs' class="fold-docs">
+				Remove remove the entry that match the give path and returns deleted entry.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Index-fold-method-String"><label for="Index-fold-method-String">(*T) <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/index.go.html#line-113">String</a>() <a href="../../../../../../builtin.html#name-string">string</a></label><span id='Index-fold-method-String-docs' class="fold-docs">
+				String is equivalent to `git ls-files --stage --debug`
+</span></span></span>
+		<input type='checkbox' class="fold" id="Index-fold-impls"><label for="Index-fold-impls">Implements (<i>at least 4, in which 2 are exported</i>)</label><span id='Index-fold-impls-items' class="fold-items"><span>
+			*T : expvar.<a href="../../../../../../expvar.html#name-Var">Var</a></span><span>
+			*T : fmt.<a href="../../../../../../fmt.html#name-Stringer">Stringer</a></span>
+			<input type='checkbox' class="showhide" id="Index-showhide-impls"><i><label for="Index-showhide-impls" class="show-inline">/* 2+ unexporteds ... */</label><label for="Index-showhide-impls" class="hide-inline">/* 2+ unexporteds: */</label></i><span class="hidden"><i>
+			*T : context.<a href="../../../../../../context.html#name-stringer">stringer</a></i></span><span class="hidden"><i>
+			*T : runtime.<a href="../../../../../../runtime.html#name-stringer">stringer</a></i></span></span>
+		<input type='checkbox' class="fold" id="Index-fold-results"><label for="Index-fold-results">As Outputs Of (<i>at least 4, all are exported</i>)</label><span id='Index-fold-results-items' class="fold-items"><span>
+			func github.com/go-git/go-git/v5/plumbing/storer.<a href="../storer.html#name-IndexStorer">IndexStorer</a>.<a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/storer/index.go.html#line-8">Index</a>() (*<b>Index</b>, <a href="../../../../../../builtin.html#name-error">error</a>)</span><span>
+			func github.com/go-git/go-git/v5/storage.<a href="../../storage.html#name-Storer">Storer</a>.<a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/storer/index.go.html#line-8">Index</a>() (*<b>Index</b>, <a href="../../../../../../builtin.html#name-error">error</a>)</span><span>
+			func github.com/go-git/go-git/v5/storage/filesystem.(*<a href="../../storage/filesystem.html#name-IndexStorage">IndexStorage</a>).<a href="../../../../../../../src/github.com/go-git/go-git/v5/storage/filesystem/index.go.html#line-35">Index</a>() (i *<b>Index</b>, err <a href="../../../../../../builtin.html#name-error">error</a>)</span><span>
+			func github.com/go-git/go-git/v5/storage/memory.(*<a href="../../storage/memory.html#name-IndexStorage">IndexStorage</a>).<a href="../../../../../../../src/github.com/go-git/go-git/v5/storage/memory/storage.go.html#line-77">Index</a>() (*<b>Index</b>, <a href="../../../../../../builtin.html#name-error">error</a>)</span></span>
+		<input type='checkbox' class="fold" id="Index-fold-params"><label for="Index-fold-params">As Inputs Of (<i>at least 24, in which 7 are exported</i>)</label><span id='Index-fold-params-items' class="fold-items"><span>
+			func (*<a href="#name-Decoder">Decoder</a>).<a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/decoder.go.html#line-62">Decode</a>(idx *<b>Index</b>) <a href="../../../../../../builtin.html#name-error">error</a></span><span>
+			func (*<a href="#name-Encoder">Encoder</a>).<a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/encoder.go.html#line-38">Encode</a>(idx *<b>Index</b>) <a href="../../../../../../builtin.html#name-error">error</a></span><span>
+			func github.com/go-git/go-git/v5/plumbing/storer.<a href="../storer.html#name-IndexStorer">IndexStorer</a>.<a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/storer/index.go.html#line-7">SetIndex</a>(*<b>Index</b>) <a href="../../../../../../builtin.html#name-error">error</a></span><span>
+			func github.com/go-git/go-git/v5/storage.<a href="../../storage.html#name-Storer">Storer</a>.<a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/storer/index.go.html#line-7">SetIndex</a>(*<b>Index</b>) <a href="../../../../../../builtin.html#name-error">error</a></span><span>
+			func github.com/go-git/go-git/v5/storage/filesystem.(*<a href="../../storage/filesystem.html#name-IndexStorage">IndexStorage</a>).<a href="../../../../../../../src/github.com/go-git/go-git/v5/storage/filesystem/index.go.html#line-16">SetIndex</a>(idx *<b>Index</b>) (err <a href="../../../../../../builtin.html#name-error">error</a>)</span><span>
+			func github.com/go-git/go-git/v5/storage/memory.(*<a href="../../storage/memory.html#name-IndexStorage">IndexStorage</a>).<a href="../../../../../../../src/github.com/go-git/go-git/v5/storage/memory/storage.go.html#line-72">SetIndex</a>(idx *<b>Index</b>) <a href="../../../../../../builtin.html#name-error">error</a></span><span>
+			func github.com/go-git/go-git/v5/utils/merkletrie/index.<a href="../../utils/merkletrie/index.html#name-NewRootNode">NewRootNode</a>(idx *<b>Index</b>) <a href="../../utils/merkletrie/noder.html">noder</a>.<a href="../../utils/merkletrie/noder.html#name-Noder">Noder</a></span>
+			<input type='checkbox' class="showhide" id="Index-showhide-outputofs"><i><label for="Index-showhide-outputofs" class="show-inline">/* 17+ unexporteds ... */</label><label for="Index-showhide-outputofs" class="hide-inline">/* 17+ unexporteds: */</label></i><span class="hidden"><i>
+			func (*<a href="#name-Decoder">Decoder</a>).<a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/decoder.go.html#line-198">padEntry</a>(idx *<b>Index</b>, e *<a href="#name-Entry">Entry</a>, read <a href="../../../../../../builtin.html#name-int">int</a>) <a href="../../../../../../builtin.html#name-error">error</a></i></span><span class="hidden"><i>
+			func (*<a href="#name-Decoder">Decoder</a>).<a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/decoder.go.html#line-81">readEntries</a>(idx *<b>Index</b>, count <a href="../../../../../../builtin.html#name-int">int</a>) <a href="../../../../../../builtin.html#name-error">error</a></i></span><span class="hidden"><i>
+			func (*<a href="#name-Decoder">Decoder</a>).<a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/decoder.go.html#line-95">readEntry</a>(idx *<b>Index</b>) (*<a href="#name-Entry">Entry</a>, <a href="../../../../../../builtin.html#name-error">error</a>)</i></span><span class="hidden"><i>
+			func (*<a href="#name-Decoder">Decoder</a>).<a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/decoder.go.html#line-148">readEntryName</a>(idx *<b>Index</b>, e *<a href="#name-Entry">Entry</a>, flags <a href="../../../../../../builtin.html#name-uint16">uint16</a>) <a href="../../../../../../builtin.html#name-error">error</a></i></span><span class="hidden"><i>
+			func (*<a href="#name-Decoder">Decoder</a>).<a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/decoder.go.html#line-242">readExtension</a>(idx *<b>Index</b>, header []<a href="../../../../../../builtin.html#name-byte">byte</a>) <a href="../../../../../../builtin.html#name-error">error</a></i></span><span class="hidden"><i>
+			func (*<a href="#name-Decoder">Decoder</a>).<a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/decoder.go.html#line-209">readExtensions</a>(idx *<b>Index</b>) <a href="../../../../../../builtin.html#name-error">error</a></i></span><span class="hidden"><i>
+			func (*<a href="#name-Encoder">Encoder</a>).<a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/encoder.go.html#line-64">encodeEntries</a>(idx *<b>Index</b>) <a href="../../../../../../builtin.html#name-error">error</a></i></span><span class="hidden"><i>
+			func (*<a href="#name-Encoder">Encoder</a>).<a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/encoder.go.html#line-56">encodeHeader</a>(idx *<b>Index</b>) <a href="../../../../../../builtin.html#name-error">error</a></i></span><span class="hidden"><i>
+			func github.com/go-git/go-git/v5.<a href="../../../v5.html#name-newIndexBuilder">newIndexBuilder</a>(idx *<b>Index</b>) *<a href="../../../v5.html">git</a>.<a href="../../../v5.html#name-indexBuilder">indexBuilder</a></i></span><span class="hidden"><i>
+			func github.com/go-git/go-git/v5.(*<a href="../../../v5.html#name-Submodule">Submodule</a>).<a href="../../../../../../../src/github.com/go-git/go-git/v5/submodule.go.html#line-64">status</a>(idx *<b>Index</b>) (*<a href="../../../v5.html">git</a>.<a href="../../../v5.html#name-SubmoduleStatus">SubmoduleStatus</a>, <a href="../../../../../../builtin.html#name-error">error</a>)</i></span><span class="hidden"><i>
+			func github.com/go-git/go-git/v5.(*<a href="../../../v5.html#name-Worktree">Worktree</a>).<a href="../../../../../../../src/github.com/go-git/go-git/v5/worktree_status.go.html#line-463">addOrUpdateFileToIndex</a>(idx *<b>Index</b>, filename <a href="../../../../../../builtin.html#name-string">string</a>, h <a href="../../plumbing.html">plumbing</a>.<a href="../../plumbing.html#name-Hash">Hash</a>) <a href="../../../../../../builtin.html#name-error">error</a></i></span><span class="hidden"><i>
+			func github.com/go-git/go-git/v5.(*<a href="../../../v5.html#name-Worktree">Worktree</a>).<a href="../../../../../../../src/github.com/go-git/go-git/v5/worktree_status.go.html#line-578">deleteFromIndex</a>(idx *<b>Index</b>, path <a href="../../../../../../builtin.html#name-string">string</a>) (<a href="../../plumbing.html">plumbing</a>.<a href="../../plumbing.html#name-Hash">Hash</a>, <a href="../../../../../../builtin.html#name-error">error</a>)</i></span><span class="hidden"><i>
+			func github.com/go-git/go-git/v5.(*<a href="../../../v5.html#name-Worktree">Worktree</a>).<a href="../../../../../../../src/github.com/go-git/go-git/v5/worktree_status.go.html#line-299">doAddDirectory</a>(idx *<b>Index</b>, s <a href="../../../v5.html">git</a>.<a href="../../../v5.html#name-Status">Status</a>, directory <a href="../../../../../../builtin.html#name-string">string</a>) (added <a href="../../../../../../builtin.html#name-bool">bool</a>, err <a href="../../../../../../builtin.html#name-error">error</a>)</i></span><span class="hidden"><i>
+			func github.com/go-git/go-git/v5.(*<a href="../../../v5.html#name-Worktree">Worktree</a>).<a href="../../../../../../../src/github.com/go-git/go-git/v5/worktree_status.go.html#line-386">doAddFile</a>(idx *<b>Index</b>, s <a href="../../../v5.html">git</a>.<a href="../../../v5.html#name-Status">Status</a>, path <a href="../../../../../../builtin.html#name-string">string</a>) (added <a href="../../../../../../builtin.html#name-bool">bool</a>, h <a href="../../plumbing.html">plumbing</a>.<a href="../../plumbing.html#name-Hash">Hash</a>, err <a href="../../../../../../builtin.html#name-error">error</a>)</i></span><span class="hidden"><i>
+			func github.com/go-git/go-git/v5.(*<a href="../../../v5.html#name-Worktree">Worktree</a>).<a href="../../../../../../../src/github.com/go-git/go-git/v5/worktree_status.go.html#line-476">doAddFileToIndex</a>(idx *<b>Index</b>, filename <a href="../../../../../../builtin.html#name-string">string</a>, h <a href="../../plumbing.html">plumbing</a>.<a href="../../plumbing.html#name-Hash">Hash</a>) <a href="../../../../../../builtin.html#name-error">error</a></i></span><span class="hidden"><i>
+			func github.com/go-git/go-git/v5.(*<a href="../../../v5.html#name-Worktree">Worktree</a>).<a href="../../../../../../../src/github.com/go-git/go-git/v5/worktree_status.go.html#line-524">doRemoveDirectory</a>(idx *<b>Index</b>, directory <a href="../../../../../../builtin.html#name-string">string</a>) (removed <a href="../../../../../../builtin.html#name-bool">bool</a>, err <a href="../../../../../../builtin.html#name-error">error</a>)</i></span><span class="hidden"><i>
+			func github.com/go-git/go-git/v5.(*<a href="../../../v5.html#name-Worktree">Worktree</a>).<a href="../../../../../../../src/github.com/go-git/go-git/v5/worktree_status.go.html#line-569">doRemoveFile</a>(idx *<b>Index</b>, path <a href="../../../../../../builtin.html#name-string">string</a>) (<a href="../../plumbing.html">plumbing</a>.<a href="../../plumbing.html#name-Hash">Hash</a>, <a href="../../../../../../builtin.html#name-error">error</a>)</i></span></span>
+
+</span></div><div class="anchor type-res" id="name-ResolveUndo" data-popularity="0">	<input type='checkbox' class="fold" id="ResolveUndo-fold-content"><label for="ResolveUndo-fold-content"> <a href="../../../../../../../use/github.com/go-git/go-git/v5/plumbing/format/index..ResolveUndo.html">type</a> <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/index.go.html#line-190">ResolveUndo</a> <i>(struct)</i></label><span id='ResolveUndo-fold-content-docs' class="fold-docs">
+		ResolveUndo is used when a conflict is resolved (e.g. with "git add path"),
+		these higher stage entries are removed and a stage-0 entry with proper
+		resolution is added. When these higher stage entries are removed, they are
+		saved in the resolve undo extension.
+
+		<input type='checkbox' class="fold" id="ResolveUndo-fold-fields"><label for="ResolveUndo-fold-fields">Fields (<i>only one, which is exported</i>)</label><span id='ResolveUndo-fold-fields-items' class="fold-items"><span>
+			<span class="nodocs"><a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/index.go.html#line-191">Entries</a> <i>[]<a href="#name-ResolveUndoEntry">ResolveUndoEntry</a></i></span></span></span>
+
+</span></div><div class="anchor type-res" id="name-ResolveUndoEntry" data-popularity="0">	<input type='checkbox' class="fold" id="ResolveUndoEntry-fold-content"><label for="ResolveUndoEntry-fold-content"> <a href="../../../../../../../use/github.com/go-git/go-git/v5/plumbing/format/index..ResolveUndoEntry.html">type</a> <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/index.go.html#line-195">ResolveUndoEntry</a> <i>(struct)</i></label><span id='ResolveUndoEntry-fold-content-docs' class="fold-docs">
+		ResolveUndoEntry contains the information about a conflict when is resolved
+
+		<input type='checkbox' class="fold" id="ResolveUndoEntry-fold-fields"><label for="ResolveUndoEntry-fold-fields">Fields (<i>total 2, both are exported</i>)</label><span id='ResolveUndoEntry-fold-fields-items' class="fold-items"><span>
+			<span class="nodocs"><a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/index.go.html#line-196">Path</a> <i><a href="../../../../../../builtin.html#name-string">string</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/index.go.html#line-197">Stages</a> <i>map[<a href="#name-Stage">Stage</a>]<a href="../../plumbing.html">plumbing</a>.<a href="../../plumbing.html#name-Hash">Hash</a></i></span></span></span>
+
+</span></div><div class="anchor type-res" id="name-Stage" data-popularity="15">	<input type='checkbox' class="fold" id="Stage-fold-content"><label for="Stage-fold-content"> <a href="../../../../../../../use/github.com/go-git/go-git/v5/plumbing/format/index..Stage.html">type</a> <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/index.go.html#line-28">Stage</a> <a href="../../../../../../builtin.html#name-int">int</a> <i>(basic type)</i></label><span id='Stage-fold-content-docs' class="fold-docs">
+		Stage during merge
+
+		<input type='checkbox' class="fold" id="Stage-fold-values"><label for="Stage-fold-values">As Types Of (<i>total 4, all are exported</i>)</label><span id='Stage-fold-values-items' class="fold-items"><span>
+			const <a href="#name-AncestorMode">AncestorMode</a></span><span>
+			const <a href="#name-Merged">Merged</a></span><span>
+			const <a href="#name-OurMode">OurMode</a></span><span>
+			const <a href="#name-TheirMode">TheirMode</a></span></span>
+
+</span></div><div class="anchor type-res" id="name-Tree" data-popularity="0">	<input type='checkbox' class="fold" id="Tree-fold-content"><label for="Tree-fold-content"> <a href="../../../../../../../use/github.com/go-git/go-git/v5/plumbing/format/index..Tree.html">type</a> <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/index.go.html#line-168">Tree</a> <i>(struct)</i></label><span id='Tree-fold-content-docs' class="fold-docs">
+		Tree contains pre-computed hashes for trees that can be derived from the
+		index. It helps speed up tree object generation from index for a new commit.
+
+		<input type='checkbox' class="fold" id="Tree-fold-fields"><label for="Tree-fold-fields">Fields (<i>only one, which is exported</i>)</label><span id='Tree-fold-fields-items' class="fold-items"><span>
+			<span class="nodocs"><a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/index.go.html#line-169">Entries</a> <i>[]<a href="#name-TreeEntry">TreeEntry</a></i></span></span></span>
+
+</span></div><div class="anchor type-res" id="name-TreeEntry" data-popularity="0">	<input type='checkbox' class="fold" id="TreeEntry-fold-content"><label for="TreeEntry-fold-content"> <a href="../../../../../../../use/github.com/go-git/go-git/v5/plumbing/format/index..TreeEntry.html">type</a> <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/index.go.html#line-173">TreeEntry</a> <i>(struct)</i></label><span id='TreeEntry-fold-content-docs' class="fold-docs">
+		TreeEntry entry of a cached Tree
+
+		<input type='checkbox' class="fold" id="TreeEntry-fold-fields"><label for="TreeEntry-fold-fields">Fields (<i>total 4, all are exported</i>)</label><span id='TreeEntry-fold-fields-items' class="fold-items"><span>
+			<input type='checkbox' class="fold" id="TreeEntry-fold-field-Entries"><label for="TreeEntry-fold-field-Entries"><a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/index.go.html#line-178">Entries</a> <i><a href="../../../../../../builtin.html#name-int">int</a></i></label><span id='TreeEntry-fold-field-Entries-docs' class="fold-docs">
+				Entries is the number of entries in the index that is covered by the tree
+				this entry represents.
+</span></span><span>
+			<input type='checkbox' class="fold" id="TreeEntry-fold-field-Hash"><label for="TreeEntry-fold-field-Hash"><a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/index.go.html#line-183">Hash</a> <i><a href="../../plumbing.html">plumbing</a>.<a href="../../plumbing.html#name-Hash">Hash</a></i></label><span id='TreeEntry-fold-field-Hash-docs' class="fold-docs">
+				Hash object name for the object that would result from writing this span
+				of index as a tree.
+</span></span><span>
+			<input type='checkbox' class="fold" id="TreeEntry-fold-field-Path"><label for="TreeEntry-fold-field-Path"><a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/index.go.html#line-175">Path</a> <i><a href="../../../../../../builtin.html#name-string">string</a></i></label><span id='TreeEntry-fold-field-Path-docs' class="fold-docs">
+				Path component (relative to its parent directory)
+</span></span><span>
+			<input type='checkbox' class="fold" id="TreeEntry-fold-field-Trees"><label for="TreeEntry-fold-field-Trees"><a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/index.go.html#line-180">Trees</a> <i><a href="../../../../../../builtin.html#name-int">int</a></i></label><span id='TreeEntry-fold-field-Trees-docs' class="fold-docs">
+				Trees is the number that represents the number of subtrees this tree has
+</span></span></span>
+
+</span></div></div><div>	<input type='checkbox' class="showhide" id="unexported-typenames-showhide"><i><label for="unexported-typenames-showhide" class="show-inline">/* 4 unexporteds ... */</label><label for="unexported-typenames-showhide" class="hide-inline">/* 4 unexporteds: */</label></i><div class="anchor type-res hidden" id="name-byName" data-popularity="250">	<input type='checkbox' class="fold" id="byName-fold-content"><label for="byName-fold-content"> <a href="../../../../../../../use/github.com/go-git/go-git/v5/plumbing/format/index..byName*67fa0.html">type</a> <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/encoder.go.html#line-146">byName</a> <i>([]T)</i></label><span id='byName-fold-content-docs' class="fold-docs">
+
+		<input type='checkbox' class="fold" id="byName-fold-methods"><label for="byName-fold-methods">Methods (<i>total 3, all are exported</i>)</label><span id='byName-fold-methods-items' class="fold-items"><span>
+			<span class="nodocs">( T) <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/encoder.go.html#line-148">Len</a>() <a href="../../../../../../builtin.html#name-int">int</a></span></span><span>
+			<span class="nodocs">( T) <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/encoder.go.html#line-150">Less</a>(i, j <a href="../../../../../../builtin.html#name-int">int</a>) <a href="../../../../../../builtin.html#name-bool">bool</a></span></span><span>
+			<span class="nodocs">( T) <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/encoder.go.html#line-149">Swap</a>(i, j <a href="../../../../../../builtin.html#name-int">int</a>)</span></span></span>
+		<input type='checkbox' class="fold" id="byName-fold-impls"><label for="byName-fold-impls">Implements (<i>at least 2, in which 1 are exported</i>)</label><span id='byName-fold-impls-items' class="fold-items"><span>
+			 T : sort.<a href="../../../../../../sort.html#name-Interface">Interface</a></span>
+			<input type='checkbox' checked class="showhide" id="byName-showhide-impls"><i><label for="byName-showhide-impls" class="show-inline">/* at least one unexported ... */</label><label for="byName-showhide-impls" class="hide-inline">/* at least one unexported: */</label></i><span class="hidden"><i>
+			 T : github.com/aws/aws-sdk-go/aws/corehandlers.<a href="../../../../../aws/aws-sdk-go/aws/corehandlers.html#name-lener">lener</a></i></span></span>
+
+</span></div><div class="anchor type-res hidden" id="name-endOfIndexEntryDecoder" data-popularity="50">	<input type='checkbox' class="fold" id="endOfIndexEntryDecoder-fold-content"><label for="endOfIndexEntryDecoder-fold-content"> <a href="../../../../../../../use/github.com/go-git/go-git/v5/plumbing/format/index..endOfIndexEntryDecoder*6518f.html">type</a> <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/decoder.go.html#line-464">endOfIndexEntryDecoder</a> <i>(struct)</i></label><span id='endOfIndexEntryDecoder-fold-content-docs' class="fold-docs">
+
+		<input type='checkbox' class="fold" id="endOfIndexEntryDecoder-fold-fields"><label for="endOfIndexEntryDecoder-fold-fields">Fields (<i>only one, which is unexported</i>)</label><span id='endOfIndexEntryDecoder-fold-fields-items' class="fold-items">
+			<input type='checkbox' checked class="showhide" id="endOfIndexEntryDecoder-showhide-fields"><i><label for="endOfIndexEntryDecoder-showhide-fields" class="show-inline">/* one unexported ... */</label><label for="endOfIndexEntryDecoder-showhide-fields" class="hide-inline">/* one unexported: */</label></i><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/decoder.go.html#line-332">r</a> <i>*<a href="../../../../../../bufio.html">bufio</a>.<a href="../../../../../../bufio.html#name-Reader">Reader</a></i></span></i></span></span>
+		<input type='checkbox' class="fold" id="endOfIndexEntryDecoder-fold-methods"><label for="endOfIndexEntryDecoder-fold-methods">Methods (<i>only one, which is exported</i>)</label><span id='endOfIndexEntryDecoder-fold-methods-items' class="fold-items"><span>
+			<span class="nodocs">(*T) <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/decoder.go.html#line-468">Decode</a>(e *<a href="#name-EndOfIndexEntry">EndOfIndexEntry</a>) <a href="../../../../../../builtin.html#name-error">error</a></span></span></span>
+
+</span></div><div class="anchor type-res hidden" id="name-resolveUndoDecoder" data-popularity="150">	<input type='checkbox' class="fold" id="resolveUndoDecoder-fold-content"><label for="resolveUndoDecoder-fold-content"> <a href="../../../../../../../use/github.com/go-git/go-git/v5/plumbing/format/index..resolveUndoDecoder*d91e8.html">type</a> <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/decoder.go.html#line-397">resolveUndoDecoder</a> <i>(struct)</i></label><span id='resolveUndoDecoder-fold-content-docs' class="fold-docs">
+
+		<input type='checkbox' class="fold" id="resolveUndoDecoder-fold-fields"><label for="resolveUndoDecoder-fold-fields">Fields (<i>only one, which is unexported</i>)</label><span id='resolveUndoDecoder-fold-fields-items' class="fold-items">
+			<input type='checkbox' checked class="showhide" id="resolveUndoDecoder-showhide-fields"><i><label for="resolveUndoDecoder-showhide-fields" class="show-inline">/* one unexported ... */</label><label for="resolveUndoDecoder-showhide-fields" class="hide-inline">/* one unexported: */</label></i><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/decoder.go.html#line-332">r</a> <i>*<a href="../../../../../../bufio.html">bufio</a>.<a href="../../../../../../bufio.html#name-Reader">Reader</a></i></span></i></span></span>
+		<input type='checkbox' class="fold" id="resolveUndoDecoder-fold-methods"><label for="resolveUndoDecoder-fold-methods">Methods (<i>total 3, in which 1 are exported</i>)</label><span id='resolveUndoDecoder-fold-methods-items' class="fold-items"><span>
+			<span class="nodocs">(*T) <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/decoder.go.html#line-401">Decode</a>(ru *<a href="#name-ResolveUndo">ResolveUndo</a>) <a href="../../../../../../builtin.html#name-error">error</a></span></span>
+			<input type='checkbox' checked class="showhide" id="resolveUndoDecoder-showhide-methods"><i><label for="resolveUndoDecoder-showhide-methods" class="show-inline">/* 2 unexporteds ... */</label><label for="resolveUndoDecoder-showhide-methods" class="hide-inline">/* 2 unexporteds: */</label></i><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/decoder.go.html#line-416">readEntry</a>() (*<a href="#name-ResolveUndoEntry">ResolveUndoEntry</a>, <a href="../../../../../../builtin.html#name-error">error</a>)</span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/decoder.go.html#line-446">readStage</a>(e *<a href="#name-ResolveUndoEntry">ResolveUndoEntry</a>, s <a href="#name-Stage">Stage</a>) <a href="../../../../../../builtin.html#name-error">error</a></span></i></span></span>
+
+</span></div><div class="anchor type-res hidden" id="name-treeExtensionDecoder" data-popularity="100">	<input type='checkbox' class="fold" id="treeExtensionDecoder-fold-content"><label for="treeExtensionDecoder-fold-content"> <a href="../../../../../../../use/github.com/go-git/go-git/v5/plumbing/format/index..treeExtensionDecoder*fa253.html">type</a> <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/decoder.go.html#line-331">treeExtensionDecoder</a> <i>(struct)</i></label><span id='treeExtensionDecoder-fold-content-docs' class="fold-docs">
+
+		<input type='checkbox' class="fold" id="treeExtensionDecoder-fold-fields"><label for="treeExtensionDecoder-fold-fields">Fields (<i>only one, which is unexported</i>)</label><span id='treeExtensionDecoder-fold-fields-items' class="fold-items">
+			<input type='checkbox' checked class="showhide" id="treeExtensionDecoder-showhide-fields"><i><label for="treeExtensionDecoder-showhide-fields" class="show-inline">/* one unexported ... */</label><label for="treeExtensionDecoder-showhide-fields" class="hide-inline">/* one unexported: */</label></i><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/decoder.go.html#line-332">r</a> <i>*<a href="../../../../../../bufio.html">bufio</a>.<a href="../../../../../../bufio.html#name-Reader">Reader</a></i></span></i></span></span>
+		<input type='checkbox' class="fold" id="treeExtensionDecoder-fold-methods"><label for="treeExtensionDecoder-fold-methods">Methods (<i>total 2, in which 1 are exported</i>)</label><span id='treeExtensionDecoder-fold-methods-items' class="fold-items"><span>
+			<span class="nodocs">(*T) <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/decoder.go.html#line-335">Decode</a>(t *<a href="#name-Tree">Tree</a>) <a href="../../../../../../builtin.html#name-error">error</a></span></span>
+			<input type='checkbox' checked class="showhide" id="treeExtensionDecoder-showhide-methods"><i><label for="treeExtensionDecoder-showhide-methods" class="show-inline">/* one unexported ... */</label><label for="treeExtensionDecoder-showhide-methods" class="hide-inline">/* one unexported: */</label></i><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/decoder.go.html#line-354">readEntry</a>() (*<a href="#name-TreeEntry">TreeEntry</a>, <a href="../../../../../../builtin.html#name-error">error</a>)</span></i></span></span>
+
+</span></div></div>
+<div id="exported-functions"><span class="title">Package-Level Functions<span class="title-stat"><i> (total 7, in which 2 are exported)</i></span></span>
+
+<div class="anchor value-res" id="name-NewDecoder">	<input type='checkbox' class="fold" id="NewDecoder-fold-content"><label for="NewDecoder-fold-content"> <a href="../../../../../../../use/github.com/go-git/go-git/v5/plumbing/format/index..NewDecoder.html">func</a> <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/decoder.go.html#line-51">NewDecoder</a>(r <a href="../../../../../../io.html">io</a>.<a href="../../../../../../io.html#name-Reader">Reader</a>) *<a href="#name-Decoder">Decoder</a></label><span id='NewDecoder-fold-content-docs' class="fold-docs">
+		NewDecoder returns a new decoder that reads from r.
+
+</span></div><div class="anchor value-res" id="name-NewEncoder">	<input type='checkbox' class="fold" id="NewEncoder-fold-content"><label for="NewEncoder-fold-content"> <a href="../../../../../../../use/github.com/go-git/go-git/v5/plumbing/format/index..NewEncoder.html">func</a> <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/encoder.go.html#line-31">NewEncoder</a>(w <a href="../../../../../../io.html">io</a>.<a href="../../../../../../io.html#name-Writer">Writer</a>) *<a href="#name-Encoder">Encoder</a></label><span id='NewEncoder-fold-content-docs' class="fold-docs">
+		NewEncoder returns a new encoder that writes to w.
+
+</span></div>	<input type='checkbox' class="showhide" id="unexported-functions-showhide"><i><label for="unexported-functions-showhide" class="show-inline">/* 5 unexporteds ... */</label><label for="unexported-functions-showhide" class="hide-inline">/* 5 unexporteds: */</label></i><div class="anchor value-res hidden" id="name-getEsc"><i>	<input type='checkbox' class="fold" id="getEsc-fold-content"><label for="getEsc-fold-content"> <a href="../../../../../../../use/github.com/go-git/go-git/v5/plumbing/format/index..getEsc*30981.html">func</a> <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/match.go.html#line-165">getEsc</a>(chunk <a href="../../../../../../builtin.html#name-string">string</a>) (r <a href="../../../../../../builtin.html#name-rune">rune</a>, nchunk <a href="../../../../../../builtin.html#name-string">string</a>, err <a href="../../../../../../builtin.html#name-error">error</a>)</label><span id='getEsc-fold-content-docs' class="fold-docs">
+		getEsc gets a possibly-escaped character from chunk, for a character class.
+
+</span></i></div><div class="anchor value-res hidden" id="name-match"><i>	<input type='checkbox' class="fold" id="match-fold-content"><label for="match-fold-content"> <a href="../../../../../../../use/github.com/go-git/go-git/v5/plumbing/format/index..match*4945a.html">func</a> <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/match.go.html#line-12">match</a>(pattern, name <a href="../../../../../../builtin.html#name-string">string</a>) (matched <a href="../../../../../../builtin.html#name-bool">bool</a>, err <a href="../../../../../../builtin.html#name-error">error</a>)</label><span id='match-fold-content-docs' class="fold-docs">
+		match is filepath.Match with support to match fullpath and not only filenames
+		code from:
+		https://github.com/golang/go/blob/39852bf4cce6927e01d0136c7843f65a801738cb/src/path/filepath/match.go#L44-L224
+
+</span></i></div><div class="anchor value-res hidden" id="name-matchChunk"><i>	<input type='checkbox' class="fold" id="matchChunk-fold-content"><label for="matchChunk-fold-content"> <a href="../../../../../../../use/github.com/go-git/go-git/v5/plumbing/format/index..matchChunk*508e0.html">func</a> <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/match.go.html#line-89">matchChunk</a>(chunk, s <a href="../../../../../../builtin.html#name-string">string</a>) (rest <a href="../../../../../../builtin.html#name-string">string</a>, ok <a href="../../../../../../builtin.html#name-bool">bool</a>, err <a href="../../../../../../builtin.html#name-error">error</a>)</label><span id='matchChunk-fold-content-docs' class="fold-docs">
+		matchChunk checks whether chunk matches the beginning of s.
+		If so, it returns the remainder of s (after the match).
+		Chunk is all single-character operators: literals, char classes, and ?.
+
+</span></i></div><div class="anchor value-res hidden" id="name-scanChunk"><i>	<input type='checkbox' class="fold" id="scanChunk-fold-content"><label for="scanChunk-fold-content"> <a href="../../../../../../../use/github.com/go-git/go-git/v5/plumbing/format/index..scanChunk*5ab0e.html">func</a> <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/match.go.html#line-56">scanChunk</a>(pattern <a href="../../../../../../builtin.html#name-string">string</a>) (star <a href="../../../../../../builtin.html#name-bool">bool</a>, chunk, rest <a href="../../../../../../builtin.html#name-string">string</a>)</label><span id='scanChunk-fold-content-docs' class="fold-docs">
+		scanChunk gets the next segment of pattern, which is a non-star string
+		possibly preceded by a star.
+
+</span></i></div><div class="anchor value-res hidden" id="name-validateHeader"><i>	<span class="nodocs"> <a href="../../../../../../../use/github.com/go-git/go-git/v5/plumbing/format/index..validateHeader*b9a54.html">func</a> <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/decoder.go.html#line-309">validateHeader</a>(r <a href="../../../../../../io.html">io</a>.<a href="../../../../../../io.html#name-Reader">Reader</a>) (version <a href="../../../../../../builtin.html#name-uint32">uint32</a>, err <a href="../../../../../../builtin.html#name-error">error</a>)</span></i></div></div>
+<div id="exported-variables"><span class="title">Package-Level Variables<span class="title-stat"><i> (total 12, in which 7 are exported)</i></span></span>
+
+<div class="anchor value-res" id="name-DecodeVersionSupported">	<input type='checkbox' class="fold" id="DecodeVersionSupported-fold-content"><label for="DecodeVersionSupported-fold-content">  <a href="../../../../../../../use/github.com/go-git/go-git/v5/plumbing/format/index..DecodeVersionSupported.html">var</a> <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/decoder.go.html#line-20">DecodeVersionSupported</a> struct{Min <a href="../../../../../../builtin.html#name-uint32">uint32</a>; Max <a href="../../../../../../builtin.html#name-uint32">uint32</a>}</label><span id='DecodeVersionSupported-fold-content-docs' class="fold-docs">
+		DecodeVersionSupported is the range of supported index versions
+
+</span></div><div class="anchor value-res" id="name-EncodeVersionSupported">	<input type='checkbox' class="fold" id="EncodeVersionSupported-fold-content"><label for="EncodeVersionSupported-fold-content">  <a href="../../../../../../../use/github.com/go-git/go-git/v5/plumbing/format/index..EncodeVersionSupported.html">var</a> <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/encoder.go.html#line-17">EncodeVersionSupported</a> <a href="../../../../../../builtin.html#name-uint32">uint32</a></label><span id='EncodeVersionSupported-fold-content-docs' class="fold-docs">
+		EncodeVersionSupported is the range of supported index versions
+
+</span></div><div class="anchor value-res" id="name-ErrEntryNotFound">	<input type='checkbox' class="fold" id="ErrEntryNotFound-fold-content"><label for="ErrEntryNotFound-fold-content">  <a href="../../../../../../../use/github.com/go-git/go-git/v5/plumbing/format/index..ErrEntryNotFound.html">var</a> <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/index.go.html#line-19">ErrEntryNotFound</a> <a href="../../../../../../builtin.html#name-error">error</a></label><span id='ErrEntryNotFound-fold-content-docs' class="fold-docs">
+		ErrEntryNotFound is returned by Index.Entry, if an entry is not found.
+
+</span></div><div class="anchor value-res" id="name-ErrInvalidChecksum">	<input type='checkbox' class="fold" id="ErrInvalidChecksum-fold-content"><label for="ErrInvalidChecksum-fold-content">  <a href="../../../../../../../use/github.com/go-git/go-git/v5/plumbing/format/index..ErrInvalidChecksum.html">var</a> <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/decoder.go.html#line-27">ErrInvalidChecksum</a> <a href="../../../../../../builtin.html#name-error">error</a></label><span id='ErrInvalidChecksum-fold-content-docs' class="fold-docs">
+		ErrInvalidChecksum is returned by Decode if the SHA1 hash mismatch with
+		the read content
+
+</span></div><div class="anchor value-res" id="name-ErrInvalidTimestamp">	<input type='checkbox' class="fold" id="ErrInvalidTimestamp-fold-content"><label for="ErrInvalidTimestamp-fold-content">  <a href="../../../../../../../use/github.com/go-git/go-git/v5/plumbing/format/index..ErrInvalidTimestamp.html">var</a> <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/encoder.go.html#line-21">ErrInvalidTimestamp</a> <a href="../../../../../../builtin.html#name-error">error</a></label><span id='ErrInvalidTimestamp-fold-content-docs' class="fold-docs">
+		ErrInvalidTimestamp is returned by Encode if a Index with a Entry with
+		negative timestamp values
+
+</span></div><div class="anchor value-res" id="name-ErrMalformedSignature">	<input type='checkbox' class="fold" id="ErrMalformedSignature-fold-content"><label for="ErrMalformedSignature-fold-content">  <a href="../../../../../../../use/github.com/go-git/go-git/v5/plumbing/format/index..ErrMalformedSignature.html">var</a> <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/decoder.go.html#line-24">ErrMalformedSignature</a> <a href="../../../../../../builtin.html#name-error">error</a></label><span id='ErrMalformedSignature-fold-content-docs' class="fold-docs">
+		ErrMalformedSignature is returned by Decode when the index header file is
+		malformed
+
+</span></div><div class="anchor value-res" id="name-ErrUnsupportedVersion">	<input type='checkbox' class="fold" id="ErrUnsupportedVersion-fold-content"><label for="ErrUnsupportedVersion-fold-content">  <a href="../../../../../../../use/github.com/go-git/go-git/v5/plumbing/format/index..ErrUnsupportedVersion.html">var</a> <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/index.go.html#line-17">ErrUnsupportedVersion</a> <a href="../../../../../../builtin.html#name-error">error</a></label><span id='ErrUnsupportedVersion-fold-content-docs' class="fold-docs">
+		ErrUnsupportedVersion is returned by Decode when the index file version
+		is not supported.
+
+</span></div>	<input type='checkbox' class="showhide" id="unexported-variables-showhide"><i><label for="unexported-variables-showhide" class="show-inline">/* 5 unexporteds ... */</label><label for="unexported-variables-showhide" class="hide-inline">/* 5 unexporteds: */</label></i><div class="anchor value-res hidden" id="name-endOfIndexEntryExtSignature"><i>	<span class="nodocs">  <a href="../../../../../../../use/github.com/go-git/go-git/v5/plumbing/format/index..endOfIndexEntryExtSignature*e9ea5.html">var</a> <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/index.go.html#line-24">endOfIndexEntryExtSignature</a> []<a href="../../../../../../builtin.html#name-byte">byte</a></span></i></div><div class="anchor value-res hidden" id="name-errUnknownExtension"><i>	<span class="nodocs">  <a href="../../../../../../../use/github.com/go-git/go-git/v5/plumbing/format/index..errUnknownExtension*0fb37.html">var</a> <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/decoder.go.html#line-29">errUnknownExtension</a> <a href="../../../../../../builtin.html#name-error">error</a></span></i></div><div class="anchor value-res hidden" id="name-indexSignature"><i>	<span class="nodocs">  <a href="../../../../../../../use/github.com/go-git/go-git/v5/plumbing/format/index..indexSignature*74567.html">var</a> <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/index.go.html#line-21">indexSignature</a> []<a href="../../../../../../builtin.html#name-byte">byte</a></span></i></div><div class="anchor value-res hidden" id="name-resolveUndoExtSignature"><i>	<span class="nodocs">  <a href="../../../../../../../use/github.com/go-git/go-git/v5/plumbing/format/index..resolveUndoExtSignature*3dfe2.html">var</a> <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/index.go.html#line-23">resolveUndoExtSignature</a> []<a href="../../../../../../builtin.html#name-byte">byte</a></span></i></div><div class="anchor value-res hidden" id="name-treeExtSignature"><i>	<span class="nodocs">  <a href="../../../../../../../use/github.com/go-git/go-git/v5/plumbing/format/index..treeExtSignature*40cd7.html">var</a> <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/index.go.html#line-22">treeExtSignature</a> []<a href="../../../../../../builtin.html#name-byte">byte</a></span></i></div></div>
+<div id="exported-constants"><span class="title">Package-Level Constants<span class="title-stat"><i> (total 10, in which 4 are exported)</i></span></span>
+
+<div class="anchor value-res" id="name-AncestorMode">	<input type='checkbox' class="fold" id="AncestorMode-fold-content"><label for="AncestorMode-fold-content"><a href="../../../../../../../use/github.com/go-git/go-git/v5/plumbing/format/index..AncestorMode.html">const</a> <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/index.go.html#line-34">AncestorMode</a> <a href="#name-Stage">Stage</a> = 1</label><span id='AncestorMode-fold-content-docs' class="fold-docs">
+		AncestorMode is the base revision
+
+</span></div><div class="anchor value-res" id="name-Merged">	<input type='checkbox' class="fold" id="Merged-fold-content"><label for="Merged-fold-content"><a href="../../../../../../../use/github.com/go-git/go-git/v5/plumbing/format/index..Merged.html">const</a> <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/index.go.html#line-32">Merged</a> <a href="#name-Stage">Stage</a> = 1</label><span id='Merged-fold-content-docs' class="fold-docs">
+		Merged is the default stage, fully merged
+
+</span></div><div class="anchor value-res" id="name-OurMode">	<input type='checkbox' class="fold" id="OurMode-fold-content"><label for="OurMode-fold-content"><a href="../../../../../../../use/github.com/go-git/go-git/v5/plumbing/format/index..OurMode.html">const</a> <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/index.go.html#line-36">OurMode</a> <a href="#name-Stage">Stage</a> = 2</label><span id='OurMode-fold-content-docs' class="fold-docs">
+		OurMode is the first tree revision, ours
+
+</span></div><div class="anchor value-res" id="name-TheirMode">	<input type='checkbox' class="fold" id="TheirMode-fold-content"><label for="TheirMode-fold-content"><a href="../../../../../../../use/github.com/go-git/go-git/v5/plumbing/format/index..TheirMode.html">const</a> <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/index.go.html#line-38">TheirMode</a> <a href="#name-Stage">Stage</a> = 3</label><span id='TheirMode-fold-content-docs' class="fold-docs">
+		TheirMode is the second tree revision, theirs
+
+</span></div>	<input type='checkbox' class="showhide" id="unexported-constants-showhide"><i><label for="unexported-constants-showhide" class="show-inline">/* 6 unexporteds ... */</label><label for="unexported-constants-showhide" class="hide-inline">/* 6 unexporteds: */</label></i><div class="anchor value-res hidden" id="name-entryExtended"><i>	<span class="nodocs"><a href="../../../../../../../use/github.com/go-git/go-git/v5/plumbing/format/index..entryExtended*ca003.html">const</a> <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/decoder.go.html#line-34">entryExtended</a> = 16384</span></i></div><div class="anchor value-res hidden" id="name-entryHeaderLength"><i>	<span class="nodocs"><a href="../../../../../../../use/github.com/go-git/go-git/v5/plumbing/format/index..entryHeaderLength*15588.html">const</a> <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/decoder.go.html#line-33">entryHeaderLength</a> = 62</span></i></div><div class="anchor value-res hidden" id="name-entryValid"><i>	<span class="nodocs"><a href="../../../../../../../use/github.com/go-git/go-git/v5/plumbing/format/index..entryValid*ea0db.html">const</a> <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/decoder.go.html#line-35">entryValid</a> = 32768</span></i></div><div class="anchor value-res hidden" id="name-intentToAddMask"><i>	<span class="nodocs"><a href="../../../../../../../use/github.com/go-git/go-git/v5/plumbing/format/index..intentToAddMask*0b8d2.html">const</a> <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/decoder.go.html#line-37">intentToAddMask</a> = 8192</span></i></div><div class="anchor value-res hidden" id="name-nameMask"><i>	<span class="nodocs"><a href="../../../../../../../use/github.com/go-git/go-git/v5/plumbing/format/index..nameMask*fb07b.html">const</a> <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/decoder.go.html#line-36">nameMask</a> = 4095</span></i></div><div class="anchor value-res hidden" id="name-skipWorkTreeMask"><i>	<span class="nodocs"><a href="../../../../../../../use/github.com/go-git/go-git/v5/plumbing/format/index..skipWorkTreeMask*57451.html">const</a> <a href="../../../../../../../src/github.com/go-git/go-git/v5/plumbing/format/index/decoder.go.html#line-38">skipWorkTreeMask</a> = 16384</span></i></div></div></code></pre><pre id="footer">
+<table><tr><td><img src="../../../../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

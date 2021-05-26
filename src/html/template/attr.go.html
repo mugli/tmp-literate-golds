@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: attr.go in package html/template</title>
+<link href="../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	attr.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../pkg/html/template.html">html/template</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2011 The Go Authors. All rights reserved.</span><span class="comment"> Use of this source code is governed by a BSD-style</span><span class="comment"> license that can be found in the LICENSE file.</span></div>
+<div class="code"><pre><code>
+<span class="keyword">package</span> template
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"strings"</span></label>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> attrTypeMap[n] describes the value of the given attribute.</span><span class="comment"> If an attribute affects (or can mask) the encoding or interpretation of</span><span class="comment"> other content, or affects the contents, idempotency, or credentials of a</span><span class="comment"> network message, then the value in this map is contentTypeUnsafe.</span><span class="comment"> This map is derived from HTML5, specifically</span><span class="comment"> https://www.w3.org/TR/html5/Overview.html#attributes-1</span><span class="comment"> as well as "%URI"-typed attributes from</span><span class="comment"> https://www.w3.org/TR/html4/index/attributes.html</span></div>
+<div class="code"><pre><code><span class="keyword">var</span> <a href="../../../pkg/html/template.html#name-attrTypeMap" class="ident">attrTypeMap</a> = <span class="keyword">map</span>[<a href="../../../pkg/builtin.html#name-string" class="ident">string</a>]<a href="content.go.html#line-96" class="ident">contentType</a>{
+	<span class="lit-string">"accept"</span>:          <a href="content.go.html#line-99" class="ident">contentTypePlain</a>,
+	<span class="lit-string">"accept-charset"</span>:  <a href="content.go.html#line-110" class="ident">contentTypeUnsafe</a>,
+	<span class="lit-string">"action"</span>:          <a href="content.go.html#line-105" class="ident">contentTypeURL</a>,
+	<span class="lit-string">"alt"</span>:             <a href="content.go.html#line-99" class="ident">contentTypePlain</a>,
+	<span class="lit-string">"archive"</span>:         <a href="content.go.html#line-105" class="ident">contentTypeURL</a>,
+	<span class="lit-string">"async"</span>:           <a href="content.go.html#line-110" class="ident">contentTypeUnsafe</a>,
+	<span class="lit-string">"autocomplete"</span>:    <a href="content.go.html#line-99" class="ident">contentTypePlain</a>,
+	<span class="lit-string">"autofocus"</span>:       <a href="content.go.html#line-99" class="ident">contentTypePlain</a>,
+	<span class="lit-string">"autoplay"</span>:        <a href="content.go.html#line-99" class="ident">contentTypePlain</a>,
+	<span class="lit-string">"background"</span>:      <a href="content.go.html#line-105" class="ident">contentTypeURL</a>,
+	<span class="lit-string">"border"</span>:          <a href="content.go.html#line-99" class="ident">contentTypePlain</a>,
+	<span class="lit-string">"checked"</span>:         <a href="content.go.html#line-99" class="ident">contentTypePlain</a>,
+	<span class="lit-string">"cite"</span>:            <a href="content.go.html#line-105" class="ident">contentTypeURL</a>,
+	<span class="lit-string">"challenge"</span>:       <a href="content.go.html#line-110" class="ident">contentTypeUnsafe</a>,
+	<span class="lit-string">"charset"</span>:         <a href="content.go.html#line-110" class="ident">contentTypeUnsafe</a>,
+	<span class="lit-string">"class"</span>:           <a href="content.go.html#line-99" class="ident">contentTypePlain</a>,
+	<span class="lit-string">"classid"</span>:         <a href="content.go.html#line-105" class="ident">contentTypeURL</a>,
+	<span class="lit-string">"codebase"</span>:        <a href="content.go.html#line-105" class="ident">contentTypeURL</a>,
+	<span class="lit-string">"cols"</span>:            <a href="content.go.html#line-99" class="ident">contentTypePlain</a>,
+	<span class="lit-string">"colspan"</span>:         <a href="content.go.html#line-99" class="ident">contentTypePlain</a>,
+	<span class="lit-string">"content"</span>:         <a href="content.go.html#line-110" class="ident">contentTypeUnsafe</a>,
+	<span class="lit-string">"contenteditable"</span>: <a href="content.go.html#line-99" class="ident">contentTypePlain</a>,
+	<span class="lit-string">"contextmenu"</span>:     <a href="content.go.html#line-99" class="ident">contentTypePlain</a>,
+	<span class="lit-string">"controls"</span>:        <a href="content.go.html#line-99" class="ident">contentTypePlain</a>,
+	<span class="lit-string">"coords"</span>:          <a href="content.go.html#line-99" class="ident">contentTypePlain</a>,
+	<span class="lit-string">"crossorigin"</span>:     <a href="content.go.html#line-110" class="ident">contentTypeUnsafe</a>,
+	<span class="lit-string">"data"</span>:            <a href="content.go.html#line-105" class="ident">contentTypeURL</a>,
+	<span class="lit-string">"datetime"</span>:        <a href="content.go.html#line-99" class="ident">contentTypePlain</a>,
+	<span class="lit-string">"default"</span>:         <a href="content.go.html#line-99" class="ident">contentTypePlain</a>,
+	<span class="lit-string">"defer"</span>:           <a href="content.go.html#line-110" class="ident">contentTypeUnsafe</a>,
+	<span class="lit-string">"dir"</span>:             <a href="content.go.html#line-99" class="ident">contentTypePlain</a>,
+	<span class="lit-string">"dirname"</span>:         <a href="content.go.html#line-99" class="ident">contentTypePlain</a>,
+	<span class="lit-string">"disabled"</span>:        <a href="content.go.html#line-99" class="ident">contentTypePlain</a>,
+	<span class="lit-string">"draggable"</span>:       <a href="content.go.html#line-99" class="ident">contentTypePlain</a>,
+	<span class="lit-string">"dropzone"</span>:        <a href="content.go.html#line-99" class="ident">contentTypePlain</a>,
+	<span class="lit-string">"enctype"</span>:         <a href="content.go.html#line-110" class="ident">contentTypeUnsafe</a>,
+	<span class="lit-string">"for"</span>:             <a href="content.go.html#line-99" class="ident">contentTypePlain</a>,
+	<span class="lit-string">"form"</span>:            <a href="content.go.html#line-110" class="ident">contentTypeUnsafe</a>,
+	<span class="lit-string">"formaction"</span>:      <a href="content.go.html#line-105" class="ident">contentTypeURL</a>,
+	<span class="lit-string">"formenctype"</span>:     <a href="content.go.html#line-110" class="ident">contentTypeUnsafe</a>,
+	<span class="lit-string">"formmethod"</span>:      <a href="content.go.html#line-110" class="ident">contentTypeUnsafe</a>,
+	<span class="lit-string">"formnovalidate"</span>:  <a href="content.go.html#line-110" class="ident">contentTypeUnsafe</a>,
+	<span class="lit-string">"formtarget"</span>:      <a href="content.go.html#line-99" class="ident">contentTypePlain</a>,
+	<span class="lit-string">"headers"</span>:         <a href="content.go.html#line-99" class="ident">contentTypePlain</a>,
+	<span class="lit-string">"height"</span>:          <a href="content.go.html#line-99" class="ident">contentTypePlain</a>,
+	<span class="lit-string">"hidden"</span>:          <a href="content.go.html#line-99" class="ident">contentTypePlain</a>,
+	<span class="lit-string">"high"</span>:            <a href="content.go.html#line-99" class="ident">contentTypePlain</a>,
+	<span class="lit-string">"href"</span>:            <a href="content.go.html#line-105" class="ident">contentTypeURL</a>,
+	<span class="lit-string">"hreflang"</span>:        <a href="content.go.html#line-99" class="ident">contentTypePlain</a>,
+	<span class="lit-string">"http-equiv"</span>:      <a href="content.go.html#line-110" class="ident">contentTypeUnsafe</a>,
+	<span class="lit-string">"icon"</span>:            <a href="content.go.html#line-105" class="ident">contentTypeURL</a>,
+	<span class="lit-string">"id"</span>:              <a href="content.go.html#line-99" class="ident">contentTypePlain</a>,
+	<span class="lit-string">"ismap"</span>:           <a href="content.go.html#line-99" class="ident">contentTypePlain</a>,
+	<span class="lit-string">"keytype"</span>:         <a href="content.go.html#line-110" class="ident">contentTypeUnsafe</a>,
+	<span class="lit-string">"kind"</span>:            <a href="content.go.html#line-99" class="ident">contentTypePlain</a>,
+	<span class="lit-string">"label"</span>:           <a href="content.go.html#line-99" class="ident">contentTypePlain</a>,
+	<span class="lit-string">"lang"</span>:            <a href="content.go.html#line-99" class="ident">contentTypePlain</a>,
+	<span class="lit-string">"language"</span>:        <a href="content.go.html#line-110" class="ident">contentTypeUnsafe</a>,
+	<span class="lit-string">"list"</span>:            <a href="content.go.html#line-99" class="ident">contentTypePlain</a>,
+	<span class="lit-string">"longdesc"</span>:        <a href="content.go.html#line-105" class="ident">contentTypeURL</a>,
+	<span class="lit-string">"loop"</span>:            <a href="content.go.html#line-99" class="ident">contentTypePlain</a>,
+	<span class="lit-string">"low"</span>:             <a href="content.go.html#line-99" class="ident">contentTypePlain</a>,
+	<span class="lit-string">"manifest"</span>:        <a href="content.go.html#line-105" class="ident">contentTypeURL</a>,
+	<span class="lit-string">"max"</span>:             <a href="content.go.html#line-99" class="ident">contentTypePlain</a>,
+	<span class="lit-string">"maxlength"</span>:       <a href="content.go.html#line-99" class="ident">contentTypePlain</a>,
+	<span class="lit-string">"media"</span>:           <a href="content.go.html#line-99" class="ident">contentTypePlain</a>,
+	<span class="lit-string">"mediagroup"</span>:      <a href="content.go.html#line-99" class="ident">contentTypePlain</a>,
+	<span class="lit-string">"method"</span>:          <a href="content.go.html#line-110" class="ident">contentTypeUnsafe</a>,
+	<span class="lit-string">"min"</span>:             <a href="content.go.html#line-99" class="ident">contentTypePlain</a>,
+	<span class="lit-string">"multiple"</span>:        <a href="content.go.html#line-99" class="ident">contentTypePlain</a>,
+	<span class="lit-string">"name"</span>:            <a href="content.go.html#line-99" class="ident">contentTypePlain</a>,
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Skip handler names from</span><span class="comment">	 https://www.w3.org/TR/html5/webappapis.html#event-handlers-on-elements,-document-objects,-and-window-objects</span><span class="comment">	 since we have special handling in attrType.</span></div>
+<div class="code"><pre><code>	<span class="lit-string">"open"</span>:        <a href="content.go.html#line-99" class="ident">contentTypePlain</a>,
+	<span class="lit-string">"optimum"</span>:     <a href="content.go.html#line-99" class="ident">contentTypePlain</a>,
+	<span class="lit-string">"pattern"</span>:     <a href="content.go.html#line-110" class="ident">contentTypeUnsafe</a>,
+	<span class="lit-string">"placeholder"</span>: <a href="content.go.html#line-99" class="ident">contentTypePlain</a>,
+	<span class="lit-string">"poster"</span>:      <a href="content.go.html#line-105" class="ident">contentTypeURL</a>,
+	<span class="lit-string">"profile"</span>:     <a href="content.go.html#line-105" class="ident">contentTypeURL</a>,
+	<span class="lit-string">"preload"</span>:     <a href="content.go.html#line-99" class="ident">contentTypePlain</a>,
+	<span class="lit-string">"pubdate"</span>:     <a href="content.go.html#line-99" class="ident">contentTypePlain</a>,
+	<span class="lit-string">"radiogroup"</span>:  <a href="content.go.html#line-99" class="ident">contentTypePlain</a>,
+	<span class="lit-string">"readonly"</span>:    <a href="content.go.html#line-99" class="ident">contentTypePlain</a>,
+	<span class="lit-string">"rel"</span>:         <a href="content.go.html#line-110" class="ident">contentTypeUnsafe</a>,
+	<span class="lit-string">"required"</span>:    <a href="content.go.html#line-99" class="ident">contentTypePlain</a>,
+	<span class="lit-string">"reversed"</span>:    <a href="content.go.html#line-99" class="ident">contentTypePlain</a>,
+	<span class="lit-string">"rows"</span>:        <a href="content.go.html#line-99" class="ident">contentTypePlain</a>,
+	<span class="lit-string">"rowspan"</span>:     <a href="content.go.html#line-99" class="ident">contentTypePlain</a>,
+	<span class="lit-string">"sandbox"</span>:     <a href="content.go.html#line-110" class="ident">contentTypeUnsafe</a>,
+	<span class="lit-string">"spellcheck"</span>:  <a href="content.go.html#line-99" class="ident">contentTypePlain</a>,
+	<span class="lit-string">"scope"</span>:       <a href="content.go.html#line-99" class="ident">contentTypePlain</a>,
+	<span class="lit-string">"scoped"</span>:      <a href="content.go.html#line-99" class="ident">contentTypePlain</a>,
+	<span class="lit-string">"seamless"</span>:    <a href="content.go.html#line-99" class="ident">contentTypePlain</a>,
+	<span class="lit-string">"selected"</span>:    <a href="content.go.html#line-99" class="ident">contentTypePlain</a>,
+	<span class="lit-string">"shape"</span>:       <a href="content.go.html#line-99" class="ident">contentTypePlain</a>,
+	<span class="lit-string">"size"</span>:        <a href="content.go.html#line-99" class="ident">contentTypePlain</a>,
+	<span class="lit-string">"sizes"</span>:       <a href="content.go.html#line-99" class="ident">contentTypePlain</a>,
+	<span class="lit-string">"span"</span>:        <a href="content.go.html#line-99" class="ident">contentTypePlain</a>,
+	<span class="lit-string">"src"</span>:         <a href="content.go.html#line-105" class="ident">contentTypeURL</a>,
+	<span class="lit-string">"srcdoc"</span>:      <a href="content.go.html#line-101" class="ident">contentTypeHTML</a>,
+	<span class="lit-string">"srclang"</span>:     <a href="content.go.html#line-99" class="ident">contentTypePlain</a>,
+	<span class="lit-string">"srcset"</span>:      <a href="content.go.html#line-106" class="ident">contentTypeSrcset</a>,
+	<span class="lit-string">"start"</span>:       <a href="content.go.html#line-99" class="ident">contentTypePlain</a>,
+	<span class="lit-string">"step"</span>:        <a href="content.go.html#line-99" class="ident">contentTypePlain</a>,
+	<span class="lit-string">"style"</span>:       <a href="content.go.html#line-100" class="ident">contentTypeCSS</a>,
+	<span class="lit-string">"tabindex"</span>:    <a href="content.go.html#line-99" class="ident">contentTypePlain</a>,
+	<span class="lit-string">"target"</span>:      <a href="content.go.html#line-99" class="ident">contentTypePlain</a>,
+	<span class="lit-string">"title"</span>:       <a href="content.go.html#line-99" class="ident">contentTypePlain</a>,
+	<span class="lit-string">"type"</span>:        <a href="content.go.html#line-110" class="ident">contentTypeUnsafe</a>,
+	<span class="lit-string">"usemap"</span>:      <a href="content.go.html#line-105" class="ident">contentTypeURL</a>,
+	<span class="lit-string">"value"</span>:       <a href="content.go.html#line-110" class="ident">contentTypeUnsafe</a>,
+	<span class="lit-string">"width"</span>:       <a href="content.go.html#line-99" class="ident">contentTypePlain</a>,
+	<span class="lit-string">"wrap"</span>:        <a href="content.go.html#line-99" class="ident">contentTypePlain</a>,
+	<span class="lit-string">"xmlns"</span>:       <a href="content.go.html#line-105" class="ident">contentTypeURL</a>,
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> attrType returns a conservative (upper-bound on authority) guess at the</span><span class="comment"> type of the lowercase named attribute.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r0" class="ident"><a href="../../../pkg/html/template.html#name-attrType" class="ident">attrType</a></label>(<label for="r1" class="ident">name</label> <a href="../../../pkg/builtin.html#name-string" class="ident">string</a>) <a href="content.go.html#line-96" class="ident">contentType</a> {
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Strip data- so that custom attribute heuristics below are</span><span class="comment">		 widely applied.</span><span class="comment">		 Treat data-action as URL below.</span></div>
+<div class="code"><pre><code>		<label for="r1" class="ident">name</label> = <label for="r1" class="ident">name</label>[<span class="lit-number">5</span>:]
+	} <span class="keyword">else</span> <span class="keyword">if</span> <label for="r2" class="ident">colon</label> := <a href="../../../pkg/strings.html" class="ident i0">strings</a>.<a href="../../strings/strings.go.html#line-121" class="ident">IndexRune</a>(<label for="r1" class="ident">name</label>, <span class="lit-number">':'</span>); <label for="r2" class="ident">colon</label> != -<span class="lit-number">1</span> {
+		<span class="keyword">if</span> <label for="r1" class="ident">name</label>[:<label for="r2" class="ident">colon</label>] == <span class="lit-string">"xmlns"</span> {
+			<span class="keyword">return</span> <a href="content.go.html#line-105" class="ident">contentTypeURL</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Treat svg:href and xlink:href as href below.</span></div>
+<div class="code"><pre><code>		<label for="r1" class="ident">name</label> = <label for="r1" class="ident">name</label>[<label for="r2" class="ident">colon</label>+<span class="lit-number">1</span>:]
+	}
+	<span class="keyword">if</span> <label for="r3" class="ident">t</label>, <label for="r4" class="ident">ok</label> := <a href="#line-19" class="ident">attrTypeMap</a>[<label for="r1" class="ident">name</label>]; <label for="r4" class="ident">ok</label> {
+		<span class="keyword">return</span> <label for="r3" class="ident">t</label>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Treat partial event handler names as script.</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> <a href="../../../pkg/strings.html" class="ident i0">strings</a>.<a href="../../strings/strings.go.html#line-444" class="ident">HasPrefix</a>(<label for="r1" class="ident">name</label>, <span class="lit-string">"on"</span>) {
+		<span class="keyword">return</span> <a href="content.go.html#line-103" class="ident">contentTypeJS</a>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Heuristics to prevent "javascript:..." injection in custom</span><span class="comment">	 data attributes and custom attributes like g:tweetUrl.</span><span class="comment">	 https://www.w3.org/TR/html5/dom.html#embedding-custom-non-visible-data-with-the-data-*-attributes</span><span class="comment">	 "Custom data attributes are intended to store custom data</span><span class="comment">	  private to the page or application, for which there are no</span><span class="comment">	  more appropriate attributes or elements."</span><span class="comment">	 Developers seem to store URL content in data URLs that start</span><span class="comment">	 or end with "URI" or "URL".</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> <a href="../../../pkg/strings.html" class="ident i0">strings</a>.<a href="../../strings/strings.go.html#line-61" class="ident">Contains</a>(<label for="r1" class="ident">name</label>, <span class="lit-string">"src"</span>) ||
+		<a href="../../../pkg/strings.html" class="ident i0">strings</a>.<a href="../../strings/strings.go.html#line-61" class="ident">Contains</a>(<label for="r1" class="ident">name</label>, <span class="lit-string">"uri"</span>) ||
+		<a href="../../../pkg/strings.html" class="ident i0">strings</a>.<a href="../../strings/strings.go.html#line-61" class="ident">Contains</a>(<label for="r1" class="ident">name</label>, <span class="lit-string">"url"</span>) {
+		<span class="keyword">return</span> <a href="content.go.html#line-105" class="ident">contentTypeURL</a>
+	}
+	<span class="keyword">return</span> <a href="content.go.html#line-99" class="ident">contentTypePlain</a>
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

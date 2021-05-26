@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: decimal.go in package math/big</title>
+<link href="../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	decimal.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../pkg/math/big.html">math/big</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16],
+input[id=r17]:checked ~pre label[for=r17],
+input[id=r18]:checked ~pre label[for=r18],
+input[id=r19]:checked ~pre label[for=r19],
+input[id=r20]:checked ~pre label[for=r20],
+input[id=r21]:checked ~pre label[for=r21],
+input[id=r22]:checked ~pre label[for=r22],
+input[id=r23]:checked ~pre label[for=r23],
+input[id=r24]:checked ~pre label[for=r24],
+input[id=r25]:checked ~pre label[for=r25],
+input[id=r26]:checked ~pre label[for=r26],
+input[id=r27]:checked ~pre label[for=r27],
+input[id=r28]:checked ~pre label[for=r28],
+input[id=r29]:checked ~pre label[for=r29],
+input[id=r30]:checked ~pre label[for=r30],
+input[id=r31]:checked ~pre label[for=r31],
+input[id=r32]:checked ~pre label[for=r32],
+input[id=r33]:checked ~pre label[for=r33],
+input[id=r34]:checked ~pre label[for=r34],
+input[id=r35]:checked ~pre label[for=r35],
+input[id=r36]:checked ~pre label[for=r36],
+input[id=r37]:checked ~pre label[for=r37],
+input[id=r38]:checked ~pre label[for=r38],
+input[id=r39]:checked ~pre label[for=r39],
+input[id=r40]:checked ~pre label[for=r40],
+input[id=r41]:checked ~pre label[for=r41],
+input[id=r42]:checked ~pre label[for=r42],
+input[id=r43]:checked ~pre label[for=r43]
+{background: #226; color: #ff8;}
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="r17" type="radio" name="g"/>
+<input id="r18" type="radio" name="g"/>
+<input id="r19" type="radio" name="g"/>
+<input id="r20" type="radio" name="g"/>
+<input id="r21" type="radio" name="g"/>
+<input id="r22" type="radio" name="g"/>
+<input id="r23" type="radio" name="g"/>
+<input id="r24" type="radio" name="g"/>
+<input id="r25" type="radio" name="g"/>
+<input id="r26" type="radio" name="g"/>
+<input id="r27" type="radio" name="g"/>
+<input id="r28" type="radio" name="g"/>
+<input id="r29" type="radio" name="g"/>
+<input id="r30" type="radio" name="g"/>
+<input id="r31" type="radio" name="g"/>
+<input id="r32" type="radio" name="g"/>
+<input id="r33" type="radio" name="g"/>
+<input id="r34" type="radio" name="g"/>
+<input id="r35" type="radio" name="g"/>
+<input id="r36" type="radio" name="g"/>
+<input id="r37" type="radio" name="g"/>
+<input id="r38" type="radio" name="g"/>
+<input id="r39" type="radio" name="g"/>
+<input id="r40" type="radio" name="g"/>
+<input id="r41" type="radio" name="g"/>
+<input id="r42" type="radio" name="g"/>
+<input id="r43" type="radio" name="g"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2015 The Go Authors. All rights reserved.</span><span class="comment"> Use of this source code is governed by a BSD-style</span><span class="comment"> license that can be found in the LICENSE file.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> This file implements multi-precision decimal numbers.</span><span class="comment"> The implementation is for float to decimal conversion only;</span><span class="comment"> not general purpose use.</span><span class="comment"> The only operations are precise conversion from binary to</span><span class="comment"> decimal and rounding.</span><span class="comment"></span><span class="comment"> The key observation and some code (shr) is borrowed from</span><span class="comment"> strconv/decimal.go: conversion of binary fractional values can be done</span><span class="comment"> precisely in multi-precision decimal because 2 divides 10 (required for</span><span class="comment"> &gt;&gt; of mantissa); but conversion of decimal floating-point values cannot</span><span class="comment"> be done precisely in binary representation.</span><span class="comment"></span><span class="comment"> In contrast to strconv/decimal.go, only right shift is implemented in</span><span class="comment"> decimal format - left shift can be done precisely in binary format.</span></div>
+<div class="code"><pre><code>
+<span class="keyword">package</span> big
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> A decimal represents an unsigned floating-point number in decimal representation.</span><span class="comment"> The value of a non-zero decimal d is d.mant * 10**d.exp with 0.1 &lt;= d.mant &lt; 1,</span><span class="comment"> with the most-significant mantissa digit at index 0. For the zero decimal, the</span><span class="comment"> mantissa length and exponent are 0.</span><span class="comment"> The zero value for decimal represents a ready-to-use 0.0.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../pkg/math/big.html#name-decimal" class="ident">decimal</a> <span class="keyword">struct</span> {
+	<a href="../../../use/math/big..decimal*3e6d4.mant*0b88a.html" class="ident">mant</a> []<a href="../../../pkg/builtin.html#name-byte" class="ident">byte</a> <span class="comment">// mantissa ASCII digits, big-endian</span>
+	<a href="../../../use/math/big..decimal*3e6d4.exp*dd7a9.html" class="ident">exp</a>  <a href="../../../pkg/builtin.html#name-int" class="ident">int</a>    <span class="comment">// exponent</span>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> at returns the i'th mantissa digit, starting with the most significant digit at 0.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r0" class="ident">d</label> *<a href="#line-27" class="ident">decimal</a>) <label for="r1" class="ident"><a href="../../../use/math/big..decimal*3e6d4.at*b1d6b.html" class="ident">at</a></label>(<label for="r2" class="ident">i</label> <a href="../../../pkg/builtin.html#name-int" class="ident">int</a>) <a href="../../../pkg/builtin.html#name-byte" class="ident">byte</a> {
+	<span class="keyword">if</span> <span class="lit-number">0</span> &lt;= <label for="r2" class="ident">i</label> &amp;&amp; <label for="r2" class="ident">i</label> &lt; <a href="../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r0" class="ident">d</label>.<a href="#line-28" class="ident">mant</a>) {
+		<span class="keyword">return</span> <label for="r0" class="ident">d</label>.<a href="#line-28" class="ident">mant</a>[<label for="r2" class="ident">i</label>]
+	}
+	<span class="keyword">return</span> <span class="lit-number">'0'</span>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Maximum shift amount that can be done in one pass without overflow.</span><span class="comment"> A Word has _W bits and (1&lt;&lt;maxShift - 1)*10 + 9 must fit into Word.</span></div>
+<div class="code"><pre><code><span class="keyword">const</span> <a href="../../../pkg/math/big.html#name-maxShift" class="ident">maxShift</a> = <a href="arith.go.html#line-21" class="ident">_W</a> - <span class="lit-number">4</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> TODO(gri) Since we know the desired decimal precision when converting</span><span class="comment"> a floating-point number, we may be able to limit the number of decimal</span><span class="comment"> digits that need to be computed by init by providing an additional</span><span class="comment"> precision argument and keeping track of when a number was truncated early</span><span class="comment"> (equivalent of "sticky bit" in binary rounding).</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> TODO(gri) Along the same lines, enforce some limit to shift magnitudes</span><span class="comment"> to avoid "infinitely" long running conversions (until we run out of space).</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Init initializes x to the decimal representation of m &lt;&lt; shift (for</span><span class="comment"> shift &gt;= 0), or m &gt;&gt; -shift (for shift &lt; 0).</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> special case 0</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> <a href="../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r5" class="ident">m</label>) == <span class="lit-number">0</span> {
+		<label for="r3" class="ident">x</label>.<a href="#line-28" class="ident">mant</a> = <label for="r3" class="ident">x</label>.<a href="#line-28" class="ident">mant</a>[:<span class="lit-number">0</span>]
+		<label for="r3" class="ident">x</label>.<a href="#line-29" class="ident">exp</a> = <span class="lit-number">0</span>
+		<span class="keyword">return</span>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Optimization: If we need to shift right, first remove any trailing</span><span class="comment">	 zero bits from m to reduce shift amount that needs to be done in</span><span class="comment">	 decimal format (since that is likely slower).</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> <label for="r6" class="ident">shift</label> &lt; <span class="lit-number">0</span> {
+		<label for="r7" class="ident">ntz</label> := <label for="r5" class="ident">m</label>.<a href="nat.go.html#line-976" class="ident">trailingZeroBits</a>()
+		<label for="r8" class="ident">s</label> := <a href="../../../pkg/builtin.html#name-uint" class="ident">uint</a>(-<label for="r6" class="ident">shift</label>)
+		<span class="keyword">if</span> <label for="r8" class="ident">s</label> &gt;= <label for="r7" class="ident">ntz</label> {
+			<label for="r8" class="ident">s</label> = <label for="r7" class="ident">ntz</label> <span class="comment">// shift at most ntz bits</span>
+		}
+		<label for="r5" class="ident">m</label> = <a href="nat.go.html#line-35" class="ident">nat</a>(<a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a>).<a href="nat.go.html#line-1018" class="ident">shr</a>(<label for="r5" class="ident">m</label>, <label for="r8" class="ident">s</label>)
+		<label for="r6" class="ident">shift</label> += <a href="../../../pkg/builtin.html#name-int" class="ident">int</a>(<label for="r8" class="ident">s</label>)
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Do any shift left in binary representation.</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> <label for="r6" class="ident">shift</label> &gt; <span class="lit-number">0</span> {
+		<label for="r5" class="ident">m</label> = <a href="nat.go.html#line-35" class="ident">nat</a>(<a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a>).<a href="nat.go.html#line-993" class="ident">shl</a>(<label for="r5" class="ident">m</label>, <a href="../../../pkg/builtin.html#name-uint" class="ident">uint</a>(<label for="r6" class="ident">shift</label>))
+		<label for="r6" class="ident">shift</label> = <span class="lit-number">0</span>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Convert mantissa into decimal representation.</span></div>
+<div class="code"><pre><code>	<label for="r9" class="ident">s</label> := <label for="r5" class="ident">m</label>.<a href="natconv.go.html#line-259" class="ident">utoa</a>(<span class="lit-number">10</span>)
+	<label for="r10" class="ident">n</label> := <a href="../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r9" class="ident">s</label>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Trim trailing zeros; instead the exponent is tracking</span><span class="comment">	 the decimal point independent of the number of digits.</span></div>
+<div class="code"><pre><code>	<span class="keyword">for</span> <label for="r10" class="ident">n</label> &gt; <span class="lit-number">0</span> &amp;&amp; <label for="r9" class="ident">s</label>[<label for="r10" class="ident">n</label>-<span class="lit-number">1</span>] == <span class="lit-number">'0'</span> {
+		<label for="r10" class="ident">n</label>--
+	}
+	<label for="r3" class="ident">x</label>.<a href="#line-28" class="ident">mant</a> = <a href="../../../pkg/builtin.html#name-append" class="ident">append</a>(<label for="r3" class="ident">x</label>.<a href="#line-28" class="ident">mant</a>[:<span class="lit-number">0</span>], <label for="r9" class="ident">s</label>[:<label for="r10" class="ident">n</label>]...)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Do any (remaining) shift right in decimal representation.</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> <label for="r6" class="ident">shift</label> &lt; <span class="lit-number">0</span> {
+		<span class="keyword">for</span> <label for="r6" class="ident">shift</label> &lt; -<a href="#line-42" class="ident">maxShift</a> {
+			<a href="#line-104" class="ident">shr</a>(<label for="r3" class="ident">x</label>, <a href="#line-42" class="ident">maxShift</a>)
+			<label for="r6" class="ident">shift</label> += <a href="#line-42" class="ident">maxShift</a>
+		}
+		<a href="#line-104" class="ident">shr</a>(<label for="r3" class="ident">x</label>, <a href="../../../pkg/builtin.html#name-uint" class="ident">uint</a>(-<label for="r6" class="ident">shift</label>))
+	}
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> shr implements x &gt;&gt; s, for s &lt;= maxShift.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Division by 1&lt;&lt;s using shift-and-subtract algorithm.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> pick up enough leading digits to cover first shift</span></div>
+<div class="code"><pre><code>	<label for="r14" class="ident">r</label> := <span class="lit-number">0</span> <span class="comment">// read index</span>
+	<span class="keyword">var</span> <label for="r15" class="ident">n</label> <a href="arith.go.html#line-16" class="ident">Word</a>
+	<span class="keyword">for</span> <label for="r15" class="ident">n</label>&gt;&gt;<label for="r13" class="ident">s</label> == <span class="lit-number">0</span> &amp;&amp; <label for="r14" class="ident">r</label> &lt; <a href="../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r12" class="ident">x</label>.<a href="#line-28" class="ident">mant</a>) {
+		<label for="r16" class="ident">ch</label> := <a href="arith.go.html#line-16" class="ident">Word</a>(<label for="r12" class="ident">x</label>.<a href="#line-28" class="ident">mant</a>[<label for="r14" class="ident">r</label>])
+		<label for="r14" class="ident">r</label>++
+		<label for="r15" class="ident">n</label> = <label for="r15" class="ident">n</label>*<span class="lit-number">10</span> + <label for="r16" class="ident">ch</label> - <span class="lit-number">'0'</span>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> x == 0; shouldn't get here, but handle anyway</span></div>
+<div class="code"><pre><code>		<label for="r12" class="ident">x</label>.<a href="#line-28" class="ident">mant</a> = <label for="r12" class="ident">x</label>.<a href="#line-28" class="ident">mant</a>[:<span class="lit-number">0</span>]
+		<span class="keyword">return</span>
+	}
+	<span class="keyword">for</span> <label for="r15" class="ident">n</label>&gt;&gt;<label for="r13" class="ident">s</label> == <span class="lit-number">0</span> {
+		<label for="r14" class="ident">r</label>++
+		<label for="r15" class="ident">n</label> *= <span class="lit-number">10</span>
+	}
+	<label for="r12" class="ident">x</label>.<a href="#line-29" class="ident">exp</a> += <span class="lit-number">1</span> - <label for="r14" class="ident">r</label>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> read a digit, write a digit</span></div>
+<div class="code"><pre><code>	<label for="r17" class="ident">w</label> := <span class="lit-number">0</span> <span class="comment">// write index</span>
+	<label for="r18" class="ident">mask</label> := <a href="arith.go.html#line-16" class="ident">Word</a>(<span class="lit-number">1</span>)&lt;&lt;<label for="r13" class="ident">s</label> - <span class="lit-number">1</span>
+	<span class="keyword">for</span> <label for="r14" class="ident">r</label> &lt; <a href="../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r12" class="ident">x</label>.<a href="#line-28" class="ident">mant</a>) {
+		<label for="r19" class="ident">ch</label> := <a href="arith.go.html#line-16" class="ident">Word</a>(<label for="r12" class="ident">x</label>.<a href="#line-28" class="ident">mant</a>[<label for="r14" class="ident">r</label>])
+		<label for="r14" class="ident">r</label>++
+		<label for="r20" class="ident">d</label> := <label for="r15" class="ident">n</label> &gt;&gt; <label for="r13" class="ident">s</label>
+		<label for="r15" class="ident">n</label> &amp;= <label for="r18" class="ident">mask</label> <span class="comment">// n -= d &lt;&lt; s</span>
+		<label for="r12" class="ident">x</label>.<a href="#line-28" class="ident">mant</a>[<label for="r17" class="ident">w</label>] = <a href="../../../pkg/builtin.html#name-byte" class="ident">byte</a>(<label for="r20" class="ident">d</label> + <span class="lit-number">'0'</span>)
+		<label for="r17" class="ident">w</label>++
+		<label for="r15" class="ident">n</label> = <label for="r15" class="ident">n</label>*<span class="lit-number">10</span> + <label for="r19" class="ident">ch</label> - <span class="lit-number">'0'</span>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> write extra digits that still fit</span></div>
+<div class="code"><pre><code>	<span class="keyword">for</span> <label for="r15" class="ident">n</label> &gt; <span class="lit-number">0</span> &amp;&amp; <label for="r17" class="ident">w</label> &lt; <a href="../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r12" class="ident">x</label>.<a href="#line-28" class="ident">mant</a>) {
+		<label for="r21" class="ident">d</label> := <label for="r15" class="ident">n</label> &gt;&gt; <label for="r13" class="ident">s</label>
+		<label for="r15" class="ident">n</label> &amp;= <label for="r18" class="ident">mask</label>
+		<label for="r12" class="ident">x</label>.<a href="#line-28" class="ident">mant</a>[<label for="r17" class="ident">w</label>] = <a href="../../../pkg/builtin.html#name-byte" class="ident">byte</a>(<label for="r21" class="ident">d</label> + <span class="lit-number">'0'</span>)
+		<label for="r17" class="ident">w</label>++
+		<label for="r15" class="ident">n</label> = <label for="r15" class="ident">n</label> * <span class="lit-number">10</span>
+	}
+	<label for="r12" class="ident">x</label>.<a href="#line-28" class="ident">mant</a> = <label for="r12" class="ident">x</label>.<a href="#line-28" class="ident">mant</a>[:<label for="r17" class="ident">w</label>] <span class="comment">// the number may be shorter (e.g. 1024 &gt;&gt; 10)</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> append additional digits that didn't fit</span></div>
+<div class="code"><pre><code>	<span class="keyword">for</span> <label for="r15" class="ident">n</label> &gt; <span class="lit-number">0</span> {
+		<label for="r22" class="ident">d</label> := <label for="r15" class="ident">n</label> &gt;&gt; <label for="r13" class="ident">s</label>
+		<label for="r15" class="ident">n</label> &amp;= <label for="r18" class="ident">mask</label>
+		<label for="r12" class="ident">x</label>.<a href="#line-28" class="ident">mant</a> = <a href="../../../pkg/builtin.html#name-append" class="ident">append</a>(<label for="r12" class="ident">x</label>.<a href="#line-28" class="ident">mant</a>, <a href="../../../pkg/builtin.html#name-byte" class="ident">byte</a>(<label for="r22" class="ident">d</label>+<span class="lit-number">'0'</span>))
+		<label for="r15" class="ident">n</label> = <label for="r15" class="ident">n</label> * <span class="lit-number">10</span>
+	}
+
+	<a href="#line-261" class="ident">trim</a>(<label for="r12" class="ident">x</label>)
+}
+
+<span class="keyword">func</span> (<label for="r23" class="ident">x</label> *<a href="#line-27" class="ident">decimal</a>) <label for="r24" class="ident"><a href="../../../use/math/big..decimal*3e6d4.String.html" class="ident">String</a></label>() <a href="../../../pkg/builtin.html#name-string" class="ident">string</a> {
+	<span class="keyword">if</span> <a href="../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r23" class="ident">x</label>.<a href="#line-28" class="ident">mant</a>) == <span class="lit-number">0</span> {
+		<span class="keyword">return</span> <span class="lit-string">"0"</span>
+	}
+
+	<span class="keyword">var</span> <label for="r25" class="ident">buf</label> []<a href="../../../pkg/builtin.html#name-byte" class="ident">byte</a>
+	<span class="keyword">switch</span> {
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> 0.00ddd</span></div>
+<div class="code"><pre><code>		<label for="r25" class="ident">buf</label> = <a href="../../../pkg/builtin.html#name-make" class="ident">make</a>([]<a href="../../../pkg/builtin.html#name-byte" class="ident">byte</a>, <span class="lit-number">0</span>, <span class="lit-number">2</span>+(-<label for="r23" class="ident">x</label>.<a href="#line-29" class="ident">exp</a>)+<a href="../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r23" class="ident">x</label>.<a href="#line-28" class="ident">mant</a>))
+		<label for="r25" class="ident">buf</label> = <a href="../../../pkg/builtin.html#name-append" class="ident">append</a>(<label for="r25" class="ident">buf</label>, <span class="lit-string">"0."</span>...)
+		<label for="r25" class="ident">buf</label> = <a href="#line-192" class="ident">appendZeros</a>(<label for="r25" class="ident">buf</label>, -<label for="r23" class="ident">x</label>.<a href="#line-29" class="ident">exp</a>)
+		<label for="r25" class="ident">buf</label> = <a href="../../../pkg/builtin.html#name-append" class="ident">append</a>(<label for="r25" class="ident">buf</label>, <label for="r23" class="ident">x</label>.<a href="#line-28" class="ident">mant</a>...)
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> dd.ddd</span></div>
+<div class="code"><pre><code>		<label for="r25" class="ident">buf</label> = <a href="../../../pkg/builtin.html#name-make" class="ident">make</a>([]<a href="../../../pkg/builtin.html#name-byte" class="ident">byte</a>, <span class="lit-number">0</span>, <span class="lit-number">1</span>+<a href="../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r23" class="ident">x</label>.<a href="#line-28" class="ident">mant</a>))
+		<label for="r25" class="ident">buf</label> = <a href="../../../pkg/builtin.html#name-append" class="ident">append</a>(<label for="r25" class="ident">buf</label>, <label for="r23" class="ident">x</label>.<a href="#line-28" class="ident">mant</a>[:<label for="r23" class="ident">x</label>.<a href="#line-29" class="ident">exp</a>]...)
+		<label for="r25" class="ident">buf</label> = <a href="../../../pkg/builtin.html#name-append" class="ident">append</a>(<label for="r25" class="ident">buf</label>, <span class="lit-number">'.'</span>)
+		<label for="r25" class="ident">buf</label> = <a href="../../../pkg/builtin.html#name-append" class="ident">append</a>(<label for="r25" class="ident">buf</label>, <label for="r23" class="ident">x</label>.<a href="#line-28" class="ident">mant</a>[<label for="r23" class="ident">x</label>.<a href="#line-29" class="ident">exp</a>:]...)
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> ddd00</span></div>
+<div class="code"><pre><code>		<label for="r25" class="ident">buf</label> = <a href="../../../pkg/builtin.html#name-make" class="ident">make</a>([]<a href="../../../pkg/builtin.html#name-byte" class="ident">byte</a>, <span class="lit-number">0</span>, <label for="r23" class="ident">x</label>.<a href="#line-29" class="ident">exp</a>)
+		<label for="r25" class="ident">buf</label> = <a href="../../../pkg/builtin.html#name-append" class="ident">append</a>(<label for="r25" class="ident">buf</label>, <label for="r23" class="ident">x</label>.<a href="#line-28" class="ident">mant</a>...)
+		<label for="r25" class="ident">buf</label> = <a href="#line-192" class="ident">appendZeros</a>(<label for="r25" class="ident">buf</label>, <label for="r23" class="ident">x</label>.<a href="#line-29" class="ident">exp</a>-<a href="../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r23" class="ident">x</label>.<a href="#line-28" class="ident">mant</a>))
+	}
+
+	<span class="keyword">return</span> <a href="../../../pkg/builtin.html#name-string" class="ident">string</a>(<label for="r25" class="ident">buf</label>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> appendZeros appends n 0 digits to buf and returns buf.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r26" class="ident"><a href="../../../pkg/math/big.html#name-appendZeros" class="ident">appendZeros</a></label>(<label for="r27" class="ident">buf</label> []<a href="../../../pkg/builtin.html#name-byte" class="ident">byte</a>, <label for="r28" class="ident">n</label> <a href="../../../pkg/builtin.html#name-int" class="ident">int</a>) []<a href="../../../pkg/builtin.html#name-byte" class="ident">byte</a> {
+	<span class="keyword">for</span> ; <label for="r28" class="ident">n</label> &gt; <span class="lit-number">0</span>; <label for="r28" class="ident">n</label>-- {
+		<label for="r27" class="ident">buf</label> = <a href="../../../pkg/builtin.html#name-append" class="ident">append</a>(<label for="r27" class="ident">buf</label>, <span class="lit-number">'0'</span>)
+	}
+	<span class="keyword">return</span> <label for="r27" class="ident">buf</label>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> shouldRoundUp reports if x should be rounded up</span><span class="comment"> if shortened to n digits. n must be a valid index</span><span class="comment"> for x.mant.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r29" class="ident"><a href="../../../pkg/math/big.html#name-shouldRoundUp" class="ident">shouldRoundUp</a></label>(<label for="r30" class="ident">x</label> *<a href="#line-27" class="ident">decimal</a>, <label for="r31" class="ident">n</label> <a href="../../../pkg/builtin.html#name-int" class="ident">int</a>) <a href="../../../pkg/builtin.html#name-bool" class="ident">bool</a> {
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> exactly halfway - round to even</span></div>
+<div class="code"><pre><code>		<span class="keyword">return</span> <label for="r31" class="ident">n</label> &gt; <span class="lit-number">0</span> &amp;&amp; (<label for="r30" class="ident">x</label>.<a href="#line-28" class="ident">mant</a>[<label for="r31" class="ident">n</label>-<span class="lit-number">1</span>]-<span class="lit-number">'0'</span>)&amp;<span class="lit-number">1</span> != <span class="lit-number">0</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> not halfway - digit tells all (x.mant has no trailing zeros)</span></div>
+<div class="code"><pre><code>	<span class="keyword">return</span> <label for="r30" class="ident">x</label>.<a href="#line-28" class="ident">mant</a>[<label for="r31" class="ident">n</label>] &gt;= <span class="lit-number">'5'</span>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> round sets x to (at most) n mantissa digits by rounding it</span><span class="comment"> to the nearest even value with n (or fever) mantissa digits.</span><span class="comment"> If n &lt; 0, x remains unchanged.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r32" class="ident">x</label> *<a href="#line-27" class="ident">decimal</a>) <label for="r33" class="ident"><a href="../../../use/math/big..decimal*3e6d4.round*a97b0.html" class="ident">round</a></label>(<label for="r34" class="ident">n</label> <a href="../../../pkg/builtin.html#name-int" class="ident">int</a>) {
+	<span class="keyword">if</span> <label for="r34" class="ident">n</label> &lt; <span class="lit-number">0</span> || <label for="r34" class="ident">n</label> &gt;= <a href="../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r32" class="ident">x</label>.<a href="#line-28" class="ident">mant</a>) {
+		<span class="keyword">return</span> <span class="comment">// nothing to do</span>
+	}
+
+	<span class="keyword">if</span> <a href="#line-202" class="ident">shouldRoundUp</a>(<label for="r32" class="ident">x</label>, <label for="r34" class="ident">n</label>) {
+		<label for="r32" class="ident">x</label>.<a href="#line-226" class="ident">roundUp</a>(<label for="r34" class="ident">n</label>)
+	} <span class="keyword">else</span> {
+		<label for="r32" class="ident">x</label>.<a href="#line-251" class="ident">roundDown</a>(<label for="r34" class="ident">n</label>)
+	}
+}
+
+<span class="keyword">func</span> (<label for="r35" class="ident">x</label> *<a href="#line-27" class="ident">decimal</a>) <label for="r36" class="ident"><a href="../../../use/math/big..decimal*3e6d4.roundUp*942f9.html" class="ident">roundUp</a></label>(<label for="r37" class="ident">n</label> <a href="../../../pkg/builtin.html#name-int" class="ident">int</a>) {
+	<span class="keyword">if</span> <label for="r37" class="ident">n</label> &lt; <span class="lit-number">0</span> || <label for="r37" class="ident">n</label> &gt;= <a href="../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r35" class="ident">x</label>.<a href="#line-28" class="ident">mant</a>) {
+		<span class="keyword">return</span> <span class="comment">// nothing to do</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> 0 &lt;= n &lt; len(x.mant)</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> find first digit &lt; '9'</span></div>
+<div class="code"><pre><code>	<span class="keyword">for</span> <label for="r37" class="ident">n</label> &gt; <span class="lit-number">0</span> &amp;&amp; <label for="r35" class="ident">x</label>.<a href="#line-28" class="ident">mant</a>[<label for="r37" class="ident">n</label>-<span class="lit-number">1</span>] &gt;= <span class="lit-number">'9'</span> {
+		<label for="r37" class="ident">n</label>--
+	}
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> all digits are '9's =&gt; round up to '1' and update exponent</span></div>
+<div class="code"><pre><code>		<label for="r35" class="ident">x</label>.<a href="#line-28" class="ident">mant</a>[<span class="lit-number">0</span>] = <span class="lit-number">'1'</span> <span class="comment">// ok since len(x.mant) &gt; n</span>
+		<label for="r35" class="ident">x</label>.<a href="#line-28" class="ident">mant</a> = <label for="r35" class="ident">x</label>.<a href="#line-28" class="ident">mant</a>[:<span class="lit-number">1</span>]
+		<label for="r35" class="ident">x</label>.<a href="#line-29" class="ident">exp</a>++
+		<span class="keyword">return</span>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> n &gt; 0 &amp;&amp; x.mant[n-1] &lt; '9'</span></div>
+<div class="code"><pre><code>	<label for="r35" class="ident">x</label>.<a href="#line-28" class="ident">mant</a>[<label for="r37" class="ident">n</label>-<span class="lit-number">1</span>]++
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> x already trimmed</span></div>
+<div class="code"><pre><code>}
+
+<span class="keyword">func</span> (<label for="r38" class="ident">x</label> *<a href="#line-27" class="ident">decimal</a>) <label for="r39" class="ident"><a href="../../../use/math/big..decimal*3e6d4.roundDown*de384.html" class="ident">roundDown</a></label>(<label for="r40" class="ident">n</label> <a href="../../../pkg/builtin.html#name-int" class="ident">int</a>) {
+	<span class="keyword">if</span> <label for="r40" class="ident">n</label> &lt; <span class="lit-number">0</span> || <label for="r40" class="ident">n</label> &gt;= <a href="../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r38" class="ident">x</label>.<a href="#line-28" class="ident">mant</a>) {
+		<span class="keyword">return</span> <span class="comment">// nothing to do</span>
+	}
+	<label for="r38" class="ident">x</label>.<a href="#line-28" class="ident">mant</a> = <label for="r38" class="ident">x</label>.<a href="#line-28" class="ident">mant</a>[:<label for="r40" class="ident">n</label>]
+	<a href="#line-261" class="ident">trim</a>(<label for="r38" class="ident">x</label>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> trim cuts off any trailing zeros from x's mantissa;</span><span class="comment"> they are meaningless for the value of x.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r41" class="ident"><a href="../../../pkg/math/big.html#name-trim" class="ident">trim</a></label>(<label for="r42" class="ident">x</label> *<a href="#line-27" class="ident">decimal</a>) {
+	<label for="r43" class="ident">i</label> := <a href="../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r42" class="ident">x</label>.<a href="#line-28" class="ident">mant</a>)
+	<span class="keyword">for</span> <label for="r43" class="ident">i</label> &gt; <span class="lit-number">0</span> &amp;&amp; <label for="r42" class="ident">x</label>.<a href="#line-28" class="ident">mant</a>[<label for="r43" class="ident">i</label>-<span class="lit-number">1</span>] == <span class="lit-number">'0'</span> {
+		<label for="r43" class="ident">i</label>--
+	}
+	<label for="r42" class="ident">x</label>.<a href="#line-28" class="ident">mant</a> = <label for="r42" class="ident">x</label>.<a href="#line-28" class="ident">mant</a>[:<label for="r43" class="ident">i</label>]
+	<span class="keyword">if</span> <label for="r43" class="ident">i</label> == <span class="lit-number">0</span> {
+		<label for="r42" class="ident">x</label>.<a href="#line-29" class="ident">exp</a> = <span class="lit-number">0</span>
+	}
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: cpuprof.go in package runtime</title>
+<link href="../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	cpuprof.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../pkg/runtime.html">runtime</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16],
+input[id=r17]:checked ~pre label[for=r17],
+input[id=r18]:checked ~pre label[for=r18],
+input[id=r19]:checked ~pre label[for=r19],
+input[id=r20]:checked ~pre label[for=r20],
+input[id=r21]:checked ~pre label[for=r21],
+input[id=r22]:checked ~pre label[for=r22],
+input[id=r23]:checked ~pre label[for=r23],
+input[id=r24]:checked ~pre label[for=r24],
+input[id=r25]:checked ~pre label[for=r25],
+input[id=r26]:checked ~pre label[for=r26]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1,
+input[id=i2]:checked ~pre .i2
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="r17" type="radio" name="g"/>
+<input id="r18" type="radio" name="g"/>
+<input id="r19" type="radio" name="g"/>
+<input id="r20" type="radio" name="g"/>
+<input id="r21" type="radio" name="g"/>
+<input id="r22" type="radio" name="g"/>
+<input id="r23" type="radio" name="g"/>
+<input id="r24" type="radio" name="g"/>
+<input id="r25" type="radio" name="g"/>
+<input id="r26" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<input id="i2" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2011 The Go Authors. All rights reserved.</span><span class="comment"> Use of this source code is governed by a BSD-style</span><span class="comment"> license that can be found in the LICENSE file.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> CPU profiling.</span><span class="comment"></span><span class="comment"> The signal handler for the profiling clock tick adds a new stack trace</span><span class="comment"> to a log of recent traces. The log is read by a user goroutine that</span><span class="comment"> turns it into formatted profile data. If the reader does not keep up</span><span class="comment"> with the log, those writes will be recorded as a count of lost records.</span><span class="comment"> The actual profile buffer is in profbuf.go.</span></div>
+<div class="code"><pre><code>
+<span class="keyword">package</span> runtime
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"runtime/internal/atomic"</span></label>
+	<label for="i1"><span class="lit-string i1">"runtime/internal/sys"</span></label>
+	<label for="i2"><span class="lit-string i2">"unsafe"</span></label>
+)
+
+<span class="keyword">const</span> <a href="../../pkg/runtime.html#name-maxCPUProfStack" class="ident">maxCPUProfStack</a> = <span class="lit-number">64</span>
+
+<span class="keyword">type</span> <a href="../../pkg/runtime.html#name-cpuProfile" class="ident">cpuProfile</a> <span class="keyword">struct</span> {
+	<a href="../../use/runtime..cpuProfile*058fa.lock*0c030.html" class="ident">lock</a> <a href="runtime2.go.html#line-162" class="ident">mutex</a>
+	<a href="../../use/runtime..cpuProfile*058fa.on*b8d31.html" class="ident">on</a>   <a href="../../pkg/builtin.html#name-bool" class="ident">bool</a>     <span class="comment">// profiling is on</span>
+	<a href="../../use/runtime..cpuProfile*058fa.log*836ff.html" class="ident">log</a>  *<a href="profbuf.go.html#line-88" class="ident">profBuf</a> <span class="comment">// profile events written here</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> extra holds extra stacks accumulated in addNonGo</span><span class="comment">	 corresponding to profiling signals arriving on</span><span class="comment">	 non-Go-created threads. Those stacks are written</span><span class="comment">	 to log the next time a normal Go thread gets the</span><span class="comment">	 signal handler.</span><span class="comment">	 Assuming the stacks are 2 words each (we don't get</span><span class="comment">	 a full traceback from those threads), plus one word</span><span class="comment">	 size for framing, 100 Hz profiling would generate</span><span class="comment">	 300 words per second.</span><span class="comment">	 Hopefully a normal Go thread will get the profiling</span><span class="comment">	 signal at least once every few seconds.</span></div>
+<div class="code"><pre><code>	<a href="../../use/runtime..cpuProfile*058fa.extra*c8dee.html" class="ident">extra</a>      [<span class="lit-number">1000</span>]<a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>
+	<a href="../../use/runtime..cpuProfile*058fa.numExtra*bf0df.html" class="ident">numExtra</a>   <a href="../../pkg/builtin.html#name-int" class="ident">int</a>
+	<a href="../../use/runtime..cpuProfile*058fa.lostExtra*21e56.html" class="ident">lostExtra</a>  <a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a> <span class="comment">// count of frames lost because extra is full</span>
+	<a href="../../use/runtime..cpuProfile*058fa.lostAtomic*5190f.html" class="ident">lostAtomic</a> <a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a> <span class="comment">// count of frames lost because of being in atomic64 on mips/arm; updated racily</span>
+}
+
+<span class="keyword">var</span> <a href="../../pkg/runtime.html#name-cpuprof" class="ident">cpuprof</a> <a href="#line-23" class="ident">cpuProfile</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> SetCPUProfileRate sets the CPU profiling rate to hz samples per second.</span><span class="comment"> If hz &lt;= 0, SetCPUProfileRate turns off profiling.</span><span class="comment"> If the profiler is on, the rate cannot be changed without first turning it off.</span><span class="comment"></span><span class="comment"> Most clients should use the runtime/pprof package or</span><span class="comment"> the testing package's -test.cpuprofile flag instead of calling</span><span class="comment"> SetCPUProfileRate directly.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Clamp hz to something reasonable.</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> <label for="r1" class="ident">hz</label> &lt; <span class="lit-number">0</span> {
+		<label for="r1" class="ident">hz</label> = <span class="lit-number">0</span>
+	}
+	<span class="keyword">if</span> <label for="r1" class="ident">hz</label> &gt; <span class="lit-number">1000000</span> {
+		<label for="r1" class="ident">hz</label> = <span class="lit-number">1000000</span>
+	}
+
+	<a href="lock_sema.go.html#line-35" class="ident">lock</a>(&amp;<a href="#line-45" class="ident">cpuprof</a>.<a href="#line-24" class="ident">lock</a>)
+	<span class="keyword">if</span> <label for="r1" class="ident">hz</label> &gt; <span class="lit-number">0</span> {
+		<span class="keyword">if</span> <a href="#line-45" class="ident">cpuprof</a>.<a href="#line-25" class="ident">on</a> || <a href="#line-45" class="ident">cpuprof</a>.<a href="#line-26" class="ident">log</a> != <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<a href="../../pkg/builtin.html#name-print" class="ident">print</a>(<span class="lit-string">"runtime: cannot set cpu profile rate until previous profile has finished.\n"</span>)
+			<a href="lock_sema.go.html#line-96" class="ident">unlock</a>(&amp;<a href="#line-45" class="ident">cpuprof</a>.<a href="#line-24" class="ident">lock</a>)
+			<span class="keyword">return</span>
+		}
+
+		<a href="#line-45" class="ident">cpuprof</a>.<a href="#line-25" class="ident">on</a> = <a href="../../pkg/builtin.html#name-true" class="ident">true</a>
+		<a href="#line-45" class="ident">cpuprof</a>.<a href="#line-26" class="ident">log</a> = <a href="profbuf.go.html#line-208" class="ident">newProfBuf</a>(<span class="lit-number">1</span>, <span class="lit-number">1</span>&lt;&lt;<span class="lit-number">17</span>, <span class="lit-number">1</span>&lt;&lt;<span class="lit-number">14</span>)
+		<label for="r2" class="ident">hdr</label> := [<span class="lit-number">1</span>]<a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a>{<a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a>(<label for="r1" class="ident">hz</label>)}
+		<a href="#line-45" class="ident">cpuprof</a>.<a href="#line-26" class="ident">log</a>.<a href="profbuf.go.html#line-304" class="ident">write</a>(<a href="../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="time_nofake.go.html#line-18" class="ident">nanotime</a>(), <label for="r2" class="ident">hdr</label>[:], <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a>)
+		<a href="proc.go.html#line-4603" class="ident">setcpuprofilerate</a>(<a href="../../pkg/builtin.html#name-int32" class="ident">int32</a>(<label for="r1" class="ident">hz</label>))
+	} <span class="keyword">else</span> <span class="keyword">if</span> <a href="#line-45" class="ident">cpuprof</a>.<a href="#line-25" class="ident">on</a> {
+		<a href="proc.go.html#line-4603" class="ident">setcpuprofilerate</a>(<span class="lit-number">0</span>)
+		<a href="#line-45" class="ident">cpuprof</a>.<a href="#line-25" class="ident">on</a> = <a href="../../pkg/builtin.html#name-false" class="ident">false</a>
+		<a href="#line-45" class="ident">cpuprof</a>.<a href="#line-147" class="ident">addExtra</a>()
+		<a href="#line-45" class="ident">cpuprof</a>.<a href="#line-26" class="ident">log</a>.<a href="profbuf.go.html#line-397" class="ident">close</a>()
+	}
+	<a href="lock_sema.go.html#line-96" class="ident">unlock</a>(&amp;<a href="#line-45" class="ident">cpuprof</a>.<a href="#line-24" class="ident">lock</a>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> add adds the stack trace to the profile.</span><span class="comment"> It is called from signal handlers and other limited environments</span><span class="comment"> and cannot allocate memory or acquire locks that might be</span><span class="comment"> held at the time of the signal, nor can it use substantial amounts</span><span class="comment"> of stack.</span><span class="comment">go:nowritebarrierrec</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Simple cas-lock to coordinate with setcpuprofilerate.</span></div>
+<div class="code"><pre><code>	<span class="keyword">for</span> !<a href="../../pkg/runtime/internal/atomic.html" class="ident i0">atomic</a>.<a href="internal/atomic/stubs.go.html#line-12" class="ident">Cas</a>(&amp;<a href="proc.go.html#line-4357" class="ident">prof</a>.<a href="proc.go.html#line-4358" class="ident">signalLock</a>, <span class="lit-number">0</span>, <span class="lit-number">1</span>) {
+		<a href="os_darwin.go.html#line-334" class="ident">osyield</a>()
+	}
+
+	<span class="keyword">if</span> <a href="proc.go.html#line-4357" class="ident">prof</a>.<a href="proc.go.html#line-4359" class="ident">hz</a> != <span class="lit-number">0</span> { <span class="comment">// implies cpuprof.log != nil</span>
+		<span class="keyword">if</span> <label for="r3" class="ident">p</label>.<a href="#line-40" class="ident">numExtra</a> &gt; <span class="lit-number">0</span> || <label for="r3" class="ident">p</label>.<a href="#line-41" class="ident">lostExtra</a> &gt; <span class="lit-number">0</span> || <label for="r3" class="ident">p</label>.<a href="#line-42" class="ident">lostAtomic</a> &gt; <span class="lit-number">0</span> {
+			<label for="r3" class="ident">p</label>.<a href="#line-147" class="ident">addExtra</a>()
+		}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Note: write "knows" that the argument is &amp;gp.labels,</span><span class="comment">		 because otherwise its write barrier behavior may not</span><span class="comment">		 be correct. See the long comment there before</span><span class="comment">		 changing the argument here.</span></div>
+<div class="code"><pre><code>		<a href="#line-45" class="ident">cpuprof</a>.<a href="#line-26" class="ident">log</a>.<a href="profbuf.go.html#line-304" class="ident">write</a>(&amp;<label for="r5" class="ident">gp</label>.<a href="runtime2.go.html#line-470" class="ident">labels</a>, <a href="time_nofake.go.html#line-18" class="ident">nanotime</a>(), <label for="r7" class="ident">hdr</label>[:], <label for="r6" class="ident">stk</label>)
+	}
+
+	<a href="../../pkg/runtime/internal/atomic.html" class="ident i0">atomic</a>.<a href="internal/atomic/atomic_amd64.go.html#line-95" class="ident">Store</a>(&amp;<a href="proc.go.html#line-4357" class="ident">prof</a>.<a href="proc.go.html#line-4358" class="ident">signalLock</a>, <span class="lit-number">0</span>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> addNonGo adds the non-Go stack trace to the profile.</span><span class="comment"> It is called from a non-Go thread, so we cannot use much stack at all,</span><span class="comment"> nor do anything that needs a g or an m.</span><span class="comment"> In particular, we can't call cpuprof.log.write.</span><span class="comment"> Instead, we copy the stack into cpuprof.extra,</span><span class="comment"> which will be drained the next time a Go thread</span><span class="comment"> gets the signal handling event.</span><span class="comment">go:nosplit</span><span class="comment">go:nowritebarrierrec</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Simple cas-lock to coordinate with SetCPUProfileRate.</span><span class="comment">	 (Other calls to add or addNonGo should be blocked out</span><span class="comment">	 by the fact that only one SIGPROF can be handled by the</span><span class="comment">	 process at a time. If not, this lock will serialize those too.)</span></div>
+<div class="code"><pre><code>	<span class="keyword">for</span> !<a href="../../pkg/runtime/internal/atomic.html" class="ident i0">atomic</a>.<a href="internal/atomic/stubs.go.html#line-12" class="ident">Cas</a>(&amp;<a href="proc.go.html#line-4357" class="ident">prof</a>.<a href="proc.go.html#line-4358" class="ident">signalLock</a>, <span class="lit-number">0</span>, <span class="lit-number">1</span>) {
+		<a href="os_darwin.go.html#line-334" class="ident">osyield</a>()
+	}
+
+	<span class="keyword">if</span> <a href="#line-45" class="ident">cpuprof</a>.<a href="#line-40" class="ident">numExtra</a>+<span class="lit-number">1</span>+<a href="../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r10" class="ident">stk</label>) &lt; <a href="../../pkg/builtin.html#name-len" class="ident">len</a>(<a href="#line-45" class="ident">cpuprof</a>.<a href="#line-39" class="ident">extra</a>) {
+		<label for="r11" class="ident">i</label> := <a href="#line-45" class="ident">cpuprof</a>.<a href="#line-40" class="ident">numExtra</a>
+		<a href="#line-45" class="ident">cpuprof</a>.<a href="#line-39" class="ident">extra</a>[<label for="r11" class="ident">i</label>] = <a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>(<span class="lit-number">1</span> + <a href="../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r10" class="ident">stk</label>))
+		<a href="../../pkg/builtin.html#name-copy" class="ident">copy</a>(<a href="#line-45" class="ident">cpuprof</a>.<a href="#line-39" class="ident">extra</a>[<label for="r11" class="ident">i</label>+<span class="lit-number">1</span>:], <label for="r10" class="ident">stk</label>)
+		<a href="#line-45" class="ident">cpuprof</a>.<a href="#line-40" class="ident">numExtra</a> += <span class="lit-number">1</span> + <a href="../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r10" class="ident">stk</label>)
+	} <span class="keyword">else</span> {
+		<a href="#line-45" class="ident">cpuprof</a>.<a href="#line-41" class="ident">lostExtra</a>++
+	}
+
+	<a href="../../pkg/runtime/internal/atomic.html" class="ident i0">atomic</a>.<a href="internal/atomic/atomic_amd64.go.html#line-95" class="ident">Store</a>(&amp;<a href="proc.go.html#line-4357" class="ident">prof</a>.<a href="proc.go.html#line-4358" class="ident">signalLock</a>, <span class="lit-number">0</span>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> addExtra adds the "extra" profiling events,</span><span class="comment"> queued by addNonGo, to the profile log.</span><span class="comment"> addExtra is called either from a signal handler on a Go thread</span><span class="comment"> or from an ordinary goroutine; either way it can use stack</span><span class="comment"> and has a g. The world may be stopped, though.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Copy accumulated non-Go profile events.</span></div>
+<div class="code"><pre><code>	<label for="r14" class="ident">hdr</label> := [<span class="lit-number">1</span>]<a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a>{<span class="lit-number">1</span>}
+	<span class="keyword">for</span> <label for="r15" class="ident">i</label> := <span class="lit-number">0</span>; <label for="r15" class="ident">i</label> &lt; <label for="r12" class="ident">p</label>.<a href="#line-40" class="ident">numExtra</a>; {
+		<label for="r12" class="ident">p</label>.<a href="#line-26" class="ident">log</a>.<a href="profbuf.go.html#line-304" class="ident">write</a>(<a href="../../pkg/builtin.html#name-nil" class="ident">nil</a>, <span class="lit-number">0</span>, <label for="r14" class="ident">hdr</label>[:], <label for="r12" class="ident">p</label>.<a href="#line-39" class="ident">extra</a>[<label for="r15" class="ident">i</label>+<span class="lit-number">1</span>:<label for="r15" class="ident">i</label>+<a href="../../pkg/builtin.html#name-int" class="ident">int</a>(<label for="r12" class="ident">p</label>.<a href="#line-39" class="ident">extra</a>[<label for="r15" class="ident">i</label>])])
+		<label for="r15" class="ident">i</label> += <a href="../../pkg/builtin.html#name-int" class="ident">int</a>(<label for="r12" class="ident">p</label>.<a href="#line-39" class="ident">extra</a>[<label for="r15" class="ident">i</label>])
+	}
+	<label for="r12" class="ident">p</label>.<a href="#line-40" class="ident">numExtra</a> = <span class="lit-number">0</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Report any lost events.</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> <label for="r12" class="ident">p</label>.<a href="#line-41" class="ident">lostExtra</a> &gt; <span class="lit-number">0</span> {
+		<label for="r16" class="ident">hdr</label> := [<span class="lit-number">1</span>]<a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a>{<label for="r12" class="ident">p</label>.<a href="#line-41" class="ident">lostExtra</a>}
+		<label for="r17" class="ident">lostStk</label> := [<span class="lit-number">2</span>]<a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>{
+			<a href="proc.go.html#line-447" class="ident">funcPC</a>(<a href="proc.go.html#line-4364" class="ident">_LostExternalCode</a>) + <a href="../../pkg/runtime/internal/sys.html" class="ident i1">sys</a>.<a href="internal/sys/arch_amd64.go.html#line-11" class="ident">PCQuantum</a>,
+			<a href="proc.go.html#line-447" class="ident">funcPC</a>(<a href="proc.go.html#line-4363" class="ident">_ExternalCode</a>) + <a href="../../pkg/runtime/internal/sys.html" class="ident i1">sys</a>.<a href="internal/sys/arch_amd64.go.html#line-11" class="ident">PCQuantum</a>,
+		}
+		<label for="r12" class="ident">p</label>.<a href="#line-26" class="ident">log</a>.<a href="profbuf.go.html#line-304" class="ident">write</a>(<a href="../../pkg/builtin.html#name-nil" class="ident">nil</a>, <span class="lit-number">0</span>, <label for="r16" class="ident">hdr</label>[:], <label for="r17" class="ident">lostStk</label>[:])
+		<label for="r12" class="ident">p</label>.<a href="#line-41" class="ident">lostExtra</a> = <span class="lit-number">0</span>
+	}
+
+	<span class="keyword">if</span> <label for="r12" class="ident">p</label>.<a href="#line-42" class="ident">lostAtomic</a> &gt; <span class="lit-number">0</span> {
+		<label for="r18" class="ident">hdr</label> := [<span class="lit-number">1</span>]<a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a>{<label for="r12" class="ident">p</label>.<a href="#line-42" class="ident">lostAtomic</a>}
+		<label for="r19" class="ident">lostStk</label> := [<span class="lit-number">2</span>]<a href="../../pkg/builtin.html#name-uintptr" class="ident">uintptr</a>{
+			<a href="proc.go.html#line-447" class="ident">funcPC</a>(<a href="proc.go.html#line-4366" class="ident">_LostSIGPROFDuringAtomic64</a>) + <a href="../../pkg/runtime/internal/sys.html" class="ident i1">sys</a>.<a href="internal/sys/arch_amd64.go.html#line-11" class="ident">PCQuantum</a>,
+			<a href="proc.go.html#line-447" class="ident">funcPC</a>(<a href="proc.go.html#line-4362" class="ident">_System</a>) + <a href="../../pkg/runtime/internal/sys.html" class="ident i1">sys</a>.<a href="internal/sys/arch_amd64.go.html#line-11" class="ident">PCQuantum</a>,
+		}
+		<label for="r12" class="ident">p</label>.<a href="#line-26" class="ident">log</a>.<a href="profbuf.go.html#line-304" class="ident">write</a>(<a href="../../pkg/builtin.html#name-nil" class="ident">nil</a>, <span class="lit-number">0</span>, <label for="r18" class="ident">hdr</label>[:], <label for="r19" class="ident">lostStk</label>[:])
+		<label for="r12" class="ident">p</label>.<a href="#line-42" class="ident">lostAtomic</a> = <span class="lit-number">0</span>
+	}
+
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> CPUProfile panics.</span><span class="comment"> It formerly provided raw access to chunks of</span><span class="comment"> a pprof-format profile generated by the runtime.</span><span class="comment"> The details of generating that format have changed,</span><span class="comment"> so this functionality has been removed.</span><span class="comment"></span><span class="comment"> Deprecated: Use the runtime/pprof package,</span><span class="comment"> or the handlers in the net/http/pprof package,</span><span class="comment"> or the testing package's -test.cpuprofile flag instead.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r20" class="ident"><a href="../../pkg/runtime.html#name-CPUProfile" class="ident">CPUProfile</a></label>() []<a href="../../pkg/builtin.html#name-byte" class="ident">byte</a> {
+	<a href="../../pkg/builtin.html#name-panic" class="ident">panic</a>(<span class="lit-string">"CPUProfile no longer available"</span>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment">go:linkname runtime_pprof_runtime_cyclesPerSecond runtime/pprof.runtime_cyclesPerSecond</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r21" class="ident"><a href="../../pkg/runtime.html#name-runtime_pprof_runtime_cyclesPerSecond" class="ident">runtime_pprof_runtime_cyclesPerSecond</a></label>() <a href="../../pkg/builtin.html#name-int64" class="ident">int64</a> {
+	<span class="keyword">return</span> <a href="runtime.go.html#line-23" class="ident">tickspersecond</a>()
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> readProfile, provided to runtime/pprof, returns the next chunk of</span><span class="comment"> binary CPU profiling stack trace data, blocking until data is available.</span><span class="comment"> If profiling is turned off and all the profile data accumulated while it was</span><span class="comment"> on has been returned, readProfile returns eof=true.</span><span class="comment"> The caller must save the returned data and tags before calling readProfile again.</span><span class="comment"></span><span class="comment">go:linkname runtime_pprof_readProfile runtime/pprof.readProfile</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r22" class="ident"><a href="../../pkg/runtime.html#name-runtime_pprof_readProfile" class="ident">runtime_pprof_readProfile</a></label>() ([]<a href="../../pkg/builtin.html#name-uint64" class="ident">uint64</a>, []<a href="../../pkg/unsafe.html" class="ident i2">unsafe</a>.<a href="../../pkg/unsafe.html#name-Pointer" class="ident">Pointer</a>, <a href="../../pkg/builtin.html#name-bool" class="ident">bool</a>) {
+	<a href="lock_sema.go.html#line-35" class="ident">lock</a>(&amp;<a href="#line-45" class="ident">cpuprof</a>.<a href="#line-24" class="ident">lock</a>)
+	<label for="r23" class="ident">log</label> := <a href="#line-45" class="ident">cpuprof</a>.<a href="#line-26" class="ident">log</a>
+	<a href="lock_sema.go.html#line-96" class="ident">unlock</a>(&amp;<a href="#line-45" class="ident">cpuprof</a>.<a href="#line-24" class="ident">lock</a>)
+	<label for="r24" class="ident">data</label>, <label for="r25" class="ident">tags</label>, <label for="r26" class="ident">eof</label> := <label for="r23" class="ident">log</label>.<a href="profbuf.go.html#line-432" class="ident">read</a>(<a href="profbuf.go.html#line-426" class="ident">profBufBlocking</a>)
+	<span class="keyword">if</span> <a href="../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r24" class="ident">data</label>) == <span class="lit-number">0</span> &amp;&amp; <label for="r26" class="ident">eof</label> {
+		<a href="lock_sema.go.html#line-35" class="ident">lock</a>(&amp;<a href="#line-45" class="ident">cpuprof</a>.<a href="#line-24" class="ident">lock</a>)
+		<a href="#line-45" class="ident">cpuprof</a>.<a href="#line-26" class="ident">log</a> = <a href="../../pkg/builtin.html#name-nil" class="ident">nil</a>
+		<a href="lock_sema.go.html#line-96" class="ident">unlock</a>(&amp;<a href="#line-45" class="ident">cpuprof</a>.<a href="#line-24" class="ident">lock</a>)
+	}
+	<span class="keyword">return</span> <label for="r24" class="ident">data</label>, <label for="r25" class="ident">tags</label>, <label for="r26" class="ident">eof</label>
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

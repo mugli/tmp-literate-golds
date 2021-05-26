@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Package: go.opencensus.io/plugin/ochttp</title>
+<link href="../../../css/light-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="package-details"><code><span style="font-size:xx-large;">package <b>ochttp</b></span>
+
+<span class="title">Import Path</span>
+	<a href="../../../index.html#pkg-go.opencensus.io/plugin/ochttp">go.opencensus.io/plugin/ochttp</a><i> (on <a href="https://pkg.go.dev/go.opencensus.io/plugin/ochttp" target="_blank">go.dev</a>)</i>
+
+<span class="title">Dependency Relation</span>
+	imports <a href="../../../dep/go.opencensus.io/plugin/ochttp.html">15 packages</a>, and imported by <a href="../../../dep/go.opencensus.io/plugin/ochttp.html#imported-by">10 packages</a>
+
+<div id="files"><span class="title">Involved Source Files</span>
+
+	<span class="nodocs">      <a href="../../../src/go.opencensus.io/plugin/ochttp/client.go.html">client.go</a></span>
+	<span class="nodocs">      <a href="../../../src/go.opencensus.io/plugin/ochttp/client_stats.go.html">client_stats.go</a></span>
+	<input type='checkbox' checked class="fold" id="file-2-fold-content"><label for="file-2-fold-content">   <a href="../../../src/go.opencensus.io/plugin/ochttp/doc.go.html#doc">d➜</a> <a href="../../../src/go.opencensus.io/plugin/ochttp/doc.go.html">doc.go</a></label><span id='file-2-fold-content-items' class="fold-items">
+		Package ochttp provides OpenCensus instrumentation for net/http package.
+
+		For server instrumentation, see Handler. For client-side instrumentation,
+		see Transport.
+</span>
+	<span class="nodocs">      <a href="../../../src/go.opencensus.io/plugin/ochttp/route.go.html">route.go</a></span>
+	<span class="nodocs">      <a href="../../../src/go.opencensus.io/plugin/ochttp/server.go.html">server.go</a></span>
+	<span class="nodocs">      <a href="../../../src/go.opencensus.io/plugin/ochttp/span_annotating_client_trace.go.html">span_annotating_client_trace.go</a></span>
+	<span class="nodocs">      <a href="../../../src/go.opencensus.io/plugin/ochttp/stats.go.html">stats.go</a></span>
+	<span class="nodocs">      <a href="../../../src/go.opencensus.io/plugin/ochttp/trace.go.html">trace.go</a></span>
+	<span class="nodocs">      <a href="../../../src/go.opencensus.io/plugin/ochttp/wrapped_body.go.html">wrapped_body.go</a></span></div>
+<div id="examples"><span class="title">Code Examples</span>
+
+	<input type='checkbox' class="fold" id="example-0-fold-content"><label for="example-0-fold-content">Handler</label><span id='example-0-fold-content-items' class="fold-items">
+		package main
+		
+		import (
+			"go.opencensus.io/plugin/ochttp"
+			"log"
+			"net/http"
+		)
+		
+		var usersHandler http.Handler
+		
+		func main() {
+			// import "go.opencensus.io/plugin/ochttp"
+		
+			http.Handle("/users", ochttp.WithRouteTag(usersHandler, "/users"))
+		
+			// If no handler is specified, the default mux is used.
+			log.Fatal(http.ListenAndServe("localhost:8080", &ochttp.Handler{}))
+		}
+
+</span>
+	<input type='checkbox' class="fold" id="example-1-fold-content"><label for="example-1-fold-content">Handler_mux</label><span id='example-1-fold-content-items' class="fold-items">
+		package main
+		
+		import (
+			"go.opencensus.io/plugin/ochttp"
+			"go.opencensus.io/plugin/ochttp/propagation/b3"
+			"log"
+			"net/http"
+		)
+		
+		var usersHandler http.Handler
+		
+		func main() {
+			// import "go.opencensus.io/plugin/ochttp"
+		
+			mux := http.NewServeMux()
+			mux.Handle("/users", ochttp.WithRouteTag(usersHandler, "/users"))
+			log.Fatal(http.ListenAndServe("localhost:8080", &ochttp.Handler{
+				Handler:     mux,
+				Propagation: &b3.HTTPFormat{},
+			}))
+		}
+
+</span>
+	<input type='checkbox' class="fold" id="example-2-fold-content"><label for="example-2-fold-content">Transport</label><span id='example-2-fold-content-items' class="fold-items">
+		package main
+		
+		import (
+			"go.opencensus.io/plugin/ochttp"
+			"go.opencensus.io/stats/view"
+			"go.opencensus.io/tag"
+			"log"
+			"net/http"
+		)
+		
+		func main() {
+			// import (
+			// 		"go.opencensus.io/plugin/ochttp"
+			//		"go.opencensus.io/stats/view"
+			// )
+		
+			if err := view.Register(
+				// Register a few default views.
+				ochttp.ClientSentBytesDistribution,
+				ochttp.ClientReceivedBytesDistribution,
+				ochttp.ClientRoundtripLatencyDistribution,
+				// Register a custom view.
+				&view.View{
+					Name:        "httpclient_latency_by_path",
+					TagKeys:     []tag.Key{ochttp.KeyClientPath},
+					Measure:     ochttp.ClientRoundtripLatency,
+					Aggregation: ochttp.DefaultLatencyDistribution,
+				},
+			); err != nil {
+				log.Fatal(err)
+			}
+		
+			client := &http.Client{
+				Transport: &ochttp.Transport{},
+			}
+		
+			// Use client to perform requests.
+			_ = client
+		}
+</span>
+</div>
+<div id="exported-types"><span class="title">Package-Level Type Names<span class="title-stat"><i> (total 11, in which 2 are exported)</i></span></span>
+
+<div id="exported-types-buttons" class="js-on">	/* sort exporteds by: <label id="sort-types-by-alphabet" class="button">alphabet</label> | <label id="sort-types-by-popularity" class="button">popularity</label> */</div><div class="anchor type-res" id="name-Handler" data-popularity="250">	<input type='checkbox' class="fold" id="Handler-fold-content"><label for="Handler-fold-content"> <a href="../../../use/go.opencensus.io/plugin/ochttp..Handler.html">type</a> <a href="../../../src/go.opencensus.io/plugin/ochttp/server.go.html#line-44">Handler</a> <i>(struct)</i></label><span id='Handler-fold-content-docs' class="fold-docs">
+		Handler is an http.Handler wrapper to instrument your HTTP server with
+		OpenCensus. It supports both stats and tracing.
+
+		Tracing
+
+		This handler is aware of the incoming request's span, reading it from request
+		headers as configured using the Propagation field.
+		The extracted span can be accessed from the incoming request's
+		context.
+
+		   span := trace.FromContext(r.Context())
+
+		The server span will be automatically ended at the end of ServeHTTP.
+
+		<input type='checkbox' class="fold" id="Handler-fold-fields"><label for="Handler-fold-fields">Fields (<i>total 7, all are exported</i>)</label><span id='Handler-fold-fields-items' class="fold-items"><span>
+			<input type='checkbox' class="fold" id="Handler-fold-field-FormatSpanName"><label for="Handler-fold-field-FormatSpanName"><a href="../../../src/go.opencensus.io/plugin/ochttp/server.go.html#line-72">FormatSpanName</a> <i>func(*<a href="../../net/http.html">http</a>.<a href="../../net/http.html#name-Request">Request</a>) <a href="../../builtin.html#name-string">string</a></i></label><span id='Handler-fold-field-FormatSpanName-docs' class="fold-docs">
+				FormatSpanName holds the function to use for generating the span name
+				from the information found in the incoming HTTP Request. By default the
+				name equals the URL Path.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Handler-fold-field-GetStartOptions"><label for="Handler-fold-field-GetStartOptions"><a href="../../../src/go.opencensus.io/plugin/ochttp/server.go.html#line-61">GetStartOptions</a> <i>func(*<a href="../../net/http.html">http</a>.<a href="../../net/http.html#name-Request">Request</a>) <a href="../trace.html">trace</a>.<a href="../trace.html#name-StartOptions">StartOptions</a></i></label><span id='Handler-fold-field-GetStartOptions-docs' class="fold-docs">
+				GetStartOptions allows to set start options per request. If set,
+				StartOptions is going to be ignored.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Handler-fold-field-Handler"><label for="Handler-fold-field-Handler"><a href="../../../src/go.opencensus.io/plugin/ochttp/server.go.html#line-50">Handler</a> <i><a href="../../net/http.html">http</a>.<a href="../../net/http.html#name-Handler">Handler</a></i></label><span id='Handler-fold-field-Handler-docs' class="fold-docs">
+				Handler is the handler used to handle the incoming request.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Handler-fold-field-IsHealthEndpoint"><label for="Handler-fold-field-IsHealthEndpoint"><a href="../../../src/go.opencensus.io/plugin/ochttp/server.go.html#line-78">IsHealthEndpoint</a> <i>func(*<a href="../../net/http.html">http</a>.<a href="../../net/http.html#name-Request">Request</a>) <a href="../../builtin.html#name-bool">bool</a></i></label><span id='Handler-fold-field-IsHealthEndpoint-docs' class="fold-docs">
+				IsHealthEndpoint holds the function to use for determining if the
+				incoming HTTP request should be considered a health check. This is in
+				addition to the private isHealthEndpoint func which may also indicate
+				tracing should be skipped.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Handler-fold-field-IsPublicEndpoint"><label for="Handler-fold-field-IsPublicEndpoint"><a href="../../../src/go.opencensus.io/plugin/ochttp/server.go.html#line-67">IsPublicEndpoint</a> <i><a href="../../builtin.html#name-bool">bool</a></i></label><span id='Handler-fold-field-IsPublicEndpoint-docs' class="fold-docs">
+				IsPublicEndpoint should be set to true for publicly accessible HTTP(S)
+				servers. If true, any trace metadata set on the incoming request will
+				be added as a linked trace instead of being added as a parent of the
+				current trace.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Handler-fold-field-Propagation"><label for="Handler-fold-field-Propagation"><a href="../../../src/go.opencensus.io/plugin/ochttp/server.go.html#line-47">Propagation</a> <i><a href="../trace/propagation.html">propagation</a>.<a href="../trace/propagation.html#name-HTTPFormat">HTTPFormat</a></i></label><span id='Handler-fold-field-Propagation-docs' class="fold-docs">
+				Propagation defines how traces are propagated. If unspecified,
+				B3 propagation will be used.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Handler-fold-field-StartOptions"><label for="Handler-fold-field-StartOptions"><a href="../../../src/go.opencensus.io/plugin/ochttp/server.go.html#line-57">StartOptions</a> <i><a href="../trace.html">trace</a>.<a href="../trace.html#name-StartOptions">StartOptions</a></i></label><span id='Handler-fold-field-StartOptions-docs' class="fold-docs">
+				StartOptions are applied to the span started by this Handler around each
+				request.
+
+				StartOptions.SpanKind will always be set to trace.SpanKindServer
+				for spans started by this transport.
+</span></span></span>
+		<input type='checkbox' class="fold" id="Handler-fold-methods"><label for="Handler-fold-methods">Methods (<i>total 4, in which 1 are exported</i>)</label><span id='Handler-fold-methods-items' class="fold-items"><span>
+			<span class="nodocs">(*T) <a href="../../../src/go.opencensus.io/plugin/ochttp/server.go.html#line-81">ServeHTTP</a>(w <a href="../../net/http.html">http</a>.<a href="../../net/http.html#name-ResponseWriter">ResponseWriter</a>, r *<a href="../../net/http.html">http</a>.<a href="../../net/http.html#name-Request">Request</a>)</span></span>
+			<input type='checkbox' class="showhide" id="Handler-showhide-methods"><i><label for="Handler-showhide-methods" class="show-inline">/* 3 unexporteds ... */</label><label for="Handler-showhide-methods" class="hide-inline">/* 3 unexporteds: */</label></i><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../src/go.opencensus.io/plugin/ochttp/server.go.html#line-142">extractSpanContext</a>(r *<a href="../../net/http.html">http</a>.<a href="../../net/http.html#name-Request">Request</a>) (<a href="../trace.html">trace</a>.<a href="../trace.html#name-SpanContext">SpanContext</a>, <a href="../../builtin.html#name-bool">bool</a>)</span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../src/go.opencensus.io/plugin/ochttp/server.go.html#line-149">startStats</a>(w <a href="../../net/http.html">http</a>.<a href="../../net/http.html#name-ResponseWriter">ResponseWriter</a>, r *<a href="../../net/http.html">http</a>.<a href="../../net/http.html#name-Request">Request</a>) (<a href="../../net/http.html">http</a>.<a href="../../net/http.html#name-ResponseWriter">ResponseWriter</a>, func(tags *<a href="#name-addedTags">addedTags</a>))</span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../src/go.opencensus.io/plugin/ochttp/server.go.html#line-95">startTrace</a>(w <a href="../../net/http.html">http</a>.<a href="../../net/http.html#name-ResponseWriter">ResponseWriter</a>, r *<a href="../../net/http.html">http</a>.<a href="../../net/http.html#name-Request">Request</a>) (*<a href="../../net/http.html">http</a>.<a href="../../net/http.html#name-Request">Request</a>, func())</span></i></span></span>
+		<input type='checkbox' class="fold" id="Handler-fold-impls"><label for="Handler-fold-impls">Implements (<i>at least one exported</i>)</label><span id='Handler-fold-impls-items' class="fold-items"><span>
+			*T : net/http.<a href="../../net/http.html#name-Handler">Handler</a></span></span>
+
+</span></div><div class="anchor type-res" id="name-Transport" data-popularity="200">	<input type='checkbox' class="fold" id="Transport-fold-content"><label for="Transport-fold-content"> <a href="../../../use/go.opencensus.io/plugin/ochttp..Transport.html">type</a> <a href="../../../src/go.opencensus.io/plugin/ochttp/client.go.html#line-31">Transport</a> <i>(struct)</i></label><span id='Transport-fold-content-docs' class="fold-docs">
+		Transport is an http.RoundTripper that instruments all outgoing requests with
+		OpenCensus stats and tracing.
+
+		The zero value is intended to be a useful default, but for
+		now it's recommended that you explicitly set Propagation, since the default
+		for this may change.
+
+		<input type='checkbox' class="fold" id="Transport-fold-fields"><label for="Transport-fold-fields">Fields (<i>total 6, all are exported</i>)</label><span id='Transport-fold-fields-items' class="fold-items"><span>
+			<input type='checkbox' class="fold" id="Transport-fold-field-Base"><label for="Transport-fold-field-Base"><a href="../../../src/go.opencensus.io/plugin/ochttp/client.go.html#line-37">Base</a> <i><a href="../../net/http.html">http</a>.<a href="../../net/http.html#name-RoundTripper">RoundTripper</a></i></label><span id='Transport-fold-field-Base-docs' class="fold-docs">
+				Base may be set to wrap another http.RoundTripper that does the actual
+				requests. By default http.DefaultTransport is used.
+
+				If base HTTP roundtripper implements CancelRequest,
+				the returned round tripper will be cancelable.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Transport-fold-field-FormatSpanName"><label for="Transport-fold-field-FormatSpanName"><a href="../../../src/go.opencensus.io/plugin/ochttp/client.go.html#line-57">FormatSpanName</a> <i>func(*<a href="../../net/http.html">http</a>.<a href="../../net/http.html#name-Request">Request</a>) <a href="../../builtin.html#name-string">string</a></i></label><span id='Transport-fold-field-FormatSpanName-docs' class="fold-docs">
+				NameFromRequest holds the function to use for generating the span name
+				from the information found in the outgoing HTTP Request. By default the
+				name equals the URL Path.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Transport-fold-field-GetStartOptions"><label for="Transport-fold-field-GetStartOptions"><a href="../../../src/go.opencensus.io/plugin/ochttp/client.go.html#line-52">GetStartOptions</a> <i>func(*<a href="../../net/http.html">http</a>.<a href="../../net/http.html#name-Request">Request</a>) <a href="../trace.html">trace</a>.<a href="../trace.html#name-StartOptions">StartOptions</a></i></label><span id='Transport-fold-field-GetStartOptions-docs' class="fold-docs">
+				GetStartOptions allows to set start options per request. If set,
+				StartOptions is going to be ignored.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Transport-fold-field-NewClientTrace"><label for="Transport-fold-field-NewClientTrace"><a href="../../../src/go.opencensus.io/plugin/ochttp/client.go.html#line-62">NewClientTrace</a> <i>func(*<a href="../../net/http.html">http</a>.<a href="../../net/http.html#name-Request">Request</a>, *<a href="../trace.html">trace</a>.<a href="../trace.html#name-Span">Span</a>) *<a href="../../net/http/httptrace.html">httptrace</a>.<a href="../../net/http/httptrace.html#name-ClientTrace">ClientTrace</a></i></label><span id='Transport-fold-field-NewClientTrace-docs' class="fold-docs">
+				NewClientTrace may be set to a function allowing the current *trace.Span
+				to be annotated with HTTP request event information emitted by the
+				httptrace package.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Transport-fold-field-Propagation"><label for="Transport-fold-field-Propagation"><a href="../../../src/go.opencensus.io/plugin/ochttp/client.go.html#line-41">Propagation</a> <i><a href="../trace/propagation.html">propagation</a>.<a href="../trace/propagation.html#name-HTTPFormat">HTTPFormat</a></i></label><span id='Transport-fold-field-Propagation-docs' class="fold-docs">
+				Propagation defines how traces are propagated. If unspecified, a default
+				(currently B3 format) will be used.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Transport-fold-field-StartOptions"><label for="Transport-fold-field-StartOptions"><a href="../../../src/go.opencensus.io/plugin/ochttp/client.go.html#line-48">StartOptions</a> <i><a href="../trace.html">trace</a>.<a href="../trace.html#name-StartOptions">StartOptions</a></i></label><span id='Transport-fold-field-StartOptions-docs' class="fold-docs">
+				StartOptions are applied to the span started by this Transport around each
+				request.
+
+				StartOptions.SpanKind will always be set to trace.SpanKindClient
+				for spans started by this transport.
+</span></span></span>
+		<input type='checkbox' class="fold" id="Transport-fold-methods"><label for="Transport-fold-methods">Methods (<i>total 3, in which 2 are exported</i>)</label><span id='Transport-fold-methods-items' class="fold-items"><span>
+			<input type='checkbox' class="fold" id="Transport-fold-method-CancelRequest"><label for="Transport-fold-method-CancelRequest">(*T) <a href="../../../src/go.opencensus.io/plugin/ochttp/client.go.html#line-110">CancelRequest</a>(req *<a href="../../net/http.html">http</a>.<a href="../../net/http.html#name-Request">Request</a>)</label><span id='Transport-fold-method-CancelRequest-docs' class="fold-docs">
+				CancelRequest cancels an in-flight request by closing its connection.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Transport-fold-method-RoundTrip"><label for="Transport-fold-method-RoundTrip">(*T) <a href="../../../src/go.opencensus.io/plugin/ochttp/client.go.html#line-68">RoundTrip</a>(req *<a href="../../net/http.html">http</a>.<a href="../../net/http.html#name-Request">Request</a>) (*<a href="../../net/http.html">http</a>.<a href="../../net/http.html#name-Response">Response</a>, <a href="../../builtin.html#name-error">error</a>)</label><span id='Transport-fold-method-RoundTrip-docs' class="fold-docs">
+				RoundTrip implements http.RoundTripper, delegating to Base and recording stats and traces for the request.
+</span></span>
+			<input type='checkbox' class="showhide" id="Transport-showhide-methods"><i><label for="Transport-showhide-methods" class="show-inline">/* one unexported ... */</label><label for="Transport-showhide-methods" class="hide-inline">/* one unexported: */</label></i><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../src/go.opencensus.io/plugin/ochttp/client.go.html#line-102">base</a>() <a href="../../net/http.html">http</a>.<a href="../../net/http.html#name-RoundTripper">RoundTripper</a></span></i></span></span>
+		<input type='checkbox' class="fold" id="Transport-fold-impls"><label for="Transport-fold-impls">Implements (<i>at least one exported</i>)</label><span id='Transport-fold-impls-items' class="fold-items"><span>
+			*T : net/http.<a href="../../net/http.html#name-RoundTripper">RoundTripper</a></span></span>
+
+</span></div></div><div>	<input type='checkbox' class="showhide" id="unexported-typenames-showhide"><i><label for="unexported-typenames-showhide" class="show-inline">/* 9 unexporteds ... */</label><label for="unexported-typenames-showhide" class="hide-inline">/* 9 unexporteds: */</label></i><div class="anchor type-res hidden" id="name-addedTags" data-popularity="0">	<input type='checkbox' class="fold" id="addedTags-fold-content"><label for="addedTags-fold-content"> <a href="../../../use/go.opencensus.io/plugin/ochttp..addedTags*4166d.html">type</a> <a href="../../../src/go.opencensus.io/plugin/ochttp/route.go.html#line-59">addedTags</a> <i>(struct)</i></label><span id='addedTags-fold-content-docs' class="fold-docs">
+
+		<input type='checkbox' class="fold" id="addedTags-fold-fields"><label for="addedTags-fold-fields">Fields (<i>only one, which is unexported</i>)</label><span id='addedTags-fold-fields-items' class="fold-items">
+			<input type='checkbox' checked class="showhide" id="addedTags-showhide-fields"><i><label for="addedTags-showhide-fields" class="show-inline">/* one unexported ... */</label><label for="addedTags-showhide-fields" class="hide-inline">/* one unexported: */</label></i><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/go.opencensus.io/plugin/ochttp/route.go.html#line-60">t</a> <i>[]<a href="../tag.html">tag</a>.<a href="../tag.html#name-Mutator">Mutator</a></i></span></i></span></span>
+
+</span></div><div class="anchor type-res hidden" id="name-addedTagsKey" data-popularity="0">	<span class="nodocs"> <a href="../../../use/go.opencensus.io/plugin/ochttp..addedTagsKey*30900.html">type</a> <a href="../../../src/go.opencensus.io/plugin/ochttp/route.go.html#line-57">addedTagsKey</a> <i>(struct)</i></span></div><div class="anchor type-res hidden" id="name-bodyTracker" data-popularity="300">	<input type='checkbox' class="fold" id="bodyTracker-fold-content"><label for="bodyTracker-fold-content"> <a href="../../../use/go.opencensus.io/plugin/ochttp..bodyTracker*6a801.html">type</a> <a href="../../../src/go.opencensus.io/plugin/ochttp/trace.go.html#line-105">bodyTracker</a> <i>(struct)</i></label><span id='bodyTracker-fold-content-docs' class="fold-docs">
+		bodyTracker wraps a response.Body and invokes
+		trace.EndSpan on encountering io.EOF on reading
+		the body of the original response.
+
+		<input type='checkbox' class="fold" id="bodyTracker-fold-fields"><label for="bodyTracker-fold-fields">Fields (<i>total 2, neither is exported</i>)</label><span id='bodyTracker-fold-fields-items' class="fold-items">
+			<input type='checkbox' checked class="showhide" id="bodyTracker-showhide-fields"><i><label for="bodyTracker-showhide-fields" class="show-inline">/* 2 unexporteds ... */</label><label for="bodyTracker-showhide-fields" class="hide-inline">/* 2 unexporteds: */</label></i><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/go.opencensus.io/plugin/ochttp/trace.go.html#line-106">rc</a> <i><a href="../../io.html">io</a>.<a href="../../io.html#name-ReadCloser">ReadCloser</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/go.opencensus.io/plugin/ochttp/trace.go.html#line-107">span</a> <i>*<a href="../trace.html">trace</a>.<a href="../trace.html#name-Span">Span</a></i></span></i></span></span>
+		<input type='checkbox' class="fold" id="bodyTracker-fold-methods"><label for="bodyTracker-fold-methods">Methods (<i>total 2, both are exported</i>)</label><span id='bodyTracker-fold-methods-items' class="fold-items"><span>
+			<span class="nodocs">(*T) <a href="../../../src/go.opencensus.io/plugin/ochttp/trace.go.html#line-131">Close</a>() <a href="../../builtin.html#name-error">error</a></span></span><span>
+			<span class="nodocs">(*T) <a href="../../../src/go.opencensus.io/plugin/ochttp/trace.go.html#line-112">Read</a>(b []<a href="../../builtin.html#name-byte">byte</a>) (<a href="../../builtin.html#name-int">int</a>, <a href="../../builtin.html#name-error">error</a>)</span></span></span>
+		<input type='checkbox' class="fold" id="bodyTracker-fold-impls"><label for="bodyTracker-fold-impls">Implements (<i>at least 4, all are exported</i>)</label><span id='bodyTracker-fold-impls-items' class="fold-items"><span>
+			*T : github.com/jbenet/go-context/io.<a href="../../github.com/jbenet/go-context/io.html#name-Reader">Reader</a></span><span>
+			*T : io.<a href="../../io.html#name-Closer">Closer</a></span><span>
+			*T : io.<a href="../../io.html#name-ReadCloser">ReadCloser</a></span><span>
+			*T : io.<a href="../../io.html#name-Reader">Reader</a></span></span>
+
+</span></div><div class="anchor type-res hidden" id="name-spanAnnotator" data-popularity="700">	<input type='checkbox' class="fold" id="spanAnnotator-fold-content"><label for="spanAnnotator-fold-content"> <a href="../../../use/go.opencensus.io/plugin/ochttp..spanAnnotator*bce0b.html">type</a> <a href="../../../src/go.opencensus.io/plugin/ochttp/span_annotating_client_trace.go.html#line-26">spanAnnotator</a> <i>(struct)</i></label><span id='spanAnnotator-fold-content-docs' class="fold-docs">
+
+		<input type='checkbox' class="fold" id="spanAnnotator-fold-fields"><label for="spanAnnotator-fold-fields">Fields (<i>only one, which is unexported</i>)</label><span id='spanAnnotator-fold-fields-items' class="fold-items">
+			<input type='checkbox' checked class="showhide" id="spanAnnotator-showhide-fields"><i><label for="spanAnnotator-showhide-fields" class="show-inline">/* one unexported ... */</label><label for="spanAnnotator-showhide-fields" class="hide-inline">/* one unexported: */</label></i><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/go.opencensus.io/plugin/ochttp/span_annotating_client_trace.go.html#line-27">sp</a> <i>*<a href="../trace.html">trace</a>.<a href="../trace.html#name-Span">Span</a></i></span></i></span></span>
+		<input type='checkbox' class="fold" id="spanAnnotator-fold-methods"><label for="spanAnnotator-fold-methods">Methods (<i>total 14, none are exported</i>)</label><span id='spanAnnotator-fold-methods-items' class="fold-items">
+			<input type='checkbox' checked class="showhide" id="spanAnnotator-showhide-methods"><i><label for="spanAnnotator-showhide-methods" class="show-inline">/* 14 unexporteds ... */</label><label for="spanAnnotator-showhide-methods" class="hide-inline">/* 14 unexporteds: */</label></i><span class="hidden"><i>
+			<span class="nodocs">( T) <a href="../../../src/go.opencensus.io/plugin/ochttp/span_annotating_client_trace.go.html#line-129">connectDone</a>(network, addr <a href="../../builtin.html#name-string">string</a>, err <a href="../../builtin.html#name-error">error</a>)</span></i></span><span class="hidden"><i>
+			<span class="nodocs">( T) <a href="../../../src/go.opencensus.io/plugin/ochttp/span_annotating_client_trace.go.html#line-121">connectStart</a>(network, addr <a href="../../builtin.html#name-string">string</a>)</span></i></span><span class="hidden"><i>
+			<span class="nodocs">( T) <a href="../../../src/go.opencensus.io/plugin/ochttp/span_annotating_client_trace.go.html#line-106">dnsDone</a>(info <a href="../../net/http/httptrace.html">httptrace</a>.<a href="../../net/http/httptrace.html#name-DNSDoneInfo">DNSDoneInfo</a>)</span></i></span><span class="hidden"><i>
+			<span class="nodocs">( T) <a href="../../../src/go.opencensus.io/plugin/ochttp/span_annotating_client_trace.go.html#line-99">dnsStart</a>(info <a href="../../net/http/httptrace.html">httptrace</a>.<a href="../../net/http/httptrace.html#name-DNSStartInfo">DNSStartInfo</a>)</span></i></span><span class="hidden"><i>
+			<span class="nodocs">( T) <a href="../../../src/go.opencensus.io/plugin/ochttp/span_annotating_client_trace.go.html#line-62">getConn</a>(hostPort <a href="../../builtin.html#name-string">string</a>)</span></i></span><span class="hidden"><i>
+			<span class="nodocs">( T) <a href="../../../src/go.opencensus.io/plugin/ochttp/span_annotating_client_trace.go.html#line-95">got100Continue</a>()</span></i></span><span class="hidden"><i>
+			<span class="nodocs">( T) <a href="../../../src/go.opencensus.io/plugin/ochttp/span_annotating_client_trace.go.html#line-69">gotConn</a>(info <a href="../../net/http/httptrace.html">httptrace</a>.<a href="../../net/http/httptrace.html#name-GotConnInfo">GotConnInfo</a>)</span></i></span><span class="hidden"><i>
+			<span class="nodocs">( T) <a href="../../../src/go.opencensus.io/plugin/ochttp/span_annotating_client_trace.go.html#line-91">gotFirstResponseByte</a>()</span></i></span><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="spanAnnotator-fold-method-putIdleConn"><label for="spanAnnotator-fold-method-putIdleConn">( T) <a href="../../../src/go.opencensus.io/plugin/ochttp/span_annotating_client_trace.go.html#line-82">putIdleConn</a>(err <a href="../../builtin.html#name-error">error</a>)</label><span id='spanAnnotator-fold-method-putIdleConn-docs' class="fold-docs">
+				PutIdleConn implements a httptrace.ClientTrace hook
+</span></i></span><span class="hidden"><i>
+			<span class="nodocs">( T) <a href="../../../src/go.opencensus.io/plugin/ochttp/span_annotating_client_trace.go.html#line-145">tlsHandshakeDone</a>(_ <a href="../../crypto/tls.html">tls</a>.<a href="../../crypto/tls.html#name-ConnectionState">ConnectionState</a>, err <a href="../../builtin.html#name-error">error</a>)</span></i></span><span class="hidden"><i>
+			<span class="nodocs">( T) <a href="../../../src/go.opencensus.io/plugin/ochttp/span_annotating_client_trace.go.html#line-141">tlsHandshakeStart</a>()</span></i></span><span class="hidden"><i>
+			<span class="nodocs">( T) <a href="../../../src/go.opencensus.io/plugin/ochttp/span_annotating_client_trace.go.html#line-158">wait100Continue</a>()</span></i></span><span class="hidden"><i>
+			<span class="nodocs">( T) <a href="../../../src/go.opencensus.io/plugin/ochttp/span_annotating_client_trace.go.html#line-154">wroteHeaders</a>()</span></i></span><span class="hidden"><i>
+			<span class="nodocs">( T) <a href="../../../src/go.opencensus.io/plugin/ochttp/span_annotating_client_trace.go.html#line-162">wroteRequest</a>(info <a href="../../net/http/httptrace.html">httptrace</a>.<a href="../../net/http/httptrace.html#name-WroteRequestInfo">WroteRequestInfo</a>)</span></i></span></span>
+
+</span></div><div class="anchor type-res hidden" id="name-statsTransport" data-popularity="150">	<input type='checkbox' class="fold" id="statsTransport-fold-content"><label for="statsTransport-fold-content"> <a href="../../../use/go.opencensus.io/plugin/ochttp..statsTransport*b092b.html">type</a> <a href="../../../src/go.opencensus.io/plugin/ochttp/client_stats.go.html#line-30">statsTransport</a> <i>(struct)</i></label><span id='statsTransport-fold-content-docs' class="fold-docs">
+		statsTransport is an http.RoundTripper that collects stats for the outgoing requests.
+
+		<input type='checkbox' class="fold" id="statsTransport-fold-fields"><label for="statsTransport-fold-fields">Fields (<i>only one, which is unexported</i>)</label><span id='statsTransport-fold-fields-items' class="fold-items">
+			<input type='checkbox' checked class="showhide" id="statsTransport-showhide-fields"><i><label for="statsTransport-showhide-fields" class="show-inline">/* one unexported ... */</label><label for="statsTransport-showhide-fields" class="hide-inline">/* one unexported: */</label></i><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/go.opencensus.io/plugin/ochttp/client_stats.go.html#line-31">base</a> <i><a href="../../net/http.html">http</a>.<a href="../../net/http.html#name-RoundTripper">RoundTripper</a></i></span></i></span></span>
+		<input type='checkbox' class="fold" id="statsTransport-fold-methods"><label for="statsTransport-fold-methods">Methods (<i>total 2, both are exported</i>)</label><span id='statsTransport-fold-methods-items' class="fold-items"><span>
+			<input type='checkbox' class="fold" id="statsTransport-fold-method-CancelRequest"><label for="statsTransport-fold-method-CancelRequest">( T) <a href="../../../src/go.opencensus.io/plugin/ochttp/client_stats.go.html#line-78">CancelRequest</a>(req *<a href="../../net/http.html">http</a>.<a href="../../net/http.html#name-Request">Request</a>)</label><span id='statsTransport-fold-method-CancelRequest-docs' class="fold-docs">
+				CancelRequest cancels an in-flight request by closing its connection.
+</span></span><span>
+			<input type='checkbox' class="fold" id="statsTransport-fold-method-RoundTrip"><label for="statsTransport-fold-method-RoundTrip">( T) <a href="../../../src/go.opencensus.io/plugin/ochttp/client_stats.go.html#line-35">RoundTrip</a>(req *<a href="../../net/http.html">http</a>.<a href="../../net/http.html#name-Request">Request</a>) (*<a href="../../net/http.html">http</a>.<a href="../../net/http.html#name-Response">Response</a>, <a href="../../builtin.html#name-error">error</a>)</label><span id='statsTransport-fold-method-RoundTrip-docs' class="fold-docs">
+				RoundTrip implements http.RoundTripper, delegating to Base and recording stats for the request.
+</span></span></span>
+		<input type='checkbox' class="fold" id="statsTransport-fold-impls"><label for="statsTransport-fold-impls">Implements (<i>at least one exported</i>)</label><span id='statsTransport-fold-impls-items' class="fold-items"><span>
+			 T : net/http.<a href="../../net/http.html#name-RoundTripper">RoundTripper</a></span></span>
+
+</span></div><div class="anchor type-res hidden" id="name-taggedHandlerFunc" data-popularity="100">	<input type='checkbox' class="fold" id="taggedHandlerFunc-fold-content"><label for="taggedHandlerFunc-fold-content"> <a href="../../../use/go.opencensus.io/plugin/ochttp..taggedHandlerFunc*20632.html">type</a> <a href="../../../src/go.opencensus.io/plugin/ochttp/route.go.html#line-48">taggedHandlerFunc</a> <i>(func)</i></label><span id='taggedHandlerFunc-fold-content-docs' class="fold-docs">
+		taggedHandlerFunc is a http.Handler that returns tags describing the
+		processing of the request. These tags will be recorded along with the
+		measures in this package at the end of the request.
+
+		<input type='checkbox' class="fold" id="taggedHandlerFunc-fold-methods"><label for="taggedHandlerFunc-fold-methods">Methods (<i>only one, which is exported</i>)</label><span id='taggedHandlerFunc-fold-methods-items' class="fold-items"><span>
+			<span class="nodocs">( T) <a href="../../../src/go.opencensus.io/plugin/ochttp/route.go.html#line-50">ServeHTTP</a>(w <a href="../../net/http.html">http</a>.<a href="../../net/http.html#name-ResponseWriter">ResponseWriter</a>, r *<a href="../../net/http.html">http</a>.<a href="../../net/http.html#name-Request">Request</a>)</span></span></span>
+		<input type='checkbox' class="fold" id="taggedHandlerFunc-fold-impls"><label for="taggedHandlerFunc-fold-impls">Implements (<i>at least one exported</i>)</label><span id='taggedHandlerFunc-fold-impls-items' class="fold-items"><span>
+			 T : net/http.<a href="../../net/http.html#name-Handler">Handler</a></span></span>
+
+</span></div><div class="anchor type-res hidden" id="name-traceTransport" data-popularity="150">	<input type='checkbox' class="fold" id="traceTransport-fold-content"><label for="traceTransport-fold-content"> <a href="../../../use/go.opencensus.io/plugin/ochttp..traceTransport*7acb2.html">type</a> <a href="../../../src/go.opencensus.io/plugin/ochttp/trace.go.html#line-42">traceTransport</a> <i>(struct)</i></label><span id='traceTransport-fold-content-docs' class="fold-docs">
+
+		<input type='checkbox' class="fold" id="traceTransport-fold-fields"><label for="traceTransport-fold-fields">Fields (<i>total 5, none are exported</i>)</label><span id='traceTransport-fold-fields-items' class="fold-items">
+			<input type='checkbox' checked class="showhide" id="traceTransport-showhide-fields"><i><label for="traceTransport-showhide-fields" class="show-inline">/* 5 unexporteds ... */</label><label for="traceTransport-showhide-fields" class="hide-inline">/* 5 unexporteds: */</label></i><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/go.opencensus.io/plugin/ochttp/trace.go.html#line-43">base</a> <i><a href="../../net/http.html">http</a>.<a href="../../net/http.html#name-RoundTripper">RoundTripper</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/go.opencensus.io/plugin/ochttp/trace.go.html#line-45">format</a> <i><a href="../trace/propagation.html">propagation</a>.<a href="../trace/propagation.html#name-HTTPFormat">HTTPFormat</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/go.opencensus.io/plugin/ochttp/trace.go.html#line-46">formatSpanName</a> <i>func(*<a href="../../net/http.html">http</a>.<a href="../../net/http.html#name-Request">Request</a>) <a href="../../builtin.html#name-string">string</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/go.opencensus.io/plugin/ochttp/trace.go.html#line-47">newClientTrace</a> <i>func(*<a href="../../net/http.html">http</a>.<a href="../../net/http.html#name-Request">Request</a>, *<a href="../trace.html">trace</a>.<a href="../trace.html#name-Span">Span</a>) *<a href="../../net/http/httptrace.html">httptrace</a>.<a href="../../net/http/httptrace.html#name-ClientTrace">ClientTrace</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/go.opencensus.io/plugin/ochttp/trace.go.html#line-44">startOptions</a> <i><a href="../trace.html">trace</a>.<a href="../trace.html#name-StartOptions">StartOptions</a></i></span></i></span></span>
+		<input type='checkbox' class="fold" id="traceTransport-fold-methods"><label for="traceTransport-fold-methods">Methods (<i>total 2, both are exported</i>)</label><span id='traceTransport-fold-methods-items' class="fold-items"><span>
+			<input type='checkbox' class="fold" id="traceTransport-fold-method-CancelRequest"><label for="traceTransport-fold-method-CancelRequest">(*T) <a href="../../../src/go.opencensus.io/plugin/ochttp/trace.go.html#line-140">CancelRequest</a>(req *<a href="../../net/http.html">http</a>.<a href="../../net/http.html#name-Request">Request</a>)</label><span id='traceTransport-fold-method-CancelRequest-docs' class="fold-docs">
+				CancelRequest cancels an in-flight request by closing its connection.
+</span></span><span>
+			<input type='checkbox' class="fold" id="traceTransport-fold-method-RoundTrip"><label for="traceTransport-fold-method-RoundTrip">(*T) <a href="../../../src/go.opencensus.io/plugin/ochttp/trace.go.html#line-55">RoundTrip</a>(req *<a href="../../net/http.html">http</a>.<a href="../../net/http.html#name-Request">Request</a>) (*<a href="../../net/http.html">http</a>.<a href="../../net/http.html#name-Response">Response</a>, <a href="../../builtin.html#name-error">error</a>)</label><span id='traceTransport-fold-method-RoundTrip-docs' class="fold-docs">
+				RoundTrip creates a trace.Span and inserts it into the outgoing request's headers.
+				The created span can follow a parent span, if a parent is presented in
+				the request's context.
+</span></span></span>
+		<input type='checkbox' class="fold" id="traceTransport-fold-impls"><label for="traceTransport-fold-impls">Implements (<i>at least one exported</i>)</label><span id='traceTransport-fold-impls-items' class="fold-items"><span>
+			*T : net/http.<a href="../../net/http.html#name-RoundTripper">RoundTripper</a></span></span>
+
+</span></div><div class="anchor type-res hidden" id="name-tracker" data-popularity="350">	<input type='checkbox' class="fold" id="tracker-fold-content"><label for="tracker-fold-content"> <a href="../../../use/go.opencensus.io/plugin/ochttp..tracker*7ae44.html">type</a> <a href="../../../src/go.opencensus.io/plugin/ochttp/client_stats.go.html#line-87">tracker</a> <i>(struct)</i></label><span id='tracker-fold-content-docs' class="fold-docs">
+
+		<input type='checkbox' class="fold" id="tracker-fold-fields"><label for="tracker-fold-fields">Fields (<i>total 8, none are exported</i>)</label><span id='tracker-fold-fields-items' class="fold-items">
+			<input type='checkbox' checked class="showhide" id="tracker-showhide-fields"><i><label for="tracker-showhide-fields" class="show-inline">/* 8 unexporteds ... */</label><label for="tracker-showhide-fields" class="hide-inline">/* 8 unexporteds: */</label></i><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/go.opencensus.io/plugin/ochttp/client_stats.go.html#line-93">body</a> <i><a href="../../io.html">io</a>.<a href="../../io.html#name-ReadCloser">ReadCloser</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/go.opencensus.io/plugin/ochttp/client_stats.go.html#line-88">ctx</a> <i><a href="../../context.html">context</a>.<a href="../../context.html#name-Context">Context</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/go.opencensus.io/plugin/ochttp/client_stats.go.html#line-95">endOnce</a> <i><a href="../../sync.html">sync</a>.<a href="../../sync.html#name-Once">Once</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/go.opencensus.io/plugin/ochttp/client_stats.go.html#line-91">reqSize</a> <i><a href="../../builtin.html#name-int64">int64</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/go.opencensus.io/plugin/ochttp/client_stats.go.html#line-90">respContentLength</a> <i><a href="../../builtin.html#name-int64">int64</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/go.opencensus.io/plugin/ochttp/client_stats.go.html#line-89">respSize</a> <i><a href="../../builtin.html#name-int64">int64</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/go.opencensus.io/plugin/ochttp/client_stats.go.html#line-92">start</a> <i><a href="../../time.html">time</a>.<a href="../../time.html#name-Time">Time</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/go.opencensus.io/plugin/ochttp/client_stats.go.html#line-94">statusCode</a> <i><a href="../../builtin.html#name-int">int</a></i></span></i></span></span>
+		<input type='checkbox' class="fold" id="tracker-fold-methods"><label for="tracker-fold-methods">Methods (<i>total 3, in which 2 are exported</i>)</label><span id='tracker-fold-methods-items' class="fold-items"><span>
+			<span class="nodocs">(*T) <a href="../../../src/go.opencensus.io/plugin/ochttp/client_stats.go.html#line-137">Close</a>() <a href="../../builtin.html#name-error">error</a></span></span><span>
+			<span class="nodocs">(*T) <a href="../../../src/go.opencensus.io/plugin/ochttp/client_stats.go.html#line-125">Read</a>(b []<a href="../../builtin.html#name-byte">byte</a>) (<a href="../../builtin.html#name-int">int</a>, <a href="../../builtin.html#name-error">error</a>)</span></span>
+			<input type='checkbox' checked class="showhide" id="tracker-showhide-methods"><i><label for="tracker-showhide-methods" class="show-inline">/* one unexported ... */</label><label for="tracker-showhide-methods" class="hide-inline">/* one unexported: */</label></i><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../src/go.opencensus.io/plugin/ochttp/client_stats.go.html#line-100">end</a>()</span></i></span></span>
+		<input type='checkbox' class="fold" id="tracker-fold-impls"><label for="tracker-fold-impls">Implements (<i>at least 4, all are exported</i>)</label><span id='tracker-fold-impls-items' class="fold-items"><span>
+			*T : github.com/jbenet/go-context/io.<a href="../../github.com/jbenet/go-context/io.html#name-Reader">Reader</a></span><span>
+			*T : io.<a href="../../io.html#name-Closer">Closer</a></span><span>
+			*T : io.<a href="../../io.html#name-ReadCloser">ReadCloser</a></span><span>
+			*T : io.<a href="../../io.html#name-Reader">Reader</a></span></span>
+
+</span></div><div class="anchor type-res hidden" id="name-trackingResponseWriter" data-popularity="450">	<input type='checkbox' class="fold" id="trackingResponseWriter-fold-content"><label for="trackingResponseWriter-fold-content"> <a href="../../../use/go.opencensus.io/plugin/ochttp..trackingResponseWriter*186fa.html">type</a> <a href="../../../src/go.opencensus.io/plugin/ochttp/server.go.html#line-169">trackingResponseWriter</a> <i>(struct)</i></label><span id='trackingResponseWriter-fold-content-docs' class="fold-docs">
+
+		<input type='checkbox' class="fold" id="trackingResponseWriter-fold-fields"><label for="trackingResponseWriter-fold-fields">Fields (<i>total 8, none are exported</i>)</label><span id='trackingResponseWriter-fold-fields-items' class="fold-items">
+			<input type='checkbox' checked class="showhide" id="trackingResponseWriter-showhide-fields"><i><label for="trackingResponseWriter-showhide-fields" class="show-inline">/* 8 unexporteds ... */</label><label for="trackingResponseWriter-showhide-fields" class="hide-inline">/* 8 unexporteds: */</label></i><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/go.opencensus.io/plugin/ochttp/server.go.html#line-170">ctx</a> <i><a href="../../context.html">context</a>.<a href="../../context.html#name-Context">Context</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/go.opencensus.io/plugin/ochttp/server.go.html#line-176">endOnce</a> <i><a href="../../sync.html">sync</a>.<a href="../../sync.html#name-Once">Once</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/go.opencensus.io/plugin/ochttp/server.go.html#line-171">reqSize</a> <i><a href="../../builtin.html#name-int64">int64</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/go.opencensus.io/plugin/ochttp/server.go.html#line-172">respSize</a> <i><a href="../../builtin.html#name-int64">int64</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/go.opencensus.io/plugin/ochttp/server.go.html#line-173">start</a> <i><a href="../../time.html">time</a>.<a href="../../time.html#name-Time">Time</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/go.opencensus.io/plugin/ochttp/server.go.html#line-174">statusCode</a> <i><a href="../../builtin.html#name-int">int</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/go.opencensus.io/plugin/ochttp/server.go.html#line-175">statusLine</a> <i><a href="../../builtin.html#name-string">string</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../src/go.opencensus.io/plugin/ochttp/server.go.html#line-177">writer</a> <i><a href="../../net/http.html">http</a>.<a href="../../net/http.html#name-ResponseWriter">ResponseWriter</a></i></span></i></span></span>
+		<input type='checkbox' class="fold" id="trackingResponseWriter-fold-methods"><label for="trackingResponseWriter-fold-methods">Methods (<i>total 5, in which 3 are exported</i>)</label><span id='trackingResponseWriter-fold-methods-items' class="fold-items"><span>
+			<span class="nodocs">(*T) <a href="../../../src/go.opencensus.io/plugin/ochttp/server.go.html#line-207">Header</a>() <a href="../../net/http.html">http</a>.<a href="../../net/http.html#name-Header">Header</a></span></span><span>
+			<span class="nodocs">(*T) <a href="../../../src/go.opencensus.io/plugin/ochttp/server.go.html#line-211">Write</a>(data []<a href="../../builtin.html#name-byte">byte</a>) (<a href="../../builtin.html#name-int">int</a>, <a href="../../builtin.html#name-error">error</a>)</span></span><span>
+			<span class="nodocs">(*T) <a href="../../../src/go.opencensus.io/plugin/ochttp/server.go.html#line-220">WriteHeader</a>(statusCode <a href="../../builtin.html#name-int">int</a>)</span></span>
+			<input type='checkbox' checked class="showhide" id="trackingResponseWriter-showhide-methods"><i><label for="trackingResponseWriter-showhide-methods" class="show-inline">/* 2 unexporteds ... */</label><label for="trackingResponseWriter-showhide-methods" class="hide-inline">/* 2 unexporteds: */</label></i><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../src/go.opencensus.io/plugin/ochttp/server.go.html#line-183">end</a>(tags *<a href="#name-addedTags">addedTags</a>)</span></i></span><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="trackingResponseWriter-fold-method-wrappedResponseWriter"><label for="trackingResponseWriter-fold-method-wrappedResponseWriter">(*T) <a href="../../../src/go.opencensus.io/plugin/ochttp/server.go.html#line-230">wrappedResponseWriter</a>() <a href="../../net/http.html">http</a>.<a href="../../net/http.html#name-ResponseWriter">ResponseWriter</a></label><span id='trackingResponseWriter-fold-method-wrappedResponseWriter-docs' class="fold-docs">
+				wrappedResponseWriter returns a wrapped version of the original
+				 ResponseWriter and only implements the same combination of additional
+				interfaces as the original.
+				This implementation is based on https://github.com/felixge/httpsnoop.
+</span></i></span></span>
+		<input type='checkbox' class="fold" id="trackingResponseWriter-fold-impls"><label for="trackingResponseWriter-fold-impls">Implements (<i>at least 4, all are exported</i>)</label><span id='trackingResponseWriter-fold-impls-items' class="fold-items"><span>
+			*T : github.com/go-git/go-git/v5/plumbing/protocol/packp/sideband.<a href="../../github.com/go-git/go-git/v5/plumbing/protocol/packp/sideband.html#name-Progress">Progress</a></span><span>
+			*T : github.com/jbenet/go-context/io.<a href="../../github.com/jbenet/go-context/io.html#name-Writer">Writer</a></span><span>
+			*T : io.<a href="../../io.html#name-Writer">Writer</a></span><span>
+			*T : net/http.<a href="../../net/http.html#name-ResponseWriter">ResponseWriter</a></span></span>
+
+</span></div></div>
+<div id="exported-functions"><span class="title">Package-Level Functions<span class="title-stat"><i> (total 10, in which 5 are exported)</i></span></span>
+
+<div class="anchor value-res" id="name-NewSpanAnnotatingClientTrace">	<input type='checkbox' class="fold" id="NewSpanAnnotatingClientTrace-fold-content"><label for="NewSpanAnnotatingClientTrace-fold-content"> <a href="../../../use/go.opencensus.io/plugin/ochttp..NewSpanAnnotatingClientTrace.html">func</a> <a href="../../../src/go.opencensus.io/plugin/ochttp/span_annotating_client_trace.go.html#line-41">NewSpanAnnotatingClientTrace</a>(_ *<a href="../../net/http.html">http</a>.<a href="../../net/http.html#name-Request">Request</a>, s *<a href="../trace.html">trace</a>.<a href="../trace.html#name-Span">Span</a>) *<a href="../../net/http/httptrace.html">httptrace</a>.<a href="../../net/http/httptrace.html#name-ClientTrace">ClientTrace</a></label><span id='NewSpanAnnotatingClientTrace-fold-content-docs' class="fold-docs">
+		NewSpanAnnotatingClientTrace returns a httptrace.ClientTrace which annotates
+		all emitted httptrace events on the provided Span.
+
+</span></div><div class="anchor value-res" id="name-NewSpanAnnotator">	<input type='checkbox' class="fold" id="NewSpanAnnotator-fold-content"><label for="NewSpanAnnotator-fold-content"> <a href="../../../use/go.opencensus.io/plugin/ochttp..NewSpanAnnotator.html">func</a> <a href="../../../src/go.opencensus.io/plugin/ochttp/span_annotating_client_trace.go.html#line-35">NewSpanAnnotator</a>(r *<a href="../../net/http.html">http</a>.<a href="../../net/http.html#name-Request">Request</a>, s *<a href="../trace.html">trace</a>.<a href="../trace.html#name-Span">Span</a>) *<a href="../../net/http/httptrace.html">httptrace</a>.<a href="../../net/http/httptrace.html#name-ClientTrace">ClientTrace</a></label><span id='NewSpanAnnotator-fold-content-docs' class="fold-docs">
+		NewSpanAnnotator returns a httptrace.ClientTrace which annotates
+		all emitted httptrace events on the provided Span.
+		Deprecated: Use NewSpanAnnotatingClientTrace instead
+
+</span></div><div class="anchor value-res" id="name-SetRoute">	<input type='checkbox' class="fold" id="SetRoute-fold-content"><label for="SetRoute-fold-content"> <a href="../../../use/go.opencensus.io/plugin/ochttp..SetRoute.html">func</a> <a href="../../../src/go.opencensus.io/plugin/ochttp/route.go.html#line-27">SetRoute</a>(ctx <a href="../../context.html">context</a>.<a href="../../context.html#name-Context">Context</a>, route <a href="../../builtin.html#name-string">string</a>)</label><span id='SetRoute-fold-content-docs' class="fold-docs">
+		SetRoute sets the http_server_route tag to the given value.
+		It's useful when an HTTP framework does not support the http.Handler interface
+		and using WithRouteTag is not an option, but provides a way to hook into the request flow.
+
+</span></div><div class="anchor value-res" id="name-TraceStatus">	<input type='checkbox' class="fold" id="TraceStatus-fold-content"><label for="TraceStatus-fold-content"> <a href="../../../use/go.opencensus.io/plugin/ochttp..TraceStatus.html">func</a> <a href="../../../src/go.opencensus.io/plugin/ochttp/trace.go.html#line-179">TraceStatus</a>(httpStatusCode <a href="../../builtin.html#name-int">int</a>, statusLine <a href="../../builtin.html#name-string">string</a>) <a href="../trace.html">trace</a>.<a href="../trace.html#name-Status">Status</a></label><span id='TraceStatus-fold-content-docs' class="fold-docs">
+		TraceStatus is a utility to convert the HTTP status code to a trace.Status that
+		represents the outcome as closely as possible.
+
+</span></div><div class="anchor value-res" id="name-WithRouteTag">	<input type='checkbox' class="fold" id="WithRouteTag-fold-content"><label for="WithRouteTag-fold-content"> <a href="../../../use/go.opencensus.io/plugin/ochttp..WithRouteTag.html">func</a> <a href="../../../src/go.opencensus.io/plugin/ochttp/route.go.html#line-35">WithRouteTag</a>(handler <a href="../../net/http.html">http</a>.<a href="../../net/http.html#name-Handler">Handler</a>, route <a href="../../builtin.html#name-string">string</a>) <a href="../../net/http.html">http</a>.<a href="../../net/http.html#name-Handler">Handler</a></label><span id='WithRouteTag-fold-content-docs' class="fold-docs">
+		WithRouteTag returns an http.Handler that records stats with the
+		http_server_route tag set to the given value.
+
+</span></div>	<input type='checkbox' class="showhide" id="unexported-functions-showhide"><i><label for="unexported-functions-showhide" class="show-inline">/* 5 unexporteds ... */</label><label for="unexported-functions-showhide" class="hide-inline">/* 5 unexporteds: */</label></i><div class="anchor value-res hidden" id="name-isHealthEndpoint"><i>	<span class="nodocs"> <a href="../../../use/go.opencensus.io/plugin/ochttp..isHealthEndpoint*4311f.html">func</a> <a href="../../../src/go.opencensus.io/plugin/ochttp/trace.go.html#line-234">isHealthEndpoint</a>(path <a href="../../builtin.html#name-string">string</a>) <a href="../../builtin.html#name-bool">bool</a></span></i></div><div class="anchor value-res hidden" id="name-requestAttrs"><i>	<span class="nodocs"> <a href="../../../use/go.opencensus.io/plugin/ochttp..requestAttrs*22fc2.html">func</a> <a href="../../../src/go.opencensus.io/plugin/ochttp/trace.go.html#line-153">requestAttrs</a>(r *<a href="../../net/http.html">http</a>.<a href="../../net/http.html#name-Request">Request</a>) []<a href="../trace.html">trace</a>.<a href="../trace.html#name-Attribute">Attribute</a></span></i></div><div class="anchor value-res hidden" id="name-responseAttrs"><i>	<span class="nodocs"> <a href="../../../use/go.opencensus.io/plugin/ochttp..responseAttrs*f1ca2.html">func</a> <a href="../../../src/go.opencensus.io/plugin/ochttp/trace.go.html#line-171">responseAttrs</a>(resp *<a href="../../net/http.html">http</a>.<a href="../../net/http.html#name-Response">Response</a>) []<a href="../trace.html">trace</a>.<a href="../trace.html#name-Attribute">Attribute</a></span></i></div><div class="anchor value-res hidden" id="name-spanNameFromURL"><i>	<span class="nodocs"> <a href="../../../use/go.opencensus.io/plugin/ochttp..spanNameFromURL*894b4.html">func</a> <a href="../../../src/go.opencensus.io/plugin/ochttp/trace.go.html#line-149">spanNameFromURL</a>(req *<a href="../../net/http.html">http</a>.<a href="../../net/http.html#name-Request">Request</a>) <a href="../../builtin.html#name-string">string</a></span></i></div><div class="anchor value-res hidden" id="name-wrappedBody"><i>	<input type='checkbox' class="fold" id="wrappedBody-fold-content"><label for="wrappedBody-fold-content"> <a href="../../../use/go.opencensus.io/plugin/ochttp..wrappedBody*a1989.html">func</a> <a href="../../../src/go.opencensus.io/plugin/ochttp/wrapped_body.go.html#line-24">wrappedBody</a>(wrapper <a href="../../io.html">io</a>.<a href="../../io.html#name-ReadCloser">ReadCloser</a>, body <a href="../../io.html">io</a>.<a href="../../io.html#name-ReadCloser">ReadCloser</a>) <a href="../../io.html">io</a>.<a href="../../io.html#name-ReadCloser">ReadCloser</a></label><span id='wrappedBody-fold-content-docs' class="fold-docs">
+		wrappedBody returns a wrapped version of the original
+		Body and only implements the same combination of additional
+		interfaces as the original.
+
+</span></i></div></div>
+<div id="exported-variables"><span class="title">Package-Level Variables<span class="title-stat"><i> (total 42, in which 40 are exported)</i></span></span>
+
+<div class="anchor value-res" id="name-ClientCompletedCount">	<input type='checkbox' class="fold" id="ClientCompletedCount-fold-content"><label for="ClientCompletedCount-fold-content">  <a href="../../../use/go.opencensus.io/plugin/ochttp..ClientCompletedCount.html">var</a> <a href="../../../src/go.opencensus.io/plugin/ochttp/stats.go.html#line-162">ClientCompletedCount</a> *<a href="../stats/view.html">view</a>.<a href="../stats/view.html#name-View">View</a></label><span id='ClientCompletedCount-fold-content-docs' class="fold-docs">
+		Package ochttp provides some convenience views for client measures.
+		You still need to register these views for data to actually be collected.
+
+</span></div><div class="anchor value-res" id="name-ClientLatency">	<input type='checkbox' class="fold" id="ClientLatency-fold-content"><label for="ClientLatency-fold-content">  <a href="../../../use/go.opencensus.io/plugin/ochttp..ClientLatency.html">var</a> <a href="../../../src/go.opencensus.io/plugin/ochttp/stats.go.html#line-41">ClientLatency</a> *<a href="../stats.html">stats</a>.<a href="../stats.html#name-Float64Measure">Float64Measure</a></label><span id='ClientLatency-fold-content-docs' class="fold-docs">
+		Deprecated: Use ClientRoundtripLatency.
+
+</span></div><div class="anchor value-res" id="name-ClientLatencyView">	<input type='checkbox' class="fold" id="ClientLatencyView-fold-content"><label for="ClientLatencyView-fold-content">  <a href="../../../use/go.opencensus.io/plugin/ochttp..ClientLatencyView.html">var</a> <a href="../../../src/go.opencensus.io/plugin/ochttp/stats.go.html#line-198">ClientLatencyView</a> *<a href="../stats/view.html">view</a>.<a href="../stats/view.html#name-View">View</a></label><span id='ClientLatencyView-fold-content-docs' class="fold-docs">
+		Deprecated: Use ClientRoundtripLatencyDistribution instead.
+
+</span></div><div class="anchor value-res" id="name-ClientReceivedBytes">	<input type='checkbox' class="fold" id="ClientReceivedBytes-fold-content"><label for="ClientReceivedBytes-fold-content">  <a href="../../../use/go.opencensus.io/plugin/ochttp..ClientReceivedBytes.html">var</a> <a href="../../../src/go.opencensus.io/plugin/ochttp/stats.go.html#line-54">ClientReceivedBytes</a> *<a href="../stats.html">stats</a>.<a href="../stats.html#name-Int64Measure">Int64Measure</a></label><span id='ClientReceivedBytes-fold-content-docs' class="fold-docs">
+		The following client HTTP measures are supported for use in custom views.
+
+</span></div><div class="anchor value-res" id="name-ClientReceivedBytesDistribution">	<input type='checkbox' class="fold" id="ClientReceivedBytesDistribution-fold-content"><label for="ClientReceivedBytesDistribution-fold-content">  <a href="../../../use/go.opencensus.io/plugin/ochttp..ClientReceivedBytesDistribution.html">var</a> <a href="../../../src/go.opencensus.io/plugin/ochttp/stats.go.html#line-146">ClientReceivedBytesDistribution</a> *<a href="../stats/view.html">view</a>.<a href="../stats/view.html#name-View">View</a></label><span id='ClientReceivedBytesDistribution-fold-content-docs' class="fold-docs">
+		Package ochttp provides some convenience views for client measures.
+		You still need to register these views for data to actually be collected.
+
+</span></div><div class="anchor value-res" id="name-ClientRequestBytes">	<input type='checkbox' class="fold" id="ClientRequestBytes-fold-content"><label for="ClientRequestBytes-fold-content">  <a href="../../../use/go.opencensus.io/plugin/ochttp..ClientRequestBytes.html">var</a> <a href="../../../src/go.opencensus.io/plugin/ochttp/stats.go.html#line-31">ClientRequestBytes</a> *<a href="../stats.html">stats</a>.<a href="../stats.html#name-Int64Measure">Int64Measure</a></label><span id='ClientRequestBytes-fold-content-docs' class="fold-docs">
+		Deprecated: Use ClientSentBytes.
+
+</span></div><div class="anchor value-res" id="name-ClientRequestBytesView">	<input type='checkbox' class="fold" id="ClientRequestBytesView-fold-content"><label for="ClientRequestBytesView-fold-content">  <a href="../../../use/go.opencensus.io/plugin/ochttp..ClientRequestBytesView.html">var</a> <a href="../../../src/go.opencensus.io/plugin/ochttp/stats.go.html#line-182">ClientRequestBytesView</a> *<a href="../stats/view.html">view</a>.<a href="../stats/view.html#name-View">View</a></label><span id='ClientRequestBytesView-fold-content-docs' class="fold-docs">
+		Deprecated: Use ClientSentBytesDistribution.
+
+</span></div><div class="anchor value-res" id="name-ClientRequestCount">	<input type='checkbox' class="fold" id="ClientRequestCount-fold-content"><label for="ClientRequestCount-fold-content">  <a href="../../../use/go.opencensus.io/plugin/ochttp..ClientRequestCount.html">var</a> <a href="../../../src/go.opencensus.io/plugin/ochttp/stats.go.html#line-26">ClientRequestCount</a> *<a href="../stats.html">stats</a>.<a href="../stats.html#name-Int64Measure">Int64Measure</a></label><span id='ClientRequestCount-fold-content-docs' class="fold-docs">
+		Deprecated: Use a Count aggregation over one of the other client measures to achieve the same effect.
+
+</span></div><div class="anchor value-res" id="name-ClientRequestCountByMethod">	<input type='checkbox' class="fold" id="ClientRequestCountByMethod-fold-content"><label for="ClientRequestCountByMethod-fold-content">  <a href="../../../use/go.opencensus.io/plugin/ochttp..ClientRequestCountByMethod.html">var</a> <a href="../../../src/go.opencensus.io/plugin/ochttp/stats.go.html#line-206">ClientRequestCountByMethod</a> *<a href="../stats/view.html">view</a>.<a href="../stats/view.html#name-View">View</a></label><span id='ClientRequestCountByMethod-fold-content-docs' class="fold-docs">
+		Deprecated: Use ClientCompletedCount instead.
+
+</span></div><div class="anchor value-res" id="name-ClientRequestCountView">	<input type='checkbox' class="fold" id="ClientRequestCountView-fold-content"><label for="ClientRequestCountView-fold-content">  <a href="../../../use/go.opencensus.io/plugin/ochttp..ClientRequestCountView.html">var</a> <a href="../../../src/go.opencensus.io/plugin/ochttp/stats.go.html#line-174">ClientRequestCountView</a> *<a href="../stats/view.html">view</a>.<a href="../stats/view.html#name-View">View</a></label><span id='ClientRequestCountView-fold-content-docs' class="fold-docs">
+		Deprecated: No direct replacement, but see ClientCompletedCount.
+
+</span></div><div class="anchor value-res" id="name-ClientResponseBytes">	<input type='checkbox' class="fold" id="ClientResponseBytes-fold-content"><label for="ClientResponseBytes-fold-content">  <a href="../../../use/go.opencensus.io/plugin/ochttp..ClientResponseBytes.html">var</a> <a href="../../../src/go.opencensus.io/plugin/ochttp/stats.go.html#line-36">ClientResponseBytes</a> *<a href="../stats.html">stats</a>.<a href="../stats.html#name-Int64Measure">Int64Measure</a></label><span id='ClientResponseBytes-fold-content-docs' class="fold-docs">
+		Deprecated: Use ClientReceivedBytes.
+
+</span></div><div class="anchor value-res" id="name-ClientResponseBytesView">	<input type='checkbox' class="fold" id="ClientResponseBytesView-fold-content"><label for="ClientResponseBytesView-fold-content">  <a href="../../../use/go.opencensus.io/plugin/ochttp..ClientResponseBytesView.html">var</a> <a href="../../../src/go.opencensus.io/plugin/ochttp/stats.go.html#line-190">ClientResponseBytesView</a> *<a href="../stats/view.html">view</a>.<a href="../stats/view.html#name-View">View</a></label><span id='ClientResponseBytesView-fold-content-docs' class="fold-docs">
+		Deprecated: Use ClientReceivedBytesDistribution instead.
+
+</span></div><div class="anchor value-res" id="name-ClientResponseCountByStatusCode">	<input type='checkbox' class="fold" id="ClientResponseCountByStatusCode-fold-content"><label for="ClientResponseCountByStatusCode-fold-content">  <a href="../../../use/go.opencensus.io/plugin/ochttp..ClientResponseCountByStatusCode.html">var</a> <a href="../../../src/go.opencensus.io/plugin/ochttp/stats.go.html#line-215">ClientResponseCountByStatusCode</a> *<a href="../stats/view.html">view</a>.<a href="../stats/view.html#name-View">View</a></label><span id='ClientResponseCountByStatusCode-fold-content-docs' class="fold-docs">
+		Deprecated: Use ClientCompletedCount instead.
+
+</span></div><div class="anchor value-res" id="name-ClientRoundtripLatency">	<input type='checkbox' class="fold" id="ClientRoundtripLatency-fold-content"><label for="ClientRoundtripLatency-fold-content">  <a href="../../../use/go.opencensus.io/plugin/ochttp..ClientRoundtripLatency.html">var</a> <a href="../../../src/go.opencensus.io/plugin/ochttp/stats.go.html#line-59">ClientRoundtripLatency</a> *<a href="../stats.html">stats</a>.<a href="../stats.html#name-Float64Measure">Float64Measure</a></label><span id='ClientRoundtripLatency-fold-content-docs' class="fold-docs">
+		The following client HTTP measures are supported for use in custom views.
+
+</span></div><div class="anchor value-res" id="name-ClientRoundtripLatencyDistribution">	<input type='checkbox' class="fold" id="ClientRoundtripLatencyDistribution-fold-content"><label for="ClientRoundtripLatencyDistribution-fold-content">  <a href="../../../use/go.opencensus.io/plugin/ochttp..ClientRoundtripLatencyDistribution.html">var</a> <a href="../../../src/go.opencensus.io/plugin/ochttp/stats.go.html#line-154">ClientRoundtripLatencyDistribution</a> *<a href="../stats/view.html">view</a>.<a href="../stats/view.html#name-View">View</a></label><span id='ClientRoundtripLatencyDistribution-fold-content-docs' class="fold-docs">
+		Package ochttp provides some convenience views for client measures.
+		You still need to register these views for data to actually be collected.
+
+</span></div><div class="anchor value-res" id="name-ClientSentBytes">	<input type='checkbox' class="fold" id="ClientSentBytes-fold-content"><label for="ClientSentBytes-fold-content">  <a href="../../../use/go.opencensus.io/plugin/ochttp..ClientSentBytes.html">var</a> <a href="../../../src/go.opencensus.io/plugin/ochttp/stats.go.html#line-49">ClientSentBytes</a> *<a href="../stats.html">stats</a>.<a href="../stats.html#name-Int64Measure">Int64Measure</a></label><span id='ClientSentBytes-fold-content-docs' class="fold-docs">
+		The following client HTTP measures are supported for use in custom views.
+
+</span></div><div class="anchor value-res" id="name-ClientSentBytesDistribution">	<input type='checkbox' class="fold" id="ClientSentBytesDistribution-fold-content"><label for="ClientSentBytesDistribution-fold-content">  <a href="../../../use/go.opencensus.io/plugin/ochttp..ClientSentBytesDistribution.html">var</a> <a href="../../../src/go.opencensus.io/plugin/ochttp/stats.go.html#line-138">ClientSentBytesDistribution</a> *<a href="../stats/view.html">view</a>.<a href="../stats/view.html#name-View">View</a></label><span id='ClientSentBytesDistribution-fold-content-docs' class="fold-docs">
+		Package ochttp provides some convenience views for client measures.
+		You still need to register these views for data to actually be collected.
+
+</span></div><div class="anchor value-res" id="name-DefaultClientViews">	<input type='checkbox' class="fold" id="DefaultClientViews-fold-content"><label for="DefaultClientViews-fold-content">  <a href="../../../use/go.opencensus.io/plugin/ochttp..DefaultClientViews.html">var</a> <a href="../../../src/go.opencensus.io/plugin/ochttp/stats.go.html#line-274">DefaultClientViews</a> []*<a href="../stats/view.html">view</a>.<a href="../stats/view.html#name-View">View</a></label><span id='DefaultClientViews-fold-content-docs' class="fold-docs">
+		DefaultClientViews are the default client views provided by this package.
+		Deprecated: No replacement. Register the views you would like individually.
+
+</span></div><div class="anchor value-res" id="name-DefaultLatencyDistribution">	<input type='checkbox' class="fold" id="DefaultLatencyDistribution-fold-content"><label for="DefaultLatencyDistribution-fold-content">  <a href="../../../use/go.opencensus.io/plugin/ochttp..DefaultLatencyDistribution.html">var</a> <a href="../../../src/go.opencensus.io/plugin/ochttp/stats.go.html#line-132">DefaultLatencyDistribution</a> *<a href="../stats/view.html">view</a>.<a href="../stats/view.html#name-Aggregation">Aggregation</a></label><span id='DefaultLatencyDistribution-fold-content-docs' class="fold-docs">
+		Default distributions used by views in this package.
+
+</span></div><div class="anchor value-res" id="name-DefaultServerViews">	<input type='checkbox' class="fold" id="DefaultServerViews-fold-content"><label for="DefaultServerViews-fold-content">  <a href="../../../use/go.opencensus.io/plugin/ochttp..DefaultServerViews.html">var</a> <a href="../../../src/go.opencensus.io/plugin/ochttp/stats.go.html#line-285">DefaultServerViews</a> []*<a href="../stats/view.html">view</a>.<a href="../stats/view.html#name-View">View</a></label><span id='DefaultServerViews-fold-content-docs' class="fold-docs">
+		DefaultServerViews are the default server views provided by this package.
+		Deprecated: No replacement. Register the views you would like individually.
+
+</span></div><div class="anchor value-res" id="name-DefaultSizeDistribution">	<input type='checkbox' class="fold" id="DefaultSizeDistribution-fold-content"><label for="DefaultSizeDistribution-fold-content">  <a href="../../../use/go.opencensus.io/plugin/ochttp..DefaultSizeDistribution.html">var</a> <a href="../../../src/go.opencensus.io/plugin/ochttp/stats.go.html#line-131">DefaultSizeDistribution</a> *<a href="../stats/view.html">view</a>.<a href="../stats/view.html#name-Aggregation">Aggregation</a></label><span id='DefaultSizeDistribution-fold-content-docs' class="fold-docs">
+		Default distributions used by views in this package.
+
+</span></div><div class="anchor value-res" id="name-Host">	<input type='checkbox' class="fold" id="Host-fold-content"><label for="Host-fold-content">  <a href="../../../use/go.opencensus.io/plugin/ochttp..Host.html">var</a> <a href="../../../src/go.opencensus.io/plugin/ochttp/stats.go.html#line-95">Host</a> <a href="../tag.html">tag</a>.<a href="../tag.html#name-Key">Key</a></label><span id='Host-fold-content-docs' class="fold-docs">
+		Host is the value of the HTTP Host header.
+
+		The value of this tag can be controlled by the HTTP client, so you need
+		to watch out for potentially generating high-cardinality labels in your
+		metrics backend if you use this tag in views.
+
+</span></div><div class="anchor value-res" id="name-KeyClientHost">	<input type='checkbox' class="fold" id="KeyClientHost-fold-content"><label for="KeyClientHost-fold-content">  <a href="../../../use/go.opencensus.io/plugin/ochttp..KeyClientHost.html">var</a> <a href="../../../src/go.opencensus.io/plugin/ochttp/stats.go.html#line-126">KeyClientHost</a> <a href="../tag.html">tag</a>.<a href="../tag.html#name-Key">Key</a></label><span id='KeyClientHost-fold-content-docs' class="fold-docs">
+		KeyClientHost is the value of the request Host header.
+
+</span></div><div class="anchor value-res" id="name-KeyClientMethod">	<input type='checkbox' class="fold" id="KeyClientMethod-fold-content"><label for="KeyClientMethod-fold-content">  <a href="../../../use/go.opencensus.io/plugin/ochttp..KeyClientMethod.html">var</a> <a href="../../../src/go.opencensus.io/plugin/ochttp/stats.go.html#line-120">KeyClientMethod</a> <a href="../tag.html">tag</a>.<a href="../tag.html#name-Key">Key</a></label><span id='KeyClientMethod-fold-content-docs' class="fold-docs">
+		KeyClientMethod is the HTTP method, capitalized (i.e. GET, POST, PUT, DELETE, etc.).
+
+</span></div><div class="anchor value-res" id="name-KeyClientPath">	<input type='checkbox' class="fold" id="KeyClientPath-fold-content"><label for="KeyClientPath-fold-content">  <a href="../../../use/go.opencensus.io/plugin/ochttp..KeyClientPath.html">var</a> <a href="../../../src/go.opencensus.io/plugin/ochttp/stats.go.html#line-122">KeyClientPath</a> <a href="../tag.html">tag</a>.<a href="../tag.html#name-Key">Key</a></label><span id='KeyClientPath-fold-content-docs' class="fold-docs">
+		KeyClientPath is the URL path (not including query string).
+
+</span></div><div class="anchor value-res" id="name-KeyClientStatus">	<input type='checkbox' class="fold" id="KeyClientStatus-fold-content"><label for="KeyClientStatus-fold-content">  <a href="../../../use/go.opencensus.io/plugin/ochttp..KeyClientStatus.html">var</a> <a href="../../../src/go.opencensus.io/plugin/ochttp/stats.go.html#line-124">KeyClientStatus</a> <a href="../tag.html">tag</a>.<a href="../tag.html#name-Key">Key</a></label><span id='KeyClientStatus-fold-content-docs' class="fold-docs">
+		KeyClientStatus is the HTTP status code as an integer (e.g. 200, 404, 500.), or "error" if no response status line was received.
+
+</span></div><div class="anchor value-res" id="name-KeyServerRoute">	<input type='checkbox' class="fold" id="KeyServerRoute-fold-content"><label for="KeyServerRoute-fold-content">  <a href="../../../use/go.opencensus.io/plugin/ochttp..KeyServerRoute.html">var</a> <a href="../../../src/go.opencensus.io/plugin/ochttp/stats.go.html#line-114">KeyServerRoute</a> <a href="../tag.html">tag</a>.<a href="../tag.html#name-Key">Key</a></label><span id='KeyServerRoute-fold-content-docs' class="fold-docs">
+		KeyServerRoute is a low cardinality string representing the logical
+		handler of the request. This is usually the pattern registered on the a
+		ServeMux (or similar string).
+
+</span></div><div class="anchor value-res" id="name-Method">	<input type='checkbox' class="fold" id="Method-fold-content"><label for="Method-fold-content">  <a href="../../../use/go.opencensus.io/plugin/ochttp..Method.html">var</a> <a href="../../../src/go.opencensus.io/plugin/ochttp/stats.go.html#line-109">Method</a> <a href="../tag.html">tag</a>.<a href="../tag.html#name-Key">Key</a></label><span id='Method-fold-content-docs' class="fold-docs">
+		Method is the HTTP method of the request, capitalized (GET, POST, etc.).
+
+</span></div><div class="anchor value-res" id="name-Path">	<input type='checkbox' class="fold" id="Path-fold-content"><label for="Path-fold-content">  <a href="../../../use/go.opencensus.io/plugin/ochttp..Path.html">var</a> <a href="../../../src/go.opencensus.io/plugin/ochttp/stats.go.html#line-106">Path</a> <a href="../tag.html">tag</a>.<a href="../tag.html#name-Key">Key</a></label><span id='Path-fold-content-docs' class="fold-docs">
+		Path is the URL path (not including query string) in the request.
+
+		The value of this tag can be controlled by the HTTP client, so you need
+		to watch out for potentially generating high-cardinality labels in your
+		metrics backend if you use this tag in views.
+
+</span></div><div class="anchor value-res" id="name-ServerLatency">	<input type='checkbox' class="fold" id="ServerLatency-fold-content"><label for="ServerLatency-fold-content">  <a href="../../../use/go.opencensus.io/plugin/ochttp..ServerLatency.html">var</a> <a href="../../../src/go.opencensus.io/plugin/ochttp/stats.go.html#line-80">ServerLatency</a> *<a href="../stats.html">stats</a>.<a href="../stats.html#name-Float64Measure">Float64Measure</a></label><span id='ServerLatency-fold-content-docs' class="fold-docs">
+		The following server HTTP measures are supported for use in custom views:
+
+</span></div><div class="anchor value-res" id="name-ServerLatencyView">	<input type='checkbox' class="fold" id="ServerLatencyView-fold-content"><label for="ServerLatencyView-fold-content">  <a href="../../../use/go.opencensus.io/plugin/ochttp..ServerLatencyView.html">var</a> <a href="../../../src/go.opencensus.io/plugin/ochttp/stats.go.html#line-248">ServerLatencyView</a> *<a href="../stats/view.html">view</a>.<a href="../stats/view.html#name-View">View</a></label><span id='ServerLatencyView-fold-content-docs' class="fold-docs">
+		Package ochttp provides some convenience views for server measures.
+		You still need to register these views for data to actually be collected.
+
+</span></div><div class="anchor value-res" id="name-ServerRequestBytes">	<input type='checkbox' class="fold" id="ServerRequestBytes-fold-content"><label for="ServerRequestBytes-fold-content">  <a href="../../../use/go.opencensus.io/plugin/ochttp..ServerRequestBytes.html">var</a> <a href="../../../src/go.opencensus.io/plugin/ochttp/stats.go.html#line-72">ServerRequestBytes</a> *<a href="../stats.html">stats</a>.<a href="../stats.html#name-Int64Measure">Int64Measure</a></label><span id='ServerRequestBytes-fold-content-docs' class="fold-docs">
+		The following server HTTP measures are supported for use in custom views:
+
+</span></div><div class="anchor value-res" id="name-ServerRequestBytesView">	<input type='checkbox' class="fold" id="ServerRequestBytesView-fold-content"><label for="ServerRequestBytesView-fold-content">  <a href="../../../use/go.opencensus.io/plugin/ochttp..ServerRequestBytesView.html">var</a> <a href="../../../src/go.opencensus.io/plugin/ochttp/stats.go.html#line-234">ServerRequestBytesView</a> *<a href="../stats/view.html">view</a>.<a href="../stats/view.html#name-View">View</a></label><span id='ServerRequestBytesView-fold-content-docs' class="fold-docs">
+		Package ochttp provides some convenience views for server measures.
+		You still need to register these views for data to actually be collected.
+
+</span></div><div class="anchor value-res" id="name-ServerRequestCount">	<input type='checkbox' class="fold" id="ServerRequestCount-fold-content"><label for="ServerRequestCount-fold-content">  <a href="../../../use/go.opencensus.io/plugin/ochttp..ServerRequestCount.html">var</a> <a href="../../../src/go.opencensus.io/plugin/ochttp/stats.go.html#line-68">ServerRequestCount</a> *<a href="../stats.html">stats</a>.<a href="../stats.html#name-Int64Measure">Int64Measure</a></label><span id='ServerRequestCount-fold-content-docs' class="fold-docs">
+		The following server HTTP measures are supported for use in custom views:
+
+</span></div><div class="anchor value-res" id="name-ServerRequestCountByMethod">	<input type='checkbox' class="fold" id="ServerRequestCountByMethod-fold-content"><label for="ServerRequestCountByMethod-fold-content">  <a href="../../../use/go.opencensus.io/plugin/ochttp..ServerRequestCountByMethod.html">var</a> <a href="../../../src/go.opencensus.io/plugin/ochttp/stats.go.html#line-255">ServerRequestCountByMethod</a> *<a href="../stats/view.html">view</a>.<a href="../stats/view.html#name-View">View</a></label><span id='ServerRequestCountByMethod-fold-content-docs' class="fold-docs">
+		Package ochttp provides some convenience views for server measures.
+		You still need to register these views for data to actually be collected.
+
+</span></div><div class="anchor value-res" id="name-ServerRequestCountView">	<input type='checkbox' class="fold" id="ServerRequestCountView-fold-content"><label for="ServerRequestCountView-fold-content">  <a href="../../../use/go.opencensus.io/plugin/ochttp..ServerRequestCountView.html">var</a> <a href="../../../src/go.opencensus.io/plugin/ochttp/stats.go.html#line-227">ServerRequestCountView</a> *<a href="../stats/view.html">view</a>.<a href="../stats/view.html#name-View">View</a></label><span id='ServerRequestCountView-fold-content-docs' class="fold-docs">
+		Package ochttp provides some convenience views for server measures.
+		You still need to register these views for data to actually be collected.
+
+</span></div><div class="anchor value-res" id="name-ServerResponseBytes">	<input type='checkbox' class="fold" id="ServerResponseBytes-fold-content"><label for="ServerResponseBytes-fold-content">  <a href="../../../use/go.opencensus.io/plugin/ochttp..ServerResponseBytes.html">var</a> <a href="../../../src/go.opencensus.io/plugin/ochttp/stats.go.html#line-76">ServerResponseBytes</a> *<a href="../stats.html">stats</a>.<a href="../stats.html#name-Int64Measure">Int64Measure</a></label><span id='ServerResponseBytes-fold-content-docs' class="fold-docs">
+		The following server HTTP measures are supported for use in custom views:
+
+</span></div><div class="anchor value-res" id="name-ServerResponseBytesView">	<input type='checkbox' class="fold" id="ServerResponseBytesView-fold-content"><label for="ServerResponseBytesView-fold-content">  <a href="../../../use/go.opencensus.io/plugin/ochttp..ServerResponseBytesView.html">var</a> <a href="../../../src/go.opencensus.io/plugin/ochttp/stats.go.html#line-241">ServerResponseBytesView</a> *<a href="../stats/view.html">view</a>.<a href="../stats/view.html#name-View">View</a></label><span id='ServerResponseBytesView-fold-content-docs' class="fold-docs">
+		Package ochttp provides some convenience views for server measures.
+		You still need to register these views for data to actually be collected.
+
+</span></div><div class="anchor value-res" id="name-ServerResponseCountByStatusCode">	<input type='checkbox' class="fold" id="ServerResponseCountByStatusCode-fold-content"><label for="ServerResponseCountByStatusCode-fold-content">  <a href="../../../use/go.opencensus.io/plugin/ochttp..ServerResponseCountByStatusCode.html">var</a> <a href="../../../src/go.opencensus.io/plugin/ochttp/stats.go.html#line-263">ServerResponseCountByStatusCode</a> *<a href="../stats/view.html">view</a>.<a href="../stats/view.html#name-View">View</a></label><span id='ServerResponseCountByStatusCode-fold-content-docs' class="fold-docs">
+		Package ochttp provides some convenience views for server measures.
+		You still need to register these views for data to actually be collected.
+
+</span></div><div class="anchor value-res" id="name-StatusCode">	<input type='checkbox' class="fold" id="StatusCode-fold-content"><label for="StatusCode-fold-content">  <a href="../../../use/go.opencensus.io/plugin/ochttp..StatusCode.html">var</a> <a href="../../../src/go.opencensus.io/plugin/ochttp/stats.go.html#line-99">StatusCode</a> <a href="../tag.html">tag</a>.<a href="../tag.html#name-Key">Key</a></label><span id='StatusCode-fold-content-docs' class="fold-docs">
+		StatusCode is the numeric HTTP response status code,
+		or "error" if a transport error occurred and no status code was read.
+
+</span></div>	<input type='checkbox' class="showhide" id="unexported-variables-showhide"><i><label for="unexported-variables-showhide" class="show-inline">/* 2 unexporteds ... */</label><label for="unexported-variables-showhide" class="hide-inline">/* 2 unexporteds: */</label></i><div class="anchor value-res hidden" id="name-codeToStr"><i>	<span class="nodocs">  <a href="../../../use/go.opencensus.io/plugin/ochttp..codeToStr*f608a.html">var</a> <a href="../../../src/go.opencensus.io/plugin/ochttp/trace.go.html#line-214">codeToStr</a> map[<a href="../../builtin.html#name-int32">int32</a>]<a href="../../builtin.html#name-string">string</a></span></i></div><div class="anchor value-res hidden" id="name-defaultFormat"><i>	<span class="nodocs">  <a href="../../../use/go.opencensus.io/plugin/ochttp..defaultFormat*489c7.html">var</a> <a href="../../../src/go.opencensus.io/plugin/ochttp/trace.go.html#line-29">defaultFormat</a> <a href="../trace/propagation.html">propagation</a>.<a href="../trace/propagation.html#name-HTTPFormat">HTTPFormat</a></span></i></div></div>
+<div id="exported-constants"><span class="title">Package-Level Constants<span class="title-stat"><i> (total 6, all are exported)</i></span></span>
+
+<div class="anchor value-res" id="name-HostAttribute">	<input type='checkbox' class="fold" id="HostAttribute-fold-content"><label for="HostAttribute-fold-content"><a href="../../../use/go.opencensus.io/plugin/ochttp..HostAttribute.html">const</a> <a href="../../../src/go.opencensus.io/plugin/ochttp/trace.go.html#line-34">HostAttribute</a> = "http.host"</label><span id='HostAttribute-fold-content-docs' class="fold-docs">
+		Attributes recorded on the span for the requests.
+		Only trace exporters will need them.
+
+</span></div><div class="anchor value-res" id="name-MethodAttribute">	<input type='checkbox' class="fold" id="MethodAttribute-fold-content"><label for="MethodAttribute-fold-content"><a href="../../../use/go.opencensus.io/plugin/ochttp..MethodAttribute.html">const</a> <a href="../../../src/go.opencensus.io/plugin/ochttp/trace.go.html#line-35">MethodAttribute</a> = "http.method"</label><span id='MethodAttribute-fold-content-docs' class="fold-docs">
+		Attributes recorded on the span for the requests.
+		Only trace exporters will need them.
+
+</span></div><div class="anchor value-res" id="name-PathAttribute">	<input type='checkbox' class="fold" id="PathAttribute-fold-content"><label for="PathAttribute-fold-content"><a href="../../../use/go.opencensus.io/plugin/ochttp..PathAttribute.html">const</a> <a href="../../../src/go.opencensus.io/plugin/ochttp/trace.go.html#line-36">PathAttribute</a> = "http.path"</label><span id='PathAttribute-fold-content-docs' class="fold-docs">
+		Attributes recorded on the span for the requests.
+		Only trace exporters will need them.
+
+</span></div><div class="anchor value-res" id="name-StatusCodeAttribute">	<input type='checkbox' class="fold" id="StatusCodeAttribute-fold-content"><label for="StatusCodeAttribute-fold-content"><a href="../../../use/go.opencensus.io/plugin/ochttp..StatusCodeAttribute.html">const</a> <a href="../../../src/go.opencensus.io/plugin/ochttp/trace.go.html#line-39">StatusCodeAttribute</a> = "http.status_code"</label><span id='StatusCodeAttribute-fold-content-docs' class="fold-docs">
+		Attributes recorded on the span for the requests.
+		Only trace exporters will need them.
+
+</span></div><div class="anchor value-res" id="name-URLAttribute">	<input type='checkbox' class="fold" id="URLAttribute-fold-content"><label for="URLAttribute-fold-content"><a href="../../../use/go.opencensus.io/plugin/ochttp..URLAttribute.html">const</a> <a href="../../../src/go.opencensus.io/plugin/ochttp/trace.go.html#line-37">URLAttribute</a> = "http.url"</label><span id='URLAttribute-fold-content-docs' class="fold-docs">
+		Attributes recorded on the span for the requests.
+		Only trace exporters will need them.
+
+</span></div><div class="anchor value-res" id="name-UserAgentAttribute">	<input type='checkbox' class="fold" id="UserAgentAttribute-fold-content"><label for="UserAgentAttribute-fold-content"><a href="../../../use/go.opencensus.io/plugin/ochttp..UserAgentAttribute.html">const</a> <a href="../../../src/go.opencensus.io/plugin/ochttp/trace.go.html#line-38">UserAgentAttribute</a> = "http.user_agent"</label><span id='UserAgentAttribute-fold-content-docs' class="fold-docs">
+		Attributes recorded on the span for the requests.
+		Only trace exporters will need them.
+
+</span></div></div></code></pre><pre id="footer">
+<table><tr><td><img src="../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Package: golang.org/x/crypto/ssh/agent</title>
+<link href="../../../../../css/light-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="package-details"><code><span style="font-size:xx-large;">package <b>agent</b></span>
+
+<span class="title">Import Path</span>
+	<a href="../../../../../index.html#pkg-golang.org/x/crypto/ssh/agent">golang.org/x/crypto/ssh/agent</a><i> (on <a href="https://pkg.go.dev/golang.org/x/crypto/ssh/agent" target="_blank">go.dev</a>)</i>
+
+<span class="title">Dependency Relation</span>
+	imports <a href="../../../../../dep/golang.org/x/crypto/ssh/agent.html">20 packages</a>, and imported by <a href="../../../../../dep/golang.org/x/crypto/ssh/agent.html#imported-by">one package</a>
+
+<div id="files"><span class="title">Involved Source Files</span>
+
+	<input type='checkbox' checked class="fold" id="file-0-fold-content"><label for="file-0-fold-content">   <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#doc">d➜</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html">client.go</a></label><span id='file-0-fold-content-items' class="fold-items">
+		Package agent implements the ssh-agent protocol, and provides both
+		a client and a server. The client can talk to a standard ssh-agent
+		that uses UNIX sockets, and one could implement an alternative
+		ssh-agent process using the sample server.
+
+		References:
+		 [PROTOCOL.agent]: https://tools.ietf.org/html/draft-miller-ssh-agent-00
+</span>
+	<span class="nodocs">      <a href="../../../../../src/golang.org/x/crypto/ssh/agent/forward.go.html">forward.go</a></span>
+	<span class="nodocs">      <a href="../../../../../src/golang.org/x/crypto/ssh/agent/keyring.go.html">keyring.go</a></span>
+	<span class="nodocs">      <a href="../../../../../src/golang.org/x/crypto/ssh/agent/server.go.html">server.go</a></span></div>
+<div id="examples"><span class="title">Code Examples</span>
+
+	<input type='checkbox' class="fold" id="example-0-fold-content"><label for="example-0-fold-content">NewClient</label><span id='example-0-fold-content-items' class="fold-items">
+		package main
+		
+		import (
+			"golang.org/x/crypto/ssh"
+			"golang.org/x/crypto/ssh/agent"
+			"log"
+			"net"
+			"os"
+		)
+		
+		func main() {
+			// ssh-agent(1) provides a UNIX socket at $SSH_AUTH_SOCK.
+			socket := os.Getenv("SSH_AUTH_SOCK")
+			conn, err := net.Dial("unix", socket)
+			if err != nil {
+				log.Fatalf("Failed to open SSH_AUTH_SOCK: %v", err)
+			}
+		
+			agentClient := agent.NewClient(conn)
+			config := &ssh.ClientConfig{
+				User: "gopher",
+				Auth: []ssh.AuthMethod{
+					// Use a callback rather than PublicKeys so we only consult the
+					// agent once the remote server wants it.
+					ssh.PublicKeysCallback(agentClient.Signers),
+				},
+				HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+			}
+		
+			sshc, err := ssh.Dial("tcp", "localhost:22", config)
+			if err != nil {
+				log.Fatal(err)
+			}
+			// Use sshc...
+			sshc.Close()
+		}
+</span>
+</div>
+<div id="exported-types"><span class="title">Package-Level Type Names<span class="title-stat"><i> (total 34, in which 6 are exported)</i></span></span>
+
+<div id="exported-types-buttons" class="js-on">	/* sort exporteds by: <label id="sort-types-by-alphabet" class="button">alphabet</label> | <label id="sort-types-by-popularity" class="button">popularity</label> */</div><div class="anchor type-res" id="name-AddedKey" data-popularity="705">	<input type='checkbox' class="fold" id="AddedKey-fold-content"><label for="AddedKey-fold-content"> <a href="../../../../../use/golang.org/x/crypto/ssh/agent..AddedKey.html">type</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-104">AddedKey</a> <i>(struct)</i></label><span id='AddedKey-fold-content-docs' class="fold-docs">
+		AddedKey describes an SSH key to be added to an Agent.
+
+		<input type='checkbox' class="fold" id="AddedKey-fold-fields"><label for="AddedKey-fold-fields">Fields (<i>total 6, all are exported</i>)</label><span id='AddedKey-fold-fields-items' class="fold-items"><span>
+			<input type='checkbox' class="fold" id="AddedKey-fold-field-Certificate"><label for="AddedKey-fold-field-Certificate"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-111">Certificate</a> <i>*<a href="../ssh.html">ssh</a>.<a href="../ssh.html#name-Certificate">Certificate</a></i></label><span id='AddedKey-fold-field-Certificate-docs' class="fold-docs">
+				Certificate, if not nil, is communicated to the agent and will be
+				stored with the key.
+</span></span><span>
+			<input type='checkbox' class="fold" id="AddedKey-fold-field-Comment"><label for="AddedKey-fold-field-Comment"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-113">Comment</a> <i><a href="../../../../builtin.html#name-string">string</a></i></label><span id='AddedKey-fold-field-Comment-docs' class="fold-docs">
+				Comment is an optional, free-form string.
+</span></span><span>
+			<input type='checkbox' class="fold" id="AddedKey-fold-field-ConfirmBeforeUse"><label for="AddedKey-fold-field-ConfirmBeforeUse"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-119">ConfirmBeforeUse</a> <i><a href="../../../../builtin.html#name-bool">bool</a></i></label><span id='AddedKey-fold-field-ConfirmBeforeUse-docs' class="fold-docs">
+				ConfirmBeforeUse, if true, requests that the agent confirm with the
+				user before each use of this key.
+</span></span><span>
+			<input type='checkbox' class="fold" id="AddedKey-fold-field-ConstraintExtensions"><label for="AddedKey-fold-field-ConstraintExtensions"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-122">ConstraintExtensions</a> <i>[]<a href="#name-ConstraintExtension">ConstraintExtension</a></i></label><span id='AddedKey-fold-field-ConstraintExtensions-docs' class="fold-docs">
+				ConstraintExtensions are the experimental or private-use constraints
+				defined by users.
+</span></span><span>
+			<input type='checkbox' class="fold" id="AddedKey-fold-field-LifetimeSecs"><label for="AddedKey-fold-field-LifetimeSecs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-116">LifetimeSecs</a> <i><a href="../../../../builtin.html#name-uint32">uint32</a></i></label><span id='AddedKey-fold-field-LifetimeSecs-docs' class="fold-docs">
+				LifetimeSecs, if not zero, is the number of seconds that the
+				agent will store the key for.
+</span></span><span>
+			<input type='checkbox' class="fold" id="AddedKey-fold-field-PrivateKey"><label for="AddedKey-fold-field-PrivateKey"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-108">PrivateKey</a> <i>interface{}</i></label><span id='AddedKey-fold-field-PrivateKey-docs' class="fold-docs">
+				PrivateKey must be a *rsa.PrivateKey, *dsa.PrivateKey,
+				ed25519.PrivateKey or *ecdsa.PrivateKey, which will be inserted into the
+				agent.
+</span></span></span>
+		<input type='checkbox' class="fold" id="AddedKey-fold-results"><label for="AddedKey-fold-results">As Outputs Of (<i>at least 8, none are exported</i>)</label><span id='AddedKey-fold-results-items' class="fold-items">
+			<input type='checkbox' class="showhide" id="AddedKey-showhide-inputofs"><i><label for="AddedKey-showhide-inputofs" class="show-inline">/* 8+ unexporteds ... */</label><label for="AddedKey-showhide-inputofs" class="hide-inline">/* 8+ unexporteds: */</label></i><span class="hidden"><i>
+			func <a href="#name-parseDSACert">parseDSACert</a>(req []<a href="../../../../builtin.html#name-byte">byte</a>) (*<b>AddedKey</b>, <a href="../../../../builtin.html#name-error">error</a>)</i></span><span class="hidden"><i>
+			func <a href="#name-parseDSAKey">parseDSAKey</a>(req []<a href="../../../../builtin.html#name-byte">byte</a>) (*<b>AddedKey</b>, <a href="../../../../builtin.html#name-error">error</a>)</i></span><span class="hidden"><i>
+			func <a href="#name-parseECDSACert">parseECDSACert</a>(req []<a href="../../../../builtin.html#name-byte">byte</a>) (*<b>AddedKey</b>, <a href="../../../../builtin.html#name-error">error</a>)</i></span><span class="hidden"><i>
+			func <a href="#name-parseECDSAKey">parseECDSAKey</a>(req []<a href="../../../../builtin.html#name-byte">byte</a>) (*<b>AddedKey</b>, <a href="../../../../builtin.html#name-error">error</a>)</i></span><span class="hidden"><i>
+			func <a href="#name-parseEd25519Cert">parseEd25519Cert</a>(req []<a href="../../../../builtin.html#name-byte">byte</a>) (*<b>AddedKey</b>, <a href="../../../../builtin.html#name-error">error</a>)</i></span><span class="hidden"><i>
+			func <a href="#name-parseEd25519Key">parseEd25519Key</a>(req []<a href="../../../../builtin.html#name-byte">byte</a>) (*<b>AddedKey</b>, <a href="../../../../builtin.html#name-error">error</a>)</i></span><span class="hidden"><i>
+			func <a href="#name-parseRSACert">parseRSACert</a>(req []<a href="../../../../builtin.html#name-byte">byte</a>) (*<b>AddedKey</b>, <a href="../../../../builtin.html#name-error">error</a>)</i></span><span class="hidden"><i>
+			func <a href="#name-parseRSAKey">parseRSAKey</a>(req []<a href="../../../../builtin.html#name-byte">byte</a>) (*<b>AddedKey</b>, <a href="../../../../builtin.html#name-error">error</a>)</i></span></span>
+		<input type='checkbox' class="fold" id="AddedKey-fold-params"><label for="AddedKey-fold-params">As Inputs Of (<i>at least 3, in which 2 are exported</i>)</label><span id='AddedKey-fold-params-items' class="fold-items"><span>
+			func <a href="#name-Agent">Agent</a>.<a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-54">Add</a>(key <b>AddedKey</b>) <a href="../../../../builtin.html#name-error">error</a></span><span>
+			func <a href="#name-ExtendedAgent">ExtendedAgent</a>.<a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-54">Add</a>(key <b>AddedKey</b>) <a href="../../../../builtin.html#name-error">error</a></span>
+			<input type='checkbox' class="showhide" id="AddedKey-showhide-outputofs"><i><label for="AddedKey-showhide-outputofs" class="show-inline">/* at least one unexported ... */</label><label for="AddedKey-showhide-outputofs" class="hide-inline">/* at least one unexported: */</label></i><span class="hidden"><i>
+			func <a href="#name-setConstraints">setConstraints</a>(key *<b>AddedKey</b>, constraintBytes []<a href="../../../../builtin.html#name-byte">byte</a>) <a href="../../../../builtin.html#name-error">error</a></i></span></span>
+
+</span></div><div class="anchor type-res" id="name-Agent" data-popularity="1070">	<input type='checkbox' class="fold" id="Agent-fold-content"><label for="Agent-fold-content"> <a href="../../../../../use/golang.org/x/crypto/ssh/agent..Agent.html">type</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-45">Agent</a> <b><i>(interface)</i></b></label><span id='Agent-fold-content-docs' class="fold-docs">
+		Agent represents the capabilities of an ssh-agent.
+
+		<input type='checkbox' class="fold" id="Agent-fold-methods"><label for="Agent-fold-methods">Methods (<i>total 8, all are exported</i>)</label><span id='Agent-fold-methods-items' class="fold-items"><span>
+			<input type='checkbox' class="fold" id="Agent-fold-method-Add"><label for="Agent-fold-method-Add">( T) <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-54">Add</a>(key <a href="#name-AddedKey">AddedKey</a>) <a href="../../../../builtin.html#name-error">error</a></label><span id='Agent-fold-method-Add-docs' class="fold-docs">
+				Add adds a private key to the agent.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Agent-fold-method-List"><label for="Agent-fold-method-List">( T) <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-47">List</a>() ([]*<a href="#name-Key">Key</a>, <a href="../../../../builtin.html#name-error">error</a>)</label><span id='Agent-fold-method-List-docs' class="fold-docs">
+				List returns the identities known to the agent.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Agent-fold-method-Lock"><label for="Agent-fold-method-Lock">( T) <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-63">Lock</a>(passphrase []<a href="../../../../builtin.html#name-byte">byte</a>) <a href="../../../../builtin.html#name-error">error</a></label><span id='Agent-fold-method-Lock-docs' class="fold-docs">
+				Lock locks the agent. Sign and Remove will fail, and List will empty an empty list.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Agent-fold-method-Remove"><label for="Agent-fold-method-Remove">( T) <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-57">Remove</a>(key <a href="../ssh.html">ssh</a>.<a href="../ssh.html#name-PublicKey">PublicKey</a>) <a href="../../../../builtin.html#name-error">error</a></label><span id='Agent-fold-method-Remove-docs' class="fold-docs">
+				Remove removes all identities with the given public key.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Agent-fold-method-RemoveAll"><label for="Agent-fold-method-RemoveAll">( T) <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-60">RemoveAll</a>() <a href="../../../../builtin.html#name-error">error</a></label><span id='Agent-fold-method-RemoveAll-docs' class="fold-docs">
+				RemoveAll removes all identities.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Agent-fold-method-Sign"><label for="Agent-fold-method-Sign">( T) <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-51">Sign</a>(key <a href="../ssh.html">ssh</a>.<a href="../ssh.html#name-PublicKey">PublicKey</a>, data []<a href="../../../../builtin.html#name-byte">byte</a>) (*<a href="../ssh.html">ssh</a>.<a href="../ssh.html#name-Signature">Signature</a>, <a href="../../../../builtin.html#name-error">error</a>)</label><span id='Agent-fold-method-Sign-docs' class="fold-docs">
+				Sign has the agent sign the data using a protocol 2 key as defined
+				in [PROTOCOL.agent] section 2.6.2.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Agent-fold-method-Signers"><label for="Agent-fold-method-Signers">( T) <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-69">Signers</a>() ([]<a href="../ssh.html">ssh</a>.<a href="../ssh.html#name-Signer">Signer</a>, <a href="../../../../builtin.html#name-error">error</a>)</label><span id='Agent-fold-method-Signers-docs' class="fold-docs">
+				Signers returns signers for all the known keys.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Agent-fold-method-Unlock"><label for="Agent-fold-method-Unlock">( T) <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-66">Unlock</a>(passphrase []<a href="../../../../builtin.html#name-byte">byte</a>) <a href="../../../../builtin.html#name-error">error</a></label><span id='Agent-fold-method-Unlock-docs' class="fold-docs">
+				Unlock undoes the effect of Lock
+</span></span></span>
+		<input type='checkbox' class="fold" id="Agent-fold-impledby"><label for="Agent-fold-impledby">Implemented By (<i>at least 3, in which 1 are exported</i>)</label><span id='Agent-fold-impledby-items' class="fold-items"><span>
+			 <a href="#name-ExtendedAgent">ExtendedAgent</a> <i>(interface)</i></span>
+			<input type='checkbox' class="showhide" id="Agent-showhide-impedBys"><i><label for="Agent-showhide-impedBys" class="show-inline">/* 2+ unexporteds ... */</label><label for="Agent-showhide-impedBys" class="hide-inline">/* 2+ unexporteds: */</label></i><span class="hidden"><i>
+			*<a href="#name-client">client</a></i></span><span class="hidden"><i>
+			*<a href="#name-keyring">keyring</a></i></span></span>
+		<input type='checkbox' class="fold" id="Agent-fold-results"><label for="Agent-fold-results">As Outputs Of (<i>at least 2, both are exported</i>)</label><span id='Agent-fold-results-items' class="fold-items"><span>
+			func <a href="#name-NewKeyring">NewKeyring</a>() <b>Agent</b></span><span>
+			func github.com/xanzy/ssh-agent.<a href="../../../../github.com/xanzy/ssh-agent.html#name-New">New</a>() (<b>Agent</b>, <a href="../../../../net.html">net</a>.<a href="../../../../net.html#name-Conn">Conn</a>, <a href="../../../../builtin.html#name-error">error</a>)</span></span>
+		<input type='checkbox' class="fold" id="Agent-fold-params"><label for="Agent-fold-params">As Inputs Of (<i>at least 2, both are exported</i>)</label><span id='Agent-fold-params-items' class="fold-items"><span>
+			func <a href="#name-ForwardToAgent">ForwardToAgent</a>(client *<a href="../ssh.html">ssh</a>.<a href="../ssh.html#name-Client">Client</a>, keyring <b>Agent</b>) <a href="../../../../builtin.html#name-error">error</a></span><span>
+			func <a href="#name-ServeAgent">ServeAgent</a>(agent <b>Agent</b>, c <a href="../../../../io.html">io</a>.<a href="../../../../io.html#name-ReadWriter">ReadWriter</a>) <a href="../../../../builtin.html#name-error">error</a></span></span>
+
+</span></div><div class="anchor type-res" id="name-ConstraintExtension" data-popularity="75">	<input type='checkbox' class="fold" id="ConstraintExtension-fold-content"><label for="ConstraintExtension-fold-content"> <a href="../../../../../use/golang.org/x/crypto/ssh/agent..ConstraintExtension.html">type</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-93">ConstraintExtension</a> <i>(struct)</i></label><span id='ConstraintExtension-fold-content-docs' class="fold-docs">
+		ConstraintExtension describes an optional constraint defined by users.
+
+		<input type='checkbox' class="fold" id="ConstraintExtension-fold-fields"><label for="ConstraintExtension-fold-fields">Fields (<i>total 2, both are exported</i>)</label><span id='ConstraintExtension-fold-fields-items' class="fold-items"><span>
+			<input type='checkbox' class="fold" id="ConstraintExtension-fold-field-ExtensionDetails"><label for="ConstraintExtension-fold-field-ExtensionDetails"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-100">ExtensionDetails</a> <i>[]<a href="../../../../builtin.html#name-byte">byte</a></i></label><span id='ConstraintExtension-fold-field-ExtensionDetails-docs' class="fold-docs">
+				ExtensionDetails contains the actual content of the extended
+				constraint.
+</span></span><span>
+			<input type='checkbox' class="fold" id="ConstraintExtension-fold-field-ExtensionName"><label for="ConstraintExtension-fold-field-ExtensionName"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-97">ExtensionName</a> <i><a href="../../../../builtin.html#name-string">string</a></i></label><span id='ConstraintExtension-fold-field-ExtensionName-docs' class="fold-docs">
+				ExtensionName consist of a UTF-8 string suffixed by the
+				implementation domain following the naming scheme defined
+				in Section 4.2 of [RFC4251], e.g.  "foo@example.com".
+</span></span></span>
+		<input type='checkbox' class="fold" id="ConstraintExtension-fold-results"><label for="ConstraintExtension-fold-results">As Outputs Of (<i>at least one unexported</i>)</label><span id='ConstraintExtension-fold-results-items' class="fold-items">
+			<input type='checkbox' class="showhide" id="ConstraintExtension-showhide-inputofs"><i><label for="ConstraintExtension-showhide-inputofs" class="show-inline">/* at least one unexported ... */</label><label for="ConstraintExtension-showhide-inputofs" class="hide-inline">/* at least one unexported: */</label></i><span class="hidden"><i>
+			func <a href="#name-parseConstraints">parseConstraints</a>(constraints []<a href="../../../../builtin.html#name-byte">byte</a>) (lifetimeSecs <a href="../../../../builtin.html#name-uint32">uint32</a>, confirmBeforeUse <a href="../../../../builtin.html#name-bool">bool</a>, extensions []<b>ConstraintExtension</b>, err <a href="../../../../builtin.html#name-error">error</a>)</i></span></span>
+
+</span></div><div class="anchor type-res" id="name-ExtendedAgent" data-popularity="925">	<input type='checkbox' class="fold" id="ExtendedAgent-fold-content"><label for="ExtendedAgent-fold-content"> <a href="../../../../../use/golang.org/x/crypto/ssh/agent..ExtendedAgent.html">type</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-72">ExtendedAgent</a> <b><i>(interface)</i></b></label><span id='ExtendedAgent-fold-content-docs' class="fold-docs">
+
+		<input type='checkbox' class="fold" id="ExtendedAgent-fold-methods"><label for="ExtendedAgent-fold-methods">Methods (<i>total 10, all are exported</i>)</label><span id='ExtendedAgent-fold-methods-items' class="fold-items"><span>
+			<input type='checkbox' class="fold" id="ExtendedAgent-fold-method-Add"><label for="ExtendedAgent-fold-method-Add">( T) <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-54">Add</a>(key <a href="#name-AddedKey">AddedKey</a>) <a href="../../../../builtin.html#name-error">error</a></label><span id='ExtendedAgent-fold-method-Add-docs' class="fold-docs">
+				Add adds a private key to the agent.
+</span></span><span>
+			<input type='checkbox' class="fold" id="ExtendedAgent-fold-method-Extension"><label for="ExtendedAgent-fold-method-Extension">( T) <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-89">Extension</a>(extensionType <a href="../../../../builtin.html#name-string">string</a>, contents []<a href="../../../../builtin.html#name-byte">byte</a>) ([]<a href="../../../../builtin.html#name-byte">byte</a>, <a href="../../../../builtin.html#name-error">error</a>)</label><span id='ExtendedAgent-fold-method-Extension-docs' class="fold-docs">
+				Extension processes a custom extension request. Standard-compliant agents are not
+				required to support any extensions, but this method allows agents to implement
+				vendor-specific methods or add experimental features. See [PROTOCOL.agent] section 4.7.
+				If agent extensions are unsupported entirely this method MUST return an
+				ErrExtensionUnsupported error. Similarly, if just the specific extensionType in
+				the request is unsupported by the agent then ErrExtensionUnsupported MUST be
+				returned.
+
+				In the case of success, since [PROTOCOL.agent] section 4.7 specifies that the contents
+				of the response are unspecified (including the type of the message), the complete
+				response will be returned as a []byte slice, including the "type" byte of the message.
+</span></span><span>
+			<input type='checkbox' class="fold" id="ExtendedAgent-fold-method-List"><label for="ExtendedAgent-fold-method-List">( T) <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-47">List</a>() ([]*<a href="#name-Key">Key</a>, <a href="../../../../builtin.html#name-error">error</a>)</label><span id='ExtendedAgent-fold-method-List-docs' class="fold-docs">
+				List returns the identities known to the agent.
+</span></span><span>
+			<input type='checkbox' class="fold" id="ExtendedAgent-fold-method-Lock"><label for="ExtendedAgent-fold-method-Lock">( T) <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-63">Lock</a>(passphrase []<a href="../../../../builtin.html#name-byte">byte</a>) <a href="../../../../builtin.html#name-error">error</a></label><span id='ExtendedAgent-fold-method-Lock-docs' class="fold-docs">
+				Lock locks the agent. Sign and Remove will fail, and List will empty an empty list.
+</span></span><span>
+			<input type='checkbox' class="fold" id="ExtendedAgent-fold-method-Remove"><label for="ExtendedAgent-fold-method-Remove">( T) <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-57">Remove</a>(key <a href="../ssh.html">ssh</a>.<a href="../ssh.html#name-PublicKey">PublicKey</a>) <a href="../../../../builtin.html#name-error">error</a></label><span id='ExtendedAgent-fold-method-Remove-docs' class="fold-docs">
+				Remove removes all identities with the given public key.
+</span></span><span>
+			<input type='checkbox' class="fold" id="ExtendedAgent-fold-method-RemoveAll"><label for="ExtendedAgent-fold-method-RemoveAll">( T) <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-60">RemoveAll</a>() <a href="../../../../builtin.html#name-error">error</a></label><span id='ExtendedAgent-fold-method-RemoveAll-docs' class="fold-docs">
+				RemoveAll removes all identities.
+</span></span><span>
+			<input type='checkbox' class="fold" id="ExtendedAgent-fold-method-Sign"><label for="ExtendedAgent-fold-method-Sign">( T) <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-51">Sign</a>(key <a href="../ssh.html">ssh</a>.<a href="../ssh.html#name-PublicKey">PublicKey</a>, data []<a href="../../../../builtin.html#name-byte">byte</a>) (*<a href="../ssh.html">ssh</a>.<a href="../ssh.html#name-Signature">Signature</a>, <a href="../../../../builtin.html#name-error">error</a>)</label><span id='ExtendedAgent-fold-method-Sign-docs' class="fold-docs">
+				Sign has the agent sign the data using a protocol 2 key as defined
+				in [PROTOCOL.agent] section 2.6.2.
+</span></span><span>
+			<input type='checkbox' class="fold" id="ExtendedAgent-fold-method-SignWithFlags"><label for="ExtendedAgent-fold-method-SignWithFlags">( T) <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-76">SignWithFlags</a>(key <a href="../ssh.html">ssh</a>.<a href="../ssh.html#name-PublicKey">PublicKey</a>, data []<a href="../../../../builtin.html#name-byte">byte</a>, flags <a href="#name-SignatureFlags">SignatureFlags</a>) (*<a href="../ssh.html">ssh</a>.<a href="../ssh.html#name-Signature">Signature</a>, <a href="../../../../builtin.html#name-error">error</a>)</label><span id='ExtendedAgent-fold-method-SignWithFlags-docs' class="fold-docs">
+				SignWithFlags signs like Sign, but allows for additional flags to be sent/received
+</span></span><span>
+			<input type='checkbox' class="fold" id="ExtendedAgent-fold-method-Signers"><label for="ExtendedAgent-fold-method-Signers">( T) <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-69">Signers</a>() ([]<a href="../ssh.html">ssh</a>.<a href="../ssh.html#name-Signer">Signer</a>, <a href="../../../../builtin.html#name-error">error</a>)</label><span id='ExtendedAgent-fold-method-Signers-docs' class="fold-docs">
+				Signers returns signers for all the known keys.
+</span></span><span>
+			<input type='checkbox' class="fold" id="ExtendedAgent-fold-method-Unlock"><label for="ExtendedAgent-fold-method-Unlock">( T) <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-66">Unlock</a>(passphrase []<a href="../../../../builtin.html#name-byte">byte</a>) <a href="../../../../builtin.html#name-error">error</a></label><span id='ExtendedAgent-fold-method-Unlock-docs' class="fold-docs">
+				Unlock undoes the effect of Lock
+</span></span></span>
+		<input type='checkbox' class="fold" id="ExtendedAgent-fold-impledby"><label for="ExtendedAgent-fold-impledby">Implemented By (<i>at least 2, neither is exported</i>)</label><span id='ExtendedAgent-fold-impledby-items' class="fold-items">
+			<input type='checkbox' class="showhide" id="ExtendedAgent-showhide-impedBys"><i><label for="ExtendedAgent-showhide-impedBys" class="show-inline">/* 2+ unexporteds ... */</label><label for="ExtendedAgent-showhide-impedBys" class="hide-inline">/* 2+ unexporteds: */</label></i><span class="hidden"><i>
+			*<a href="#name-client">client</a></i></span><span class="hidden"><i>
+			*<a href="#name-keyring">keyring</a></i></span></span>
+		<input type='checkbox' class="fold" id="ExtendedAgent-fold-impls"><label for="ExtendedAgent-fold-impls">Implements (<i>at least one exported</i>)</label><span id='ExtendedAgent-fold-impls-items' class="fold-items"><span>
+			 T : <a href="#name-Agent">Agent</a></span></span>
+		<input type='checkbox' class="fold" id="ExtendedAgent-fold-results"><label for="ExtendedAgent-fold-results">As Outputs Of (<i>at least one exported</i>)</label><span id='ExtendedAgent-fold-results-items' class="fold-items"><span>
+			func <a href="#name-NewClient">NewClient</a>(rw <a href="../../../../io.html">io</a>.<a href="../../../../io.html#name-ReadWriter">ReadWriter</a>) <b>ExtendedAgent</b></span></span>
+
+</span></div><div class="anchor type-res" id="name-Key" data-popularity="710">	<input type='checkbox' class="fold" id="Key-fold-content"><label for="Key-fold-content"> <a href="../../../../../use/golang.org/x/crypto/ssh/agent..Key.html">type</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-234">Key</a> <i>(struct)</i></label><span id='Key-fold-content-docs' class="fold-docs">
+		Key represents a protocol 2 public key as defined in
+		[PROTOCOL.agent], section 2.5.2.
+
+		<input type='checkbox' class="fold" id="Key-fold-fields"><label for="Key-fold-fields">Fields (<i>total 3, all are exported</i>)</label><span id='Key-fold-fields-items' class="fold-items"><span>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-236">Blob</a> <i>[]<a href="../../../../builtin.html#name-byte">byte</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-237">Comment</a> <i><a href="../../../../builtin.html#name-string">string</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-235">Format</a> <i><a href="../../../../builtin.html#name-string">string</a></i></span></span></span>
+		<input type='checkbox' class="fold" id="Key-fold-methods"><label for="Key-fold-methods">Methods (<i>total 4, all are exported</i>)</label><span id='Key-fold-methods-items' class="fold-items"><span>
+			<input type='checkbox' class="fold" id="Key-fold-method-Marshal"><label for="Key-fold-method-Marshal">(*T) <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-262">Marshal</a>() []<a href="../../../../builtin.html#name-byte">byte</a></label><span id='Key-fold-method-Marshal-docs' class="fold-docs">
+				Marshal returns key blob to satisfy the ssh.PublicKey interface.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Key-fold-method-String"><label for="Key-fold-method-String">(*T) <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-246">String</a>() <a href="../../../../builtin.html#name-string">string</a></label><span id='Key-fold-method-String-docs' class="fold-docs">
+				String returns the storage form of an agent key with the format, base64
+				encoded serialized key, and the comment if it is not empty.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Key-fold-method-Type"><label for="Key-fold-method-Type">(*T) <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-257">Type</a>() <a href="../../../../builtin.html#name-string">string</a></label><span id='Key-fold-method-Type-docs' class="fold-docs">
+				Type returns the public key type.
+</span></span><span>
+			<input type='checkbox' class="fold" id="Key-fold-method-Verify"><label for="Key-fold-method-Verify">(*T) <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-267">Verify</a>(data []<a href="../../../../builtin.html#name-byte">byte</a>, sig *<a href="../ssh.html">ssh</a>.<a href="../ssh.html#name-Signature">Signature</a>) <a href="../../../../builtin.html#name-error">error</a></label><span id='Key-fold-method-Verify-docs' class="fold-docs">
+				Verify satisfies the ssh.PublicKey interface.
+</span></span></span>
+		<input type='checkbox' class="fold" id="Key-fold-impls"><label for="Key-fold-impls">Implements (<i>at least 5, in which 3 are exported</i>)</label><span id='Key-fold-impls-items' class="fold-items"><span>
+			*T : golang.org/x/crypto/ssh.<a href="../ssh.html#name-PublicKey">PublicKey</a></span><span>
+			*T : expvar.<a href="../../../../expvar.html#name-Var">Var</a></span><span>
+			*T : fmt.<a href="../../../../fmt.html#name-Stringer">Stringer</a></span>
+			<input type='checkbox' class="showhide" id="Key-showhide-impls"><i><label for="Key-showhide-impls" class="show-inline">/* 2+ unexporteds ... */</label><label for="Key-showhide-impls" class="hide-inline">/* 2+ unexporteds: */</label></i><span class="hidden"><i>
+			*T : context.<a href="../../../../context.html#name-stringer">stringer</a></i></span><span class="hidden"><i>
+			*T : runtime.<a href="../../../../runtime.html#name-stringer">stringer</a></i></span></span>
+		<input type='checkbox' class="fold" id="Key-fold-results"><label for="Key-fold-results">As Outputs Of (<i>at least 3, in which 2 are exported</i>)</label><span id='Key-fold-results-items' class="fold-items"><span>
+			func <a href="#name-Agent">Agent</a>.<a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-47">List</a>() ([]*<b>Key</b>, <a href="../../../../builtin.html#name-error">error</a>)</span><span>
+			func <a href="#name-ExtendedAgent">ExtendedAgent</a>.<a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-47">List</a>() ([]*<b>Key</b>, <a href="../../../../builtin.html#name-error">error</a>)</span>
+			<input type='checkbox' class="showhide" id="Key-showhide-inputofs"><i><label for="Key-showhide-inputofs" class="show-inline">/* at least one unexported ... */</label><label for="Key-showhide-inputofs" class="hide-inline">/* at least one unexported: */</label></i><span class="hidden"><i>
+			func <a href="#name-parseKey">parseKey</a>(in []<a href="../../../../builtin.html#name-byte">byte</a>) (out *<b>Key</b>, rest []<a href="../../../../builtin.html#name-byte">byte</a>, err <a href="../../../../builtin.html#name-error">error</a>)</i></span></span>
+		<input type='checkbox' class="fold" id="Key-fold-params"><label for="Key-fold-params">As Inputs Of (<i>at least one unexported</i>)</label><span id='Key-fold-params-items' class="fold-items">
+			<input type='checkbox' class="showhide" id="Key-showhide-outputofs"><i><label for="Key-showhide-outputofs" class="show-inline">/* at least one unexported ... */</label><label for="Key-showhide-outputofs" class="hide-inline">/* at least one unexported: */</label></i><span class="hidden"><i>
+			func <a href="#name-marshalKey">marshalKey</a>(k *<b>Key</b>) []<a href="../../../../builtin.html#name-byte">byte</a></i></span></span>
+
+</span></div><div class="anchor type-res" id="name-SignatureFlags" data-popularity="50">	<input type='checkbox' class="fold" id="SignatureFlags-fold-content"><label for="SignatureFlags-fold-content"> <a href="../../../../../use/golang.org/x/crypto/ssh/agent..SignatureFlags.html">type</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-35">SignatureFlags</a> <a href="../../../../builtin.html#name-uint32">uint32</a> <i>(basic type)</i></label><span id='SignatureFlags-fold-content-docs' class="fold-docs">
+		SignatureFlags represent additional flags that can be passed to the signature
+		requests an defined in [PROTOCOL.agent] section 4.5.1.
+
+		<input type='checkbox' class="fold" id="SignatureFlags-fold-params"><label for="SignatureFlags-fold-params">As Inputs Of (<i>at least one exported</i>)</label><span id='SignatureFlags-fold-params-items' class="fold-items"><span>
+			func <a href="#name-ExtendedAgent">ExtendedAgent</a>.<a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-76">SignWithFlags</a>(key <a href="../ssh.html">ssh</a>.<a href="../ssh.html#name-PublicKey">PublicKey</a>, data []<a href="../../../../builtin.html#name-byte">byte</a>, flags <b>SignatureFlags</b>) (*<a href="../ssh.html">ssh</a>.<a href="../ssh.html#name-Signature">Signature</a>, <a href="../../../../builtin.html#name-error">error</a>)</span></span>
+		<input type='checkbox' class="fold" id="SignatureFlags-fold-values"><label for="SignatureFlags-fold-values">As Types Of (<i>total 3, all are exported</i>)</label><span id='SignatureFlags-fold-values-items' class="fold-items"><span>
+			const <a href="#name-SignatureFlagReserved">SignatureFlagReserved</a></span><span>
+			const <a href="#name-SignatureFlagRsaSha256">SignatureFlagRsaSha256</a></span><span>
+			const <a href="#name-SignatureFlagRsaSha512">SignatureFlagRsaSha512</a></span></span>
+
+</span></div></div><div>	<input type='checkbox' class="showhide" id="unexported-typenames-showhide"><i><label for="unexported-typenames-showhide" class="show-inline">/* 28 unexporteds ... */</label><label for="unexported-typenames-showhide" class="hide-inline">/* 28 unexporteds: */</label></i><div class="anchor type-res hidden" id="name-agentKeyringSigner" data-popularity="200">	<input type='checkbox' class="fold" id="agentKeyringSigner-fold-content"><label for="agentKeyringSigner-fold-content"> <a href="../../../../../use/golang.org/x/crypto/ssh/agent..agentKeyringSigner*f75bb.html">type</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-760">agentKeyringSigner</a> <i>(struct)</i></label><span id='agentKeyringSigner-fold-content-docs' class="fold-docs">
+
+		<input type='checkbox' class="fold" id="agentKeyringSigner-fold-fields"><label for="agentKeyringSigner-fold-fields">Fields (<i>total 2, neither is exported</i>)</label><span id='agentKeyringSigner-fold-fields-items' class="fold-items">
+			<input type='checkbox' checked class="showhide" id="agentKeyringSigner-showhide-fields"><i><label for="agentKeyringSigner-showhide-fields" class="show-inline">/* 2 unexporteds ... */</label><label for="agentKeyringSigner-showhide-fields" class="hide-inline">/* 2 unexporteds: */</label></i><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-761">agent</a> <i>*<a href="#name-client">client</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-762">pub</a> <i><a href="../ssh.html">ssh</a>.<a href="../ssh.html#name-PublicKey">PublicKey</a></i></span></i></span></span>
+		<input type='checkbox' class="fold" id="agentKeyringSigner-fold-methods"><label for="agentKeyringSigner-fold-methods">Methods (<i>total 3, all are exported</i>)</label><span id='agentKeyringSigner-fold-methods-items' class="fold-items"><span>
+			<span class="nodocs">(*T) <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-765">PublicKey</a>() <a href="../ssh.html">ssh</a>.<a href="../ssh.html#name-PublicKey">PublicKey</a></span></span><span>
+			<span class="nodocs">(*T) <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-769">Sign</a>(rand <a href="../../../../io.html">io</a>.<a href="../../../../io.html#name-Reader">Reader</a>, data []<a href="../../../../builtin.html#name-byte">byte</a>) (*<a href="../ssh.html">ssh</a>.<a href="../ssh.html#name-Signature">Signature</a>, <a href="../../../../builtin.html#name-error">error</a>)</span></span><span>
+			<span class="nodocs">(*T) <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-774">SignWithOpts</a>(rand <a href="../../../../io.html">io</a>.<a href="../../../../io.html#name-Reader">Reader</a>, data []<a href="../../../../builtin.html#name-byte">byte</a>, opts <a href="../../../../crypto.html">crypto</a>.<a href="../../../../crypto.html#name-SignerOpts">SignerOpts</a>) (*<a href="../ssh.html">ssh</a>.<a href="../ssh.html#name-Signature">Signature</a>, <a href="../../../../builtin.html#name-error">error</a>)</span></span></span>
+		<input type='checkbox' class="fold" id="agentKeyringSigner-fold-impls"><label for="agentKeyringSigner-fold-impls">Implements (<i>at least one exported</i>)</label><span id='agentKeyringSigner-fold-impls-items' class="fold-items"><span>
+			*T : golang.org/x/crypto/ssh.<a href="../ssh.html#name-Signer">Signer</a></span></span>
+
+</span></div><div class="anchor type-res hidden" id="name-agentLockMsg" data-popularity="0">	<input type='checkbox' class="fold" id="agentLockMsg-fold-content"><label for="agentLockMsg-fold-content"> <a href="../../../../../use/golang.org/x/crypto/ssh/agent..agentLockMsg*7004c.html">type</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/server.go.html#line-68">agentLockMsg</a> <i>(struct)</i></label><span id='agentLockMsg-fold-content-docs' class="fold-docs">
+
+		<input type='checkbox' class="fold" id="agentLockMsg-fold-fields"><label for="agentLockMsg-fold-fields">Fields (<i>only one, which is exported</i>)</label><span id='agentLockMsg-fold-fields-items' class="fold-items"><span>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/server.go.html#line-69">Passphrase</a> <i>[]<a href="../../../../builtin.html#name-byte">byte</a></i></span></span></span>
+
+</span></div><div class="anchor type-res hidden" id="name-agentRemoveIdentityMsg" data-popularity="0">	<input type='checkbox' class="fold" id="agentRemoveIdentityMsg-fold-content"><label for="agentRemoveIdentityMsg-fold-content"> <a href="../../../../../use/golang.org/x/crypto/ssh/agent..agentRemoveIdentityMsg*f9f56.html">type</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/server.go.html#line-64">agentRemoveIdentityMsg</a> <i>(struct)</i></label><span id='agentRemoveIdentityMsg-fold-content-docs' class="fold-docs">
+
+		<input type='checkbox' class="fold" id="agentRemoveIdentityMsg-fold-fields"><label for="agentRemoveIdentityMsg-fold-fields">Fields (<i>only one, which is exported</i>)</label><span id='agentRemoveIdentityMsg-fold-fields-items' class="fold-items"><span>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/server.go.html#line-65">KeyBlob</a> <i>[]<a href="../../../../builtin.html#name-byte">byte</a></i></span></span></span>
+
+</span></div><div class="anchor type-res hidden" id="name-agentUnlockMsg" data-popularity="0">	<input type='checkbox' class="fold" id="agentUnlockMsg-fold-content"><label for="agentUnlockMsg-fold-content"> <a href="../../../../../use/golang.org/x/crypto/ssh/agent..agentUnlockMsg*fb587.html">type</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/server.go.html#line-72">agentUnlockMsg</a> <i>(struct)</i></label><span id='agentUnlockMsg-fold-content-docs' class="fold-docs">
+
+		<input type='checkbox' class="fold" id="agentUnlockMsg-fold-fields"><label for="agentUnlockMsg-fold-fields">Fields (<i>only one, which is exported</i>)</label><span id='agentUnlockMsg-fold-fields-items' class="fold-items"><span>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/server.go.html#line-73">Passphrase</a> <i>[]<a href="../../../../builtin.html#name-byte">byte</a></i></span></span></span>
+
+</span></div><div class="anchor type-res hidden" id="name-agentV1IdentityMsg" data-popularity="0">	<input type='checkbox' class="fold" id="agentV1IdentityMsg-fold-content"><label for="agentV1IdentityMsg-fold-content"> <a href="../../../../../use/golang.org/x/crypto/ssh/agent..agentV1IdentityMsg*19b14.html">type</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/server.go.html#line-60">agentV1IdentityMsg</a> <i>(struct)</i></label><span id='agentV1IdentityMsg-fold-content-docs' class="fold-docs">
+
+		<input type='checkbox' class="fold" id="agentV1IdentityMsg-fold-fields"><label for="agentV1IdentityMsg-fold-fields">Fields (<i>only one, which is exported</i>)</label><span id='agentV1IdentityMsg-fold-fields-items' class="fold-items"><span>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/server.go.html#line-61">Numkeys</a> <i><a href="../../../../builtin.html#name-uint32">uint32</a></i></span></span></span>
+
+</span></div><div class="anchor type-res hidden" id="name-client" data-popularity="850">	<input type='checkbox' class="fold" id="client-fold-content"><label for="client-fold-content"> <a href="../../../../../use/golang.org/x/crypto/ssh/agent..client*948fe.html">type</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-304">client</a> <i>(struct)</i></label><span id='client-fold-content-docs' class="fold-docs">
+		client is a client for an ssh-agent process.
+
+		<input type='checkbox' class="fold" id="client-fold-fields"><label for="client-fold-fields">Fields (<i>total 2, neither is exported</i>)</label><span id='client-fold-fields-items' class="fold-items">
+			<input type='checkbox' checked class="showhide" id="client-showhide-fields"><i><label for="client-showhide-fields" class="show-inline">/* 2 unexporteds ... */</label><label for="client-showhide-fields" class="hide-inline">/* 2 unexporteds: */</label></i><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="client-fold-field-conn"><label for="client-fold-field-conn"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-306">conn</a> <i><a href="../../../../io.html">io</a>.<a href="../../../../io.html#name-ReadWriter">ReadWriter</a></i></label><span id='client-fold-field-conn-docs' class="fold-docs">
+				conn is typically a *net.UnixConn
+</span></i></span><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="client-fold-field-mu"><label for="client-fold-field-mu"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-308">mu</a> <i><a href="../../../../sync.html">sync</a>.<a href="../../../../sync.html#name-Mutex">Mutex</a></i></label><span id='client-fold-field-mu-docs' class="fold-docs">
+				mu is used to prevent concurrent access to the agent
+</span></i></span></span>
+		<input type='checkbox' class="fold" id="client-fold-methods"><label for="client-fold-methods">Methods (<i>total 15, in which 10 are exported</i>)</label><span id='client-fold-methods-items' class="fold-items"><span>
+			<input type='checkbox' class="fold" id="client-fold-method-Add"><label for="client-fold-method-Add">(*T) <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-646">Add</a>(key <a href="#name-AddedKey">AddedKey</a>) <a href="../../../../builtin.html#name-error">error</a></label><span id='client-fold-method-Add-docs' class="fold-docs">
+				Add adds a private key to the agent. If a certificate is given,
+				that certificate is added instead as public key.
+</span></span><span>
+			<input type='checkbox' class="fold" id="client-fold-method-Extension"><label for="client-fold-method-Extension">(*T) <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-791">Extension</a>(extensionType <a href="../../../../builtin.html#name-string">string</a>, contents []<a href="../../../../builtin.html#name-byte">byte</a>) ([]<a href="../../../../builtin.html#name-byte">byte</a>, <a href="../../../../builtin.html#name-error">error</a>)</label><span id='client-fold-method-Extension-docs' class="fold-docs">
+				Calls an extension method. It is up to the agent implementation as to whether or not
+				any particular extension is supported and may always return an error. Because the
+				type of the response is up to the implementation, this returns the bytes of the
+				response and does not attempt any type of unmarshalling.
+</span></span><span>
+			<input type='checkbox' class="fold" id="client-fold-method-List"><label for="client-fold-method-List">(*T) <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-399">List</a>() ([]*<a href="#name-Key">Key</a>, <a href="../../../../builtin.html#name-error">error</a>)</label><span id='client-fold-method-List-docs' class="fold-docs">
+				List returns the identities known to the agent.
+</span></span><span>
+			<span class="nodocs">(*T) <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-384">Lock</a>(passphrase []<a href="../../../../builtin.html#name-byte">byte</a>) <a href="../../../../builtin.html#name-error">error</a></span></span><span>
+			<span class="nodocs">(*T) <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-377">Remove</a>(key <a href="../ssh.html">ssh</a>.<a href="../ssh.html#name-PublicKey">PublicKey</a>) <a href="../../../../builtin.html#name-error">error</a></span></span><span>
+			<span class="nodocs">(*T) <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-373">RemoveAll</a>() <a href="../../../../builtin.html#name-error">error</a></span></span><span>
+			<input type='checkbox' class="fold" id="client-fold-method-Sign"><label for="client-fold-method-Sign">(*T) <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-432">Sign</a>(key <a href="../ssh.html">ssh</a>.<a href="../ssh.html#name-PublicKey">PublicKey</a>, data []<a href="../../../../builtin.html#name-byte">byte</a>) (*<a href="../ssh.html">ssh</a>.<a href="../ssh.html#name-Signature">Signature</a>, <a href="../../../../builtin.html#name-error">error</a>)</label><span id='client-fold-method-Sign-docs' class="fold-docs">
+				Sign has the agent sign the data using a protocol 2 key as defined
+				in [PROTOCOL.agent] section 2.6.2.
+</span></span><span>
+			<span class="nodocs">(*T) <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-436">SignWithFlags</a>(key <a href="../ssh.html">ssh</a>.<a href="../ssh.html#name-PublicKey">PublicKey</a>, data []<a href="../../../../builtin.html#name-byte">byte</a>, flags <a href="#name-SignatureFlags">SignatureFlags</a>) (*<a href="../ssh.html">ssh</a>.<a href="../ssh.html#name-Signature">Signature</a>, <a href="../../../../builtin.html#name-error">error</a>)</span></span><span>
+			<input type='checkbox' class="fold" id="client-fold-method-Signers"><label for="client-fold-method-Signers">(*T) <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-747">Signers</a>() ([]<a href="../ssh.html">ssh</a>.<a href="../ssh.html#name-Signer">Signer</a>, <a href="../../../../builtin.html#name-error">error</a>)</label><span id='client-fold-method-Signers-docs' class="fold-docs">
+				Signers provides a callback for client authentication.
+</span></span><span>
+			<span class="nodocs">(*T) <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-391">Unlock</a>(passphrase []<a href="../../../../builtin.html#name-byte">byte</a>) <a href="../../../../builtin.html#name-error">error</a></span></span>
+			<input type='checkbox' checked class="showhide" id="client-showhide-methods"><i><label for="client-showhide-methods" class="show-inline">/* 5 unexporteds ... */</label><label for="client-showhide-methods" class="hide-inline">/* 5 unexporteds: */</label></i><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="client-fold-method-call"><label for="client-fold-method-call">(*T) <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-320">call</a>(req []<a href="../../../../builtin.html#name-byte">byte</a>) (reply interface{}, err <a href="../../../../builtin.html#name-error">error</a>)</label><span id='client-fold-method-call-docs' class="fold-docs">
+				call sends an RPC to the agent. On success, the reply is
+				unmarshaled into reply and replyType is set to the first byte of
+				the reply, which contains the type of the message.
+</span></i></span><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="client-fold-method-callRaw"><label for="client-fold-method-callRaw">(*T) <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-335">callRaw</a>(req []<a href="../../../../builtin.html#name-byte">byte</a>) (reply []<a href="../../../../builtin.html#name-byte">byte</a>, err <a href="../../../../builtin.html#name-error">error</a>)</label><span id='client-fold-method-callRaw-docs' class="fold-docs">
+				callRaw sends an RPC to the agent. On success, the raw
+				bytes of the response are returned; no unmarshalling is
+				performed on the response.
+</span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-664">insertCert</a>(s interface{}, cert *<a href="../ssh.html">ssh</a>.<a href="../ssh.html#name-Certificate">Certificate</a>, comment <a href="../../../../builtin.html#name-string">string</a>, constraints []<a href="../../../../builtin.html#name-byte">byte</a>) <a href="../../../../builtin.html#name-error">error</a></span></i></span><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="client-fold-method-insertKey"><label for="client-fold-method-insertKey">(*T) <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-530">insertKey</a>(s interface{}, comment <a href="../../../../builtin.html#name-string">string</a>, constraints []<a href="../../../../builtin.html#name-byte">byte</a>) <a href="../../../../builtin.html#name-error">error</a></label><span id='client-fold-method-insertKey-docs' class="fold-docs">
+				Insert adds a private key to the agent.
+</span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-362">simpleCall</a>(req []<a href="../../../../builtin.html#name-byte">byte</a>) <a href="../../../../builtin.html#name-error">error</a></span></i></span></span>
+		<input type='checkbox' class="fold" id="client-fold-impls"><label for="client-fold-impls">Implements (<i>at least 2, both are exported</i>)</label><span id='client-fold-impls-items' class="fold-items"><span>
+			*T : <a href="#name-Agent">Agent</a></span><span>
+			*T : <a href="#name-ExtendedAgent">ExtendedAgent</a></span></span>
+
+</span></div><div class="anchor type-res hidden" id="name-constrainExtensionAgentMsg" data-popularity="0">	<input type='checkbox' class="fold" id="constrainExtensionAgentMsg-fold-content"><label for="constrainExtensionAgentMsg-fold-content"> <a href="../../../../../use/golang.org/x/crypto/ssh/agent..constrainExtensionAgentMsg*746d4.html">type</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-207">constrainExtensionAgentMsg</a> <i>(struct)</i></label><span id='constrainExtensionAgentMsg-fold-content-docs' class="fold-docs">
+
+		<input type='checkbox' class="fold" id="constrainExtensionAgentMsg-fold-fields"><label for="constrainExtensionAgentMsg-fold-fields">Fields (<i>total 3, all are exported</i>)</label><span id='constrainExtensionAgentMsg-fold-fields-items' class="fold-items"><span>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-209">ExtensionDetails</a> <i>[]<a href="../../../../builtin.html#name-byte">byte</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-208">ExtensionName</a> <i><a href="../../../../builtin.html#name-string">string</a></i></span></span><span>
+			<input type='checkbox' class="fold" id="constrainExtensionAgentMsg-fold-field-Rest"><label for="constrainExtensionAgentMsg-fold-field-Rest"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-212">Rest</a> <i>[]<a href="../../../../builtin.html#name-byte">byte</a></i></label><span id='constrainExtensionAgentMsg-fold-field-Rest-docs' class="fold-docs">
+				Rest is a field used for parsing, not part of message
+</span></span></span>
+
+</span></div><div class="anchor type-res hidden" id="name-constrainLifetimeAgentMsg" data-popularity="0">	<input type='checkbox' class="fold" id="constrainLifetimeAgentMsg-fold-content"><label for="constrainLifetimeAgentMsg-fold-content"> <a href="../../../../../use/golang.org/x/crypto/ssh/agent..constrainLifetimeAgentMsg*08964.html">type</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-203">constrainLifetimeAgentMsg</a> <i>(struct)</i></label><span id='constrainLifetimeAgentMsg-fold-content-docs' class="fold-docs">
+		3.7 Key constraint identifiers
+
+		<input type='checkbox' class="fold" id="constrainLifetimeAgentMsg-fold-fields"><label for="constrainLifetimeAgentMsg-fold-fields">Fields (<i>only one, which is exported</i>)</label><span id='constrainLifetimeAgentMsg-fold-fields-items' class="fold-items"><span>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-204">LifetimeSecs</a> <i><a href="../../../../builtin.html#name-uint32">uint32</a></i></span></span></span>
+
+</span></div><div class="anchor type-res hidden" id="name-dsaCertMsg" data-popularity="0">	<input type='checkbox' class="fold" id="dsaCertMsg-fold-content"><label for="dsaCertMsg-fold-content"> <a href="../../../../../use/golang.org/x/crypto/ssh/agent..dsaCertMsg*2ace4.html">type</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-619">dsaCertMsg</a> <i>(struct)</i></label><span id='dsaCertMsg-fold-content-docs' class="fold-docs">
+
+		<input type='checkbox' class="fold" id="dsaCertMsg-fold-fields"><label for="dsaCertMsg-fold-fields">Fields (<i>total 5, all are exported</i>)</label><span id='dsaCertMsg-fold-fields-items' class="fold-items"><span>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-621">CertBytes</a> <i>[]<a href="../../../../builtin.html#name-byte">byte</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-623">Comments</a> <i><a href="../../../../builtin.html#name-string">string</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-624">Constraints</a> <i>[]<a href="../../../../builtin.html#name-byte">byte</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-620">Type</a> <i><a href="../../../../builtin.html#name-string">string</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-622">X</a> <i>*<a href="../../../../math/big.html">big</a>.<a href="../../../../math/big.html#name-Int">Int</a></i></span></span></span>
+
+</span></div><div class="anchor type-res hidden" id="name-dsaKeyMsg" data-popularity="0">	<input type='checkbox' class="fold" id="dsaKeyMsg-fold-content"><label for="dsaKeyMsg-fold-content"> <a href="../../../../../use/golang.org/x/crypto/ssh/agent..dsaKeyMsg*f9325.html">type</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-501">dsaKeyMsg</a> <i>(struct)</i></label><span id='dsaKeyMsg-fold-content-docs' class="fold-docs">
+
+		<input type='checkbox' class="fold" id="dsaKeyMsg-fold-fields"><label for="dsaKeyMsg-fold-fields">Fields (<i>total 8, all are exported</i>)</label><span id='dsaKeyMsg-fold-fields-items' class="fold-items"><span>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-508">Comments</a> <i><a href="../../../../builtin.html#name-string">string</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-509">Constraints</a> <i>[]<a href="../../../../builtin.html#name-byte">byte</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-505">G</a> <i>*<a href="../../../../math/big.html">big</a>.<a href="../../../../math/big.html#name-Int">Int</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-503">P</a> <i>*<a href="../../../../math/big.html">big</a>.<a href="../../../../math/big.html#name-Int">Int</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-504">Q</a> <i>*<a href="../../../../math/big.html">big</a>.<a href="../../../../math/big.html#name-Int">Int</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-502">Type</a> <i><a href="../../../../builtin.html#name-string">string</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-507">X</a> <i>*<a href="../../../../math/big.html">big</a>.<a href="../../../../math/big.html#name-Int">Int</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-506">Y</a> <i>*<a href="../../../../math/big.html">big</a>.<a href="../../../../math/big.html#name-Int">Int</a></i></span></span></span>
+
+</span></div><div class="anchor type-res hidden" id="name-ecdsaCertMsg" data-popularity="0">	<input type='checkbox' class="fold" id="ecdsaCertMsg-fold-content"><label for="ecdsaCertMsg-fold-content"> <a href="../../../../../use/golang.org/x/crypto/ssh/agent..ecdsaCertMsg*a8194.html">type</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-627">ecdsaCertMsg</a> <i>(struct)</i></label><span id='ecdsaCertMsg-fold-content-docs' class="fold-docs">
+
+		<input type='checkbox' class="fold" id="ecdsaCertMsg-fold-fields"><label for="ecdsaCertMsg-fold-fields">Fields (<i>total 5, all are exported</i>)</label><span id='ecdsaCertMsg-fold-fields-items' class="fold-items"><span>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-629">CertBytes</a> <i>[]<a href="../../../../builtin.html#name-byte">byte</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-631">Comments</a> <i><a href="../../../../builtin.html#name-string">string</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-632">Constraints</a> <i>[]<a href="../../../../builtin.html#name-byte">byte</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-630">D</a> <i>*<a href="../../../../math/big.html">big</a>.<a href="../../../../math/big.html#name-Int">Int</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-628">Type</a> <i><a href="../../../../builtin.html#name-string">string</a></i></span></span></span>
+
+</span></div><div class="anchor type-res hidden" id="name-ecdsaKeyMsg" data-popularity="0">	<input type='checkbox' class="fold" id="ecdsaKeyMsg-fold-content"><label for="ecdsaKeyMsg-fold-content"> <a href="../../../../../use/golang.org/x/crypto/ssh/agent..ecdsaKeyMsg*9af21.html">type</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-512">ecdsaKeyMsg</a> <i>(struct)</i></label><span id='ecdsaKeyMsg-fold-content-docs' class="fold-docs">
+
+		<input type='checkbox' class="fold" id="ecdsaKeyMsg-fold-fields"><label for="ecdsaKeyMsg-fold-fields">Fields (<i>total 6, all are exported</i>)</label><span id='ecdsaKeyMsg-fold-fields-items' class="fold-items"><span>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-517">Comments</a> <i><a href="../../../../builtin.html#name-string">string</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-518">Constraints</a> <i>[]<a href="../../../../builtin.html#name-byte">byte</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-514">Curve</a> <i><a href="../../../../builtin.html#name-string">string</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-516">D</a> <i>*<a href="../../../../math/big.html">big</a>.<a href="../../../../math/big.html#name-Int">Int</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-515">KeyBytes</a> <i>[]<a href="../../../../builtin.html#name-byte">byte</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-513">Type</a> <i><a href="../../../../builtin.html#name-string">string</a></i></span></span></span>
+
+</span></div><div class="anchor type-res hidden" id="name-ed25519CertMsg" data-popularity="0">	<input type='checkbox' class="fold" id="ed25519CertMsg-fold-content"><label for="ed25519CertMsg-fold-content"> <a href="../../../../../use/golang.org/x/crypto/ssh/agent..ed25519CertMsg*dba5c.html">type</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-635">ed25519CertMsg</a> <i>(struct)</i></label><span id='ed25519CertMsg-fold-content-docs' class="fold-docs">
+
+		<input type='checkbox' class="fold" id="ed25519CertMsg-fold-fields"><label for="ed25519CertMsg-fold-fields">Fields (<i>total 6, all are exported</i>)</label><span id='ed25519CertMsg-fold-fields-items' class="fold-items"><span>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-637">CertBytes</a> <i>[]<a href="../../../../builtin.html#name-byte">byte</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-640">Comments</a> <i><a href="../../../../builtin.html#name-string">string</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-641">Constraints</a> <i>[]<a href="../../../../builtin.html#name-byte">byte</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-639">Priv</a> <i>[]<a href="../../../../builtin.html#name-byte">byte</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-638">Pub</a> <i>[]<a href="../../../../builtin.html#name-byte">byte</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-636">Type</a> <i><a href="../../../../builtin.html#name-string">string</a></i></span></span></span>
+
+</span></div><div class="anchor type-res hidden" id="name-ed25519KeyMsg" data-popularity="0">	<input type='checkbox' class="fold" id="ed25519KeyMsg-fold-content"><label for="ed25519KeyMsg-fold-content"> <a href="../../../../../use/golang.org/x/crypto/ssh/agent..ed25519KeyMsg*0bdd8.html">type</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-521">ed25519KeyMsg</a> <i>(struct)</i></label><span id='ed25519KeyMsg-fold-content-docs' class="fold-docs">
+
+		<input type='checkbox' class="fold" id="ed25519KeyMsg-fold-fields"><label for="ed25519KeyMsg-fold-fields">Fields (<i>total 5, all are exported</i>)</label><span id='ed25519KeyMsg-fold-fields-items' class="fold-items"><span>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-525">Comments</a> <i><a href="../../../../builtin.html#name-string">string</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-526">Constraints</a> <i>[]<a href="../../../../builtin.html#name-byte">byte</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-524">Priv</a> <i>[]<a href="../../../../builtin.html#name-byte">byte</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-523">Pub</a> <i>[]<a href="../../../../builtin.html#name-byte">byte</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-522">Type</a> <i><a href="../../../../builtin.html#name-string">string</a></i></span></span></span>
+
+</span></div><div class="anchor type-res hidden" id="name-extensionAgentMsg" data-popularity="0">	<input type='checkbox' class="fold" id="extensionAgentMsg-fold-content"><label for="extensionAgentMsg-fold-content"> <a href="../../../../../use/golang.org/x/crypto/ssh/agent..extensionAgentMsg*77ebb.html">type</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-227">extensionAgentMsg</a> <i>(struct)</i></label><span id='extensionAgentMsg-fold-content-docs' class="fold-docs">
+
+		<input type='checkbox' class="fold" id="extensionAgentMsg-fold-fields"><label for="extensionAgentMsg-fold-fields">Fields (<i>total 2, both are exported</i>)</label><span id='extensionAgentMsg-fold-fields-items' class="fold-items"><span>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-229">Contents</a> <i>[]<a href="../../../../builtin.html#name-byte">byte</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-228">ExtensionType</a> <i><a href="../../../../builtin.html#name-string">string</a></i></span></span></span>
+
+</span></div><div class="anchor type-res hidden" id="name-failureAgentMsg" data-popularity="0">	<span class="nodocs"> <a href="../../../../../use/golang.org/x/crypto/ssh/agent..failureAgentMsg*a9a98.html">type</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-160">failureAgentMsg</a> <i>(struct)</i></span></div><div class="anchor type-res hidden" id="name-identitiesAnswerAgentMsg" data-popularity="0">	<input type='checkbox' class="fold" id="identitiesAnswerAgentMsg-fold-content"><label for="identitiesAnswerAgentMsg-fold-content"> <a href="../../../../../use/golang.org/x/crypto/ssh/agent..identitiesAnswerAgentMsg*53bb5.html">type</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-174">identitiesAnswerAgentMsg</a> <i>(struct)</i></label><span id='identitiesAnswerAgentMsg-fold-content-docs' class="fold-docs">
+
+		<input type='checkbox' class="fold" id="identitiesAnswerAgentMsg-fold-fields"><label for="identitiesAnswerAgentMsg-fold-fields">Fields (<i>total 2, both are exported</i>)</label><span id='identitiesAnswerAgentMsg-fold-fields-items' class="fold-items"><span>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-176">Keys</a> <i>[]<a href="../../../../builtin.html#name-byte">byte</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-175">NumKeys</a> <i><a href="../../../../builtin.html#name-uint32">uint32</a></i></span></span></span>
+
+</span></div><div class="anchor type-res hidden" id="name-keyring" data-popularity="700">	<input type='checkbox' class="fold" id="keyring-fold-content"><label for="keyring-fold-content"> <a href="../../../../../use/golang.org/x/crypto/ssh/agent..keyring*90c4c.html">type</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/keyring.go.html#line-25">keyring</a> <i>(struct)</i></label><span id='keyring-fold-content-docs' class="fold-docs">
+
+		<input type='checkbox' class="fold" id="keyring-fold-fields"><label for="keyring-fold-fields">Fields (<i>total 4, none are exported</i>)</label><span id='keyring-fold-fields-items' class="fold-items">
+			<input type='checkbox' checked class="showhide" id="keyring-showhide-fields"><i><label for="keyring-showhide-fields" class="show-inline">/* 4 unexporteds ... */</label><label for="keyring-showhide-fields" class="hide-inline">/* 4 unexporteds: */</label></i><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/keyring.go.html#line-27">keys</a> <i>[]<a href="#name-privKey">privKey</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/keyring.go.html#line-29">locked</a> <i><a href="../../../../builtin.html#name-bool">bool</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/keyring.go.html#line-26">mu</a> <i><a href="../../../../sync.html">sync</a>.<a href="../../../../sync.html#name-Mutex">Mutex</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/keyring.go.html#line-30">passphrase</a> <i>[]<a href="../../../../builtin.html#name-byte">byte</a></i></span></i></span></span>
+		<input type='checkbox' class="fold" id="keyring-fold-methods"><label for="keyring-fold-methods">Methods (<i>total 12, in which 10 are exported</i>)</label><span id='keyring-fold-methods-items' class="fold-items"><span>
+			<input type='checkbox' class="fold" id="keyring-fold-method-Add"><label for="keyring-fold-method-Add">(*T) <a href="../../../../../src/golang.org/x/crypto/ssh/agent/keyring.go.html#line-149">Add</a>(key <a href="#name-AddedKey">AddedKey</a>) <a href="../../../../builtin.html#name-error">error</a></label><span id='keyring-fold-method-Add-docs' class="fold-docs">
+				Insert adds a private key to the keyring. If a certificate
+				is given, that certificate is added as public key. Note that
+				any constraints given are ignored.
+</span></span><span>
+			<input type='checkbox' class="fold" id="keyring-fold-method-Extension"><label for="keyring-fold-method-Extension">(*T) <a href="../../../../../src/golang.org/x/crypto/ssh/agent/keyring.go.html#line-239">Extension</a>(extensionType <a href="../../../../builtin.html#name-string">string</a>, contents []<a href="../../../../builtin.html#name-byte">byte</a>) ([]<a href="../../../../builtin.html#name-byte">byte</a>, <a href="../../../../builtin.html#name-error">error</a>)</label><span id='keyring-fold-method-Extension-docs' class="fold-docs">
+				The keyring does not support any extensions
+</span></span><span>
+			<input type='checkbox' class="fold" id="keyring-fold-method-List"><label for="keyring-fold-method-List">(*T) <a href="../../../../../src/golang.org/x/crypto/ssh/agent/keyring.go.html#line-126">List</a>() ([]*<a href="#name-Key">Key</a>, <a href="../../../../builtin.html#name-error">error</a>)</label><span id='keyring-fold-method-List-docs' class="fold-docs">
+				List returns the identities known to the agent.
+</span></span><span>
+			<input type='checkbox' class="fold" id="keyring-fold-method-Lock"><label for="keyring-fold-method-Lock">(*T) <a href="../../../../../src/golang.org/x/crypto/ssh/agent/keyring.go.html#line-86">Lock</a>(passphrase []<a href="../../../../builtin.html#name-byte">byte</a>) <a href="../../../../builtin.html#name-error">error</a></label><span id='keyring-fold-method-Lock-docs' class="fold-docs">
+				Lock locks the agent. Sign and Remove will fail, and List will return an empty list.
+</span></span><span>
+			<input type='checkbox' class="fold" id="keyring-fold-method-Remove"><label for="keyring-fold-method-Remove">(*T) <a href="../../../../../src/golang.org/x/crypto/ssh/agent/keyring.go.html#line-75">Remove</a>(key <a href="../ssh.html">ssh</a>.<a href="../ssh.html#name-PublicKey">PublicKey</a>) <a href="../../../../builtin.html#name-error">error</a></label><span id='keyring-fold-method-Remove-docs' class="fold-docs">
+				Remove removes all identities with the given public key.
+</span></span><span>
+			<input type='checkbox' class="fold" id="keyring-fold-method-RemoveAll"><label for="keyring-fold-method-RemoveAll">(*T) <a href="../../../../../src/golang.org/x/crypto/ssh/agent/keyring.go.html#line-42">RemoveAll</a>() <a href="../../../../builtin.html#name-error">error</a></label><span id='keyring-fold-method-RemoveAll-docs' class="fold-docs">
+				RemoveAll removes all identities.
+</span></span><span>
+			<input type='checkbox' class="fold" id="keyring-fold-method-Sign"><label for="keyring-fold-method-Sign">(*T) <a href="../../../../../src/golang.org/x/crypto/ssh/agent/keyring.go.html#line-184">Sign</a>(key <a href="../ssh.html">ssh</a>.<a href="../ssh.html#name-PublicKey">PublicKey</a>, data []<a href="../../../../builtin.html#name-byte">byte</a>) (*<a href="../ssh.html">ssh</a>.<a href="../ssh.html#name-Signature">Signature</a>, <a href="../../../../builtin.html#name-error">error</a>)</label><span id='keyring-fold-method-Sign-docs' class="fold-docs">
+				Sign returns a signature for the data.
+</span></span><span>
+			<span class="nodocs">(*T) <a href="../../../../../src/golang.org/x/crypto/ssh/agent/keyring.go.html#line-188">SignWithFlags</a>(key <a href="../ssh.html">ssh</a>.<a href="../ssh.html#name-PublicKey">PublicKey</a>, data []<a href="../../../../builtin.html#name-byte">byte</a>, flags <a href="#name-SignatureFlags">SignatureFlags</a>) (*<a href="../ssh.html">ssh</a>.<a href="../ssh.html#name-Signature">Signature</a>, <a href="../../../../builtin.html#name-error">error</a>)</span></span><span>
+			<input type='checkbox' class="fold" id="keyring-fold-method-Signers"><label for="keyring-fold-method-Signers">(*T) <a href="../../../../../src/golang.org/x/crypto/ssh/agent/keyring.go.html#line-223">Signers</a>() ([]<a href="../ssh.html">ssh</a>.<a href="../ssh.html#name-Signer">Signer</a>, <a href="../../../../builtin.html#name-error">error</a>)</label><span id='keyring-fold-method-Signers-docs' class="fold-docs">
+				Signers returns signers for all the known keys.
+</span></span><span>
+			<input type='checkbox' class="fold" id="keyring-fold-method-Unlock"><label for="keyring-fold-method-Unlock">(*T) <a href="../../../../../src/golang.org/x/crypto/ssh/agent/keyring.go.html#line-99">Unlock</a>(passphrase []<a href="../../../../builtin.html#name-byte">byte</a>) <a href="../../../../builtin.html#name-error">error</a></label><span id='keyring-fold-method-Unlock-docs' class="fold-docs">
+				Unlock undoes the effect of Lock
+</span></span>
+			<input type='checkbox' checked class="showhide" id="keyring-showhide-methods"><i><label for="keyring-showhide-methods" class="show-inline">/* 2 unexporteds ... */</label><label for="keyring-showhide-methods" class="hide-inline">/* 2 unexporteds: */</label></i><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="keyring-fold-method-expireKeysLocked"><label for="keyring-fold-method-expireKeysLocked">(*T) <a href="../../../../../src/golang.org/x/crypto/ssh/agent/keyring.go.html#line-117">expireKeysLocked</a>()</label><span id='keyring-fold-method-expireKeysLocked-docs' class="fold-docs">
+				expireKeysLocked removes expired keys from the keyring. If a key was added
+				with a lifetimesecs contraint and seconds &gt;= lifetimesecs seconds have
+				ellapsed, it is removed. The caller *must* be holding the keyring mutex.
+</span></i></span><span class="hidden"><i>
+			<input type='checkbox' class="fold" id="keyring-fold-method-removeLocked"><label for="keyring-fold-method-removeLocked">(*T) <a href="../../../../../src/golang.org/x/crypto/ssh/agent/keyring.go.html#line-55">removeLocked</a>(want []<a href="../../../../builtin.html#name-byte">byte</a>) <a href="../../../../builtin.html#name-error">error</a></label><span id='keyring-fold-method-removeLocked-docs' class="fold-docs">
+				removeLocked does the actual key removal. The caller must already be holding the
+				keyring mutex.
+</span></i></span></span>
+		<input type='checkbox' class="fold" id="keyring-fold-impls"><label for="keyring-fold-impls">Implements (<i>at least 2, both are exported</i>)</label><span id='keyring-fold-impls-items' class="fold-items"><span>
+			*T : <a href="#name-Agent">Agent</a></span><span>
+			*T : <a href="#name-ExtendedAgent">ExtendedAgent</a></span></span>
+
+</span></div><div class="anchor type-res hidden" id="name-privKey" data-popularity="0">	<input type='checkbox' class="fold" id="privKey-fold-content"><label for="privKey-fold-content"> <a href="../../../../../use/golang.org/x/crypto/ssh/agent..privKey*96352.html">type</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/keyring.go.html#line-19">privKey</a> <i>(struct)</i></label><span id='privKey-fold-content-docs' class="fold-docs">
+
+		<input type='checkbox' class="fold" id="privKey-fold-fields"><label for="privKey-fold-fields">Fields (<i>total 3, none are exported</i>)</label><span id='privKey-fold-fields-items' class="fold-items">
+			<input type='checkbox' checked class="showhide" id="privKey-showhide-fields"><i><label for="privKey-showhide-fields" class="show-inline">/* 3 unexporteds ... */</label><label for="privKey-showhide-fields" class="hide-inline">/* 3 unexporteds: */</label></i><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/keyring.go.html#line-21">comment</a> <i><a href="../../../../builtin.html#name-string">string</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/keyring.go.html#line-22">expire</a> <i>*<a href="../../../../time.html">time</a>.<a href="../../../../time.html#name-Time">Time</a></i></span></i></span><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/keyring.go.html#line-20">signer</a> <i><a href="../ssh.html">ssh</a>.<a href="../ssh.html#name-Signer">Signer</a></i></span></i></span></span>
+
+</span></div><div class="anchor type-res hidden" id="name-publicKey" data-popularity="0">	<input type='checkbox' class="fold" id="publicKey-fold-content"><label for="publicKey-fold-content"> <a href="../../../../../use/golang.org/x/crypto/ssh/agent..publicKey*5329b.html">type</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-197">publicKey</a> <i>(struct)</i></label><span id='publicKey-fold-content-docs' class="fold-docs">
+
+		<input type='checkbox' class="fold" id="publicKey-fold-fields"><label for="publicKey-fold-fields">Fields (<i>total 2, both are exported</i>)</label><span id='publicKey-fold-fields-items' class="fold-items"><span>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-198">Format</a> <i><a href="../../../../builtin.html#name-string">string</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-199">Rest</a> <i>[]<a href="../../../../builtin.html#name-byte">byte</a></i></span></span></span>
+
+</span></div><div class="anchor type-res hidden" id="name-requestIdentitiesAgentMsg" data-popularity="0">	<span class="nodocs"> <a href="../../../../../use/golang.org/x/crypto/ssh/agent..requestIdentitiesAgentMsg*7e7fb.html">type</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-169">requestIdentitiesAgentMsg</a> <i>(struct)</i></span></div><div class="anchor type-res hidden" id="name-rsaCertMsg" data-popularity="0">	<input type='checkbox' class="fold" id="rsaCertMsg-fold-content"><label for="rsaCertMsg-fold-content"> <a href="../../../../../use/golang.org/x/crypto/ssh/agent..rsaCertMsg*39cec.html">type</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-608">rsaCertMsg</a> <i>(struct)</i></label><span id='rsaCertMsg-fold-content-docs' class="fold-docs">
+
+		<input type='checkbox' class="fold" id="rsaCertMsg-fold-fields"><label for="rsaCertMsg-fold-fields">Fields (<i>total 8, all are exported</i>)</label><span id='rsaCertMsg-fold-fields-items' class="fold-items"><span>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-610">CertBytes</a> <i>[]<a href="../../../../builtin.html#name-byte">byte</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-615">Comments</a> <i><a href="../../../../builtin.html#name-string">string</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-616">Constraints</a> <i>[]<a href="../../../../builtin.html#name-byte">byte</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-611">D</a> <i>*<a href="../../../../math/big.html">big</a>.<a href="../../../../math/big.html#name-Int">Int</a></i></span></span><span>
+			<input type='checkbox' class="fold" id="rsaCertMsg-fold-field-Iqmp"><label for="rsaCertMsg-fold-field-Iqmp"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-612">Iqmp</a> <i>*<a href="../../../../math/big.html">big</a>.<a href="../../../../math/big.html#name-Int">Int</a></i></label><span id='rsaCertMsg-fold-field-Iqmp-docs' class="fold-docs">
+				// IQMP = Inverse Q Mod P
+</span></span><span>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-613">P</a> <i>*<a href="../../../../math/big.html">big</a>.<a href="../../../../math/big.html#name-Int">Int</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-614">Q</a> <i>*<a href="../../../../math/big.html">big</a>.<a href="../../../../math/big.html#name-Int">Int</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-609">Type</a> <i><a href="../../../../builtin.html#name-string">string</a></i></span></span></span>
+
+</span></div><div class="anchor type-res hidden" id="name-rsaKeyMsg" data-popularity="0">	<input type='checkbox' class="fold" id="rsaKeyMsg-fold-content"><label for="rsaKeyMsg-fold-content"> <a href="../../../../../use/golang.org/x/crypto/ssh/agent..rsaKeyMsg*fbba2.html">type</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-489">rsaKeyMsg</a> <i>(struct)</i></label><span id='rsaKeyMsg-fold-content-docs' class="fold-docs">
+
+		<input type='checkbox' class="fold" id="rsaKeyMsg-fold-fields"><label for="rsaKeyMsg-fold-fields">Fields (<i>total 9, all are exported</i>)</label><span id='rsaKeyMsg-fold-fields-items' class="fold-items"><span>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-497">Comments</a> <i><a href="../../../../builtin.html#name-string">string</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-498">Constraints</a> <i>[]<a href="../../../../builtin.html#name-byte">byte</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-493">D</a> <i>*<a href="../../../../math/big.html">big</a>.<a href="../../../../math/big.html#name-Int">Int</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-492">E</a> <i>*<a href="../../../../math/big.html">big</a>.<a href="../../../../math/big.html#name-Int">Int</a></i></span></span><span>
+			<input type='checkbox' class="fold" id="rsaKeyMsg-fold-field-Iqmp"><label for="rsaKeyMsg-fold-field-Iqmp"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-494">Iqmp</a> <i>*<a href="../../../../math/big.html">big</a>.<a href="../../../../math/big.html#name-Int">Int</a></i></label><span id='rsaKeyMsg-fold-field-Iqmp-docs' class="fold-docs">
+				// IQMP = Inverse Q Mod P
+</span></span><span>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-491">N</a> <i>*<a href="../../../../math/big.html">big</a>.<a href="../../../../math/big.html#name-Int">Int</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-495">P</a> <i>*<a href="../../../../math/big.html">big</a>.<a href="../../../../math/big.html#name-Int">Int</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-496">Q</a> <i>*<a href="../../../../math/big.html">big</a>.<a href="../../../../math/big.html#name-Int">Int</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-490">Type</a> <i><a href="../../../../builtin.html#name-string">string</a></i></span></span></span>
+
+</span></div><div class="anchor type-res hidden" id="name-server" data-popularity="150">	<input type='checkbox' class="fold" id="server-fold-content"><label for="server-fold-content"> <a href="../../../../../use/golang.org/x/crypto/ssh/agent..server*b3eac.html">type</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/server.go.html#line-25">server</a> <i>(struct)</i></label><span id='server-fold-content-docs' class="fold-docs">
+		Server wraps an Agent and uses it to implement the agent side of
+		the SSH-agent, wire protocol.
+
+		<input type='checkbox' class="fold" id="server-fold-fields"><label for="server-fold-fields">Fields (<i>only one, which is unexported</i>)</label><span id='server-fold-fields-items' class="fold-items">
+			<input type='checkbox' checked class="showhide" id="server-showhide-fields"><i><label for="server-showhide-fields" class="show-inline">/* one unexported ... */</label><label for="server-showhide-fields" class="hide-inline">/* one unexported: */</label></i><span class="hidden"><i>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/server.go.html#line-26">agent</a> <i><a href="#name-Agent">Agent</a></i></span></i></span></span>
+		<input type='checkbox' class="fold" id="server-fold-methods"><label for="server-fold-methods">Methods (<i>total 3, none are exported</i>)</label><span id='server-fold-methods-items' class="fold-items">
+			<input type='checkbox' checked class="showhide" id="server-showhide-methods"><i><label for="server-showhide-methods" class="show-inline">/* 3 unexporteds ... */</label><label for="server-showhide-methods" class="hide-inline">/* 3 unexporteds: */</label></i><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../../../src/golang.org/x/crypto/ssh/agent/server.go.html#line-493">insertIdentity</a>(req []<a href="../../../../builtin.html#name-byte">byte</a>) <a href="../../../../builtin.html#name-error">error</a></span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../../../src/golang.org/x/crypto/ssh/agent/server.go.html#line-76">processRequest</a>(data []<a href="../../../../builtin.html#name-byte">byte</a>) (interface{}, <a href="../../../../builtin.html#name-error">error</a>)</span></i></span><span class="hidden"><i>
+			<span class="nodocs">(*T) <a href="../../../../../src/golang.org/x/crypto/ssh/agent/server.go.html#line-29">processRequestBytes</a>(reqData []<a href="../../../../builtin.html#name-byte">byte</a>) []<a href="../../../../builtin.html#name-byte">byte</a></span></i></span></span>
+
+</span></div><div class="anchor type-res hidden" id="name-signRequestAgentMsg" data-popularity="0">	<input type='checkbox' class="fold" id="signRequestAgentMsg-fold-content"><label for="signRequestAgentMsg-fold-content"> <a href="../../../../../use/golang.org/x/crypto/ssh/agent..signRequestAgentMsg*eeebd.html">type</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-182">signRequestAgentMsg</a> <i>(struct)</i></label><span id='signRequestAgentMsg-fold-content-docs' class="fold-docs">
+
+		<input type='checkbox' class="fold" id="signRequestAgentMsg-fold-fields"><label for="signRequestAgentMsg-fold-fields">Fields (<i>total 3, all are exported</i>)</label><span id='signRequestAgentMsg-fold-fields-items' class="fold-items"><span>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-184">Data</a> <i>[]<a href="../../../../builtin.html#name-byte">byte</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-185">Flags</a> <i><a href="../../../../builtin.html#name-uint32">uint32</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-183">KeyBlob</a> <i>[]<a href="../../../../builtin.html#name-byte">byte</a></i></span></span></span>
+
+</span></div><div class="anchor type-res hidden" id="name-signResponseAgentMsg" data-popularity="0">	<input type='checkbox' class="fold" id="signResponseAgentMsg-fold-content"><label for="signResponseAgentMsg-fold-content"> <a href="../../../../../use/golang.org/x/crypto/ssh/agent..signResponseAgentMsg*a08cf.html">type</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-193">signResponseAgentMsg</a> <i>(struct)</i></label><span id='signResponseAgentMsg-fold-content-docs' class="fold-docs">
+
+		<input type='checkbox' class="fold" id="signResponseAgentMsg-fold-fields"><label for="signResponseAgentMsg-fold-fields">Fields (<i>only one, which is exported</i>)</label><span id='signResponseAgentMsg-fold-fields-items' class="fold-items"><span>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-194">SigBlob</a> <i>[]<a href="../../../../builtin.html#name-byte">byte</a></i></span></span></span>
+
+</span></div><div class="anchor type-res hidden" id="name-successAgentMsg" data-popularity="0">	<span class="nodocs"> <a href="../../../../../use/golang.org/x/crypto/ssh/agent..successAgentMsg*b9227.html">type</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-164">successAgentMsg</a> <i>(struct)</i></span></div><div class="anchor type-res hidden" id="name-wireKey" data-popularity="0">	<input type='checkbox' class="fold" id="wireKey-fold-content"><label for="wireKey-fold-content"> <a href="../../../../../use/golang.org/x/crypto/ssh/agent..wireKey*460b9.html">type</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-275">wireKey</a> <i>(struct)</i></label><span id='wireKey-fold-content-docs' class="fold-docs">
+
+		<input type='checkbox' class="fold" id="wireKey-fold-fields"><label for="wireKey-fold-fields">Fields (<i>total 2, both are exported</i>)</label><span id='wireKey-fold-fields-items' class="fold-items"><span>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-198">Format</a> <i><a href="../../../../builtin.html#name-string">string</a></i></span></span><span>
+			<span class="nodocs"><a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-199">Rest</a> <i>[]<a href="../../../../builtin.html#name-byte">byte</a></i></span></span></span>
+
+</span></div></div>
+<div id="exported-functions"><span class="title">Package-Level Functions<span class="title-stat"><i> (total 22, in which 6 are exported)</i></span></span>
+
+<div class="anchor value-res" id="name-ForwardToAgent">	<input type='checkbox' class="fold" id="ForwardToAgent-fold-content"><label for="ForwardToAgent-fold-content"> <a href="../../../../../use/golang.org/x/crypto/ssh/agent..ForwardToAgent.html">func</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/forward.go.html#line-31">ForwardToAgent</a>(client *<a href="../ssh.html">ssh</a>.<a href="../ssh.html#name-Client">Client</a>, keyring <a href="#name-Agent">Agent</a>) <a href="../../../../builtin.html#name-error">error</a></label><span id='ForwardToAgent-fold-content-docs' class="fold-docs">
+		ForwardToAgent routes authentication requests to the given keyring.
+
+</span></div><div class="anchor value-res" id="name-ForwardToRemote">	<input type='checkbox' class="fold" id="ForwardToRemote-fold-content"><label for="ForwardToRemote-fold-content"> <a href="../../../../../use/golang.org/x/crypto/ssh/agent..ForwardToRemote.html">func</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/forward.go.html#line-57">ForwardToRemote</a>(client *<a href="../ssh.html">ssh</a>.<a href="../ssh.html#name-Client">Client</a>, addr <a href="../../../../builtin.html#name-string">string</a>) <a href="../../../../builtin.html#name-error">error</a></label><span id='ForwardToRemote-fold-content-docs' class="fold-docs">
+		ForwardToRemote routes authentication requests to the ssh-agent
+		process serving on the given unix socket.
+
+</span></div><div class="anchor value-res" id="name-NewClient">	<input type='checkbox' class="fold" id="NewClient-fold-content"><label for="NewClient-fold-content"> <a href="../../../../../use/golang.org/x/crypto/ssh/agent..NewClient.html">func</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-313">NewClient</a>(rw <a href="../../../../io.html">io</a>.<a href="../../../../io.html#name-ReadWriter">ReadWriter</a>) <a href="#name-ExtendedAgent">ExtendedAgent</a></label><span id='NewClient-fold-content-docs' class="fold-docs">
+		NewClient returns an Agent that talks to an ssh-agent process over
+		the given connection.
+
+</span></div><div class="anchor value-res" id="name-NewKeyring">	<input type='checkbox' class="fold" id="NewKeyring-fold-content"><label for="NewKeyring-fold-content"> <a href="../../../../../use/golang.org/x/crypto/ssh/agent..NewKeyring.html">func</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/keyring.go.html#line-37">NewKeyring</a>() <a href="#name-Agent">Agent</a></label><span id='NewKeyring-fold-content-docs' class="fold-docs">
+		NewKeyring returns an Agent that holds keys in memory.  It is safe
+		for concurrent use by multiple goroutines.
+
+</span></div><div class="anchor value-res" id="name-RequestAgentForwarding">	<input type='checkbox' class="fold" id="RequestAgentForwarding-fold-content"><label for="RequestAgentForwarding-fold-content"> <a href="../../../../../use/golang.org/x/crypto/ssh/agent..RequestAgentForwarding.html">func</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/forward.go.html#line-19">RequestAgentForwarding</a>(session *<a href="../ssh.html">ssh</a>.<a href="../ssh.html#name-Session">Session</a>) <a href="../../../../builtin.html#name-error">error</a></label><span id='RequestAgentForwarding-fold-content-docs' class="fold-docs">
+		RequestAgentForwarding sets up agent forwarding for the session.
+		ForwardToAgent or ForwardToRemote should be called to route
+		the authentication requests.
+
+</span></div><div class="anchor value-res" id="name-ServeAgent">	<input type='checkbox' class="fold" id="ServeAgent-fold-content"><label for="ServeAgent-fold-content"> <a href="../../../../../use/golang.org/x/crypto/ssh/agent..ServeAgent.html">func</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/server.go.html#line-535">ServeAgent</a>(agent <a href="#name-Agent">Agent</a>, c <a href="../../../../io.html">io</a>.<a href="../../../../io.html#name-ReadWriter">ReadWriter</a>) <a href="../../../../builtin.html#name-error">error</a></label><span id='ServeAgent-fold-content-docs' class="fold-docs">
+		ServeAgent serves the agent protocol on the given connection. It
+		returns when an I/O error occurs.
+
+</span></div>	<input type='checkbox' class="showhide" id="unexported-functions-showhide"><i><label for="unexported-functions-showhide" class="show-inline">/* 16 unexporteds ... */</label><label for="unexported-functions-showhide" class="hide-inline">/* 16 unexporteds: */</label></i><div class="anchor value-res hidden" id="name-clientErr"><i>	<span class="nodocs"> <a href="../../../../../use/golang.org/x/crypto/ssh/agent..clientErr*1afa9.html">func</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-240">clientErr</a>(err <a href="../../../../builtin.html#name-error">error</a>) <a href="../../../../builtin.html#name-error">error</a></span></i></div><div class="anchor value-res hidden" id="name-forwardUnixSocket"><i>	<span class="nodocs"> <a href="../../../../../use/golang.org/x/crypto/ssh/agent..forwardUnixSocket*f93d1.html">func</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/forward.go.html#line-81">forwardUnixSocket</a>(channel <a href="../ssh.html">ssh</a>.<a href="../ssh.html#name-Channel">Channel</a>, addr <a href="../../../../builtin.html#name-string">string</a>)</span></i></div><div class="anchor value-res hidden" id="name-marshalKey"><i>	<span class="nodocs"> <a href="../../../../../use/golang.org/x/crypto/ssh/agent..marshalKey*9a183.html">func</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/server.go.html#line-46">marshalKey</a>(k *<a href="#name-Key">Key</a>) []<a href="../../../../builtin.html#name-byte">byte</a></span></i></div><div class="anchor value-res hidden" id="name-parseConstraints"><i>	<span class="nodocs"> <a href="../../../../../use/golang.org/x/crypto/ssh/agent..parseConstraints*b3c38.html">func</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/server.go.html#line-202">parseConstraints</a>(constraints []<a href="../../../../builtin.html#name-byte">byte</a>) (lifetimeSecs <a href="../../../../builtin.html#name-uint32">uint32</a>, confirmBeforeUse <a href="../../../../builtin.html#name-bool">bool</a>, extensions []<a href="#name-ConstraintExtension">ConstraintExtension</a>, err <a href="../../../../builtin.html#name-error">error</a>)</span></i></div><div class="anchor value-res hidden" id="name-parseDSACert"><i>	<span class="nodocs"> <a href="../../../../../use/golang.org/x/crypto/ssh/agent..parseDSACert*8652d.html">func</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/server.go.html#line-414">parseDSACert</a>(req []<a href="../../../../builtin.html#name-byte">byte</a>) (*<a href="#name-AddedKey">AddedKey</a>, <a href="../../../../builtin.html#name-error">error</a>)</span></i></div><div class="anchor value-res hidden" id="name-parseDSAKey"><i>	<span class="nodocs"> <a href="../../../../../use/golang.org/x/crypto/ssh/agent..parseDSAKey*3d8e9.html">func</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/server.go.html#line-279">parseDSAKey</a>(req []<a href="../../../../builtin.html#name-byte">byte</a>) (*<a href="#name-AddedKey">AddedKey</a>, <a href="../../../../builtin.html#name-error">error</a>)</span></i></div><div class="anchor value-res hidden" id="name-parseECDSACert"><i>	<span class="nodocs"> <a href="../../../../../use/golang.org/x/crypto/ssh/agent..parseECDSACert*3abdf.html">func</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/server.go.html#line-456">parseECDSACert</a>(req []<a href="../../../../builtin.html#name-byte">byte</a>) (*<a href="#name-AddedKey">AddedKey</a>, <a href="../../../../builtin.html#name-error">error</a>)</span></i></div><div class="anchor value-res hidden" id="name-parseECDSAKey"><i>	<span class="nodocs"> <a href="../../../../../use/golang.org/x/crypto/ssh/agent..parseECDSAKey*bc0d1.html">func</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/server.go.html#line-349">parseECDSAKey</a>(req []<a href="../../../../builtin.html#name-byte">byte</a>) (*<a href="#name-AddedKey">AddedKey</a>, <a href="../../../../builtin.html#name-error">error</a>)</span></i></div><div class="anchor value-res hidden" id="name-parseEd25519Cert"><i>	<span class="nodocs"> <a href="../../../../../use/golang.org/x/crypto/ssh/agent..parseEd25519Cert*c504d.html">func</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/server.go.html#line-327">parseEd25519Cert</a>(req []<a href="../../../../builtin.html#name-byte">byte</a>) (*<a href="#name-AddedKey">AddedKey</a>, <a href="../../../../builtin.html#name-error">error</a>)</span></i></div><div class="anchor value-res hidden" id="name-parseEd25519Key"><i>	<span class="nodocs"> <a href="../../../../../use/golang.org/x/crypto/ssh/agent..parseEd25519Key*3c993.html">func</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/server.go.html#line-265">parseEd25519Key</a>(req []<a href="../../../../builtin.html#name-byte">byte</a>) (*<a href="#name-AddedKey">AddedKey</a>, <a href="../../../../builtin.html#name-error">error</a>)</span></i></div><div class="anchor value-res hidden" id="name-parseKey"><i>	<span class="nodocs"> <a href="../../../../../use/golang.org/x/crypto/ssh/agent..parseKey*e98cf.html">func</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-280">parseKey</a>(in []<a href="../../../../builtin.html#name-byte">byte</a>) (out *<a href="#name-Key">Key</a>, rest []<a href="../../../../builtin.html#name-byte">byte</a>, err <a href="../../../../builtin.html#name-error">error</a>)</span></i></div><div class="anchor value-res hidden" id="name-parseRSACert"><i>	<span class="nodocs"> <a href="../../../../../use/golang.org/x/crypto/ssh/agent..parseRSACert*d2ecd.html">func</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/server.go.html#line-367">parseRSACert</a>(req []<a href="../../../../builtin.html#name-byte">byte</a>) (*<a href="#name-AddedKey">AddedKey</a>, <a href="../../../../builtin.html#name-error">error</a>)</span></i></div><div class="anchor value-res hidden" id="name-parseRSAKey"><i>	<span class="nodocs"> <a href="../../../../../use/golang.org/x/crypto/ssh/agent..parseRSAKey*814e8.html">func</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/server.go.html#line-240">parseRSAKey</a>(req []<a href="../../../../builtin.html#name-byte">byte</a>) (*<a href="#name-AddedKey">AddedKey</a>, <a href="../../../../builtin.html#name-error">error</a>)</span></i></div><div class="anchor value-res hidden" id="name-setConstraints"><i>	<span class="nodocs"> <a href="../../../../../use/golang.org/x/crypto/ssh/agent..setConstraints*0585d.html">func</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/server.go.html#line-228">setConstraints</a>(key *<a href="#name-AddedKey">AddedKey</a>, constraintBytes []<a href="../../../../builtin.html#name-byte">byte</a>) <a href="../../../../builtin.html#name-error">error</a></span></i></div><div class="anchor value-res hidden" id="name-unmarshal"><i>	<input type='checkbox' class="fold" id="unmarshal-fold-content"><label for="unmarshal-fold-content"> <a href="../../../../../use/golang.org/x/crypto/ssh/agent..unmarshal*fe917.html">func</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-464">unmarshal</a>(packet []<a href="../../../../builtin.html#name-byte">byte</a>) (interface{}, <a href="../../../../builtin.html#name-error">error</a>)</label><span id='unmarshal-fold-content-docs' class="fold-docs">
+		unmarshal parses an agent message in packet, returning the parsed
+		form and the message type of packet.
+
+</span></i></div><div class="anchor value-res hidden" id="name-unmarshalECDSA"><i>	<span class="nodocs"> <a href="../../../../../use/golang.org/x/crypto/ssh/agent..unmarshalECDSA*651fe.html">func</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/server.go.html#line-303">unmarshalECDSA</a>(curveName <a href="../../../../builtin.html#name-string">string</a>, keyBytes []<a href="../../../../builtin.html#name-byte">byte</a>, privScalar *<a href="../../../../math/big.html">big</a>.<a href="../../../../math/big.html#name-Int">Int</a>) (priv *<a href="../../../../crypto/ecdsa.html">ecdsa</a>.<a href="../../../../crypto/ecdsa.html#name-PrivateKey">PrivateKey</a>, err <a href="../../../../builtin.html#name-error">error</a>)</span></i></div></div>
+<div id="exported-variables"><span class="title">Package-Level Variables<span class="title-stat"><i> (total 2, in which 1 are exported)</i></span></span>
+
+<div class="anchor value-res" id="name-ErrExtensionUnsupported">	<input type='checkbox' class="fold" id="ErrExtensionUnsupported-fold-content"><label for="ErrExtensionUnsupported-fold-content">  <a href="../../../../../use/golang.org/x/crypto/ssh/agent..ErrExtensionUnsupported.html">var</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-225">ErrExtensionUnsupported</a> <a href="../../../../builtin.html#name-error">error</a></label><span id='ErrExtensionUnsupported-fold-content-docs' class="fold-docs">
+		ErrExtensionUnsupported indicates that an extension defined in
+		[PROTOCOL.agent] section 4.7 is unsupported by the agent. Specifically this
+		error indicates that the agent returned a standard SSH_AGENT_FAILURE message
+		as the result of a SSH_AGENTC_EXTENSION request. Note that the protocol
+		specification (and therefore this error) does not distinguish between a
+		specific extension being unsupported and extensions being unsupported entirely.
+
+</span></div>	<input type='checkbox' class="showhide" id="unexported-variables-showhide"><i><label for="unexported-variables-showhide" class="show-inline">/* one unexported ... */</label><label for="unexported-variables-showhide" class="hide-inline">/* one unexported: */</label></i><div class="anchor value-res hidden" id="name-errLocked"><i>	<span class="nodocs">  <a href="../../../../../use/golang.org/x/crypto/ssh/agent..errLocked*04a67.html">var</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/keyring.go.html#line-33">errLocked</a> <a href="../../../../builtin.html#name-error">error</a></span></i></div></div>
+<div id="exported-constants"><span class="title">Package-Level Constants<span class="title-stat"><i> (total 28, in which 3 are exported)</i></span></span>
+
+<div class="anchor value-res" id="name-SignatureFlagReserved">	<input type='checkbox' class="fold" id="SignatureFlagReserved-fold-content"><label for="SignatureFlagReserved-fold-content"><a href="../../../../../use/golang.org/x/crypto/ssh/agent..SignatureFlagReserved.html">const</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-39">SignatureFlagReserved</a> <a href="#name-SignatureFlags">SignatureFlags</a> = 1</label><span id='SignatureFlagReserved-fold-content-docs' class="fold-docs">
+		SignatureFlag values as defined in [PROTOCOL.agent] section 5.3.
+
+</span></div><div class="anchor value-res" id="name-SignatureFlagRsaSha256">	<input type='checkbox' class="fold" id="SignatureFlagRsaSha256-fold-content"><label for="SignatureFlagRsaSha256-fold-content"><a href="../../../../../use/golang.org/x/crypto/ssh/agent..SignatureFlagRsaSha256.html">const</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-40">SignatureFlagRsaSha256</a> <a href="#name-SignatureFlags">SignatureFlags</a> = 2</label><span id='SignatureFlagRsaSha256-fold-content-docs' class="fold-docs">
+		SignatureFlag values as defined in [PROTOCOL.agent] section 5.3.
+
+</span></div><div class="anchor value-res" id="name-SignatureFlagRsaSha512">	<input type='checkbox' class="fold" id="SignatureFlagRsaSha512-fold-content"><label for="SignatureFlagRsaSha512-fold-content"><a href="../../../../../use/golang.org/x/crypto/ssh/agent..SignatureFlagRsaSha512.html">const</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-41">SignatureFlagRsaSha512</a> <a href="#name-SignatureFlags">SignatureFlags</a> = 4</label><span id='SignatureFlagRsaSha512-fold-content-docs' class="fold-docs">
+		SignatureFlag values as defined in [PROTOCOL.agent] section 5.3.
+
+</span></div>	<input type='checkbox' class="showhide" id="unexported-constants-showhide"><i><label for="unexported-constants-showhide" class="show-inline">/* 25 unexporteds ... */</label><label for="unexported-constants-showhide" class="hide-inline">/* 25 unexporteds: */</label></i><div class="anchor value-res hidden" id="name-agentAddIDConstrained"><i>	<input type='checkbox' class="fold" id="agentAddIDConstrained-fold-content"><label for="agentAddIDConstrained-fold-content"><a href="../../../../../use/golang.org/x/crypto/ssh/agent..agentAddIDConstrained*de146.html">const</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-134">agentAddIDConstrained</a> = 25</label><span id='agentAddIDConstrained-fold-content-docs' class="fold-docs">
+		See [PROTOCOL.agent], section 3.
+
+</span></i></div><div class="anchor value-res hidden" id="name-agentAddIdentity"><i>	<input type='checkbox' class="fold" id="agentAddIdentity-fold-content"><label for="agentAddIdentity-fold-content"><a href="../../../../../use/golang.org/x/crypto/ssh/agent..agentAddIdentity*53a21.html">const</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-131">agentAddIdentity</a> = 17</label><span id='agentAddIdentity-fold-content-docs' class="fold-docs">
+		3.2 Requests from client to agent for protocol 2 key operations
+
+</span></i></div><div class="anchor value-res hidden" id="name-agentAddSmartcardKey"><i>	<input type='checkbox' class="fold" id="agentAddSmartcardKey-fold-content"><label for="agentAddSmartcardKey-fold-content"><a href="../../../../../use/golang.org/x/crypto/ssh/agent..agentAddSmartcardKey*4688d.html">const</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-137">agentAddSmartcardKey</a> = 20</label><span id='agentAddSmartcardKey-fold-content-docs' class="fold-docs">
+		3.3 Key-type independent requests from client to agent
+
+</span></i></div><div class="anchor value-res hidden" id="name-agentAddSmartcardKeyConstrained"><i>	<input type='checkbox' class="fold" id="agentAddSmartcardKeyConstrained-fold-content"><label for="agentAddSmartcardKeyConstrained-fold-content"><a href="../../../../../use/golang.org/x/crypto/ssh/agent..agentAddSmartcardKeyConstrained*83f41.html">const</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-141">agentAddSmartcardKeyConstrained</a> = 26</label><span id='agentAddSmartcardKeyConstrained-fold-content-docs' class="fold-docs">
+		See [PROTOCOL.agent], section 3.
+
+</span></i></div><div class="anchor value-res hidden" id="name-agentConstrainConfirm"><i>	<input type='checkbox' class="fold" id="agentConstrainConfirm-fold-content"><label for="agentConstrainConfirm-fold-content"><a href="../../../../../use/golang.org/x/crypto/ssh/agent..agentConstrainConfirm*6b552.html">const</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-145">agentConstrainConfirm</a> = 2</label><span id='agentConstrainConfirm-fold-content-docs' class="fold-docs">
+		See [PROTOCOL.agent], section 3.
+
+</span></i></div><div class="anchor value-res hidden" id="name-agentConstrainExtension"><i>	<input type='checkbox' class="fold" id="agentConstrainExtension-fold-content"><label for="agentConstrainExtension-fold-content"><a href="../../../../../use/golang.org/x/crypto/ssh/agent..agentConstrainExtension*70c6b.html">const</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-146">agentConstrainExtension</a> = 3</label><span id='agentConstrainExtension-fold-content-docs' class="fold-docs">
+		See [PROTOCOL.agent], section 3.
+
+</span></i></div><div class="anchor value-res hidden" id="name-agentConstrainLifetime"><i>	<input type='checkbox' class="fold" id="agentConstrainLifetime-fold-content"><label for="agentConstrainLifetime-fold-content"><a href="../../../../../use/golang.org/x/crypto/ssh/agent..agentConstrainLifetime*b26cf.html">const</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-144">agentConstrainLifetime</a> = 1</label><span id='agentConstrainLifetime-fold-content-docs' class="fold-docs">
+		3.7 Key constraint identifiers
+
+</span></i></div><div class="anchor value-res hidden" id="name-agentExtension"><i>	<input type='checkbox' class="fold" id="agentExtension-fold-content"><label for="agentExtension-fold-content"><a href="../../../../../use/golang.org/x/crypto/ssh/agent..agentExtension*39d5c.html">const</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-216">agentExtension</a> = 27</label><span id='agentExtension-fold-content-docs' class="fold-docs">
+		See [PROTOCOL.agent], section 4.7
+
+</span></i></div><div class="anchor value-res hidden" id="name-agentExtensionFailure"><i>	<span class="nodocs"><a href="../../../../../use/golang.org/x/crypto/ssh/agent..agentExtensionFailure*da2ee.html">const</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-217">agentExtensionFailure</a> = 28</span></i></div><div class="anchor value-res hidden" id="name-agentFailure"><i>	<input type='checkbox' class="fold" id="agentFailure-fold-content"><label for="agentFailure-fold-content"><a href="../../../../../use/golang.org/x/crypto/ssh/agent..agentFailure*9ea68.html">const</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-158">agentFailure</a> = 5</label><span id='agentFailure-fold-content-docs' class="fold-docs">
+		3.4 Generic replies from agent to client
+
+</span></i></div><div class="anchor value-res hidden" id="name-agentIdentitiesAnswer"><i>	<input type='checkbox' class="fold" id="agentIdentitiesAnswer-fold-content"><label for="agentIdentitiesAnswer-fold-content"><a href="../../../../../use/golang.org/x/crypto/ssh/agent..agentIdentitiesAnswer*1f410.html">const</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-172">agentIdentitiesAnswer</a> = 12</label><span id='agentIdentitiesAnswer-fold-content-docs' class="fold-docs">
+		See [PROTOCOL.agent], section 2.5.2.
+
+</span></i></div><div class="anchor value-res hidden" id="name-agentLock"><i>	<input type='checkbox' class="fold" id="agentLock-fold-content"><label for="agentLock-fold-content"><a href="../../../../../use/golang.org/x/crypto/ssh/agent..agentLock*948d7.html">const</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-139">agentLock</a> = 22</label><span id='agentLock-fold-content-docs' class="fold-docs">
+		See [PROTOCOL.agent], section 3.
+
+</span></i></div><div class="anchor value-res hidden" id="name-agentRemoveAllIdentities"><i>	<input type='checkbox' class="fold" id="agentRemoveAllIdentities-fold-content"><label for="agentRemoveAllIdentities-fold-content"><a href="../../../../../use/golang.org/x/crypto/ssh/agent..agentRemoveAllIdentities*0e56d.html">const</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-133">agentRemoveAllIdentities</a> = 19</label><span id='agentRemoveAllIdentities-fold-content-docs' class="fold-docs">
+		See [PROTOCOL.agent], section 3.
+
+</span></i></div><div class="anchor value-res hidden" id="name-agentRemoveAllV1Identities"><i>	<input type='checkbox' class="fold" id="agentRemoveAllV1Identities-fold-content"><label for="agentRemoveAllV1Identities-fold-content"><a href="../../../../../use/golang.org/x/crypto/ssh/agent..agentRemoveAllV1Identities*84374.html">const</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-128">agentRemoveAllV1Identities</a> = 9</label><span id='agentRemoveAllV1Identities-fold-content-docs' class="fold-docs">
+		See [PROTOCOL.agent], section 3.
+
+</span></i></div><div class="anchor value-res hidden" id="name-agentRemoveIdentity"><i>	<input type='checkbox' class="fold" id="agentRemoveIdentity-fold-content"><label for="agentRemoveIdentity-fold-content"><a href="../../../../../use/golang.org/x/crypto/ssh/agent..agentRemoveIdentity*53062.html">const</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-132">agentRemoveIdentity</a> = 18</label><span id='agentRemoveIdentity-fold-content-docs' class="fold-docs">
+		See [PROTOCOL.agent], section 3.
+
+</span></i></div><div class="anchor value-res hidden" id="name-agentRemoveSmartcardKey"><i>	<input type='checkbox' class="fold" id="agentRemoveSmartcardKey-fold-content"><label for="agentRemoveSmartcardKey-fold-content"><a href="../../../../../use/golang.org/x/crypto/ssh/agent..agentRemoveSmartcardKey*5f692.html">const</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-138">agentRemoveSmartcardKey</a> = 21</label><span id='agentRemoveSmartcardKey-fold-content-docs' class="fold-docs">
+		See [PROTOCOL.agent], section 3.
+
+</span></i></div><div class="anchor value-res hidden" id="name-agentRequestIdentities"><i>	<input type='checkbox' class="fold" id="agentRequestIdentities-fold-content"><label for="agentRequestIdentities-fold-content"><a href="../../../../../use/golang.org/x/crypto/ssh/agent..agentRequestIdentities*8eb54.html">const</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-167">agentRequestIdentities</a> = 11</label><span id='agentRequestIdentities-fold-content-docs' class="fold-docs">
+		See [PROTOCOL.agent], section 2.5.2.
+
+</span></i></div><div class="anchor value-res hidden" id="name-agentRequestV1Identities"><i>	<input type='checkbox' class="fold" id="agentRequestV1Identities-fold-content"><label for="agentRequestV1Identities-fold-content"><a href="../../../../../use/golang.org/x/crypto/ssh/agent..agentRequestV1Identities*e9baa.html">const</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-127">agentRequestV1Identities</a> = 1</label><span id='agentRequestV1Identities-fold-content-docs' class="fold-docs">
+		See [PROTOCOL.agent], section 3.
+
+</span></i></div><div class="anchor value-res hidden" id="name-agentSignRequest"><i>	<input type='checkbox' class="fold" id="agentSignRequest-fold-content"><label for="agentSignRequest-fold-content"><a href="../../../../../use/golang.org/x/crypto/ssh/agent..agentSignRequest*e8720.html">const</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-180">agentSignRequest</a> = 13</label><span id='agentSignRequest-fold-content-docs' class="fold-docs">
+		See [PROTOCOL.agent], section 2.6.2.
+
+</span></i></div><div class="anchor value-res hidden" id="name-agentSignResponse"><i>	<input type='checkbox' class="fold" id="agentSignResponse-fold-content"><label for="agentSignResponse-fold-content"><a href="../../../../../use/golang.org/x/crypto/ssh/agent..agentSignResponse*96c9f.html">const</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-191">agentSignResponse</a> = 14</label><span id='agentSignResponse-fold-content-docs' class="fold-docs">
+		3.6 Replies from agent to client for protocol 2 key operations
+
+</span></i></div><div class="anchor value-res hidden" id="name-agentSuccess"><i>	<span class="nodocs"><a href="../../../../../use/golang.org/x/crypto/ssh/agent..agentSuccess*565e5.html">const</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-162">agentSuccess</a> = 6</span></i></div><div class="anchor value-res hidden" id="name-agentUnlock"><i>	<input type='checkbox' class="fold" id="agentUnlock-fold-content"><label for="agentUnlock-fold-content"><a href="../../../../../use/golang.org/x/crypto/ssh/agent..agentUnlock*a8c4a.html">const</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-140">agentUnlock</a> = 23</label><span id='agentUnlock-fold-content-docs' class="fold-docs">
+		See [PROTOCOL.agent], section 3.
+
+</span></i></div><div class="anchor value-res hidden" id="name-agentV1IdentitiesAnswer"><i>	<input type='checkbox' class="fold" id="agentV1IdentitiesAnswer-fold-content"><label for="agentV1IdentitiesAnswer-fold-content"><a href="../../../../../use/golang.org/x/crypto/ssh/agent..agentV1IdentitiesAnswer*42eb0.html">const</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/server.go.html#line-58">agentV1IdentitiesAnswer</a> = 2</label><span id='agentV1IdentitiesAnswer-fold-content-docs' class="fold-docs">
+		See [PROTOCOL.agent], section 2.5.1.
+
+</span></i></div><div class="anchor value-res hidden" id="name-channelType"><i>	<span class="nodocs"><a href="../../../../../use/golang.org/x/crypto/ssh/agent..channelType*e8925.html">const</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/forward.go.html#line-53">channelType</a> = "auth-agent@openssh.com"</span></i></div><div class="anchor value-res hidden" id="name-maxAgentResponseBytes"><i>	<input type='checkbox' class="fold" id="maxAgentResponseBytes-fold-content"><label for="maxAgentResponseBytes-fold-content"><a href="../../../../../use/golang.org/x/crypto/ssh/agent..maxAgentResponseBytes*3cf31.html">const</a> <a href="../../../../../src/golang.org/x/crypto/ssh/agent/client.go.html#line-151">maxAgentResponseBytes</a> = 16777216</label><span id='maxAgentResponseBytes-fold-content-docs' class="fold-docs">
+		maxAgentResponseBytes is the maximum agent reply size that is accepted. This
+		is a sanity check, not a limit in the spec.
+
+</span></i></div></div></code></pre><pre id="footer">
+<table><tr><td><img src="../../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

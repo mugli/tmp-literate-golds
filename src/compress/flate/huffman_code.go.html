@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: huffman_code.go in package compress/flate</title>
+<link href="../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	huffman_code.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../pkg/compress/flate.html">compress/flate</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16],
+input[id=r17]:checked ~pre label[for=r17],
+input[id=r18]:checked ~pre label[for=r18],
+input[id=r19]:checked ~pre label[for=r19],
+input[id=r20]:checked ~pre label[for=r20],
+input[id=r21]:checked ~pre label[for=r21],
+input[id=r22]:checked ~pre label[for=r22],
+input[id=r23]:checked ~pre label[for=r23],
+input[id=r24]:checked ~pre label[for=r24],
+input[id=r25]:checked ~pre label[for=r25],
+input[id=r26]:checked ~pre label[for=r26],
+input[id=r27]:checked ~pre label[for=r27],
+input[id=r28]:checked ~pre label[for=r28],
+input[id=r29]:checked ~pre label[for=r29],
+input[id=r30]:checked ~pre label[for=r30],
+input[id=r31]:checked ~pre label[for=r31],
+input[id=r32]:checked ~pre label[for=r32],
+input[id=r33]:checked ~pre label[for=r33],
+input[id=r34]:checked ~pre label[for=r34],
+input[id=r35]:checked ~pre label[for=r35],
+input[id=r36]:checked ~pre label[for=r36],
+input[id=r37]:checked ~pre label[for=r37],
+input[id=r38]:checked ~pre label[for=r38],
+input[id=r39]:checked ~pre label[for=r39],
+input[id=r40]:checked ~pre label[for=r40],
+input[id=r41]:checked ~pre label[for=r41],
+input[id=r42]:checked ~pre label[for=r42],
+input[id=r43]:checked ~pre label[for=r43],
+input[id=r44]:checked ~pre label[for=r44],
+input[id=r45]:checked ~pre label[for=r45],
+input[id=r46]:checked ~pre label[for=r46],
+input[id=r47]:checked ~pre label[for=r47],
+input[id=r48]:checked ~pre label[for=r48],
+input[id=r49]:checked ~pre label[for=r49],
+input[id=r50]:checked ~pre label[for=r50],
+input[id=r51]:checked ~pre label[for=r51],
+input[id=r52]:checked ~pre label[for=r52],
+input[id=r53]:checked ~pre label[for=r53],
+input[id=r54]:checked ~pre label[for=r54],
+input[id=r55]:checked ~pre label[for=r55],
+input[id=r56]:checked ~pre label[for=r56],
+input[id=r57]:checked ~pre label[for=r57],
+input[id=r58]:checked ~pre label[for=r58],
+input[id=r59]:checked ~pre label[for=r59],
+input[id=r60]:checked ~pre label[for=r60],
+input[id=r61]:checked ~pre label[for=r61],
+input[id=r62]:checked ~pre label[for=r62],
+input[id=r63]:checked ~pre label[for=r63],
+input[id=r64]:checked ~pre label[for=r64],
+input[id=r65]:checked ~pre label[for=r65],
+input[id=r66]:checked ~pre label[for=r66],
+input[id=r67]:checked ~pre label[for=r67],
+input[id=r68]:checked ~pre label[for=r68],
+input[id=r69]:checked ~pre label[for=r69],
+input[id=r70]:checked ~pre label[for=r70],
+input[id=r71]:checked ~pre label[for=r71],
+input[id=r72]:checked ~pre label[for=r72],
+input[id=r73]:checked ~pre label[for=r73],
+input[id=r74]:checked ~pre label[for=r74],
+input[id=r75]:checked ~pre label[for=r75],
+input[id=r76]:checked ~pre label[for=r76],
+input[id=r77]:checked ~pre label[for=r77],
+input[id=r78]:checked ~pre label[for=r78],
+input[id=r79]:checked ~pre label[for=r79],
+input[id=r80]:checked ~pre label[for=r80],
+input[id=r81]:checked ~pre label[for=r81],
+input[id=r82]:checked ~pre label[for=r82],
+input[id=r83]:checked ~pre label[for=r83],
+input[id=r84]:checked ~pre label[for=r84],
+input[id=r85]:checked ~pre label[for=r85],
+input[id=r86]:checked ~pre label[for=r86],
+input[id=r87]:checked ~pre label[for=r87],
+input[id=r88]:checked ~pre label[for=r88]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1,
+input[id=i2]:checked ~pre .i2
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="r17" type="radio" name="g"/>
+<input id="r18" type="radio" name="g"/>
+<input id="r19" type="radio" name="g"/>
+<input id="r20" type="radio" name="g"/>
+<input id="r21" type="radio" name="g"/>
+<input id="r22" type="radio" name="g"/>
+<input id="r23" type="radio" name="g"/>
+<input id="r24" type="radio" name="g"/>
+<input id="r25" type="radio" name="g"/>
+<input id="r26" type="radio" name="g"/>
+<input id="r27" type="radio" name="g"/>
+<input id="r28" type="radio" name="g"/>
+<input id="r29" type="radio" name="g"/>
+<input id="r30" type="radio" name="g"/>
+<input id="r31" type="radio" name="g"/>
+<input id="r32" type="radio" name="g"/>
+<input id="r33" type="radio" name="g"/>
+<input id="r34" type="radio" name="g"/>
+<input id="r35" type="radio" name="g"/>
+<input id="r36" type="radio" name="g"/>
+<input id="r37" type="radio" name="g"/>
+<input id="r38" type="radio" name="g"/>
+<input id="r39" type="radio" name="g"/>
+<input id="r40" type="radio" name="g"/>
+<input id="r41" type="radio" name="g"/>
+<input id="r42" type="radio" name="g"/>
+<input id="r43" type="radio" name="g"/>
+<input id="r44" type="radio" name="g"/>
+<input id="r45" type="radio" name="g"/>
+<input id="r46" type="radio" name="g"/>
+<input id="r47" type="radio" name="g"/>
+<input id="r48" type="radio" name="g"/>
+<input id="r49" type="radio" name="g"/>
+<input id="r50" type="radio" name="g"/>
+<input id="r51" type="radio" name="g"/>
+<input id="r52" type="radio" name="g"/>
+<input id="r53" type="radio" name="g"/>
+<input id="r54" type="radio" name="g"/>
+<input id="r55" type="radio" name="g"/>
+<input id="r56" type="radio" name="g"/>
+<input id="r57" type="radio" name="g"/>
+<input id="r58" type="radio" name="g"/>
+<input id="r59" type="radio" name="g"/>
+<input id="r60" type="radio" name="g"/>
+<input id="r61" type="radio" name="g"/>
+<input id="r62" type="radio" name="g"/>
+<input id="r63" type="radio" name="g"/>
+<input id="r64" type="radio" name="g"/>
+<input id="r65" type="radio" name="g"/>
+<input id="r66" type="radio" name="g"/>
+<input id="r67" type="radio" name="g"/>
+<input id="r68" type="radio" name="g"/>
+<input id="r69" type="radio" name="g"/>
+<input id="r70" type="radio" name="g"/>
+<input id="r71" type="radio" name="g"/>
+<input id="r72" type="radio" name="g"/>
+<input id="r73" type="radio" name="g"/>
+<input id="r74" type="radio" name="g"/>
+<input id="r75" type="radio" name="g"/>
+<input id="r76" type="radio" name="g"/>
+<input id="r77" type="radio" name="g"/>
+<input id="r78" type="radio" name="g"/>
+<input id="r79" type="radio" name="g"/>
+<input id="r80" type="radio" name="g"/>
+<input id="r81" type="radio" name="g"/>
+<input id="r82" type="radio" name="g"/>
+<input id="r83" type="radio" name="g"/>
+<input id="r84" type="radio" name="g"/>
+<input id="r85" type="radio" name="g"/>
+<input id="r86" type="radio" name="g"/>
+<input id="r87" type="radio" name="g"/>
+<input id="r88" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<input id="i2" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2009 The Go Authors. All rights reserved.</span><span class="comment"> Use of this source code is governed by a BSD-style</span><span class="comment"> license that can be found in the LICENSE file.</span></div>
+<div class="code"><pre><code>
+<span class="keyword">package</span> flate
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"math"</span></label>
+	<label for="i1"><span class="lit-string i1">"math/bits"</span></label>
+	<label for="i2"><span class="lit-string i2">"sort"</span></label>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> hcode is a huffman code with a bit code and bit length.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../pkg/compress/flate.html#name-hcode" class="ident">hcode</a> <span class="keyword">struct</span> {
+	<a href="../../../use/compress/flate..hcode*75f9f.code*5694d.html" class="ident">code</a>, <a href="../../../use/compress/flate..hcode*75f9f.len*71fa9.html" class="ident">len</a> <a href="../../../pkg/builtin.html#name-uint16" class="ident">uint16</a>
+}
+
+<span class="keyword">type</span> <a href="../../../pkg/compress/flate.html#name-huffmanEncoder" class="ident">huffmanEncoder</a> <span class="keyword">struct</span> {
+	<a href="../../../use/compress/flate..huffmanEncoder*87c52.codes*64a79.html" class="ident">codes</a>     []<a href="#line-14" class="ident">hcode</a>
+	<a href="../../../use/compress/flate..huffmanEncoder*87c52.freqcache*09127.html" class="ident">freqcache</a> []<a href="#line-26" class="ident">literalNode</a>
+	<a href="../../../use/compress/flate..huffmanEncoder*87c52.bitCount*5a12f.html" class="ident">bitCount</a>  [<span class="lit-number">17</span>]<a href="../../../pkg/builtin.html#name-int32" class="ident">int32</a>
+	<a href="../../../use/compress/flate..huffmanEncoder*87c52.lns*34084.html" class="ident">lns</a>       <a href="#line-314" class="ident">byLiteral</a> <span class="comment">// stored to avoid repeated allocation in generate</span>
+	<a href="../../../use/compress/flate..huffmanEncoder*87c52.lfs*c0e2e.html" class="ident">lfs</a>       <a href="#line-329" class="ident">byFreq</a>    <span class="comment">// stored to avoid repeated allocation in generate</span>
+}
+
+<span class="keyword">type</span> <a href="../../../pkg/compress/flate.html#name-literalNode" class="ident">literalNode</a> <span class="keyword">struct</span> {
+	<a href="../../../use/compress/flate..literalNode*389be.literal*829f8.html" class="ident">literal</a> <a href="../../../pkg/builtin.html#name-uint16" class="ident">uint16</a>
+	<a href="../../../use/compress/flate..literalNode*389be.freq*d762b.html" class="ident">freq</a>    <a href="../../../pkg/builtin.html#name-int32" class="ident">int32</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> A levelInfo describes the state of the constructed tree for a given depth.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Our level.  for better printing</span></div>
+<div class="code"><pre><code>	<a href="../../../use/compress/flate..levelInfo*2a159.level*00817.html" class="ident">level</a> <a href="../../../pkg/builtin.html#name-int32" class="ident">int32</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> The frequency of the last node at this level</span></div>
+<div class="code"><pre><code>	<a href="../../../use/compress/flate..levelInfo*2a159.lastFreq*45906.html" class="ident">lastFreq</a> <a href="../../../pkg/builtin.html#name-int32" class="ident">int32</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> The frequency of the next character to add to this level</span></div>
+<div class="code"><pre><code>	<a href="../../../use/compress/flate..levelInfo*2a159.nextCharFreq*00e92.html" class="ident">nextCharFreq</a> <a href="../../../pkg/builtin.html#name-int32" class="ident">int32</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> The frequency of the next pair (from level below) to add to this level.</span><span class="comment">	 Only valid if the "needed" value of the next lower level is 0.</span></div>
+<div class="code"><pre><code>	<a href="../../../use/compress/flate..levelInfo*2a159.nextPairFreq*9551a.html" class="ident">nextPairFreq</a> <a href="../../../pkg/builtin.html#name-int32" class="ident">int32</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> The number of chains remaining to generate for this level before moving</span><span class="comment">	 up to the next level</span></div>
+<div class="code"><pre><code>	<a href="../../../use/compress/flate..levelInfo*2a159.needed*c0cea.html" class="ident">needed</a> <a href="../../../pkg/builtin.html#name-int32" class="ident">int32</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> set sets the code and length of an hcode.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r0" class="ident">h</label> *<a href="#line-14" class="ident">hcode</a>) <label for="r1" class="ident"><a href="../../../use/compress/flate..hcode*75f9f.set*6ee0e.html" class="ident">set</a></label>(<label for="r2" class="ident">code</label> <a href="../../../pkg/builtin.html#name-uint16" class="ident">uint16</a>, <label for="r3" class="ident">length</label> <a href="../../../pkg/builtin.html#name-uint16" class="ident">uint16</a>) {
+	<label for="r0" class="ident">h</label>.<a href="#line-15" class="ident">len</a> = <label for="r3" class="ident">length</label>
+	<label for="r0" class="ident">h</label>.<a href="#line-15" class="ident">code</a> = <label for="r2" class="ident">code</label>
+}
+
+<span class="keyword">func</span> <label for="r4" class="ident"><a href="../../../pkg/compress/flate.html#name-maxNode" class="ident">maxNode</a></label>() <a href="#line-26" class="ident">literalNode</a> { <span class="keyword">return</span> <a href="#line-26" class="ident">literalNode</a>{<a href="../../../pkg/math.html" class="ident i0">math</a>.<a href="../../math/const.go.html#line-49" class="ident">MaxUint16</a>, <a href="../../../pkg/math.html" class="ident i0">math</a>.<a href="../../math/const.go.html#line-44" class="ident">MaxInt32</a>} }
+
+<span class="keyword">func</span> <label for="r5" class="ident"><a href="../../../pkg/compress/flate.html#name-newHuffmanEncoder" class="ident">newHuffmanEncoder</a></label>(<label for="r6" class="ident">size</label> <a href="../../../pkg/builtin.html#name-int" class="ident">int</a>) *<a href="#line-18" class="ident">huffmanEncoder</a> {
+	<span class="keyword">return</span> &amp;<a href="#line-18" class="ident">huffmanEncoder</a>{<a href="#line-19" class="ident">codes</a>: <a href="../../../pkg/builtin.html#name-make" class="ident">make</a>([]<a href="#line-14" class="ident">hcode</a>, <label for="r6" class="ident">size</label>)}
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Generates a HuffmanCode corresponding to the fixed literal table</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r7" class="ident"><a href="../../../pkg/compress/flate.html#name-generateFixedLiteralEncoding" class="ident">generateFixedLiteralEncoding</a></label>() *<a href="#line-18" class="ident">huffmanEncoder</a> {
+	<label for="r8" class="ident">h</label> := <a href="#line-59" class="ident">newHuffmanEncoder</a>(<a href="inflate.go.html#line-23" class="ident">maxNumLit</a>)
+	<label for="r9" class="ident">codes</label> := <label for="r8" class="ident">h</label>.<a href="#line-19" class="ident">codes</a>
+	<span class="keyword">var</span> <label for="r10" class="ident">ch</label> <a href="../../../pkg/builtin.html#name-uint16" class="ident">uint16</a>
+	<span class="keyword">for</span> <label for="r10" class="ident">ch</label> = <span class="lit-number">0</span>; <label for="r10" class="ident">ch</label> &lt; <a href="inflate.go.html#line-23" class="ident">maxNumLit</a>; <label for="r10" class="ident">ch</label>++ {
+		<span class="keyword">var</span> <label for="r11" class="ident">bits</label> <a href="../../../pkg/builtin.html#name-uint16" class="ident">uint16</a>
+		<span class="keyword">var</span> <label for="r12" class="ident">size</label> <a href="../../../pkg/builtin.html#name-uint16" class="ident">uint16</a>
+		<span class="keyword">switch</span> {
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> size 8, 000110000  .. 10111111</span></div>
+<div class="code"><pre><code>			<label for="r11" class="ident">bits</label> = <label for="r10" class="ident">ch</label> + <span class="lit-number">48</span>
+			<label for="r12" class="ident">size</label> = <span class="lit-number">8</span>
+			<span class="keyword">break</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> size 9, 110010000 .. 111111111</span></div>
+<div class="code"><pre><code>			<label for="r11" class="ident">bits</label> = <label for="r10" class="ident">ch</label> + <span class="lit-number">400</span> - <span class="lit-number">144</span>
+			<label for="r12" class="ident">size</label> = <span class="lit-number">9</span>
+			<span class="keyword">break</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> size 7, 0000000 .. 0010111</span></div>
+<div class="code"><pre><code>			<label for="r11" class="ident">bits</label> = <label for="r10" class="ident">ch</label> - <span class="lit-number">256</span>
+			<label for="r12" class="ident">size</label> = <span class="lit-number">7</span>
+			<span class="keyword">break</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> size 8, 11000000 .. 11000111</span></div>
+<div class="code"><pre><code>			<label for="r11" class="ident">bits</label> = <label for="r10" class="ident">ch</label> + <span class="lit-number">192</span> - <span class="lit-number">280</span>
+			<label for="r12" class="ident">size</label> = <span class="lit-number">8</span>
+		}
+		<label for="r9" class="ident">codes</label>[<label for="r10" class="ident">ch</label>] = <a href="#line-14" class="ident">hcode</a>{<a href="#line-15" class="ident">code</a>: <a href="#line-347" class="ident">reverseBits</a>(<label for="r11" class="ident">bits</label>, <a href="../../../pkg/builtin.html#name-byte" class="ident">byte</a>(<label for="r12" class="ident">size</label>)), <a href="#line-15" class="ident">len</a>: <label for="r12" class="ident">size</label>}
+	}
+	<span class="keyword">return</span> <label for="r8" class="ident">h</label>
+}
+
+<span class="keyword">func</span> <label for="r13" class="ident"><a href="../../../pkg/compress/flate.html#name-generateFixedOffsetEncoding" class="ident">generateFixedOffsetEncoding</a></label>() *<a href="#line-18" class="ident">huffmanEncoder</a> {
+	<label for="r14" class="ident">h</label> := <a href="#line-59" class="ident">newHuffmanEncoder</a>(<span class="lit-number">30</span>)
+	<label for="r15" class="ident">codes</label> := <label for="r14" class="ident">h</label>.<a href="#line-19" class="ident">codes</a>
+	<span class="keyword">for</span> <label for="r16" class="ident">ch</label> := <span class="keyword">range</span> <label for="r15" class="ident">codes</label> {
+		<label for="r15" class="ident">codes</label>[<label for="r16" class="ident">ch</label>] = <a href="#line-14" class="ident">hcode</a>{<a href="#line-15" class="ident">code</a>: <a href="#line-347" class="ident">reverseBits</a>(<a href="../../../pkg/builtin.html#name-uint16" class="ident">uint16</a>(<label for="r16" class="ident">ch</label>), <span class="lit-number">5</span>), <a href="#line-15" class="ident">len</a>: <span class="lit-number">5</span>}
+	}
+	<span class="keyword">return</span> <label for="r14" class="ident">h</label>
+}
+
+<span class="keyword">var</span> <a href="../../../pkg/compress/flate.html#name-fixedLiteralEncoding" class="ident">fixedLiteralEncoding</a> *<a href="#line-18" class="ident">huffmanEncoder</a> = <a href="#line-64" class="ident">generateFixedLiteralEncoding</a>()
+<span class="keyword">var</span> <a href="../../../pkg/compress/flate.html#name-fixedOffsetEncoding" class="ident">fixedOffsetEncoding</a> *<a href="#line-18" class="ident">huffmanEncoder</a> = <a href="#line-97" class="ident">generateFixedOffsetEncoding</a>()
+
+<span class="keyword">func</span> (<label for="r17" class="ident">h</label> *<a href="#line-18" class="ident">huffmanEncoder</a>) <label for="r18" class="ident"><a href="../../../use/compress/flate..huffmanEncoder*87c52.bitLength*93c4b.html" class="ident">bitLength</a></label>(<label for="r19" class="ident">freq</label> []<a href="../../../pkg/builtin.html#name-int32" class="ident">int32</a>) <a href="../../../pkg/builtin.html#name-int" class="ident">int</a> {
+	<span class="keyword">var</span> <label for="r20" class="ident">total</label> <a href="../../../pkg/builtin.html#name-int" class="ident">int</a>
+	<span class="keyword">for</span> <label for="r21" class="ident">i</label>, <label for="r22" class="ident">f</label> := <span class="keyword">range</span> <label for="r19" class="ident">freq</label> {
+		<span class="keyword">if</span> <label for="r22" class="ident">f</label> != <span class="lit-number">0</span> {
+			<label for="r20" class="ident">total</label> += <a href="../../../pkg/builtin.html#name-int" class="ident">int</a>(<label for="r22" class="ident">f</label>) * <a href="../../../pkg/builtin.html#name-int" class="ident">int</a>(<label for="r17" class="ident">h</label>.<a href="#line-19" class="ident">codes</a>[<label for="r21" class="ident">i</label>].<a href="#line-15" class="ident">len</a>)
+		}
+	}
+	<span class="keyword">return</span> <label for="r20" class="ident">total</label>
+}
+
+<span class="keyword">const</span> <a href="../../../pkg/compress/flate.html#name-maxBitsLimit" class="ident">maxBitsLimit</a> = <span class="lit-number">16</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Return the number of literals assigned to each bit size in the Huffman encoding</span><span class="comment"></span><span class="comment"> This method is only called when list.length &gt;= 3</span><span class="comment"> The cases of 0, 1, and 2 literals are handled by special case code.</span><span class="comment"></span><span class="comment"> list  An array of the literals with non-zero frequencies</span><span class="comment">             and their associated frequencies. The array is in order of increasing</span><span class="comment">             frequency, and has as its last element a special element with frequency</span><span class="comment">             MaxInt32</span><span class="comment"> maxBits     The maximum number of bits that should be used to encode any literal.</span><span class="comment">             Must be less than 16.</span><span class="comment"> return      An integer array in which array[i] indicates the number of literals</span><span class="comment">             that should be encoded in i bits.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r23" class="ident">h</label> *<a href="#line-18" class="ident">huffmanEncoder</a>) <label for="r24" class="ident"><a href="../../../use/compress/flate..huffmanEncoder*87c52.bitCounts*4de81.html" class="ident">bitCounts</a></label>(<label for="r25" class="ident">list</label> []<a href="#line-26" class="ident">literalNode</a>, <label for="r26" class="ident">maxBits</label> <a href="../../../pkg/builtin.html#name-int32" class="ident">int32</a>) []<a href="../../../pkg/builtin.html#name-int32" class="ident">int32</a> {
+	<span class="keyword">if</span> <label for="r26" class="ident">maxBits</label> &gt;= <a href="#line-119" class="ident">maxBitsLimit</a> {
+		<a href="../../../pkg/builtin.html#name-panic" class="ident">panic</a>(<span class="lit-string">"flate: maxBits too large"</span>)
+	}
+	<label for="r27" class="ident">n</label> := <a href="../../../pkg/builtin.html#name-int32" class="ident">int32</a>(<a href="../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r25" class="ident">list</label>))
+	<label for="r25" class="ident">list</label> = <label for="r25" class="ident">list</label>[<span class="lit-number">0</span> : <label for="r27" class="ident">n</label>+<span class="lit-number">1</span>]
+	<label for="r25" class="ident">list</label>[<label for="r27" class="ident">n</label>] = <a href="#line-57" class="ident">maxNode</a>()
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> The tree can't have greater depth than n - 1, no matter what. This</span><span class="comment">	 saves a little bit of work in some small cases</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> <label for="r26" class="ident">maxBits</label> &gt; <label for="r27" class="ident">n</label>-<span class="lit-number">1</span> {
+		<label for="r26" class="ident">maxBits</label> = <label for="r27" class="ident">n</label> - <span class="lit-number">1</span>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Create information about each of the levels.</span><span class="comment">	 A bogus "Level 0" whose sole purpose is so that</span><span class="comment">	 level1.prev.needed==0.  This makes level1.nextPairFreq</span><span class="comment">	 be a legitimate value that never gets chosen.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> leafCounts[i] counts the number of literals at the left</span><span class="comment">	 of ancestors of the rightmost node at level i.</span><span class="comment">	 leafCounts[i][j] is the number of literals at the left</span><span class="comment">	 of the level j ancestor.</span></div>
+<div class="code"><pre><code>	<span class="keyword">var</span> <label for="r29" class="ident">leafCounts</label> [<a href="#line-119" class="ident">maxBitsLimit</a>][<a href="#line-119" class="ident">maxBitsLimit</a>]<a href="../../../pkg/builtin.html#name-int32" class="ident">int32</a>
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> For every level, the first two items are the first two characters.</span><span class="comment">		 We initialize the levels as if we had already figured this out.</span></div>
+<div class="code"><pre><code>		<label for="r28" class="ident">levels</label>[<label for="r30" class="ident">level</label>] = <a href="#line-32" class="ident">levelInfo</a>{
+			<a href="#line-34" class="ident">level</a>:        <label for="r30" class="ident">level</label>,
+			<a href="#line-37" class="ident">lastFreq</a>:     <label for="r25" class="ident">list</label>[<span class="lit-number">1</span>].<a href="#line-28" class="ident">freq</a>,
+			<a href="#line-40" class="ident">nextCharFreq</a>: <label for="r25" class="ident">list</label>[<span class="lit-number">2</span>].<a href="#line-28" class="ident">freq</a>,
+			<a href="#line-44" class="ident">nextPairFreq</a>: <label for="r25" class="ident">list</label>[<span class="lit-number">0</span>].<a href="#line-28" class="ident">freq</a> + <label for="r25" class="ident">list</label>[<span class="lit-number">1</span>].<a href="#line-28" class="ident">freq</a>,
+		}
+		<label for="r29" class="ident">leafCounts</label>[<label for="r30" class="ident">level</label>][<label for="r30" class="ident">level</label>] = <span class="lit-number">2</span>
+		<span class="keyword">if</span> <label for="r30" class="ident">level</label> == <span class="lit-number">1</span> {
+			<label for="r28" class="ident">levels</label>[<label for="r30" class="ident">level</label>].<a href="#line-44" class="ident">nextPairFreq</a> = <a href="../../../pkg/math.html" class="ident i0">math</a>.<a href="../../math/const.go.html#line-44" class="ident">MaxInt32</a>
+		}
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> We need a total of 2*n - 2 items at top level and have already generated 2.</span></div>
+<div class="code"><pre><code>	<label for="r28" class="ident">levels</label>[<label for="r26" class="ident">maxBits</label>].<a href="#line-48" class="ident">needed</a> = <span class="lit-number">2</span>*<label for="r27" class="ident">n</label> - <span class="lit-number">4</span>
+
+	<label for="r31" class="ident">level</label> := <label for="r26" class="ident">maxBits</label>
+	<span class="keyword">for</span> {
+		<label for="r32" class="ident">l</label> := &amp;<label for="r28" class="ident">levels</label>[<label for="r31" class="ident">level</label>]
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> We've run out of both leafs and pairs.</span><span class="comment">			 End all calculations for this level.</span><span class="comment">			 To make sure we never come back to this level or any lower level,</span><span class="comment">			 set nextPairFreq impossibly large.</span></div>
+<div class="code"><pre><code>			<label for="r32" class="ident">l</label>.<a href="#line-48" class="ident">needed</a> = <span class="lit-number">0</span>
+			<label for="r28" class="ident">levels</label>[<label for="r31" class="ident">level</label>+<span class="lit-number">1</span>].<a href="#line-44" class="ident">nextPairFreq</a> = <a href="../../../pkg/math.html" class="ident i0">math</a>.<a href="../../math/const.go.html#line-44" class="ident">MaxInt32</a>
+			<label for="r31" class="ident">level</label>++
+			<span class="keyword">continue</span>
+		}
+
+		<label for="r33" class="ident">prevFreq</label> := <label for="r32" class="ident">l</label>.<a href="#line-37" class="ident">lastFreq</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> The next item on this row is a leaf node.</span></div>
+<div class="code"><pre><code>			<label for="r34" class="ident">n</label> := <label for="r29" class="ident">leafCounts</label>[<label for="r31" class="ident">level</label>][<label for="r31" class="ident">level</label>] + <span class="lit-number">1</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Lower leafCounts are the same of the previous node.</span></div>
+<div class="code"><pre><code>			<label for="r29" class="ident">leafCounts</label>[<label for="r31" class="ident">level</label>][<label for="r31" class="ident">level</label>] = <label for="r34" class="ident">n</label>
+			<label for="r32" class="ident">l</label>.<a href="#line-40" class="ident">nextCharFreq</a> = <label for="r25" class="ident">list</label>[<label for="r34" class="ident">n</label>].<a href="#line-28" class="ident">freq</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> The next item on this row is a pair from the previous row.</span><span class="comment">			 nextPairFreq isn't valid until we generate two</span><span class="comment">			 more values in the level below</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Take leaf counts from the lower level, except counts[level] remains the same.</span></div>
+<div class="code"><pre><code>			<a href="../../../pkg/builtin.html#name-copy" class="ident">copy</a>(<label for="r29" class="ident">leafCounts</label>[<label for="r31" class="ident">level</label>][:<label for="r31" class="ident">level</label>], <label for="r29" class="ident">leafCounts</label>[<label for="r31" class="ident">level</label>-<span class="lit-number">1</span>][:<label for="r31" class="ident">level</label>])
+			<label for="r28" class="ident">levels</label>[<label for="r32" class="ident">l</label>.<a href="#line-34" class="ident">level</a>-<span class="lit-number">1</span>].<a href="#line-48" class="ident">needed</a> = <span class="lit-number">2</span>
+		}
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> We've done everything we need to do for this level.</span><span class="comment">			 Continue calculating one level up. Fill in nextPairFreq</span><span class="comment">			 of that level with the sum of the two nodes we've just calculated on</span><span class="comment">			 this level.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> All done!</span></div>
+<div class="code"><pre><code>				<span class="keyword">break</span>
+			}
+			<label for="r28" class="ident">levels</label>[<label for="r32" class="ident">l</label>.<a href="#line-34" class="ident">level</a>+<span class="lit-number">1</span>].<a href="#line-44" class="ident">nextPairFreq</a> = <label for="r33" class="ident">prevFreq</label> + <label for="r32" class="ident">l</label>.<a href="#line-37" class="ident">lastFreq</a>
+			<label for="r31" class="ident">level</label>++
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> If we stole from below, move down temporarily to replenish it.</span></div>
+<div class="code"><pre><code>			<span class="keyword">for</span> <label for="r28" class="ident">levels</label>[<label for="r31" class="ident">level</label>-<span class="lit-number">1</span>].<a href="#line-48" class="ident">needed</a> &gt; <span class="lit-number">0</span> {
+				<label for="r31" class="ident">level</label>--
+			}
+		}
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Somethings is wrong if at the end, the top level is null or hasn't used</span><span class="comment">	 all of the leaves.</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> <label for="r29" class="ident">leafCounts</label>[<label for="r26" class="ident">maxBits</label>][<label for="r26" class="ident">maxBits</label>] != <label for="r27" class="ident">n</label> {
+		<a href="../../../pkg/builtin.html#name-panic" class="ident">panic</a>(<span class="lit-string">"leafCounts[maxBits][maxBits] != n"</span>)
+	}
+
+	<label for="r35" class="ident">bitCount</label> := <label for="r23" class="ident">h</label>.<a href="#line-21" class="ident">bitCount</a>[:<label for="r26" class="ident">maxBits</label>+<span class="lit-number">1</span>]
+	<label for="r36" class="ident">bits</label> := <span class="lit-number">1</span>
+	<label for="r37" class="ident">counts</label> := &amp;<label for="r29" class="ident">leafCounts</label>[<label for="r26" class="ident">maxBits</label>]
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> chain.leafCount gives the number of literals requiring at least "bits"</span><span class="comment">		 bits to encode.</span></div>
+<div class="code"><pre><code>		<label for="r35" class="ident">bitCount</label>[<label for="r36" class="ident">bits</label>] = <label for="r37" class="ident">counts</label>[<label for="r38" class="ident">level</label>] - <label for="r37" class="ident">counts</label>[<label for="r38" class="ident">level</label>-<span class="lit-number">1</span>]
+		<label for="r36" class="ident">bits</label>++
+	}
+	<span class="keyword">return</span> <label for="r35" class="ident">bitCount</label>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Look at the leaves and assign them a bit count and an encoding as specified</span><span class="comment"> in RFC 1951 3.2.2</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r39" class="ident">h</label> *<a href="#line-18" class="ident">huffmanEncoder</a>) <label for="r40" class="ident"><a href="../../../use/compress/flate..huffmanEncoder*87c52.assignEncodingAndSize*47bad.html" class="ident">assignEncodingAndSize</a></label>(<label for="r41" class="ident">bitCount</label> []<a href="../../../pkg/builtin.html#name-int32" class="ident">int32</a>, <label for="r42" class="ident">list</label> []<a href="#line-26" class="ident">literalNode</a>) {
+	<label for="r43" class="ident">code</label> := <a href="../../../pkg/builtin.html#name-uint16" class="ident">uint16</a>(<span class="lit-number">0</span>)
+	<span class="keyword">for</span> <label for="r44" class="ident">n</label>, <label for="r45" class="ident">bits</label> := <span class="keyword">range</span> <label for="r41" class="ident">bitCount</label> {
+		<label for="r43" class="ident">code</label> &lt;&lt;= <span class="lit-number">1</span>
+		<span class="keyword">if</span> <label for="r44" class="ident">n</label> == <span class="lit-number">0</span> || <label for="r45" class="ident">bits</label> == <span class="lit-number">0</span> {
+			<span class="keyword">continue</span>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> The literals list[len(list)-bits] .. list[len(list)-bits]</span><span class="comment">		 are encoded using "bits" bits, and get the values</span><span class="comment">		 code, code + 1, ....  The code values are</span><span class="comment">		 assigned in literal order (not frequency order).</span></div>
+<div class="code"><pre><code>		<label for="r46" class="ident">chunk</label> := <label for="r42" class="ident">list</label>[<a href="../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r42" class="ident">list</label>)-<a href="../../../pkg/builtin.html#name-int" class="ident">int</a>(<label for="r45" class="ident">bits</label>):]
+
+		<label for="r39" class="ident">h</label>.<a href="#line-22" class="ident">lns</a>.<a href="#line-316" class="ident">sort</a>(<label for="r46" class="ident">chunk</label>)
+		<span class="keyword">for</span> <label for="r47" class="ident">_</label>, <label for="r48" class="ident">node</label> := <span class="keyword">range</span> <label for="r46" class="ident">chunk</label> {
+			<label for="r39" class="ident">h</label>.<a href="#line-19" class="ident">codes</a>[<label for="r48" class="ident">node</label>.<a href="#line-27" class="ident">literal</a>] = <a href="#line-14" class="ident">hcode</a>{<a href="#line-15" class="ident">code</a>: <a href="#line-347" class="ident">reverseBits</a>(<label for="r43" class="ident">code</label>, <a href="../../../pkg/builtin.html#name-uint8" class="ident">uint8</a>(<label for="r44" class="ident">n</label>)), <a href="#line-15" class="ident">len</a>: <a href="../../../pkg/builtin.html#name-uint16" class="ident">uint16</a>(<label for="r44" class="ident">n</label>)}
+			<label for="r43" class="ident">code</label>++
+		}
+		<label for="r42" class="ident">list</label> = <label for="r42" class="ident">list</label>[<span class="lit-number">0</span> : <a href="../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r42" class="ident">list</label>)-<a href="../../../pkg/builtin.html#name-int" class="ident">int</a>(<label for="r45" class="ident">bits</label>)]
+	}
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Update this Huffman Code object to be the minimum code for the specified frequency count.</span><span class="comment"></span><span class="comment"> freq  An array of frequencies, in which frequency[i] gives the frequency of literal i.</span><span class="comment"> maxBits  The maximum number of bits to use for any literal.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r49" class="ident">h</label> *<a href="#line-18" class="ident">huffmanEncoder</a>) <label for="r50" class="ident"><a href="../../../use/compress/flate..huffmanEncoder*87c52.generate*24cac.html" class="ident">generate</a></label>(<label for="r51" class="ident">freq</label> []<a href="../../../pkg/builtin.html#name-int32" class="ident">int32</a>, <label for="r52" class="ident">maxBits</label> <a href="../../../pkg/builtin.html#name-int32" class="ident">int32</a>) {
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Allocate a reusable buffer with the longest possible frequency table.</span><span class="comment">		 Possible lengths are codegenCodeCount, offsetCodeCount and maxNumLit.</span><span class="comment">		 The largest of these is maxNumLit, so we allocate for that case.</span></div>
+<div class="code"><pre><code>		<label for="r49" class="ident">h</label>.<a href="#line-20" class="ident">freqcache</a> = <a href="../../../pkg/builtin.html#name-make" class="ident">make</a>([]<a href="#line-26" class="ident">literalNode</a>, <a href="inflate.go.html#line-23" class="ident">maxNumLit</a>+<span class="lit-number">1</span>)
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Number of non-zero literals</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Set list to be the set of all non-zero literals and their frequencies</span></div>
+<div class="code"><pre><code>	<span class="keyword">for</span> <label for="r55" class="ident">i</label>, <label for="r56" class="ident">f</label> := <span class="keyword">range</span> <label for="r51" class="ident">freq</label> {
+		<span class="keyword">if</span> <label for="r56" class="ident">f</label> != <span class="lit-number">0</span> {
+			<label for="r53" class="ident">list</label>[<label for="r54" class="ident">count</label>] = <a href="#line-26" class="ident">literalNode</a>{<a href="../../../pkg/builtin.html#name-uint16" class="ident">uint16</a>(<label for="r55" class="ident">i</label>), <label for="r56" class="ident">f</label>}
+			<label for="r54" class="ident">count</label>++
+		} <span class="keyword">else</span> {
+			<label for="r53" class="ident">list</label>[<label for="r54" class="ident">count</label>] = <a href="#line-26" class="ident">literalNode</a>{}
+			<label for="r49" class="ident">h</label>.<a href="#line-19" class="ident">codes</a>[<label for="r55" class="ident">i</label>].<a href="#line-15" class="ident">len</a> = <span class="lit-number">0</span>
+		}
+	}
+	<label for="r53" class="ident">list</label>[<a href="../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r51" class="ident">freq</label>)] = <a href="#line-26" class="ident">literalNode</a>{}
+
+	<label for="r53" class="ident">list</label> = <label for="r53" class="ident">list</label>[:<label for="r54" class="ident">count</label>]
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Handle the small cases here, because they are awkward for the general case code. With</span><span class="comment">		 two or fewer literals, everything has bit length 1.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> "list" is in order of increasing literal value.</span></div>
+<div class="code"><pre><code>			<label for="r49" class="ident">h</label>.<a href="#line-19" class="ident">codes</a>[<label for="r58" class="ident">node</label>.<a href="#line-27" class="ident">literal</a>].<a href="#line-52" class="ident">set</a>(<a href="../../../pkg/builtin.html#name-uint16" class="ident">uint16</a>(<label for="r57" class="ident">i</label>), <span class="lit-number">1</span>)
+		}
+		<span class="keyword">return</span>
+	}
+	<label for="r49" class="ident">h</label>.<a href="#line-23" class="ident">lfs</a>.<a href="#line-331" class="ident">sort</a>(<label for="r53" class="ident">list</label>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Get the number of literals for each bit count</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> And do the assignment</span></div>
+<div class="code"><pre><code>	<label for="r49" class="ident">h</label>.<a href="#line-248" class="ident">assignEncodingAndSize</a>(<label for="r59" class="ident">bitCount</label>, <label for="r53" class="ident">list</label>)
+}
+
+<span class="keyword">type</span> <a href="../../../pkg/compress/flate.html#name-byLiteral" class="ident">byLiteral</a> []<a href="#line-26" class="ident">literalNode</a>
+
+<span class="keyword">func</span> (<label for="r60" class="ident">s</label> *<a href="#line-314" class="ident">byLiteral</a>) <label for="r61" class="ident"><a href="../../../use/compress/flate..byLiteral*937af.sort*64696.html" class="ident">sort</a></label>(<label for="r62" class="ident">a</label> []<a href="#line-26" class="ident">literalNode</a>) {
+	*<label for="r60" class="ident">s</label> = <a href="#line-314" class="ident">byLiteral</a>(<label for="r62" class="ident">a</label>)
+	<a href="../../../pkg/sort.html" class="ident i2">sort</a>.<a href="../../sort/sort.go.html#line-229" class="ident">Sort</a>(<label for="r60" class="ident">s</label>)
+}
+
+<span class="keyword">func</span> (<label for="r63" class="ident">s</label> <a href="#line-314" class="ident">byLiteral</a>) <label for="r64" class="ident"><a href="../../../use/compress/flate..byLiteral*937af.Len.html" class="ident">Len</a></label>() <a href="../../../pkg/builtin.html#name-int" class="ident">int</a> { <span class="keyword">return</span> <a href="../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r63" class="ident">s</label>) }
+
+<span class="keyword">func</span> (<label for="r65" class="ident">s</label> <a href="#line-314" class="ident">byLiteral</a>) <label for="r66" class="ident"><a href="../../../use/compress/flate..byLiteral*937af.Less.html" class="ident">Less</a></label>(<label for="r67" class="ident">i</label>, <label for="r68" class="ident">j</label> <a href="../../../pkg/builtin.html#name-int" class="ident">int</a>) <a href="../../../pkg/builtin.html#name-bool" class="ident">bool</a> {
+	<span class="keyword">return</span> <label for="r65" class="ident">s</label>[<label for="r67" class="ident">i</label>].<a href="#line-27" class="ident">literal</a> &lt; <label for="r65" class="ident">s</label>[<label for="r68" class="ident">j</label>].<a href="#line-27" class="ident">literal</a>
+}
+
+<span class="keyword">func</span> (<label for="r69" class="ident">s</label> <a href="#line-314" class="ident">byLiteral</a>) <label for="r70" class="ident"><a href="../../../use/compress/flate..byLiteral*937af.Swap.html" class="ident">Swap</a></label>(<label for="r71" class="ident">i</label>, <label for="r72" class="ident">j</label> <a href="../../../pkg/builtin.html#name-int" class="ident">int</a>) { <label for="r69" class="ident">s</label>[<label for="r71" class="ident">i</label>], <label for="r69" class="ident">s</label>[<label for="r72" class="ident">j</label>] = <label for="r69" class="ident">s</label>[<label for="r72" class="ident">j</label>], <label for="r69" class="ident">s</label>[<label for="r71" class="ident">i</label>] }
+
+<span class="keyword">type</span> <a href="../../../pkg/compress/flate.html#name-byFreq" class="ident">byFreq</a> []<a href="#line-26" class="ident">literalNode</a>
+
+<span class="keyword">func</span> (<label for="r73" class="ident">s</label> *<a href="#line-329" class="ident">byFreq</a>) <label for="r74" class="ident"><a href="../../../use/compress/flate..byFreq*24e83.sort*64696.html" class="ident">sort</a></label>(<label for="r75" class="ident">a</label> []<a href="#line-26" class="ident">literalNode</a>) {
+	*<label for="r73" class="ident">s</label> = <a href="#line-329" class="ident">byFreq</a>(<label for="r75" class="ident">a</label>)
+	<a href="../../../pkg/sort.html" class="ident i2">sort</a>.<a href="../../sort/sort.go.html#line-229" class="ident">Sort</a>(<label for="r73" class="ident">s</label>)
+}
+
+<span class="keyword">func</span> (<label for="r76" class="ident">s</label> <a href="#line-329" class="ident">byFreq</a>) <label for="r77" class="ident"><a href="../../../use/compress/flate..byFreq*24e83.Len.html" class="ident">Len</a></label>() <a href="../../../pkg/builtin.html#name-int" class="ident">int</a> { <span class="keyword">return</span> <a href="../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r76" class="ident">s</label>) }
+
+<span class="keyword">func</span> (<label for="r78" class="ident">s</label> <a href="#line-329" class="ident">byFreq</a>) <label for="r79" class="ident"><a href="../../../use/compress/flate..byFreq*24e83.Less.html" class="ident">Less</a></label>(<label for="r80" class="ident">i</label>, <label for="r81" class="ident">j</label> <a href="../../../pkg/builtin.html#name-int" class="ident">int</a>) <a href="../../../pkg/builtin.html#name-bool" class="ident">bool</a> {
+	<span class="keyword">if</span> <label for="r78" class="ident">s</label>[<label for="r80" class="ident">i</label>].<a href="#line-28" class="ident">freq</a> == <label for="r78" class="ident">s</label>[<label for="r81" class="ident">j</label>].<a href="#line-28" class="ident">freq</a> {
+		<span class="keyword">return</span> <label for="r78" class="ident">s</label>[<label for="r80" class="ident">i</label>].<a href="#line-27" class="ident">literal</a> &lt; <label for="r78" class="ident">s</label>[<label for="r81" class="ident">j</label>].<a href="#line-27" class="ident">literal</a>
+	}
+	<span class="keyword">return</span> <label for="r78" class="ident">s</label>[<label for="r80" class="ident">i</label>].<a href="#line-28" class="ident">freq</a> &lt; <label for="r78" class="ident">s</label>[<label for="r81" class="ident">j</label>].<a href="#line-28" class="ident">freq</a>
+}
+
+<span class="keyword">func</span> (<label for="r82" class="ident">s</label> <a href="#line-329" class="ident">byFreq</a>) <label for="r83" class="ident"><a href="../../../use/compress/flate..byFreq*24e83.Swap.html" class="ident">Swap</a></label>(<label for="r84" class="ident">i</label>, <label for="r85" class="ident">j</label> <a href="../../../pkg/builtin.html#name-int" class="ident">int</a>) { <label for="r82" class="ident">s</label>[<label for="r84" class="ident">i</label>], <label for="r82" class="ident">s</label>[<label for="r85" class="ident">j</label>] = <label for="r82" class="ident">s</label>[<label for="r85" class="ident">j</label>], <label for="r82" class="ident">s</label>[<label for="r84" class="ident">i</label>] }
+
+<span class="keyword">func</span> <label for="r86" class="ident"><a href="../../../pkg/compress/flate.html#name-reverseBits" class="ident">reverseBits</a></label>(<label for="r87" class="ident">number</label> <a href="../../../pkg/builtin.html#name-uint16" class="ident">uint16</a>, <label for="r88" class="ident">bitLength</label> <a href="../../../pkg/builtin.html#name-byte" class="ident">byte</a>) <a href="../../../pkg/builtin.html#name-uint16" class="ident">uint16</a> {
+	<span class="keyword">return</span> <a href="../../../pkg/math/bits.html" class="ident i1">bits</a>.<a href="../../math/bits/bits.go.html#line-233" class="ident">Reverse16</a>(<label for="r87" class="ident">number</label> &lt;&lt; (<span class="lit-number">16</span> - <label for="r88" class="ident">bitLength</label>))
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

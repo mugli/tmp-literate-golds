@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: impersonate.go in package google.golang.org/api/internal/impersonate</title>
+<link href="../../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	impersonate.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../../pkg/google.golang.org/api/internal/impersonate.html">google.golang.org/api/internal/impersonate</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16],
+input[id=r17]:checked ~pre label[for=r17],
+input[id=r18]:checked ~pre label[for=r18],
+input[id=r19]:checked ~pre label[for=r19],
+input[id=r20]:checked ~pre label[for=r20],
+input[id=r21]:checked ~pre label[for=r21],
+input[id=r22]:checked ~pre label[for=r22]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1,
+input[id=i2]:checked ~pre .i2,
+input[id=i3]:checked ~pre .i3,
+input[id=i4]:checked ~pre .i4,
+input[id=i5]:checked ~pre .i5,
+input[id=i6]:checked ~pre .i6,
+input[id=i7]:checked ~pre .i7,
+input[id=i8]:checked ~pre .i8
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="r17" type="radio" name="g"/>
+<input id="r18" type="radio" name="g"/>
+<input id="r19" type="radio" name="g"/>
+<input id="r20" type="radio" name="g"/>
+<input id="r21" type="radio" name="g"/>
+<input id="r22" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<input id="i2" type="radio" name="i"/>
+<input id="i3" type="radio" name="i"/>
+<input id="i4" type="radio" name="i"/>
+<input id="i5" type="radio" name="i"/>
+<input id="i6" type="radio" name="i"/>
+<input id="i7" type="radio" name="i"/>
+<input id="i8" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2020 The Go Authors. All rights reserved.</span><span class="comment"> Use of this source code is governed by a BSD-style</span><span class="comment"> license that can be found in the LICENSE file.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Package impersonate is used to impersonate Google Credentials.</span></div>
+<div class="code"><pre><code><span class="keyword">package</span> impersonate
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"bytes"</span></label>
+	<label for="i1"><span class="lit-string i1">"context"</span></label>
+	<label for="i2"><span class="lit-string i2">"encoding/json"</span></label>
+	<label for="i3"><span class="lit-string i3">"fmt"</span></label>
+	<label for="i4"><span class="lit-string i4">"io"</span></label>
+	<label for="i5"><span class="lit-string i5">"io/ioutil"</span></label>
+	<label for="i6"><span class="lit-string i6">"net/http"</span></label>
+	<label for="i7"><span class="lit-string i7">"time"</span></label>
+
+	<label for="i8"><span class="lit-string i8">"golang.org/x/oauth2"</span></label>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Config for generating impersonated credentials.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Target is the service account to impersonate. Required.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Scopes the impersonated credential should have. Required.</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Delegates are the service accounts in a delegation chain. Each service</span><span class="comment">	 account must be granted roles/iam.serviceAccountTokenCreator on the next</span><span class="comment">	 service account in the chain. Optional.</span></div>
+<div class="code"><pre><code>	<a href="../../../../../use/google.golang.org/api/internal/impersonate..Config.Delegates.html" class="ident">Delegates</a> []<a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> TokenSource returns an impersonated TokenSource configured with the provided</span><span class="comment"> config using ts as the base credential provider for making requests.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r0" class="ident"><a href="../../../../../pkg/google.golang.org/api/internal/impersonate.html#name-TokenSource" class="ident">TokenSource</a></label>(<label for="r1" class="ident">ctx</label> <a href="../../../../../pkg/context.html" class="ident i1">context</a>.<a href="../../../../context/context.go.html#line-62" class="ident">Context</a>, <label for="r2" class="ident">ts</label> <a href="../../../../../pkg/golang.org/x/oauth2.html" class="ident i8">oauth2</a>.<a href="../../../../golang.org/x/oauth2/oauth2.go.html#line-63" class="ident">TokenSource</a>, <label for="r3" class="ident">config</label> *<a href="#line-22" class="ident">Config</a>) (<a href="../../../../../pkg/golang.org/x/oauth2.html" class="ident i8">oauth2</a>.<a href="../../../../golang.org/x/oauth2/oauth2.go.html#line-63" class="ident">TokenSource</a>, <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<span class="keyword">if</span> <a href="../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r3" class="ident">config</label>.<a href="#line-26" class="ident">Scopes</a>) == <span class="lit-number">0</span> {
+		<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="../../../../../pkg/fmt.html" class="ident i3">fmt</a>.<a href="../../../../fmt/errors.go.html#line-17" class="ident">Errorf</a>(<span class="lit-string">"impersonate: scopes must be provided"</span>)
+	}
+	<label for="r4" class="ident">its</label> := <a href="#line-73" class="ident">impersonatedTokenSource</a>{
+		<a href="#line-74" class="ident">ctx</a>:  <label for="r1" class="ident">ctx</label>,
+		<a href="#line-75" class="ident">ts</a>:   <label for="r2" class="ident">ts</label>,
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Default to the longest acceptable value of one hour as the token will</span><span class="comment">		 be refreshed automatically.</span></div>
+<div class="code"><pre><code>		<a href="#line-78" class="ident">lifetime</a>: <span class="lit-string">"3600s"</span>,
+	}
+
+	<label for="r4" class="ident">its</label>.<a href="#line-80" class="ident">delegates</a> = <a href="../../../../../pkg/builtin.html#name-make" class="ident">make</a>([]<a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>, <a href="../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r3" class="ident">config</label>.<a href="#line-30" class="ident">Delegates</a>))
+	<span class="keyword">for</span> <label for="r5" class="ident">i</label>, <label for="r6" class="ident">v</label> := <span class="keyword">range</span> <label for="r3" class="ident">config</label>.<a href="#line-30" class="ident">Delegates</a> {
+		<label for="r4" class="ident">its</label>.<a href="#line-80" class="ident">delegates</a>[<label for="r5" class="ident">i</label>] = <a href="#line-58" class="ident">formatIAMServiceAccountName</a>(<label for="r6" class="ident">v</label>)
+	}
+	<label for="r4" class="ident">its</label>.<a href="#line-79" class="ident">scopes</a> = <a href="../../../../../pkg/builtin.html#name-make" class="ident">make</a>([]<a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>, <a href="../../../../../pkg/builtin.html#name-len" class="ident">len</a>(<label for="r3" class="ident">config</label>.<a href="#line-26" class="ident">Scopes</a>))
+	<a href="../../../../../pkg/builtin.html#name-copy" class="ident">copy</a>(<label for="r4" class="ident">its</label>.<a href="#line-79" class="ident">scopes</a>, <label for="r3" class="ident">config</label>.<a href="#line-26" class="ident">Scopes</a>)
+
+	<span class="keyword">return</span> <a href="../../../../../pkg/golang.org/x/oauth2.html" class="ident i8">oauth2</a>.<a href="../../../../golang.org/x/oauth2/oauth2.go.html#line-366" class="ident">ReuseTokenSource</a>(<a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <label for="r4" class="ident">its</label>), <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+}
+
+<span class="keyword">func</span> <label for="r7" class="ident"><a href="../../../../../pkg/google.golang.org/api/internal/impersonate.html#name-formatIAMServiceAccountName" class="ident">formatIAMServiceAccountName</a></label>(<label for="r8" class="ident">name</label> <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>) <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a> {
+	<span class="keyword">return</span> <a href="../../../../../pkg/fmt.html" class="ident i3">fmt</a>.<a href="../../../../fmt/print.go.html#line-217" class="ident">Sprintf</a>(<span class="lit-string">"projects/-/serviceAccounts/%s"</span>, <label for="r8" class="ident">name</label>)
+}
+
+<span class="keyword">type</span> <a href="../../../../../pkg/google.golang.org/api/internal/impersonate.html#name-generateAccessTokenReq" class="ident">generateAccessTokenReq</a> <span class="keyword">struct</span> {
+	<a href="../../../../../use/google.golang.org/api/internal/impersonate..generateAccessTokenReq*60db7.Delegates.html" class="ident">Delegates</a> []<a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a> <span class="lit-string">`json:"delegates,omitempty"`</span>
+	<a href="../../../../../use/google.golang.org/api/internal/impersonate..generateAccessTokenReq*60db7.Lifetime.html" class="ident">Lifetime</a>  <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>   <span class="lit-string">`json:"lifetime,omitempty"`</span>
+	<a href="../../../../../use/google.golang.org/api/internal/impersonate..generateAccessTokenReq*60db7.Scope.html" class="ident">Scope</a>     []<a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a> <span class="lit-string">`json:"scope,omitempty"`</span>
+}
+
+<span class="keyword">type</span> <a href="../../../../../pkg/google.golang.org/api/internal/impersonate.html#name-generateAccessTokenResp" class="ident">generateAccessTokenResp</a> <span class="keyword">struct</span> {
+	<a href="../../../../../use/google.golang.org/api/internal/impersonate..generateAccessTokenResp*0eb7b.AccessToken.html" class="ident">AccessToken</a> <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a> <span class="lit-string">`json:"accessToken"`</span>
+	<a href="../../../../../use/google.golang.org/api/internal/impersonate..generateAccessTokenResp*0eb7b.ExpireTime.html" class="ident">ExpireTime</a>  <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a> <span class="lit-string">`json:"expireTime"`</span>
+}
+
+<span class="keyword">type</span> <a href="../../../../../pkg/google.golang.org/api/internal/impersonate.html#name-impersonatedTokenSource" class="ident">impersonatedTokenSource</a> <span class="keyword">struct</span> {
+	<a href="../../../../../use/google.golang.org/api/internal/impersonate..impersonatedTokenSource*878b7.ctx*0230c.html" class="ident">ctx</a> <a href="../../../../../pkg/context.html" class="ident i1">context</a>.<a href="../../../../context/context.go.html#line-62" class="ident">Context</a>
+	<a href="../../../../../use/google.golang.org/api/internal/impersonate..impersonatedTokenSource*878b7.ts*44ad6.html" class="ident">ts</a>  <a href="../../../../../pkg/golang.org/x/oauth2.html" class="ident i8">oauth2</a>.<a href="../../../../golang.org/x/oauth2/oauth2.go.html#line-63" class="ident">TokenSource</a>
+
+	<a href="../../../../../use/google.golang.org/api/internal/impersonate..impersonatedTokenSource*878b7.name*82a35.html" class="ident">name</a>      <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../use/google.golang.org/api/internal/impersonate..impersonatedTokenSource*878b7.lifetime*6f6a6.html" class="ident">lifetime</a>  <a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../use/google.golang.org/api/internal/impersonate..impersonatedTokenSource*878b7.scopes*56b36.html" class="ident">scopes</a>    []<a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../use/google.golang.org/api/internal/impersonate..impersonatedTokenSource*878b7.delegates*45fb9.html" class="ident">delegates</a> []<a href="../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Token returns an impersonated Token.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r9" class="ident">i</label> <a href="#line-73" class="ident">impersonatedTokenSource</a>) <label for="r10" class="ident"><a href="../../../../../use/google.golang.org/api/internal/impersonate..impersonatedTokenSource*878b7.Token.html" class="ident">Token</a></label>() (*<a href="../../../../../pkg/golang.org/x/oauth2.html" class="ident i8">oauth2</a>.<a href="../../../../golang.org/x/oauth2/token.go.html#line-31" class="ident">Token</a>, <a href="../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<label for="r11" class="ident">hc</label> := <a href="../../../../../pkg/golang.org/x/oauth2.html" class="ident i8">oauth2</a>.<a href="../../../../golang.org/x/oauth2/oauth2.go.html#line-342" class="ident">NewClient</a>(<label for="r9" class="ident">i</label>.<a href="#line-74" class="ident">ctx</a>, <label for="r9" class="ident">i</label>.<a href="#line-75" class="ident">ts</a>)
+	<label for="r12" class="ident">reqBody</label> := <a href="#line-62" class="ident">generateAccessTokenReq</a>{
+		<a href="#line-63" class="ident">Delegates</a>: <label for="r9" class="ident">i</label>.<a href="#line-80" class="ident">delegates</a>,
+		<a href="#line-64" class="ident">Lifetime</a>:  <label for="r9" class="ident">i</label>.<a href="#line-78" class="ident">lifetime</a>,
+		<a href="#line-65" class="ident">Scope</a>:     <label for="r9" class="ident">i</label>.<a href="#line-79" class="ident">scopes</a>,
+	}
+	<label for="r13" class="ident">b</label>, <label for="r14" class="ident">err</label> := <a href="../../../../../pkg/encoding/json.html" class="ident i2">json</a>.<a href="../../../../encoding/json/encode.go.html#line-158" class="ident">Marshal</a>(<label for="r12" class="ident">reqBody</label>)
+	<span class="keyword">if</span> <label for="r14" class="ident">err</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="../../../../../pkg/fmt.html" class="ident i3">fmt</a>.<a href="../../../../fmt/errors.go.html#line-17" class="ident">Errorf</a>(<span class="lit-string">"impersonate: unable to marshal request: %v"</span>, <label for="r14" class="ident">err</label>)
+	}
+	<label for="r15" class="ident">url</label> := <a href="../../../../../pkg/fmt.html" class="ident i3">fmt</a>.<a href="../../../../fmt/print.go.html#line-217" class="ident">Sprintf</a>(<span class="lit-string">"https://iamcredentials.googleapis.com/v1/%s:generateAccessToken"</span>, <label for="r9" class="ident">i</label>.<a href="#line-77" class="ident">name</a>)
+	<label for="r16" class="ident">req</label>, <label for="r14" class="ident">err</label> := <a href="../../../../../pkg/net/http.html" class="ident i6">http</a>.<a href="../../../../net/http/request.go.html#line-827" class="ident">NewRequest</a>(<span class="lit-string">"POST"</span>, <label for="r15" class="ident">url</label>, <a href="../../../../../pkg/bytes.html" class="ident i0">bytes</a>.<a href="../../../../bytes/reader.go.html#line-160" class="ident">NewReader</a>(<label for="r13" class="ident">b</label>))
+	<span class="keyword">if</span> <label for="r14" class="ident">err</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="../../../../../pkg/fmt.html" class="ident i3">fmt</a>.<a href="../../../../fmt/errors.go.html#line-17" class="ident">Errorf</a>(<span class="lit-string">"impersonate: unable to create request: %v"</span>, <label for="r14" class="ident">err</label>)
+	}
+	<label for="r16" class="ident">req</label> = <label for="r16" class="ident">req</label>.<a href="../../../../net/http/request.go.html#line-354" class="ident">WithContext</a>(<label for="r9" class="ident">i</label>.<a href="#line-74" class="ident">ctx</a>)
+	<label for="r16" class="ident">req</label>.<a href="../../../../net/http/request.go.html#line-165" class="ident">Header</a>.<a href="../../../../net/http/header.go.html#line-36" class="ident">Set</a>(<span class="lit-string">"Content-Type"</span>, <span class="lit-string">"application/json"</span>)
+
+	<label for="r17" class="ident">resp</label>, <label for="r14" class="ident">err</label> := <label for="r11" class="ident">hc</label>.<a href="../../../../net/http/client.go.html#line-584" class="ident">Do</a>(<label for="r16" class="ident">req</label>)
+	<span class="keyword">if</span> <label for="r14" class="ident">err</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="../../../../../pkg/fmt.html" class="ident i3">fmt</a>.<a href="../../../../fmt/errors.go.html#line-17" class="ident">Errorf</a>(<span class="lit-string">"impersonate: unable to generate access token: %v"</span>, <label for="r14" class="ident">err</label>)
+	}
+	<span class="keyword">defer</span> <label for="r17" class="ident">resp</label>.<a href="../../../../net/http/response.go.html#line-72" class="ident">Body</a>.<a href="../../../../io/io.go.html#line-105" class="ident">Close</a>()
+	<label for="r18" class="ident">body</label>, <label for="r14" class="ident">err</label> := <a href="../../../../../pkg/io/ioutil.html" class="ident i5">ioutil</a>.<a href="../../../../io/ioutil/ioutil.go.html#line-26" class="ident">ReadAll</a>(<a href="../../../../../pkg/io.html" class="ident i4">io</a>.<a href="../../../../io/io.go.html#line-455" class="ident">LimitReader</a>(<label for="r17" class="ident">resp</label>.<a href="../../../../net/http/response.go.html#line-72" class="ident">Body</a>, <span class="lit-number">1</span>&lt;&lt;<span class="lit-number">20</span>))
+	<span class="keyword">if</span> <label for="r14" class="ident">err</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="../../../../../pkg/fmt.html" class="ident i3">fmt</a>.<a href="../../../../fmt/errors.go.html#line-17" class="ident">Errorf</a>(<span class="lit-string">"impersonate: unable to read body: %v"</span>, <label for="r14" class="ident">err</label>)
+	}
+	<span class="keyword">if</span> <label for="r19" class="ident">c</label> := <label for="r17" class="ident">resp</label>.<a href="../../../../net/http/response.go.html#line-37" class="ident">StatusCode</a>; <label for="r19" class="ident">c</label> &lt; <span class="lit-number">200</span> || <label for="r19" class="ident">c</label> &gt; <span class="lit-number">299</span> {
+		<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="../../../../../pkg/fmt.html" class="ident i3">fmt</a>.<a href="../../../../fmt/errors.go.html#line-17" class="ident">Errorf</a>(<span class="lit-string">"impersonate: status code %d: %s"</span>, <label for="r19" class="ident">c</label>, <label for="r18" class="ident">body</label>)
+	}
+
+	<span class="keyword">var</span> <label for="r20" class="ident">accessTokenResp</label> <a href="#line-68" class="ident">generateAccessTokenResp</a>
+	<span class="keyword">if</span> <label for="r21" class="ident">err</label> := <a href="../../../../../pkg/encoding/json.html" class="ident i2">json</a>.<a href="../../../../encoding/json/decode.go.html#line-96" class="ident">Unmarshal</a>(<label for="r18" class="ident">body</label>, &amp;<label for="r20" class="ident">accessTokenResp</label>); <label for="r21" class="ident">err</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="../../../../../pkg/fmt.html" class="ident i3">fmt</a>.<a href="../../../../fmt/errors.go.html#line-17" class="ident">Errorf</a>(<span class="lit-string">"impersonate: unable to parse response: %v"</span>, <label for="r21" class="ident">err</label>)
+	}
+	<label for="r22" class="ident">expiry</label>, <label for="r14" class="ident">err</label> := <a href="../../../../../pkg/time.html" class="ident i7">time</a>.<a href="../../../../time/format.go.html#line-814" class="ident">Parse</a>(<a href="../../../../../pkg/time.html" class="ident i7">time</a>.<a href="../../../../time/format.go.html#line-82" class="ident">RFC3339</a>, <label for="r20" class="ident">accessTokenResp</label>.<a href="#line-70" class="ident">ExpireTime</a>)
+	<span class="keyword">if</span> <label for="r14" class="ident">err</label> != <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>, <a href="../../../../../pkg/fmt.html" class="ident i3">fmt</a>.<a href="../../../../fmt/errors.go.html#line-17" class="ident">Errorf</a>(<span class="lit-string">"impersonate: unable to parse expiry: %v"</span>, <label for="r14" class="ident">err</label>)
+	}
+	<span class="keyword">return</span> &amp;<a href="../../../../../pkg/golang.org/x/oauth2.html" class="ident i8">oauth2</a>.<a href="../../../../golang.org/x/oauth2/token.go.html#line-31" class="ident">Token</a>{
+		<a href="../../../../golang.org/x/oauth2/token.go.html#line-34" class="ident">AccessToken</a>: <label for="r20" class="ident">accessTokenResp</label>.<a href="#line-69" class="ident">AccessToken</a>,
+		<a href="../../../../golang.org/x/oauth2/token.go.html#line-50" class="ident">Expiry</a>:      <label for="r22" class="ident">expiry</label>,
+	}, <a href="../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

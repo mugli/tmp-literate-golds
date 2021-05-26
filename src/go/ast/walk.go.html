@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: walk.go in package go/ast</title>
+<link href="../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	walk.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../pkg/go/ast.html">go/ast</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8],
+input[id=r9]:checked ~pre label[for=r9],
+input[id=r10]:checked ~pre label[for=r10],
+input[id=r11]:checked ~pre label[for=r11],
+input[id=r12]:checked ~pre label[for=r12],
+input[id=r13]:checked ~pre label[for=r13],
+input[id=r14]:checked ~pre label[for=r14],
+input[id=r15]:checked ~pre label[for=r15],
+input[id=r16]:checked ~pre label[for=r16],
+input[id=r17]:checked ~pre label[for=r17],
+input[id=r18]:checked ~pre label[for=r18],
+input[id=r19]:checked ~pre label[for=r19],
+input[id=r20]:checked ~pre label[for=r20],
+input[id=r21]:checked ~pre label[for=r21],
+input[id=r22]:checked ~pre label[for=r22],
+input[id=r23]:checked ~pre label[for=r23],
+input[id=r24]:checked ~pre label[for=r24],
+input[id=r25]:checked ~pre label[for=r25],
+input[id=r26]:checked ~pre label[for=r26],
+input[id=r27]:checked ~pre label[for=r27],
+input[id=r28]:checked ~pre label[for=r28],
+input[id=r29]:checked ~pre label[for=r29],
+input[id=r30]:checked ~pre label[for=r30],
+input[id=r31]:checked ~pre label[for=r31],
+input[id=r32]:checked ~pre label[for=r32],
+input[id=r33]:checked ~pre label[for=r33],
+input[id=r34]:checked ~pre label[for=r34],
+input[id=r35]:checked ~pre label[for=r35],
+input[id=r36]:checked ~pre label[for=r36],
+input[id=r37]:checked ~pre label[for=r37],
+input[id=r38]:checked ~pre label[for=r38],
+input[id=r39]:checked ~pre label[for=r39],
+input[id=r40]:checked ~pre label[for=r40],
+input[id=r41]:checked ~pre label[for=r41],
+input[id=r42]:checked ~pre label[for=r42],
+input[id=r43]:checked ~pre label[for=r43],
+input[id=r44]:checked ~pre label[for=r44],
+input[id=r45]:checked ~pre label[for=r45],
+input[id=r46]:checked ~pre label[for=r46],
+input[id=r47]:checked ~pre label[for=r47],
+input[id=r48]:checked ~pre label[for=r48],
+input[id=r49]:checked ~pre label[for=r49],
+input[id=r50]:checked ~pre label[for=r50],
+input[id=r51]:checked ~pre label[for=r51],
+input[id=r52]:checked ~pre label[for=r52],
+input[id=r53]:checked ~pre label[for=r53],
+input[id=r54]:checked ~pre label[for=r54],
+input[id=r55]:checked ~pre label[for=r55],
+input[id=r56]:checked ~pre label[for=r56],
+input[id=r57]:checked ~pre label[for=r57],
+input[id=r58]:checked ~pre label[for=r58],
+input[id=r59]:checked ~pre label[for=r59],
+input[id=r60]:checked ~pre label[for=r60],
+input[id=r61]:checked ~pre label[for=r61],
+input[id=r62]:checked ~pre label[for=r62],
+input[id=r63]:checked ~pre label[for=r63],
+input[id=r64]:checked ~pre label[for=r64],
+input[id=r65]:checked ~pre label[for=r65],
+input[id=r66]:checked ~pre label[for=r66],
+input[id=r67]:checked ~pre label[for=r67],
+input[id=r68]:checked ~pre label[for=r68],
+input[id=r69]:checked ~pre label[for=r69],
+input[id=r70]:checked ~pre label[for=r70],
+input[id=r71]:checked ~pre label[for=r71],
+input[id=r72]:checked ~pre label[for=r72],
+input[id=r73]:checked ~pre label[for=r73],
+input[id=r74]:checked ~pre label[for=r74],
+input[id=r75]:checked ~pre label[for=r75],
+input[id=r76]:checked ~pre label[for=r76],
+input[id=r77]:checked ~pre label[for=r77],
+input[id=r78]:checked ~pre label[for=r78],
+input[id=r79]:checked ~pre label[for=r79],
+input[id=r80]:checked ~pre label[for=r80],
+input[id=r81]:checked ~pre label[for=r81],
+input[id=r82]:checked ~pre label[for=r82],
+input[id=r83]:checked ~pre label[for=r83],
+input[id=r84]:checked ~pre label[for=r84],
+input[id=r85]:checked ~pre label[for=r85]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="r9" type="radio" name="g"/>
+<input id="r10" type="radio" name="g"/>
+<input id="r11" type="radio" name="g"/>
+<input id="r12" type="radio" name="g"/>
+<input id="r13" type="radio" name="g"/>
+<input id="r14" type="radio" name="g"/>
+<input id="r15" type="radio" name="g"/>
+<input id="r16" type="radio" name="g"/>
+<input id="r17" type="radio" name="g"/>
+<input id="r18" type="radio" name="g"/>
+<input id="r19" type="radio" name="g"/>
+<input id="r20" type="radio" name="g"/>
+<input id="r21" type="radio" name="g"/>
+<input id="r22" type="radio" name="g"/>
+<input id="r23" type="radio" name="g"/>
+<input id="r24" type="radio" name="g"/>
+<input id="r25" type="radio" name="g"/>
+<input id="r26" type="radio" name="g"/>
+<input id="r27" type="radio" name="g"/>
+<input id="r28" type="radio" name="g"/>
+<input id="r29" type="radio" name="g"/>
+<input id="r30" type="radio" name="g"/>
+<input id="r31" type="radio" name="g"/>
+<input id="r32" type="radio" name="g"/>
+<input id="r33" type="radio" name="g"/>
+<input id="r34" type="radio" name="g"/>
+<input id="r35" type="radio" name="g"/>
+<input id="r36" type="radio" name="g"/>
+<input id="r37" type="radio" name="g"/>
+<input id="r38" type="radio" name="g"/>
+<input id="r39" type="radio" name="g"/>
+<input id="r40" type="radio" name="g"/>
+<input id="r41" type="radio" name="g"/>
+<input id="r42" type="radio" name="g"/>
+<input id="r43" type="radio" name="g"/>
+<input id="r44" type="radio" name="g"/>
+<input id="r45" type="radio" name="g"/>
+<input id="r46" type="radio" name="g"/>
+<input id="r47" type="radio" name="g"/>
+<input id="r48" type="radio" name="g"/>
+<input id="r49" type="radio" name="g"/>
+<input id="r50" type="radio" name="g"/>
+<input id="r51" type="radio" name="g"/>
+<input id="r52" type="radio" name="g"/>
+<input id="r53" type="radio" name="g"/>
+<input id="r54" type="radio" name="g"/>
+<input id="r55" type="radio" name="g"/>
+<input id="r56" type="radio" name="g"/>
+<input id="r57" type="radio" name="g"/>
+<input id="r58" type="radio" name="g"/>
+<input id="r59" type="radio" name="g"/>
+<input id="r60" type="radio" name="g"/>
+<input id="r61" type="radio" name="g"/>
+<input id="r62" type="radio" name="g"/>
+<input id="r63" type="radio" name="g"/>
+<input id="r64" type="radio" name="g"/>
+<input id="r65" type="radio" name="g"/>
+<input id="r66" type="radio" name="g"/>
+<input id="r67" type="radio" name="g"/>
+<input id="r68" type="radio" name="g"/>
+<input id="r69" type="radio" name="g"/>
+<input id="r70" type="radio" name="g"/>
+<input id="r71" type="radio" name="g"/>
+<input id="r72" type="radio" name="g"/>
+<input id="r73" type="radio" name="g"/>
+<input id="r74" type="radio" name="g"/>
+<input id="r75" type="radio" name="g"/>
+<input id="r76" type="radio" name="g"/>
+<input id="r77" type="radio" name="g"/>
+<input id="r78" type="radio" name="g"/>
+<input id="r79" type="radio" name="g"/>
+<input id="r80" type="radio" name="g"/>
+<input id="r81" type="radio" name="g"/>
+<input id="r82" type="radio" name="g"/>
+<input id="r83" type="radio" name="g"/>
+<input id="r84" type="radio" name="g"/>
+<input id="r85" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2009 The Go Authors. All rights reserved.</span><span class="comment"> Use of this source code is governed by a BSD-style</span><span class="comment"> license that can be found in the LICENSE file.</span></div>
+<div class="code"><pre><code>
+<span class="keyword">package</span> ast
+
+<span class="keyword">import</span> <label for="i0"><span class="lit-string i0">"fmt"</span></label>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> A Visitor's Visit method is invoked for each node encountered by Walk.</span><span class="comment"> If the result visitor w is not nil, Walk visits each of the children</span><span class="comment"> of node with the visitor w, followed by a call of w.Visit(nil).</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../pkg/go/ast.html#name-Visitor" class="ident">Visitor</a> <span class="keyword">interface</span> {
+	Visit(node <a href="ast.go.html#line-33" class="ident">Node</a>) (w <a href="#line-12" class="ident">Visitor</a>)
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Helper functions for common node lists. They may be empty.</span></div>
+<div class="code"><pre><code>
+<span class="keyword">func</span> <label for="r0" class="ident"><a href="../../../pkg/go/ast.html#name-walkIdentList" class="ident">walkIdentList</a></label>(<label for="r1" class="ident">v</label> <a href="#line-12" class="ident">Visitor</a>, <label for="r2" class="ident">list</label> []*<a href="ast.go.html#line-278" class="ident">Ident</a>) {
+	<span class="keyword">for</span> <label for="r3" class="ident">_</label>, <label for="r4" class="ident">x</label> := <span class="keyword">range</span> <label for="r2" class="ident">list</label> {
+		<a href="#line-51" class="ident">Walk</a>(<label for="r1" class="ident">v</label>, <label for="r4" class="ident">x</label>)
+	}
+}
+
+<span class="keyword">func</span> <label for="r5" class="ident"><a href="../../../pkg/go/ast.html#name-walkExprList" class="ident">walkExprList</a></label>(<label for="r6" class="ident">v</label> <a href="#line-12" class="ident">Visitor</a>, <label for="r7" class="ident">list</label> []<a href="ast.go.html#line-39" class="ident">Expr</a>) {
+	<span class="keyword">for</span> <label for="r8" class="ident">_</label>, <label for="r9" class="ident">x</label> := <span class="keyword">range</span> <label for="r7" class="ident">list</label> {
+		<a href="#line-51" class="ident">Walk</a>(<label for="r6" class="ident">v</label>, <label for="r9" class="ident">x</label>)
+	}
+}
+
+<span class="keyword">func</span> <label for="r10" class="ident"><a href="../../../pkg/go/ast.html#name-walkStmtList" class="ident">walkStmtList</a></label>(<label for="r11" class="ident">v</label> <a href="#line-12" class="ident">Visitor</a>, <label for="r12" class="ident">list</label> []<a href="ast.go.html#line-45" class="ident">Stmt</a>) {
+	<span class="keyword">for</span> <label for="r13" class="ident">_</label>, <label for="r14" class="ident">x</label> := <span class="keyword">range</span> <label for="r12" class="ident">list</label> {
+		<a href="#line-51" class="ident">Walk</a>(<label for="r11" class="ident">v</label>, <label for="r14" class="ident">x</label>)
+	}
+}
+
+<span class="keyword">func</span> <label for="r15" class="ident"><a href="../../../pkg/go/ast.html#name-walkDeclList" class="ident">walkDeclList</a></label>(<label for="r16" class="ident">v</label> <a href="#line-12" class="ident">Visitor</a>, <label for="r17" class="ident">list</label> []<a href="ast.go.html#line-51" class="ident">Decl</a>) {
+	<span class="keyword">for</span> <label for="r18" class="ident">_</label>, <label for="r19" class="ident">x</label> := <span class="keyword">range</span> <label for="r17" class="ident">list</label> {
+		<a href="#line-51" class="ident">Walk</a>(<label for="r16" class="ident">v</label>, <label for="r19" class="ident">x</label>)
+	}
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> TODO(gri): Investigate if providing a closure to Walk leads to</span><span class="comment">            simpler use (and may help eliminate Inspect in turn).</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Walk traverses an AST in depth-first order: It starts by calling</span><span class="comment"> v.Visit(node); node must not be nil. If the visitor w returned by</span><span class="comment"> v.Visit(node) is not nil, Walk is invoked recursively with visitor</span><span class="comment"> w for each of the non-nil children of node, followed by a call of</span><span class="comment"> w.Visit(nil).</span><span class="comment"></span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r20" class="ident"><a href="../../../pkg/go/ast.html#name-Walk" class="ident">Walk</a></label>(<label for="r21" class="ident">v</label> <a href="#line-12" class="ident">Visitor</a>, <label for="r22" class="ident">node</label> <a href="ast.go.html#line-33" class="ident">Node</a>) {
+	<span class="keyword">if</span> <label for="r21" class="ident">v</label> = <label for="r21" class="ident">v</label>.<a href="#line-13" class="ident">Visit</a>(<label for="r22" class="ident">node</label>); <label for="r21" class="ident">v</label> == <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span>
+	}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> walk children</span><span class="comment">	 (the order of the cases matches the order</span><span class="comment">	 of the corresponding node types in ast.go)</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Comments and fields</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> nothing to do</span></div>
+<div class="code"><pre><code>
+	<span class="keyword">case</span> *<a href="ast.go.html#line-76" class="ident">CommentGroup</a>:
+		<span class="keyword">for</span> <label for="r23" class="ident">_</label>, <label for="r24" class="ident">c</label> := <span class="keyword">range</span> <label for="r25" class="ident">n</label>.<a href="ast.go.html#line-77" class="ident">List</a> {
+			<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r24" class="ident">c</label>)
+		}
+
+	<span class="keyword">case</span> *<a href="ast.go.html#line-197" class="ident">Field</a>:
+		<span class="keyword">if</span> <label for="r26" class="ident">n</label>.<a href="ast.go.html#line-198" class="ident">Doc</a> != <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r26" class="ident">n</label>.<a href="ast.go.html#line-198" class="ident">Doc</a>)
+		}
+		<a href="#line-18" class="ident">walkIdentList</a>(<label for="r21" class="ident">v</label>, <label for="r26" class="ident">n</label>.<a href="ast.go.html#line-199" class="ident">Names</a>)
+		<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r26" class="ident">n</label>.<a href="ast.go.html#line-200" class="ident">Type</a>)
+		<span class="keyword">if</span> <label for="r26" class="ident">n</label>.<a href="ast.go.html#line-201" class="ident">Tag</a> != <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r26" class="ident">n</label>.<a href="ast.go.html#line-201" class="ident">Tag</a>)
+		}
+		<span class="keyword">if</span> <label for="r26" class="ident">n</label>.<a href="ast.go.html#line-202" class="ident">Comment</a> != <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r26" class="ident">n</label>.<a href="ast.go.html#line-202" class="ident">Comment</a>)
+		}
+
+	<span class="keyword">case</span> *<a href="ast.go.html#line-220" class="ident">FieldList</a>:
+		<span class="keyword">for</span> <label for="r27" class="ident">_</label>, <label for="r28" class="ident">f</label> := <span class="keyword">range</span> <label for="r29" class="ident">n</label>.<a href="ast.go.html#line-222" class="ident">List</a> {
+			<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r28" class="ident">f</label>)
+		}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Expressions</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> nothing to do</span></div>
+<div class="code"><pre><code>
+	<span class="keyword">case</span> *<a href="ast.go.html#line-287" class="ident">Ellipsis</a>:
+		<span class="keyword">if</span> <label for="r30" class="ident">n</label>.<a href="ast.go.html#line-289" class="ident">Elt</a> != <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r30" class="ident">n</label>.<a href="ast.go.html#line-289" class="ident">Elt</a>)
+		}
+
+	<span class="keyword">case</span> *<a href="ast.go.html#line-306" class="ident">FuncLit</a>:
+		<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r31" class="ident">n</label>.<a href="ast.go.html#line-307" class="ident">Type</a>)
+		<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r31" class="ident">n</label>.<a href="ast.go.html#line-308" class="ident">Body</a>)
+
+	<span class="keyword">case</span> *<a href="ast.go.html#line-312" class="ident">CompositeLit</a>:
+		<span class="keyword">if</span> <label for="r32" class="ident">n</label>.<a href="ast.go.html#line-313" class="ident">Type</a> != <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r32" class="ident">n</label>.<a href="ast.go.html#line-313" class="ident">Type</a>)
+		}
+		<a href="#line-24" class="ident">walkExprList</a>(<label for="r21" class="ident">v</label>, <label for="r32" class="ident">n</label>.<a href="ast.go.html#line-315" class="ident">Elts</a>)
+
+	<span class="keyword">case</span> *<a href="ast.go.html#line-321" class="ident">ParenExpr</a>:
+		<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r33" class="ident">n</label>.<a href="ast.go.html#line-323" class="ident">X</a>)
+
+	<span class="keyword">case</span> *<a href="ast.go.html#line-328" class="ident">SelectorExpr</a>:
+		<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r34" class="ident">n</label>.<a href="ast.go.html#line-329" class="ident">X</a>)
+		<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r34" class="ident">n</label>.<a href="ast.go.html#line-330" class="ident">Sel</a>)
+
+	<span class="keyword">case</span> *<a href="ast.go.html#line-334" class="ident">IndexExpr</a>:
+		<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r35" class="ident">n</label>.<a href="ast.go.html#line-335" class="ident">X</a>)
+		<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r35" class="ident">n</label>.<a href="ast.go.html#line-337" class="ident">Index</a>)
+
+	<span class="keyword">case</span> *<a href="ast.go.html#line-342" class="ident">SliceExpr</a>:
+		<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r36" class="ident">n</label>.<a href="ast.go.html#line-343" class="ident">X</a>)
+		<span class="keyword">if</span> <label for="r36" class="ident">n</label>.<a href="ast.go.html#line-345" class="ident">Low</a> != <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r36" class="ident">n</label>.<a href="ast.go.html#line-345" class="ident">Low</a>)
+		}
+		<span class="keyword">if</span> <label for="r36" class="ident">n</label>.<a href="ast.go.html#line-346" class="ident">High</a> != <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r36" class="ident">n</label>.<a href="ast.go.html#line-346" class="ident">High</a>)
+		}
+		<span class="keyword">if</span> <label for="r36" class="ident">n</label>.<a href="ast.go.html#line-347" class="ident">Max</a> != <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r36" class="ident">n</label>.<a href="ast.go.html#line-347" class="ident">Max</a>)
+		}
+
+	<span class="keyword">case</span> *<a href="ast.go.html#line-355" class="ident">TypeAssertExpr</a>:
+		<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r37" class="ident">n</label>.<a href="ast.go.html#line-356" class="ident">X</a>)
+		<span class="keyword">if</span> <label for="r37" class="ident">n</label>.<a href="ast.go.html#line-358" class="ident">Type</a> != <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r37" class="ident">n</label>.<a href="ast.go.html#line-358" class="ident">Type</a>)
+		}
+
+	<span class="keyword">case</span> *<a href="ast.go.html#line-363" class="ident">CallExpr</a>:
+		<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r38" class="ident">n</label>.<a href="ast.go.html#line-364" class="ident">Fun</a>)
+		<a href="#line-24" class="ident">walkExprList</a>(<label for="r21" class="ident">v</label>, <label for="r38" class="ident">n</label>.<a href="ast.go.html#line-366" class="ident">Args</a>)
+
+	<span class="keyword">case</span> *<a href="ast.go.html#line-374" class="ident">StarExpr</a>:
+		<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r39" class="ident">n</label>.<a href="ast.go.html#line-376" class="ident">X</a>)
+
+	<span class="keyword">case</span> *<a href="ast.go.html#line-382" class="ident">UnaryExpr</a>:
+		<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r40" class="ident">n</label>.<a href="ast.go.html#line-385" class="ident">X</a>)
+
+	<span class="keyword">case</span> *<a href="ast.go.html#line-389" class="ident">BinaryExpr</a>:
+		<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r41" class="ident">n</label>.<a href="ast.go.html#line-390" class="ident">X</a>)
+		<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r41" class="ident">n</label>.<a href="ast.go.html#line-393" class="ident">Y</a>)
+
+	<span class="keyword">case</span> *<a href="ast.go.html#line-399" class="ident">KeyValueExpr</a>:
+		<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r42" class="ident">n</label>.<a href="ast.go.html#line-400" class="ident">Key</a>)
+		<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r42" class="ident">n</label>.<a href="ast.go.html#line-402" class="ident">Value</a>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Types</span></div>
+<div class="code"><pre><code>	<span class="keyword">case</span> *<a href="ast.go.html#line-422" class="ident">ArrayType</a>:
+		<span class="keyword">if</span> <label for="r43" class="ident">n</label>.<a href="ast.go.html#line-424" class="ident">Len</a> != <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r43" class="ident">n</label>.<a href="ast.go.html#line-424" class="ident">Len</a>)
+		}
+		<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r43" class="ident">n</label>.<a href="ast.go.html#line-425" class="ident">Elt</a>)
+
+	<span class="keyword">case</span> *<a href="ast.go.html#line-429" class="ident">StructType</a>:
+		<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r44" class="ident">n</label>.<a href="ast.go.html#line-431" class="ident">Fields</a>)
+
+	<span class="keyword">case</span> *<a href="ast.go.html#line-438" class="ident">FuncType</a>:
+		<span class="keyword">if</span> <label for="r45" class="ident">n</label>.<a href="ast.go.html#line-440" class="ident">Params</a> != <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r45" class="ident">n</label>.<a href="ast.go.html#line-440" class="ident">Params</a>)
+		}
+		<span class="keyword">if</span> <label for="r45" class="ident">n</label>.<a href="ast.go.html#line-441" class="ident">Results</a> != <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r45" class="ident">n</label>.<a href="ast.go.html#line-441" class="ident">Results</a>)
+		}
+
+	<span class="keyword">case</span> *<a href="ast.go.html#line-445" class="ident">InterfaceType</a>:
+		<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r46" class="ident">n</label>.<a href="ast.go.html#line-447" class="ident">Methods</a>)
+
+	<span class="keyword">case</span> *<a href="ast.go.html#line-452" class="ident">MapType</a>:
+		<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r47" class="ident">n</label>.<a href="ast.go.html#line-454" class="ident">Key</a>)
+		<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r47" class="ident">n</label>.<a href="ast.go.html#line-455" class="ident">Value</a>)
+
+	<span class="keyword">case</span> *<a href="ast.go.html#line-459" class="ident">ChanType</a>:
+		<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r48" class="ident">n</label>.<a href="ast.go.html#line-463" class="ident">Value</a>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Statements</span></div>
+<div class="code"><pre><code></code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> nothing to do</span></div>
+<div class="code"><pre><code>
+	<span class="keyword">case</span> *<a href="ast.go.html#line-601" class="ident">DeclStmt</a>:
+		<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r49" class="ident">n</label>.<a href="ast.go.html#line-602" class="ident">Decl</a>)
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> nothing to do</span></div>
+<div class="code"><pre><code>
+	<span class="keyword">case</span> *<a href="ast.go.html#line-615" class="ident">LabeledStmt</a>:
+		<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r50" class="ident">n</label>.<a href="ast.go.html#line-616" class="ident">Label</a>)
+		<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r50" class="ident">n</label>.<a href="ast.go.html#line-618" class="ident">Stmt</a>)
+
+	<span class="keyword">case</span> *<a href="ast.go.html#line-624" class="ident">ExprStmt</a>:
+		<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r51" class="ident">n</label>.<a href="ast.go.html#line-625" class="ident">X</a>)
+
+	<span class="keyword">case</span> *<a href="ast.go.html#line-629" class="ident">SendStmt</a>:
+		<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r52" class="ident">n</label>.<a href="ast.go.html#line-630" class="ident">Chan</a>)
+		<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r52" class="ident">n</label>.<a href="ast.go.html#line-632" class="ident">Value</a>)
+
+	<span class="keyword">case</span> *<a href="ast.go.html#line-636" class="ident">IncDecStmt</a>:
+		<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r53" class="ident">n</label>.<a href="ast.go.html#line-637" class="ident">X</a>)
+
+	<span class="keyword">case</span> *<a href="ast.go.html#line-645" class="ident">AssignStmt</a>:
+		<a href="#line-24" class="ident">walkExprList</a>(<label for="r21" class="ident">v</label>, <label for="r54" class="ident">n</label>.<a href="ast.go.html#line-646" class="ident">Lhs</a>)
+		<a href="#line-24" class="ident">walkExprList</a>(<label for="r21" class="ident">v</label>, <label for="r54" class="ident">n</label>.<a href="ast.go.html#line-649" class="ident">Rhs</a>)
+
+	<span class="keyword">case</span> *<a href="ast.go.html#line-653" class="ident">GoStmt</a>:
+		<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r55" class="ident">n</label>.<a href="ast.go.html#line-655" class="ident">Call</a>)
+
+	<span class="keyword">case</span> *<a href="ast.go.html#line-659" class="ident">DeferStmt</a>:
+		<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r56" class="ident">n</label>.<a href="ast.go.html#line-661" class="ident">Call</a>)
+
+	<span class="keyword">case</span> *<a href="ast.go.html#line-665" class="ident">ReturnStmt</a>:
+		<a href="#line-24" class="ident">walkExprList</a>(<label for="r21" class="ident">v</label>, <label for="r57" class="ident">n</label>.<a href="ast.go.html#line-667" class="ident">Results</a>)
+
+	<span class="keyword">case</span> *<a href="ast.go.html#line-673" class="ident">BranchStmt</a>:
+		<span class="keyword">if</span> <label for="r58" class="ident">n</label>.<a href="ast.go.html#line-676" class="ident">Label</a> != <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r58" class="ident">n</label>.<a href="ast.go.html#line-676" class="ident">Label</a>)
+		}
+
+	<span class="keyword">case</span> *<a href="ast.go.html#line-680" class="ident">BlockStmt</a>:
+		<a href="#line-30" class="ident">walkStmtList</a>(<label for="r21" class="ident">v</label>, <label for="r59" class="ident">n</label>.<a href="ast.go.html#line-682" class="ident">List</a>)
+
+	<span class="keyword">case</span> *<a href="ast.go.html#line-687" class="ident">IfStmt</a>:
+		<span class="keyword">if</span> <label for="r60" class="ident">n</label>.<a href="ast.go.html#line-689" class="ident">Init</a> != <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r60" class="ident">n</label>.<a href="ast.go.html#line-689" class="ident">Init</a>)
+		}
+		<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r60" class="ident">n</label>.<a href="ast.go.html#line-690" class="ident">Cond</a>)
+		<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r60" class="ident">n</label>.<a href="ast.go.html#line-691" class="ident">Body</a>)
+		<span class="keyword">if</span> <label for="r60" class="ident">n</label>.<a href="ast.go.html#line-692" class="ident">Else</a> != <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r60" class="ident">n</label>.<a href="ast.go.html#line-692" class="ident">Else</a>)
+		}
+
+	<span class="keyword">case</span> *<a href="ast.go.html#line-696" class="ident">CaseClause</a>:
+		<a href="#line-24" class="ident">walkExprList</a>(<label for="r21" class="ident">v</label>, <label for="r61" class="ident">n</label>.<a href="ast.go.html#line-698" class="ident">List</a>)
+		<a href="#line-30" class="ident">walkStmtList</a>(<label for="r21" class="ident">v</label>, <label for="r61" class="ident">n</label>.<a href="ast.go.html#line-700" class="ident">Body</a>)
+
+	<span class="keyword">case</span> *<a href="ast.go.html#line-704" class="ident">SwitchStmt</a>:
+		<span class="keyword">if</span> <label for="r62" class="ident">n</label>.<a href="ast.go.html#line-706" class="ident">Init</a> != <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r62" class="ident">n</label>.<a href="ast.go.html#line-706" class="ident">Init</a>)
+		}
+		<span class="keyword">if</span> <label for="r62" class="ident">n</label>.<a href="ast.go.html#line-707" class="ident">Tag</a> != <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r62" class="ident">n</label>.<a href="ast.go.html#line-707" class="ident">Tag</a>)
+		}
+		<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r62" class="ident">n</label>.<a href="ast.go.html#line-708" class="ident">Body</a>)
+
+	<span class="keyword">case</span> *<a href="ast.go.html#line-712" class="ident">TypeSwitchStmt</a>:
+		<span class="keyword">if</span> <label for="r63" class="ident">n</label>.<a href="ast.go.html#line-714" class="ident">Init</a> != <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r63" class="ident">n</label>.<a href="ast.go.html#line-714" class="ident">Init</a>)
+		}
+		<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r63" class="ident">n</label>.<a href="ast.go.html#line-715" class="ident">Assign</a>)
+		<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r63" class="ident">n</label>.<a href="ast.go.html#line-716" class="ident">Body</a>)
+
+	<span class="keyword">case</span> *<a href="ast.go.html#line-720" class="ident">CommClause</a>:
+		<span class="keyword">if</span> <label for="r64" class="ident">n</label>.<a href="ast.go.html#line-722" class="ident">Comm</a> != <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r64" class="ident">n</label>.<a href="ast.go.html#line-722" class="ident">Comm</a>)
+		}
+		<a href="#line-30" class="ident">walkStmtList</a>(<label for="r21" class="ident">v</label>, <label for="r64" class="ident">n</label>.<a href="ast.go.html#line-724" class="ident">Body</a>)
+
+	<span class="keyword">case</span> *<a href="ast.go.html#line-728" class="ident">SelectStmt</a>:
+		<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r65" class="ident">n</label>.<a href="ast.go.html#line-730" class="ident">Body</a>)
+
+	<span class="keyword">case</span> *<a href="ast.go.html#line-734" class="ident">ForStmt</a>:
+		<span class="keyword">if</span> <label for="r66" class="ident">n</label>.<a href="ast.go.html#line-736" class="ident">Init</a> != <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r66" class="ident">n</label>.<a href="ast.go.html#line-736" class="ident">Init</a>)
+		}
+		<span class="keyword">if</span> <label for="r66" class="ident">n</label>.<a href="ast.go.html#line-737" class="ident">Cond</a> != <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r66" class="ident">n</label>.<a href="ast.go.html#line-737" class="ident">Cond</a>)
+		}
+		<span class="keyword">if</span> <label for="r66" class="ident">n</label>.<a href="ast.go.html#line-738" class="ident">Post</a> != <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r66" class="ident">n</label>.<a href="ast.go.html#line-738" class="ident">Post</a>)
+		}
+		<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r66" class="ident">n</label>.<a href="ast.go.html#line-739" class="ident">Body</a>)
+
+	<span class="keyword">case</span> *<a href="ast.go.html#line-743" class="ident">RangeStmt</a>:
+		<span class="keyword">if</span> <label for="r67" class="ident">n</label>.<a href="ast.go.html#line-745" class="ident">Key</a> != <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r67" class="ident">n</label>.<a href="ast.go.html#line-745" class="ident">Key</a>)
+		}
+		<span class="keyword">if</span> <label for="r67" class="ident">n</label>.<a href="ast.go.html#line-745" class="ident">Value</a> != <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r67" class="ident">n</label>.<a href="ast.go.html#line-745" class="ident">Value</a>)
+		}
+		<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r67" class="ident">n</label>.<a href="ast.go.html#line-748" class="ident">X</a>)
+		<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r67" class="ident">n</label>.<a href="ast.go.html#line-749" class="ident">Body</a>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Declarations</span></div>
+<div class="code"><pre><code>	<span class="keyword">case</span> *<a href="ast.go.html#line-878" class="ident">ImportSpec</a>:
+		<span class="keyword">if</span> <label for="r68" class="ident">n</label>.<a href="ast.go.html#line-879" class="ident">Doc</a> != <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r68" class="ident">n</label>.<a href="ast.go.html#line-879" class="ident">Doc</a>)
+		}
+		<span class="keyword">if</span> <label for="r68" class="ident">n</label>.<a href="ast.go.html#line-880" class="ident">Name</a> != <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r68" class="ident">n</label>.<a href="ast.go.html#line-880" class="ident">Name</a>)
+		}
+		<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r68" class="ident">n</label>.<a href="ast.go.html#line-881" class="ident">Path</a>)
+		<span class="keyword">if</span> <label for="r68" class="ident">n</label>.<a href="ast.go.html#line-882" class="ident">Comment</a> != <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r68" class="ident">n</label>.<a href="ast.go.html#line-882" class="ident">Comment</a>)
+		}
+
+	<span class="keyword">case</span> *<a href="ast.go.html#line-889" class="ident">ValueSpec</a>:
+		<span class="keyword">if</span> <label for="r69" class="ident">n</label>.<a href="ast.go.html#line-890" class="ident">Doc</a> != <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r69" class="ident">n</label>.<a href="ast.go.html#line-890" class="ident">Doc</a>)
+		}
+		<a href="#line-18" class="ident">walkIdentList</a>(<label for="r21" class="ident">v</label>, <label for="r69" class="ident">n</label>.<a href="ast.go.html#line-891" class="ident">Names</a>)
+		<span class="keyword">if</span> <label for="r69" class="ident">n</label>.<a href="ast.go.html#line-892" class="ident">Type</a> != <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r69" class="ident">n</label>.<a href="ast.go.html#line-892" class="ident">Type</a>)
+		}
+		<a href="#line-24" class="ident">walkExprList</a>(<label for="r21" class="ident">v</label>, <label for="r69" class="ident">n</label>.<a href="ast.go.html#line-893" class="ident">Values</a>)
+		<span class="keyword">if</span> <label for="r69" class="ident">n</label>.<a href="ast.go.html#line-894" class="ident">Comment</a> != <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r69" class="ident">n</label>.<a href="ast.go.html#line-894" class="ident">Comment</a>)
+		}
+
+	<span class="keyword">case</span> *<a href="ast.go.html#line-898" class="ident">TypeSpec</a>:
+		<span class="keyword">if</span> <label for="r70" class="ident">n</label>.<a href="ast.go.html#line-899" class="ident">Doc</a> != <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r70" class="ident">n</label>.<a href="ast.go.html#line-899" class="ident">Doc</a>)
+		}
+		<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r70" class="ident">n</label>.<a href="ast.go.html#line-900" class="ident">Name</a>)
+		<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r70" class="ident">n</label>.<a href="ast.go.html#line-902" class="ident">Type</a>)
+		<span class="keyword">if</span> <label for="r70" class="ident">n</label>.<a href="ast.go.html#line-903" class="ident">Comment</a> != <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r70" class="ident">n</label>.<a href="ast.go.html#line-903" class="ident">Comment</a>)
+		}
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> nothing to do</span></div>
+<div class="code"><pre><code>
+	<span class="keyword">case</span> *<a href="ast.go.html#line-965" class="ident">GenDecl</a>:
+		<span class="keyword">if</span> <label for="r71" class="ident">n</label>.<a href="ast.go.html#line-966" class="ident">Doc</a> != <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r71" class="ident">n</label>.<a href="ast.go.html#line-966" class="ident">Doc</a>)
+		}
+		<span class="keyword">for</span> <label for="r72" class="ident">_</label>, <label for="r73" class="ident">s</label> := <span class="keyword">range</span> <label for="r71" class="ident">n</label>.<a href="ast.go.html#line-970" class="ident">Specs</a> {
+			<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r73" class="ident">s</label>)
+		}
+
+	<span class="keyword">case</span> *<a href="ast.go.html#line-975" class="ident">FuncDecl</a>:
+		<span class="keyword">if</span> <label for="r74" class="ident">n</label>.<a href="ast.go.html#line-976" class="ident">Doc</a> != <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r74" class="ident">n</label>.<a href="ast.go.html#line-976" class="ident">Doc</a>)
+		}
+		<span class="keyword">if</span> <label for="r74" class="ident">n</label>.<a href="ast.go.html#line-977" class="ident">Recv</a> != <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r74" class="ident">n</label>.<a href="ast.go.html#line-977" class="ident">Recv</a>)
+		}
+		<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r74" class="ident">n</label>.<a href="ast.go.html#line-978" class="ident">Name</a>)
+		<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r74" class="ident">n</label>.<a href="ast.go.html#line-979" class="ident">Type</a>)
+		<span class="keyword">if</span> <label for="r74" class="ident">n</label>.<a href="ast.go.html#line-980" class="ident">Body</a> != <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r74" class="ident">n</label>.<a href="ast.go.html#line-980" class="ident">Body</a>)
+		}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Files and packages</span></div>
+<div class="code"><pre><code>	<span class="keyword">case</span> *<a href="ast.go.html#line-1033" class="ident">File</a>:
+		<span class="keyword">if</span> <label for="r75" class="ident">n</label>.<a href="ast.go.html#line-1034" class="ident">Doc</a> != <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+			<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r75" class="ident">n</label>.<a href="ast.go.html#line-1034" class="ident">Doc</a>)
+		}
+		<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r75" class="ident">n</label>.<a href="ast.go.html#line-1036" class="ident">Name</a>)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> don't walk n.Comments - they have been</span><span class="comment">		 visited already through the individual</span><span class="comment">		 nodes</span></div>
+<div class="code"><pre><code>
+	<span class="keyword">case</span> *<a href="ast.go.html#line-1055" class="ident">Package</a>:
+		<span class="keyword">for</span> <label for="r76" class="ident">_</label>, <label for="r77" class="ident">f</label> := <span class="keyword">range</span> <label for="r78" class="ident">n</label>.<a href="ast.go.html#line-1059" class="ident">Files</a> {
+			<label for="r20" class="ident">Walk</label>(<label for="r21" class="ident">v</label>, <label for="r77" class="ident">f</label>)
+		}
+
+	<span class="keyword">default</span>:
+		<a href="../../../pkg/builtin.html#name-panic" class="ident">panic</a>(<a href="../../../pkg/fmt.html" class="ident i0">fmt</a>.<a href="../../fmt/print.go.html#line-217" class="ident">Sprintf</a>(<span class="lit-string">"ast.Walk: unexpected node type %T"</span>, <label for="r79" class="ident">n</label>))
+	}
+
+	<label for="r21" class="ident">v</label>.<a href="#line-13" class="ident">Visit</a>(<a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a>)
+}
+
+<span class="keyword">type</span> <a href="../../../pkg/go/ast.html#name-inspector" class="ident">inspector</a> <span class="keyword">func</span>(<a href="ast.go.html#line-33" class="ident">Node</a>) <a href="../../../pkg/builtin.html#name-bool" class="ident">bool</a>
+
+<span class="keyword">func</span> (<label for="r80" class="ident">f</label> <a href="#line-370" class="ident">inspector</a>) <label for="r81" class="ident"><a href="../../../use/go/ast..inspector*98fe4.Visit.html" class="ident">Visit</a></label>(<label for="r82" class="ident">node</label> <a href="ast.go.html#line-33" class="ident">Node</a>) <a href="#line-12" class="ident">Visitor</a> {
+	<span class="keyword">if</span> <label for="r80" class="ident">f</label>(<label for="r82" class="ident">node</label>) {
+		<span class="keyword">return</span> <label for="r80" class="ident">f</label>
+	}
+	<span class="keyword">return</span> <a href="../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Inspect traverses an AST in depth-first order: It starts by calling</span><span class="comment"> f(node); node must not be nil. If f returns true, Inspect invokes f</span><span class="comment"> recursively for each of the non-nil children of node, followed by a</span><span class="comment"> call of f(nil).</span><span class="comment"></span></div>
+<div class="code"><pre><code><span class="keyword">func</span> <label for="r83" class="ident"><a href="../../../pkg/go/ast.html#name-Inspect" class="ident">Inspect</a></label>(<label for="r84" class="ident">node</label> <a href="ast.go.html#line-33" class="ident">Node</a>, <label for="r85" class="ident">f</label> <span class="keyword">func</span>(<a href="ast.go.html#line-33" class="ident">Node</a>) <a href="../../../pkg/builtin.html#name-bool" class="ident">bool</a>) {
+	<a href="#line-51" class="ident">Walk</a>(<a href="#line-370" class="ident">inspector</a>(<label for="r85" class="ident">f</label>), <label for="r84" class="ident">node</label>)
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

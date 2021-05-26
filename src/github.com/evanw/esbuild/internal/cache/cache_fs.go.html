@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: cache_fs.go in package github.com/evanw/esbuild/internal/cache</title>
+<link href="../../../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	cache_fs.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../../../pkg/github.com/evanw/esbuild/internal/cache.html">github.com/evanw/esbuild/internal/cache</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6],
+input[id=r7]:checked ~pre label[for=r7],
+input[id=r8]:checked ~pre label[for=r8]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0,
+input[id=i1]:checked ~pre .i1
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="r7" type="radio" name="g"/>
+<input id="r8" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<input id="i1" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+</div>
+<div class="code"><pre><code><span class="keyword">package</span> cache
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"sync"</span></label>
+
+	<label for="i1"><span class="lit-string i1">"github.com/evanw/esbuild/internal/fs"</span></label>
+)
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> This cache uses information from the "stat" syscall to try to avoid re-</span><span class="comment"> reading files from the file system during subsequent builds if the file</span><span class="comment"> hasn't changed. The assumption is reading the file metadata is faster than</span><span class="comment"> reading the file contents.</span></div>
+<div class="code"><pre><code>
+<span class="keyword">type</span> <a href="../../../../../../pkg/github.com/evanw/esbuild/internal/cache.html#name-FSCache" class="ident">FSCache</a> <span class="keyword">struct</span> {
+	<a href="../../../../../../use/github.com/evanw/esbuild/internal/cache..FSCache.mutex*96cf2.html" class="ident">mutex</a>   <a href="../../../../../../pkg/sync.html" class="ident i0">sync</a>.<a href="../../../../../sync/mutex.go.html#line-25" class="ident">Mutex</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/internal/cache..FSCache.entries*87d05.html" class="ident">entries</a> <span class="keyword">map</span>[<a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>]*<a href="#line-19" class="ident">fsEntry</a>
+}
+
+<span class="keyword">type</span> <a href="../../../../../../pkg/github.com/evanw/esbuild/internal/cache.html#name-fsEntry" class="ident">fsEntry</a> <span class="keyword">struct</span> {
+	<a href="../../../../../../use/github.com/evanw/esbuild/internal/cache..fsEntry*3b9f2.contents*d1b2a.html" class="ident">contents</a>       <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/internal/cache..fsEntry*3b9f2.modKey*2ca0a.html" class="ident">modKey</a>         <a href="../../../../../../pkg/github.com/evanw/esbuild/internal/fs.html" class="ident i1">fs</a>.<a href="../fs/fs.go.html#line-126" class="ident">ModKey</a>
+	<a href="../../../../../../use/github.com/evanw/esbuild/internal/cache..fsEntry*3b9f2.isModKeyUsable*d6219.html" class="ident">isModKeyUsable</a> <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>
+}
+
+<span class="keyword">func</span> (<label for="r0" class="ident">c</label> *<a href="#line-14" class="ident">FSCache</a>) <label for="r1" class="ident"><a href="../../../../../../use/github.com/evanw/esbuild/internal/cache..FSCache.ReadFile.html" class="ident">ReadFile</a></label>(<label for="r2" class="ident">fs</label> <a href="../../../../../../pkg/github.com/evanw/esbuild/internal/fs.html" class="ident i1">fs</a>.<a href="../fs/fs.go.html#line-82" class="ident">FS</a>, <label for="r3" class="ident">path</label> <a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>) (<a href="../../../../../../pkg/builtin.html#name-string" class="ident">string</a>, <a href="../../../../../../pkg/builtin.html#name-error" class="ident">error</a>) {
+	<label for="r4" class="ident">entry</label> := <span class="keyword">func</span>() *<a href="#line-19" class="ident">fsEntry</a> {
+		<label for="r0" class="ident">c</label>.<a href="#line-15" class="ident">mutex</a>.<a href="../../../../../sync/mutex.go.html#line-72" class="ident">Lock</a>()
+		<span class="keyword">defer</span> <label for="r0" class="ident">c</label>.<a href="#line-15" class="ident">mutex</a>.<a href="../../../../../sync/mutex.go.html#line-179" class="ident">Unlock</a>()
+		<span class="keyword">return</span> <label for="r0" class="ident">c</label>.<a href="#line-16" class="ident">entries</a>[<label for="r3" class="ident">path</label>]
+	}()
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> If the file's modification key hasn't changed since it was cached, assume</span><span class="comment">	 the contents of the file are also the same and skip reading the file.</span></div>
+<div class="code"><pre><code>	<label for="r5" class="ident">modKey</label>, <label for="r6" class="ident">modKeyErr</label> := <label for="r2" class="ident">fs</label>.<a href="../fs/fs.go.html#line-99" class="ident">ModKey</a>(<label for="r3" class="ident">path</label>)
+	<span class="keyword">if</span> <label for="r4" class="ident">entry</label> != <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> &amp;&amp; <label for="r4" class="ident">entry</label>.<a href="#line-22" class="ident">isModKeyUsable</a> &amp;&amp; <label for="r6" class="ident">modKeyErr</label> == <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> &amp;&amp; <label for="r4" class="ident">entry</label>.<a href="#line-21" class="ident">modKey</a> == <label for="r5" class="ident">modKey</label> {
+		<span class="keyword">return</span> <label for="r4" class="ident">entry</label>.<a href="#line-20" class="ident">contents</a>, <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+	}
+
+	<label for="r7" class="ident">contents</label>, <label for="r8" class="ident">err</label> := <label for="r2" class="ident">fs</label>.<a href="../fs/fs.go.html#line-86" class="ident">ReadFile</a>(<label for="r3" class="ident">path</label>)
+	<span class="keyword">if</span> <label for="r8" class="ident">err</label> != <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a> {
+		<span class="keyword">return</span> <span class="lit-string">""</span>, <label for="r8" class="ident">err</label>
+	}
+
+	<label for="r0" class="ident">c</label>.<a href="#line-15" class="ident">mutex</a>.<a href="../../../../../sync/mutex.go.html#line-72" class="ident">Lock</a>()
+	<span class="keyword">defer</span> <label for="r0" class="ident">c</label>.<a href="#line-15" class="ident">mutex</a>.<a href="../../../../../sync/mutex.go.html#line-179" class="ident">Unlock</a>()
+	<label for="r0" class="ident">c</label>.<a href="#line-16" class="ident">entries</a>[<label for="r3" class="ident">path</label>] = &amp;<a href="#line-19" class="ident">fsEntry</a>{
+		<a href="#line-20" class="ident">contents</a>:       <label for="r7" class="ident">contents</label>,
+		<a href="#line-21" class="ident">modKey</a>:         <label for="r5" class="ident">modKey</label>,
+		<a href="#line-22" class="ident">isModKeyUsable</a>: <label for="r6" class="ident">modKeyErr</label> == <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>,
+	}
+	<span class="keyword">return</span> <label for="r7" class="ident">contents</label>, <a href="../../../../../../pkg/builtin.html#name-nil" class="ident">nil</a>
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

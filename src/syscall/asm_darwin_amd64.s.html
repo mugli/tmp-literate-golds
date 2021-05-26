@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: asm_darwin_amd64.s in package syscall</title>
+<link href="../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	asm_darwin_amd64.s
+
+<span class="title">Belonging Package</span>
+	<a href="../../pkg/syscall.html">syscall</a>
+</code></pre>
+<div id="container"><div class="section">
+<div class="doc">
+</div>
+<div class="code"><pre><code>// Copyright 2009 The Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+#include "textflag.h"
+#include "funcdata.h"
+
+//
+// System call support for AMD64, Darwin
+//
+
+// Trap # in AX, args in DI SI DX, return in AX DX
+
+// func Syscall(trap, a1, a2, a3 uintptr) (r1, r2 uintptr, err Errno);
+TEXT	·Syscall(SB),NOSPLIT,$0-56
+	CALL	runtime·entersyscall(SB)
+	MOVQ	a1+8(FP), DI
+	MOVQ	a2+16(FP), SI
+	MOVQ	a3+24(FP), DX
+	MOVQ	trap+0(FP), AX	// syscall entry
+	ADDQ	$0x2000000, AX
+	SYSCALL
+	JCC	ok
+	MOVQ	$-1, r1+32(FP)
+	MOVQ	$0, r2+40(FP)
+	MOVQ	AX, err+48(FP)
+	CALL	runtime·exitsyscall(SB)
+	RET
+ok:
+	MOVQ	AX, r1+32(FP)
+	MOVQ	DX, r2+40(FP)
+	MOVQ	$0, err+48(FP)
+	CALL	runtime·exitsyscall(SB)
+	RET
+
+// func Syscall6(trap, a1, a2, a3, a4, a5, a6 uintptr) (r1, r2 uintptr, err Errno);
+TEXT	·Syscall6(SB),NOSPLIT,$0-80
+	CALL	runtime·entersyscall(SB)
+	MOVQ	a1+8(FP), DI
+	MOVQ	a2+16(FP), SI
+	MOVQ	a3+24(FP), DX
+	MOVQ	a4+32(FP), R10
+	MOVQ	a5+40(FP), R8
+	MOVQ	a6+48(FP), R9
+	MOVQ	trap+0(FP), AX	// syscall entry
+	ADDQ	$0x2000000, AX
+	SYSCALL
+	JCC	ok6
+	MOVQ	$-1, r1+56(FP)
+	MOVQ	$0, r2+64(FP)
+	MOVQ	AX, err+72(FP)
+	CALL	runtime·exitsyscall(SB)
+	RET
+ok6:
+	MOVQ	AX, r1+56(FP)
+	MOVQ	DX, r2+64(FP)
+	MOVQ	$0, err+72(FP)
+	CALL	runtime·exitsyscall(SB)
+	RET
+
+// func Syscall9(trap, a1, a2, a3, a4, a5, a6, a7, a8, a9 uintptr) (r1, r2 uintptr, err Errno)
+TEXT	·Syscall9(SB),NOSPLIT,$0-104
+	CALL	runtime·entersyscall(SB)
+	MOVQ	trap+0(FP), AX	// syscall entry
+	MOVQ	a1+8(FP), DI
+	MOVQ	a2+16(FP), SI
+	MOVQ	a3+24(FP), DX
+	MOVQ	a4+32(FP), R10
+	MOVQ	a5+40(FP), R8
+	MOVQ	a6+48(FP), R9
+	MOVQ	a7+56(FP), R11
+	MOVQ	a8+64(FP), R12
+	MOVQ	a9+72(FP), R13
+	SUBQ	$32, SP
+	MOVQ	R11, 8(SP)
+	MOVQ	R12, 16(SP)
+	MOVQ	R13, 24(SP)
+	ADDQ	$0x2000000, AX
+	SYSCALL
+	JCC	ok9
+	ADDQ	$32, SP
+	MOVQ	$-1, r1+80(FP)
+	MOVQ	$0, r2+88(FP)
+	MOVQ	AX, err+96(FP)
+	CALL	runtime·exitsyscall(SB)
+	RET
+ok9:
+	ADDQ	$32, SP
+	MOVQ	AX, r1+80(FP)
+	MOVQ	DX, r2+88(FP)
+	MOVQ	$0, err+96(FP)
+	CALL	runtime·exitsyscall(SB)
+	RET
+
+// func RawSyscall(trap, a1, a2, a3 uintptr) (r1, r2 uintptr, err Errno)
+TEXT ·RawSyscall(SB),NOSPLIT,$0-56
+	MOVQ	a1+8(FP), DI
+	MOVQ	a2+16(FP), SI
+	MOVQ	a3+24(FP), DX
+	MOVQ	trap+0(FP), AX	// syscall entry
+	ADDQ	$0x2000000, AX
+	SYSCALL
+	JCC	ok1
+	MOVQ	$-1, r1+32(FP)
+	MOVQ	$0, r2+40(FP)
+	MOVQ	AX, err+48(FP)
+	RET
+ok1:
+	MOVQ	AX, r1+32(FP)
+	MOVQ	DX, r2+40(FP)
+	MOVQ	$0, err+48(FP)
+	RET
+
+// func RawSyscall6(trap, a1, a2, a3, a4, a5, a6 uintptr) (r1, r2 uintptr, err Errno)
+TEXT	·RawSyscall6(SB),NOSPLIT,$0-80
+	MOVQ	a1+8(FP), DI
+	MOVQ	a2+16(FP), SI
+	MOVQ	a3+24(FP), DX
+	MOVQ	a4+32(FP), R10
+	MOVQ	a5+40(FP), R8
+	MOVQ	a6+48(FP), R9
+	MOVQ	trap+0(FP), AX	// syscall entry
+	ADDQ	$0x2000000, AX
+	SYSCALL
+	JCC	ok2
+	MOVQ	$-1, r1+56(FP)
+	MOVQ	$0, r2+64(FP)
+	MOVQ	AX, err+72(FP)
+	RET
+ok2:
+	MOVQ	AX, r1+56(FP)
+	MOVQ	DX, r2+64(FP)
+	MOVQ	$0, err+72(FP)
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>

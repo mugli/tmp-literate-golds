@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source: loadshedding.go in package golang.org/x/pkgsite/internal/fetch</title>
+<link href="../../../../../../css/lightLiterate-v0.3.2-preview.css" rel="stylesheet">
+<script src="../../../../../../jvs/golds-v0.3.2-preview.js"></script>
+<body onload="onPageLoad()"><div>
+
+<pre id="header"><code><span class="title">Source File</span>
+	loadshedding.go
+
+<span class="title">Belonging Package</span>
+	<a href="../../../../../../pkg/golang.org/x/pkgsite/internal/fetch.html">golang.org/x/pkgsite/internal/fetch</a>
+</code></pre>
+<style>input[type=radio] {display: none;}
+input[id=r0]:checked ~pre label[for=r0],
+input[id=r1]:checked ~pre label[for=r1],
+input[id=r2]:checked ~pre label[for=r2],
+input[id=r3]:checked ~pre label[for=r3],
+input[id=r4]:checked ~pre label[for=r4],
+input[id=r5]:checked ~pre label[for=r5],
+input[id=r6]:checked ~pre label[for=r6]
+{background: #226; color: #ff8;}
+input[id=i0]:checked ~pre .i0
+{background: brown; color: #eed;}
+</style><input id="r0" type="radio" name="g"/>
+<input id="r1" type="radio" name="g"/>
+<input id="r2" type="radio" name="g"/>
+<input id="r3" type="radio" name="g"/>
+<input id="r4" type="radio" name="g"/>
+<input id="r5" type="radio" name="g"/>
+<input id="r6" type="radio" name="g"/>
+<input id="i0" type="radio" name="i"/>
+<div id="container"><div class="section">
+<div class="doc">
+<span class="comment"> Copyright 2020 The Go Authors. All rights reserved.</span><span class="comment"> Use of this source code is governed by a BSD-style</span><span class="comment"> license that can be found in the LICENSE file.</span></div>
+<div class="code"><pre><code>
+<span class="keyword">package</span> fetch
+
+<span class="keyword">import</span> (
+	<label for="i0"><span class="lit-string i0">"sync"</span></label>
+)
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> The maximum size of requests that can be processed at once. If an</span><span class="comment">	 incoming request would cause sizeInFlight to exceed this value, it won't</span><span class="comment">	 be processed.</span></div>
+<div class="code"><pre><code>	<a href="../../../../../../use/golang.org/x/pkgsite/internal/fetch..loadShedder*9cbba.maxSizeInFlight*c8daa.html" class="ident">maxSizeInFlight</a> <a href="../../../../../../pkg/builtin.html#name-uint64" class="ident">uint64</a>
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Protects the variables below, and also serializes shedding decisions so</span><span class="comment">	 multiple simultaneous requests are handled properly.</span></div>
+<div class="code"><pre><code>	<a href="../../../../../../use/golang.org/x/pkgsite/internal/fetch..loadShedder*9cbba.mu*19503.html" class="ident">mu</a> <a href="../../../../../../pkg/sync.html" class="ident i0">sync</a>.<a href="../../../../../sync/mutex.go.html#line-25" class="ident">Mutex</a>
+
+	<a href="../../../../../../use/golang.org/x/pkgsite/internal/fetch..loadShedder*9cbba.sizeInFlight*6cd22.html" class="ident">sizeInFlight</a>     <a href="../../../../../../pkg/builtin.html#name-uint64" class="ident">uint64</a> <span class="comment">// size of requests currently in progress.</span>
+	<a href="../../../../../../use/golang.org/x/pkgsite/internal/fetch..loadShedder*9cbba.requestsInFlight*41e94.html" class="ident">requestsInFlight</a> <a href="../../../../../../pkg/builtin.html#name-int" class="ident">int</a>    <span class="comment">// number of request currently in progress</span>
+	<a href="../../../../../../use/golang.org/x/pkgsite/internal/fetch..loadShedder*9cbba.requestsTotal*a748d.html" class="ident">requestsTotal</a>    <a href="../../../../../../pkg/builtin.html#name-int" class="ident">int</a>    <span class="comment">// total fetch requests ever seen</span>
+	<a href="../../../../../../use/golang.org/x/pkgsite/internal/fetch..loadShedder*9cbba.requestsShed*27dd6.html" class="ident">requestsShed</a>     <a href="../../../../../../pkg/builtin.html#name-int" class="ident">int</a>    <span class="comment">// number of requests that were shedded</span>
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> shouldShed reports whether a request of size should be shed (not processed).</span><span class="comment"> Its second return value is a function that should be deferred by the caller.</span></div>
+<div class="code"><pre><code><span class="keyword">func</span> (<label for="r0" class="ident">ls</label> *<a href="#line-11" class="ident">loadShedder</a>) <label for="r1" class="ident"><a href="../../../../../../use/golang.org/x/pkgsite/internal/fetch..loadShedder*9cbba.shouldShed*9e447.html" class="ident">shouldShed</a></label>(<label for="r2" class="ident">size</label> <a href="../../../../../../pkg/builtin.html#name-uint64" class="ident">uint64</a>) (<label for="r3" class="ident">_</label> <a href="../../../../../../pkg/builtin.html#name-bool" class="ident">bool</a>, <label for="r4" class="ident">deferFunc</label> <span class="keyword">func</span>()) {
+	<label for="r0" class="ident">ls</label>.<a href="#line-19" class="ident">mu</a>.<a href="../../../../../sync/mutex.go.html#line-72" class="ident">Lock</a>()
+	<span class="keyword">defer</span> <label for="r0" class="ident">ls</label>.<a href="#line-19" class="ident">mu</a>.<a href="../../../../../sync/mutex.go.html#line-179" class="ident">Unlock</a>()
+
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> Shed if size exceeds our limit--except that if nothing is being</span><span class="comment">	 processed, accept this request to avoid starving it forever.</span></div>
+<div class="code"><pre><code>	<span class="keyword">if</span> <label for="r0" class="ident">ls</label>.<a href="#line-21" class="ident">sizeInFlight</a> &gt; <span class="lit-number">0</span> &amp;&amp; <label for="r0" class="ident">ls</label>.<a href="#line-21" class="ident">sizeInFlight</a>+<label for="r2" class="ident">size</label> &gt; <label for="r0" class="ident">ls</label>.<a href="#line-15" class="ident">maxSizeInFlight</a> {
+		<label for="r0" class="ident">ls</label>.<a href="#line-24" class="ident">requestsShed</a>++
+		<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-true" class="ident">true</a>, <span class="keyword">func</span>() {}
+	}
+	<label for="r0" class="ident">ls</label>.<a href="#line-21" class="ident">sizeInFlight</a> += <label for="r2" class="ident">size</label>
+	<label for="r0" class="ident">ls</label>.<a href="#line-22" class="ident">requestsInFlight</a>++
+	<span class="keyword">return</span> <a href="../../../../../../pkg/builtin.html#name-false" class="ident">false</a>, <span class="keyword">func</span>() {
+		<label for="r0" class="ident">ls</label>.<a href="#line-19" class="ident">mu</a>.<a href="../../../../../sync/mutex.go.html#line-72" class="ident">Lock</a>()
+		<span class="keyword">defer</span> <label for="r0" class="ident">ls</label>.<a href="#line-19" class="ident">mu</a>.<a href="../../../../../sync/mutex.go.html#line-179" class="ident">Unlock</a>()
+		<label for="r0" class="ident">ls</label>.<a href="#line-21" class="ident">sizeInFlight</a> -= <label for="r2" class="ident">size</label>
+		<label for="r0" class="ident">ls</label>.<a href="#line-22" class="ident">requestsInFlight</a>--
+	}
+}
+</code></pre></div></div>
+<div class="section">
+<div class="doc">
+<span class="comment"> LoadShedStats holds statistics about load shedding.</span></div>
+<div class="code"><pre><code><span class="keyword">type</span> <a href="../../../../../../pkg/golang.org/x/pkgsite/internal/fetch.html#name-LoadShedStats" class="ident">LoadShedStats</a> <span class="keyword">struct</span> {
+	<a href="../../../../../../use/golang.org/x/pkgsite/internal/fetch..LoadShedStats.SizeInFlight.html" class="ident">SizeInFlight</a>     <a href="../../../../../../pkg/builtin.html#name-uint64" class="ident">uint64</a>
+	<a href="../../../../../../use/golang.org/x/pkgsite/internal/fetch..LoadShedStats.MaxSizeInFlight.html" class="ident">MaxSizeInFlight</a>  <a href="../../../../../../pkg/builtin.html#name-uint64" class="ident">uint64</a>
+	<a href="../../../../../../use/golang.org/x/pkgsite/internal/fetch..LoadShedStats.RequestsInFlight.html" class="ident">RequestsInFlight</a> <a href="../../../../../../pkg/builtin.html#name-int" class="ident">int</a>
+	<a href="../../../../../../use/golang.org/x/pkgsite/internal/fetch..LoadShedStats.RequestsShed.html" class="ident">RequestsShed</a>     <a href="../../../../../../pkg/builtin.html#name-int" class="ident">int</a>
+	<a href="../../../../../../use/golang.org/x/pkgsite/internal/fetch..LoadShedStats.RequestsTotal.html" class="ident">RequestsTotal</a>    <a href="../../../../../../pkg/builtin.html#name-int" class="ident">int</a>
+}
+
+<span class="keyword">func</span> (<label for="r5" class="ident">ls</label> *<a href="#line-11" class="ident">loadShedder</a>) <label for="r6" class="ident"><a href="../../../../../../use/golang.org/x/pkgsite/internal/fetch..loadShedder*9cbba.stats*4b5af.html" class="ident">stats</a></label>() <a href="#line-51" class="ident">LoadShedStats</a> {
+	<label for="r5" class="ident">ls</label>.<a href="#line-19" class="ident">mu</a>.<a href="../../../../../sync/mutex.go.html#line-72" class="ident">Lock</a>()
+	<span class="keyword">defer</span> <label for="r5" class="ident">ls</label>.<a href="#line-19" class="ident">mu</a>.<a href="../../../../../sync/mutex.go.html#line-179" class="ident">Unlock</a>()
+	<span class="keyword">return</span> <a href="#line-51" class="ident">LoadShedStats</a>{
+		<a href="#line-54" class="ident">RequestsInFlight</a>: <label for="r5" class="ident">ls</label>.<a href="#line-22" class="ident">requestsInFlight</a>,
+		<a href="#line-52" class="ident">SizeInFlight</a>:     <label for="r5" class="ident">ls</label>.<a href="#line-21" class="ident">sizeInFlight</a>,
+		<a href="#line-53" class="ident">MaxSizeInFlight</a>:  <label for="r5" class="ident">ls</label>.<a href="#line-15" class="ident">maxSizeInFlight</a>,
+		<a href="#line-55" class="ident">RequestsShed</a>:     <label for="r5" class="ident">ls</label>.<a href="#line-24" class="ident">requestsShed</a>,
+		<a href="#line-56" class="ident">RequestsTotal</a>:    <label for="r5" class="ident">ls</label>.<a href="#line-23" class="ident">requestsTotal</a>,
+	}
+</code></pre></div></div>
+
+</div><pre id="footer">
+<table><tr><td><img src="../../../../../../png/go101-twitter.png"></td>
+<td>The pages are generated with <a href="https://go101.org/article/tool-golds.html"><b>Golds</b></a> <i>v0.3.2-preview</i>. (GOOS=darwin GOARCH=amd64)
+<b>Golds</b> is a <a href="https://go101.org">Go 101</a> project developed by <a href="https://tapirgames.com">Tapir Liu</a>.
+PR and bug reports are welcome and can be submitted to <a href="https://github.com/go101/golds">the issue list</a>.
+Please follow <a href="https://twitter.com/go100and1">@Go100and1</a> (reachable from the left QR code) to get the latest news of <b>Golds</b>.</td></tr></table></pre>
